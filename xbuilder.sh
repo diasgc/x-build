@@ -7,7 +7,7 @@
 function trap_sigint {
   tput cnorm -- normal
   cd $(dirname $0)
-  echo -e "\n\n${CY1}  Interrupted by user${C0}\n  Log available at ${log_file}\n\n"
+  echo -e "\n\n${CY1}  Interrupted by user${C0}\n  Log available at \e[4m${log_file}\e[24m\n\n"
 }
 
 # first load .common functions and error trap
@@ -155,13 +155,13 @@ main(){
     : "${lic:=$(echo "$gitjson" | jq .licence)}"
     : "${dsc:=$(echo "$gitjson" | jq .description)}"
   fi
+
   # show package info
   [ -f "${dir_install_pc}/${pkg}.pc" ] || show_packageinfo
-
-  log_file="${dir_install}/${lib}.log"
 }
 
 show_packageinfo(){
+  log_file="${dir_install}/${lib}.log"
   local dp=
   local vs=
   local longdesc=$(package_long_desc)
@@ -191,12 +191,10 @@ show_packageinfo(){
 
   # Build Deps
   [ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}$dep"
-  if [ "$sty" == "git" ];then
-    local vgit=$(git_remote_version $src)
+  if str_contains $src "git"; then
+    local vgit=$(git_version_remote $src)
     if [ -d ${dir_src} ];then
-      pushdir ${dir_src}
-      local vrep=$(git describe --abbrev=0 --tags 2>/dev/null)
-      popdir
+      local vrep=$(git_version_local ${dir_src})
       vs="${CT0}vrs: ${C0}$vrep "
       if str_contains $vgit $vrs; then
         vs+=" updated"
@@ -207,8 +205,7 @@ show_packageinfo(){
       vs="${CT0}vrs: ${C0}${vgit}"
     fi
   fi
-
-  echo -e " ${vs}"
+  echo -e " ${vs} ${CD} see log at \e[4m${log_file}\e[24m${C0}"
 }
 
 package_long_desc(){

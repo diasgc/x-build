@@ -61,7 +61,7 @@ function libcheck {
 
 function install_ndk {
     # install android-ndk
-    [ -z "$(command -v unzip)" ] && sudo apt install unzip
+    [ -z "$(command -v unzip)" ] && check_install unzip
     local od=$(pwd)
     cd ~
     # get latest version
@@ -109,7 +109,7 @@ CH=${CC0}
 [ -f ".config" ] && . .config
 
 force=false
-cmd_apt_install="sudo apt install"
+export cmd_apt_install="sudo apt install"
 
 case $1 in
     --git-cleanup)
@@ -147,7 +147,7 @@ printf "${CH}%-20s: ${C0}%s\n" '  build os' ${build_os}
 printf "${CH}%-20s: ${C0}%s\n" '  build cpu' ${build_cpu}
 
 if [ -z "${cmd_apt_install}" ];then
-    [ -n "$(which sudo)" ] && cmd_apt_install="sudo "
+    [ -n "$(command -v sudo)" ] && cmd_apt_install="sudo "
     case $OSTYPE in
         linux-gnu) cmd_apt_install+="apt install";;
         linux-android) cmd_apt_install="pkg install";;
@@ -163,12 +163,12 @@ fi
 export dir_toolchain="$(pwd)/builds/toolchain"
 
 echo -e "\n${CC1}LLVM-Clang:"
-if [ -z "$(which clang)" ]; then
+if [ -z "$(command -v clang)" ]; then
     echo -e "not found. Install?"; read -p "[Y|n]" pndk
     case $pndk in y|Y) $cmd_apt_install llvm clang;; esac
 fi
-if [ -n "$(which clang)" ]; then
-    printf "${CH}%-20s: ${C0}%s\n" "  found at" $(which clang)
+if [ -n "$(command -v clang)" ]; then
+    printf "${CH}%-20s: ${C0}%s\n" "  found at" $(command -v clang)
     clang_version=$(clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
     printf "${CH}%-20s: ${C0}%s\n" '  clang' "$clang_version"
     # install symlinks 
@@ -199,10 +199,15 @@ bash_clang(){
 if [ "${OSTYPE}" != "linux-android" ];then
     echo -e "\n${CC1}Android NDK:"
     if [ -z "${ANDROID_NDK_HOME}" ]; then
-        ndk_clang_bin_dir=$(find ~ -name "aarch64-linux-android30-clang")
+        ndk_clang_bin_dir=$(find ~ -name "aarch64-linux-android??-clang" | tail -n1)
         if [ -z "${ndk_clang_bin_dir}" ]; then
             echo -e "not found. Install?"; read -p "[Y|n]" pndk
             case $pndk in y|Y) install_ndk;; esac
+        else
+            export ANDROID_NDK_HOME=$(echo ${ndk_clang_bin_dir} | sed 's|/toolchains/llvm/prebuilt.*||')
+        fi
+        if [ -n "${ANDROID_NDK_HOME}" ]; then
+            printf "\nexport ANDROID_NDK_HOME=${ANDROID_NDK_HOME}\n" >> ~/.bashrc && source ~/.bashrc
         fi
     fi
     if [ -n "${ANDROID_NDK_HOME}" ]; then
@@ -250,8 +255,9 @@ if [ "${OSTYPE}" != "linux-android" ];then
             [ -d "${dir_toolchain}/include" ] || sudo ln -s "${ndk_sysroot}/usr/include" "${dir_toolchain}/include"
             
             [ -d "${dir_root}/builds/android/${c_abi[${i}]}" ] || mkdir -p "${dir_root}/builds/android/${c_abi[${i}]}"
-            [ -d "${dir_toolchain}/local" ] || sudo ln -s "${dir_root}/builds/android/${c_abi[${i}]}" "${dir_toolchain}/local"
             
+            [ -d "${dir_toolchain}/local" ] && sudo unlink ${dir_toolchain}/local
+            sudo ln -s "${dir_root}/builds/android/${c_abi[${i}]}" "${dir_toolchain}/local"
         done
         printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
         [ -f "${dir_toolchain}/include/sys/soundcard.h" ] || printf "#include <linux/soundcard.h>" >""
@@ -309,3 +315,52 @@ check_install git subversion lzip unzip
 
 echo -e "\n${CC1}${b} Other tools${C0}"
 check_install curl gperf bison texinfo patch jq
+
+echo -ne "\n${CC1}${b} Writing config${C0}"
+
+[ -z "${llvm_mingw}" ] && [ -n "${LLVM_MINGW_HOME}" ] && llvm_mingw=${LLVM_MINGW_HOME}
+case "$(uname -s)" in
+    Linux)  build_arch=$(echo $(uname -m)-linux-gnu)
+    [ -n "$(grep -q BCM2708 /proc/cpuinfo)" ] && build_arch="${build_arch}eabihf"    
+    if [ -n "$(command -v getprop)" ];then
+        build_arch=$(echo $(uname -m)-linux-android)
+        export API=$(getprop ro.build.version.sdk)
+    fi
+    ;;
+    Darwin) build_arch=$(echo $(uname -m)-darwin-gnu);;
+    CYGWIN*|MINGW32*|MSYS*|MINGW*) build_arch=$(echo $(uname -m)-w64-mingw32);;
+esac
+
+xv_x64_mingw=$(ls -t /usr/lib/gcc/x86_64-w64-mingw32 2>/dev/null | grep -E "*-win32" | head -n1)
+xv_x86_mingw=$(ls -t /usr/lib/gcc/i686-w64-mingw32 2>/dev/null | grep -E "*-win32" | head -n1)
+
+cat <<-EOF >${dir_root}/.config
+#!/bin/bash
+export config_lastupdate=$(date +%s) \\
+    dir_root="$(pwd)" \\
+    ROOTDIR="$(pwd)" \\
+    cmd_apt_install="${cmd_apt_install}" \\
+    build_arch="${build_arch}" \\
+    ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
+    ndk_cc=(clang clang++) \\
+    vrs_ndk="${ndk_version}" \\
+    vrs_ndk_major="$(echo ${ndk_version} | sed 's/\..*//')" \\
+    ndk_toolchain="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64" \\
+    LLVM_MINGW_HOME="${llvm_mingw}" \\
+    LLVM_MINGW_REL="${llvm_mingw_rel}" \\
+    MAKE_EXECUTABLE="$(command -v make)" \\
+    CMAKE_EXECUTABLE="$(command -v cmake)" \\
+    NASM_EXECUTABLE="$(command -v nasm)" \\
+    PKG_CONFIG="$(command -v pkg-config)" \\
+    HOST_NPROC="$(nproc)" \\
+    xv_llvm_mingw="$(ls -t /usr/lib/gcc-cross/arm-linux-gnueabihf 2>/dev/null | head -n1)" \\
+    llvm_mingw_rel="${llvm_mingw_rel}" \\
+    xv_aarch64_gnu="$(ls -t /usr/lib/gcc-cross/aarch64-linux-gnu 2>/dev/null | head -n1)" \\
+    xv_armeabi_gnu="${xv_armeabi_gnu}" \\
+    xv_x86_gnu="$(ls -t /usr/lib/gcc-cross/i686-linux-gnu 2>/dev/null | head -n1)" \\
+    xv_x64_gnu="$(ls -t /usr/lib/gcc/x86_64-linux-gnu 2>/dev/null | head -n1)" \\
+    xv_x64_mingw="${xv_x64_mingw%%-*}" \\
+    xv_x86_mingw="${xv_x86_mingw%%-*}"
+EOF
+
+echo -ne "... ${CC1}Done!${C0}\n\n"

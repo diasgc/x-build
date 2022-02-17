@@ -10,9 +10,7 @@ tls='perl'
 eta='240'
 
 dev_bra='main'
-dev_vrs='3.2.0'
-stb_bra='tags/v3.2.0'
-stb_vrs='v3.2.0'
+dev_vrs='3.3.0'
 
 lst_inc='aom/*.h'
 lst_lib='libaom'
