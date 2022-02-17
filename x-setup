@@ -1,0 +1,311 @@
+#!/bin/bash
+# ................................................
+# setup util 1.0 2021-diasgc
+# ................................................
+clear
+
+# Target Triple
+#   <arch><sub-arch>-<vendor>-<os>-<environ>
+#       <arch>      aarch64, arm, i686, x86_64
+#       <sub-arch>  v7a,v7m
+#       <vendor>    apple, pc, ibm, unknown
+#       <os>        darwin, linux, openbsd
+#       <environ>   android, elf, gnu, gnueabihf
+#
+
+#
+: "${dir_root:=$(dirname $0)}"
+
+check_install(){
+    local v0
+    local v1
+    for p in $@; do
+        v0=$(dpkg-query -W $p 2>/dev/null | cut -f 2)
+        v1=$(apt-cache madison $p | cut -d '|' -f 2 | xargs)
+        if [ -z "${v0}" ];then
+            printf "${CH}%-20s: ${C0}%s\n" "  $p" "installing..."
+            printf "$(${cmd_apt_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
+        elif [ "${v1}" == "${v0}" ]; then
+            printf "${CH}%-20s: ${C0}%s\n" "  $p" "${v0}"
+        else
+            printf "${CH}%-20s: ${C0}%s" "  $p" "${v0} upgrading to..."
+            printf "$(${cmd_apt_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
+        fi  
+    done
+}
+
+update(){
+    while [ -n "${1}" ]; do
+        case $1 in
+            ndk|NDK)    install_ndk;;
+            llvm-mingw) llvm_mingw_install;;
+        esac
+        shift
+    done
+}
+
+function libcheck {
+    local v
+    local g
+    for fscript in *.sh; do
+        case $fscript in _*|*build*|*setup*|*unpack*) continue;; esac
+        v=$(./${fscript} --get vrs_local | 2>/dev/null)
+        printf "${CC0}%-40s" ${fscript}
+        #if [ -n "${v}" ]; then
+            g=$(./${fscript} --get vrs_remote 2>/dev/null)
+            printf "${CH}%-10s${CY}%-10s" ${v} ${g}
+        #fi
+        printf "\n"
+    done
+}
+
+function install_ndk {
+    # install android-ndk
+    [ -z "$(command -v unzip)" ] && sudo apt install unzip
+    local od=$(pwd)
+    cd ~
+    # get latest version
+    local url=$(wget -qO- https://developer.android.com/ndk/downloads | grep -Po "https://dl.google.com/android/repository/android-ndk-r..*-linux.zip" | tail -n1)
+    # download latest version
+    wget $url -qO tmp 2>&1
+    local fname=$(basename $url)
+    unzip tmp
+    rm -f $fname
+    mv ${fname%.*} android-ndk
+    export ANDROID_NDK_HOME="$(pwd)/android-ndk"
+    cd $od
+}
+
+function llvm_mingw_install {
+    # install llvm-mingw
+    local od=$(pwd)
+    if [ -z "${LLVM_MINGW_HOME}" ]; then
+        export LLVM_MINGW_HOME="$HOME/llvm-mingw"
+    fi
+    cd $(dirname ${LLVM_MINGW_HOME})
+    [ -d "llvm-mingw" ] && rm -rf "llvm-mingw"
+    export llvm_mingw_rel=$(git ls-remote --tags --refs --sort="v:refname" 'https://github.com/mstorsjo/llvm-mingw.git' 2>/dev/null | tail -n1 | sed 's/.*\///')
+    wget_untar "https://github.com/mstorsjo/llvm-mingw/releases/download/${llvm_mingw_rel}/llvm-mingw-${llvm_mingw_rel}-ucrt-ubuntu-18.04-x86_64.tar.xz" "llvm-mingw"    
+    echo $llvm_mingw_rel >"${LLVM_MINGW_HOME}/version"
+    export xv_llvm_mingw=$(./llvm-mingw/bin/aarch64-w64-mingw32-clang --version | grep -oP '\d*\.\d*.\d* (?=\()')
+    cd $od
+}
+
+
+
+
+
+
+
+
+
+
+
+# first-time load common functions
+[ -z ${vsh+x} ] && . .common
+# set cyan theme color
+CH=${CC0}
+# load config
+[ -f ".config" ] && . .config
+
+force=false
+cmd_apt_install="sudo apt install"
+
+case $1 in
+    --git-cleanup)
+        echo -e "size before cleanup: $(du -s .git)\n"
+        git filter-branch --index-filter 'git rm --cached --ignore-unmatch *.tar.gz' -- --all
+        rm -Rf .git/refs/original
+        rm -Rf .git/logs/
+        git gc --aggressive --prune=now
+        echo -e "\nDone\n\n"
+        echo -e "size after cleanup: $(du -s .git)\n"
+        exit 0
+        ;;
+    --force) force=true;;
+    --install) shift; check_install $@; exit 0;;
+    --update)  shift
+        while [ -n "${1}" ]; do
+            case $1 in
+                ndk|NDK)    install_ndk;;
+                llvm-mingw) llvm_mingw_install;;
+            esac
+            shift
+        done
+        exec x-setup
+        exit 0
+        ;;
+    --libcheck) libcheck; exit 0;;
+esac
+
+echo -e "\n${CC1}This Machine:"
+[ -z "${build_arch}" ] && build_arch=$(gcc -dumpmachine)
+[ -z "${build_os}" ] && build_os=$(uname -s)
+[ -z "${build_cpu}" ] && build_cpu=$(uname -m)
+printf "${CH}%-20s: ${C0}%s\n" '  build arch' ${build_arch}
+printf "${CH}%-20s: ${C0}%s\n" '  build os' ${build_os}
+printf "${CH}%-20s: ${C0}%s\n" '  build cpu' ${build_cpu}
+
+if [ -z "${cmd_apt_install}" ];then
+    [ -n "$(which sudo)" ] && cmd_apt_install="sudo "
+    case $OSTYPE in
+        linux-gnu) cmd_apt_install+="apt install";;
+        linux-android) cmd_apt_install="pkg install";;
+        darwin) cmd_apt_install="brew install";;
+    esac
+    #[ -n "$(which apt)" ] && cmd_apt_install+="apt install " || cmd_apt_install="exit 1;"
+    printf "\n${CH}%-20s: ${C0}%s\n" 'cmd install' "${cmd_apt_install}"
+fi
+
+if [ ! -d "builds/toolchain" ]; then
+    mkdir -p builds/toolchain
+fi
+export dir_toolchain="$(pwd)/builds/toolchain"
+
+echo -e "\n${CC1}LLVM-Clang:"
+if [ -z "$(which clang)" ]; then
+    echo -e "not found. Install?"; read -p "[Y|n]" pndk
+    case $pndk in y|Y) $cmd_apt_install llvm clang;; esac
+fi
+if [ -n "$(which clang)" ]; then
+    printf "${CH}%-20s: ${C0}%s\n" "  found at" $(which clang)
+    clang_version=$(clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
+    printf "${CH}%-20s: ${C0}%s\n" '  clang' "$clang_version"
+    # install symlinks 
+    # todo
+    #for cl in aarch64 arm i686 x86_64; do
+    #    for e in ar nm addr2line objcopy objdump ranlib readelf size strings strip windres; do
+    #        v="${dir_toolchain}/${cl}-linux-gnu-${e}"
+    #        [ ! -f "${v}" ] && ln -s "${ndk_toolchain}/bin/llvm-${e}" "${v}" 2>/dev/null
+    #    done
+    #    [ ! -f "${dir_toolchain}/${cl}-linux-gnu-clang" ] && printf "#!/bin/bash\n[ \"\$1\" != \"-cc1\" ] && ${ndk_toolchain}/bin/clang --target=${cl}${cpuv}-linux-android${eabi}\${NDK_API} \"\$@\" || ${ndk_toolchain}/bin/clang \"\$@\"" >"${dir_toolchain}/${cl}-linux-android-clang"
+    #    [ ! -f "${dir_toolchain}/${cl}-linux-gnu-clang++" ] && printf "#!/bin/bash\n[ \"\$1\" != \"-cc1\" ] && ${ndk_toolchain}/bin/clang++ --target=${cl}${cpuv}-linux-android${eabi}\${NDK_API} \"\$@\" || ${ndk_toolchain}/bin/clang++ \"\$@\"" >"${dir_toolchain}/${cl}-linux-android-clang++"
+    #    [ ! -f "${dir_toolchain}/${cl}-linux-gnu-as" ] && ln -s "${ndk_toolchain}/bin/arm-linux-gnueabihf-as" "${dir_toolchain}/${cl}-linux-android-as" 2>/dev/null
+    #    [ ! -f "${dir_toolchain}/${cl}-linux-gnu-ld" ] && ln -s "${ndk_toolchain}/bin/lld" "${dir_toolchain}/${cl}-linux-android-ld"
+    #done
+fi
+
+bash_clang(){
+    # echo "${2}"
+	cat <<-eof | sudo tee ${3} >/dev/null
+	#!/bin/bash
+	[ "\$1" != "-cc1" ] && ${1}/ --target=${2}\${NDK_API} "\$@" || ${1} "\$@"
+	eof
+    sudo chmod +x ${3}
+}
+
+
+
+if [ "${OSTYPE}" != "linux-android" ];then
+    echo -e "\n${CC1}Android NDK:"
+    if [ -z "${ANDROID_NDK_HOME}" ]; then
+        ndk_clang_bin_dir=$(find ~ -name "aarch64-linux-android30-clang")
+        if [ -z "${ndk_clang_bin_dir}" ]; then
+            echo -e "not found. Install?"; read -p "[Y|n]" pndk
+            case $pndk in y|Y) install_ndk;; esac
+        fi
+    fi
+    if [ -n "${ANDROID_NDK_HOME}" ]; then
+        printf "${CH}%-20s: ${C0}%s\n" "  found at" ${ANDROID_NDK_HOME}
+        ndk_version=$(cat ${ANDROID_NDK_HOME}/source.properties | grep "^Pkg.Revision = " | sed 's/Pkg.Revision = //')
+        printf "${CH}%-20s: ${C0}%s " '  version' $ndk_version
+        
+        ndk_version_latest=$(wget -qO- https://developer.android.com/ndk/downloads | grep ndkVersion | tr ' ' '\n' | tail -n1 | sed 's/"//g')
+        if [ "${ndk_version}" == "${ndk_version_latest}" ]; then
+            echo -e "(updated)"
+        else
+            echo -e "${CY1} latest is ${ndk_version_latest}${C0}"
+        fi
+        
+        ndk_build="linux-$(uname -m)"
+        ndk_toolchain="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/${ndk_build}"
+        ndk_sysroot="${ndk_toolchain}/sysroot"
+        ndk_clang_version=$(${ndk_toolchain}/bin/clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
+        printf "${CH}%-20s: ${C0}%s\n" '  clang' "$ndk_clang_version"
+
+        # check and create symlinks in toolchains dir if needed
+        c_arch=('aarch64' 'arm' 'i686' 'x86_64')
+        c_abi=('arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64')
+        c_clang=('aarch64-linux-android' 'armv7a-linux-androideabi' 'i686-linux-android' 'x86_64-linux-android')
+        c_lib=('aarch64-linux-android' 'arm-linux-androideabi' 'i686-linux-android' 'x86_64-linux-android')
+        for i in 0 1 2 3; do
+            #cl="${c_arch[${i}]}"
+
+            dir_toolchain="/usr/${c_lib[${i}]}"
+            #
+            [ -d "${dir_toolchain}/bin" ] || sudo mkdir -p "${dir_toolchain}/bin"
+            [ -f "${dir_toolchain}/bin/clang" ] || bash_clang "${ndk_toolchain}/bin/clang" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang"
+            [ -f "${dir_toolchain}/bin/clang++" ] || bash_clang "${ndk_toolchain}/bin/clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
+            #[ -f "${dir_toolchain}/bin/as" ] || sudo ln -s "${ndk_toolchain}/bin/${c_lib[${i}]}-as" "${dir_toolchain}/bin/as"
+            [ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s "${ndk_toolchain}/bin/lld" "${dir_toolchain}/bin/ld"
+            
+            for j in as ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
+                [ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -s "${ndk_toolchain}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
+            done
+            
+            [ -d "${dir_toolchain}/lib" ] || sudo ln -s "${ndk_toolchain}/sysroot/usr/lib/${c_lib[${i}]}" "${dir_toolchain}/lib"
+            [ -f "${dir_toolchain}/lib/libpthread.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/libpthread.a"
+            [ -f "${dir_toolchain}/lib/librt.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/librt.a"
+            
+            [ -d "${dir_toolchain}/include" ] || sudo ln -s "${ndk_sysroot}/usr/include" "${dir_toolchain}/include"
+            
+            [ -d "${dir_root}/builds/android/${c_abi[${i}]}" ] || mkdir -p "${dir_root}/builds/android/${c_abi[${i}]}"
+            [ -d "${dir_toolchain}/local" ] || sudo ln -s "${dir_root}/builds/android/${c_abi[${i}]}" "${dir_toolchain}/local"
+            
+        done
+        printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
+        [ -f "${dir_toolchain}/include/sys/soundcard.h" ] || printf "#include <linux/soundcard.h>" >""
+    else
+        echo -e "  not installed"
+    fi
+fi
+
+echo -e "\n${CC1}LLVM MINGW:"
+if [ -z "${LLVM_MINGW_HOME}" ]; then
+    llvm_mingw_bin_dir=$(find ~ -name "aarch64-w64-mingw32-clang")
+    if [ -z "${llvm_mingw_bin_dir}" ]; then
+        echo -e "not found. Install?"; read -p "[Y|n]" pndk
+        case $pndk in y|Y) llvm_mingw_install;; esac
+    else
+        export LLVM_MINGW_HOME=$(dirname $(dirname $llvm_mingw_bin_dir))
+    fi
+fi
+if [ -n "${LLVM_MINGW_HOME}" ]; then
+    printf "${CH}%-20s: ${C0}%s\n" "  found at" ${LLVM_MINGW_HOME}
+    llvm_mingw_version=$(cat ${LLVM_MINGW_HOME}/version)
+    printf "${CH}%-20s: ${C0}%s " '  version' $llvm_mingw_version
+    llvm_mingw_version_latest=$(git ls-remote --tags --refs --sort="v:refname" 'https://github.com/mstorsjo/llvm-mingw.git' 2>/dev/null | tail -n1 | sed 's/.*\///')
+    if [ "${llvm_mingw_version}" == "${llvm_mingw_version_latest}" ]; then
+        echo -e "(updated)"
+    else
+        echo -e "${CY1} latest is ${llvm_mingw_version_latest}${C0}"
+    fi
+
+    llvm_mingw_clang_version=$(${LLVM_MINGW_HOME}/bin/clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
+    printf "${CH}%-20s: ${C0}%s\n" '  clang' "$llvm_mingw_clang_version"
+
+    # check and create symlinks in toolchains dir if needed
+    for cl in aarch64 arm i686 x86_64; do
+        for e in ar nm addr2line dlltool objcopy ranlib readelf strings strip windres; do
+            v="${dir_toolchain}/${cl}-w64-mingw32-${e}"
+            [ ! -f "${v}" ] && ln -s "${LLVM_MINGW_HOME}/bin/llvm-${e}" "${v}" 2>/dev/null
+        done
+        for e in as c++ c11 c99 cc clang clang++ g++ gcc; do
+            v="${dir_toolchain}/${cl}-w64-mingw32-${e}"
+            [ ! -f "${v}" ] && ln -s "${LLVM_MINGW_HOME}/bin/clang-target-wrapper.sh" "${v}" 2>/dev/null
+        done
+        [ ! -f "${dir_toolchain}/${cl}-w64-mingw32-objdump" ] && ln -s "${LLVM_MINGW_HOME}/bin/objdump-wrapper.sh" "${dir_toolchain}/${cl}-w64-mingw32-objdump" 2>/dev/null
+        [ ! -f "${dir_toolchain}/${cl}-w64-mingw32-ld" ] && ln -s "${LLVM_MINGW_HOME}/bin/ld-wrapper.sh" "${dir_toolchain}/${cl}-w64-mingw32-ld" 2>/dev/null
+        [ ! -f "${dir_toolchain}/${cl}-w64-mingw32-widl" ] && ln -s "${LLVM_MINGW_HOME}/bin/i686-w64-mingw32-widl" "${dir_toolchain}/${cl}-w64-mingw32-ld" 2>/dev/null
+    done
+    printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
+fi
+
+echo -e "\n${CC1}${b} Build tools${C0}"
+check_install make cmake cmake-curses-gui meson build-essential automake autoconf autogen autopoint libtool-bin m4 nasm yasm pkg-config
+
+echo -e "\n${CC1}${b} Repository tools${C0}"
+check_install git subversion lzip unzip
+
+echo -e "\n${CC1}${b} Other tools${C0}"
+check_install curl gperf bison texinfo patch jq

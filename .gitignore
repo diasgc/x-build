@@ -1,0 +1,7 @@
+builds/*
+sources/*
+packages/*
+.config
+.vscode
+_test.sh
+_template.sh

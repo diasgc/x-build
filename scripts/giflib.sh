@@ -1,0 +1,103 @@
+#!/bin/bash
+# cpu av8 av7 x86 x64
+# NDK +++ +++ +++ +++ clang
+# GNU +++ +++  .   .  gcc
+# WIN +++ +++  .   .  clang/gcc
+
+lib='giflib'
+apt='libgif-dev'
+dsc='Library for manipulating GIF files'
+lic='other'
+src='https://git.code.sf.net/p/giflib/code.git'
+cfg='cmake'
+pc_llib='-lgif'
+eta='18'
+
+lst_inc='gif_lib.h'
+lst_lib='libgiflib'
+lst_bin='giftext gifsponge giffilter giffix gifecho gifbg gifhisto gifwedge giftool gifclrmp gif2rgb gifcolor gifbuild gifinto'
+lst_lic='COPYING AUTHORS'
+lst_pc='giflib.pc'
+
+cmake_bin='BUILD_UTILITIES'
+cmake_static='BUILD_STATIC_LIBS'
+
+dev_bra='main'
+dev_vrs=''
+stb_bra=''
+stb_vrs=''
+
+. xbuilder.sh
+
+start
+
+# patch 01: create CMakeLists with dual static/shared build, docs and man support
+<<'XB64_PATCH'
+LS0tIENNYWtlTGlzdHMudHh0CTIwMjItMDEtMjkgMTk6MzQ6MjEuODMxNzEyMzAwICswMDAwCisr
+KyBDTWFrZUxpc3RzLnR4dAkyMDIyLTAxLTI5IDE5OjM3OjM2LjQ1MTcxMjMwMCArMDAwMApAQCAt
+MCwwICsxLDg1IEBACitjbWFrZV9taW5pbXVtX3JlcXVpcmVkKFZFUlNJT04gMi44LjEyKQorCitw
+cm9qZWN0KGdpZmxpYiBDKQorCitvcHRpb24oQlVJTERfU1RBVElDX0xJQlMgIkJ1aWxkIHN0YXRp
+YyBsaWJzIiBPTikKK29wdGlvbihCVUlMRF9VVElMSVRJRVMgIkJ1aWxkIHV0aWxpdGllcyIgT0ZG
+KQorb3B0aW9uKElOU1RBTExfTUFOICJJbnN0YWxsIG1hbiIgT0ZGKQorb3B0aW9uKElOU1RBTExf
+RE9DUyAiSW5zdGFsbCBkb2NzIiBPRkYpCisKK2V4ZWN1dGVfcHJvY2VzcyhDT01NQU5EIC4vZ2V0
+dmVyc2lvbgorICAgIFdPUktJTkdfRElSRUNUT1JZICR7Q01BS0VfU09VUkNFX0RJUn0KKyAgICBP
+VVRQVVRfVkFSSUFCTEUgVkVSU0lPTgorICAgIE9VVFBVVF9TVFJJUF9UUkFJTElOR19XSElURVNQ
+QUNFCispCisKK3NldChMSUJNQUpPUiA3KQorc2V0KExJQk1JTk9SIDEpCitzZXQoTElCUE9JTlQg
+MCkKK3NldChMSUJWRVIgIiR7TElCTUFKT1J9LiR7TElCTUlOT1J9LiR7TElCUE9JTlR9IikKKwor
+c2V0KGdpZmxpYl9TUkMgZGdpZl9saWIuYyBlZ2lmX2xpYi5jIGdldGFyZy5jCisgICAgZ2lmYWxs
+b2MuYyBnaWZfZXJyLmMgZ2lmX2ZvbnQuYyBnaWZfaGFzaC5jCisgICAgb3BlbmJzZC1yZWFsbG9j
+YXJyYXkuYyBxcHJpbnRmLmMgcXVhbnRpemUuYworKQorCitzZXQoZ2lmbGliX0lOU1RBTExBQkxF
+IGdpZjJyZ2IgZ2lmYnVpbGQgZ2lmZWNobworICAgIGdpZmZpbHRlciBnaWZmaXggZ2lmaW50byBn
+aWZ0ZXh0IGdpZnRvb2wKKyAgICBnaWZzcG9uZ2UgZ2lmY2xybXAKKykKKworc2V0KGdpZmxpYl9V
+VElMUyAke2dpZmxpYl9JTlNUQUxMQUJMRX0KKyAgICBnaWZiZyBnaWZjb2xvciBnaWZoaXN0byBn
+aWZ3ZWRnZQorKQorCitzZXQoZ2lmbGliX0RPQ1MgTkVXUyBUT0RPCisgICAgZ2V0dmVyc2lvbiBD
+aGFuZ2VMb2cgaGlzdG9yeS5hZG9jCisgICAgY29udHJvbCBkb2MvKi54bWwgZG9jLyoudHh0Cisg
+ICAgZG9jL2luZGV4Lmh0bWwuaW4gZG9jLzAwUkVBRE1FCispCisKK2ZpbGUoR0xPQiBnaWZsaWJf
+TUFOIGRvYy8qLjEpCisKK3NldChnaWZsaWJfdGFyZ2V0cyBnaWZsaWIpCithZGRfbGlicmFyeShn
+aWZsaWIgJHtnaWZsaWJfU1JDfSkKK3RhcmdldF9saW5rX2xpYnJhcmllcyhnaWZsaWIgbSkKK3Nl
+dF90YXJnZXRfcHJvcGVydGllcyhnaWZsaWIgUFJPUEVSVElFUyBWRVJTSU9OICR7TElCVkVSfSBT
+T1ZFUlNJT04gJHtMSUJNQUpPUn0pCitpZihXSU4zMikKKyAgc2V0X3RhcmdldF9wcm9wZXJ0aWVz
+KGdpZmxpYiBQUk9QRVJUSUVTIFNVRkZJWCAiLSR7TElCTUFKT1J9JHtDTUFLRV9TSEFSRURfTElC
+UkFSWV9TVUZGSVh9IikKK2VuZGlmKFdJTjMyKQorCitpZihCVUlMRF9TSEFSRURfTElCUyBBTkQg
+QlVJTERfU1RBVElDX0xJQlMpCisgIGFkZF9saWJyYXJ5KGdpZmxpYl9zdGF0aWMgU1RBVElDICR7
+Z2lmbGliX1NSQ30pCisgIHNldF90YXJnZXRfcHJvcGVydGllcyhnaWZsaWJfc3RhdGljIFBST1BF
+UlRJRVMgT1VUUFVUX05BTUUgZ2lmbGliKQorICBsaXN0KEFQUEVORCBnaWZsaWJfdGFyZ2V0cyBn
+aWZsaWJfc3RhdGljKQorZW5kaWYoKQorCitpZihCVUlMRF9VVElMSVRJRVMpCisgIGZvcmVhY2go
+VVRJTElUWSAke2dpZmxpYl9VVElMU30pCisgICAgYWRkX2V4ZWN1dGFibGUoJHtVVElMSVRZfSAk
+e1VUSUxJVFl9LmMpCisgICAgdGFyZ2V0X2xpbmtfbGlicmFyaWVzKCR7VVRJTElUWX0gZ2lmbGli
+KQorICBlbmRmb3JlYWNoKCkKK2VuZGlmKCkKKworaW5zdGFsbChUQVJHRVRTICR7Z2lmbGliX3Rh
+cmdldHN9CisgIFJVTlRJTUUgREVTVElOQVRJT04gYmluCisgIEFSQ0hJVkUgREVTVElOQVRJT04g
+bGliJHtMSUJfU1VGRklYfQorICBMSUJSQVJZIERFU1RJTkFUSU9OIGxpYiR7TElCX1NVRkZJWH0p
+CisKK2lmKEJVSUxEX1VUSUxJVElFUykKKyAgZm9yZWFjaChVVElMSVRZICR7Z2lmbGliX1VUSUxT
+fSkKKyAgICBpbnN0YWxsKFRBUkdFVFMgJHtVVElMSVRZfSBERVNUSU5BVElPTiBiaW4pCisgIGVu
+ZGZvcmVhY2goKQorZW5kaWYoKQorCitpbnN0YWxsKEZJTEVTIGdpZl9saWIuaCBERVNUSU5BVElP
+TiBpbmNsdWRlKQorCitpZihJTlNUQUxMX01BTikKKyAgaW5zdGFsbChGSUxFUyAke2dpZmxpYl9N
+QU59IERFU1RJTkFUSU9OICR7Q01BS0VfSU5TVEFMTF9QUkVGSVh9L21hbi9tYW4xKQorZW5kaWYo
+KQorCitpZihJTlNUQUxMX0RPQ1MpCisgIGluc3RhbGwoRklMRVMgJHtnaWZsaWJfRE9DU30gREVT
+VElOQVRJT04gJHtDTUFLRV9JTlNUQUxMX1BSRUZJWH0vc2hhcmUvZG9jL2dpZmxpYikKK2VuZGlm
+KCkKKworaW5zdGFsbChGSUxFUyBDT1BZSU5HIERFU1RJTkFUSU9OICR7Q01BS0VfSU5TVEFMTF9Q
+UkVGSVh9L3NoYXJlL2RvYy9naWZsaWIpCg==
+XB64_PATCH
+
+
+# Filelist
+# --------
+# include/gif_lib.h
+# lib/libgiflib.a
+# lib/pkgconfig/giflib.pc
+# lib/libgiflib.so
+# share/doc/giflib/COPYING
+# bin/giftext
+# bin/gifsponge
+# bin/giffilter
+# bin/giffix
+# bin/gifecho
+# bin/gifbg
+# bin/gifhisto
+# bin/gifwedge
+# bin/giftool
+# bin/gifclrmp
+# bin/gif2rgb
+# bin/gifcolor
+# bin/gifbuild
+# bin/gifinto
