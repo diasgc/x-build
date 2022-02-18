@@ -318,7 +318,7 @@ start(){
       [ ! $? -eq 0 ] && doErr 'No Internet Connection. Aborting...'
       # check whether to custom get source
       if fn_defined 'source_get'; then
-        source_get
+        fn_log 'get' source_get
       elif [ -n "${sty}" ]; then
         case $sty in
           git)         git_clone $src $lib $src_opt;;
@@ -353,7 +353,7 @@ start(){
   if $req_src_config; then
     # check whether to custom config source
     if fn_defined 'source_config'; then
-      do_log 'config' source_config
+      fn_log 'config' source_config
     elif [ -n "$automake_cmd" ];then
       do_log 'automake' $automake_cmd
       unset automake_cmd
@@ -382,7 +382,7 @@ start(){
     check_xbautopatch
     # check whether to custom patch source
     if fn_defined 'source_patch'; then
-      do_log 'patch' source_patch
+      fn_log 'patch' source_patch
     fi
   fi
 
@@ -404,16 +404,16 @@ start(){
   log_vars CC CXX LD AS AR NM RANLIB STRIP
   
   if fn_defined 'build_all'; then
-    build_all
+    fn_log 'build' build_all
     end_script
   fi
 
   if fn_defined 'build_prepare'; then
-    build_prepare
+    fn_log 'prepare' build_prepare
   fi
 
   if fn_defined 'build_clean'; then
-    build_clean
+    fn_log 'clean' build_clean
   elif [ -f "Makefile" ]; then
     mkc=$(make_findtarget "distclean" "clean")
     [ -n "${mkc}" ] && do_quietly 'clean' ${MAKE_EXECUTABLE} $mkc
@@ -421,7 +421,7 @@ start(){
 
   local arr
   if fn_defined 'build_config'; then
-    build_config
+    fn_log 'config' build_config
   else case $build_tool in
     cmake)
       : "${exec_config:=${CMAKE_EXECUTABLE}}"
@@ -499,7 +499,7 @@ start(){
   fi
 
   if fn_defined 'before_make'; then
-    do_log 'preparing' before_make
+    fn_log 'preparing' before_make
   fi
 
   [ -n "${WFLAGS}" ] && CPPFLAGS+=" ${WFLAGS}"
@@ -519,27 +519,27 @@ start(){
   : "${skip_make:=false}"
 
   if fn_defined 'on_make'; then
-    do_log 'make' on_make
+    fn_log 'make' on_make
   elif ! $skip_make; then
     do_progress 'make' ${MAKE_EXECUTABLE} ${mkf} -j${HOST_NPROC} || err
     unset skip_make
   fi
   
   if fn_defined 'before_install'; then
-    do_log 'preparing' before_install
+    fn_log 'preparing' before_install
   fi
 
   # strip libs
   if ! $host_mingw; then
     if fn_defined 'on_strip'; then
-      do_log 'strip' on_strip
+      fn_log 'strip' on_strip
     elif $build_strip; then
       do_log 'strip' doStrip
     fi
   fi
 
   if fn_defined 'on_install'; then
-    do_log 'install' on_install
+    fn_log 'install' on_install
   else
     cd $dir_build
     do_log 'install' ${MAKE_EXECUTABLE} ${mki}
@@ -548,7 +548,7 @@ start(){
   # check whether to create pkg-config .pc file
   if ! $skip_pc; then
     if fn_defined 'on_create_pc'; then
-      do_log 'pkgconfig' on_create_pc
+      fn_log 'pkgconfig' on_create_pc
     elif [ -n "$pc_llib" ]; then
       do_log 'pkgconfig' create_pkgconfig_file $pkg $pc_llib
     elif [ -n "${pc_llibs}" ]; then
@@ -561,7 +561,7 @@ start(){
   fi
 
   if fn_defined 'on_pack'; then
-    do_log 'pack' on_pack
+    fn_log 'pack' on_pack
   elif $build_package; then
     if [ -f "${dir_build}/install_manifest.txt" ]; then
       do_log 'cpack' build_package_cmake
@@ -574,7 +574,7 @@ start(){
 
   $skip_pc || logver "${dir_install_pc}/${pkg}.pc"
 
-  fn_defined 'on_end' && on_end
+  fn_defined 'on_end' && fn_log 'end' on_end
 
   #stat_savestats
   end_script
@@ -784,10 +784,10 @@ build_package_cmake(){
 build_packages_bin(){
   local xb_distdir=$(build_packages_getdistdir)
   if fn_defined 'create_package'; then
-    create_package ${xb_distdir}
+    fn_log 'pack' create_package ${xb_distdir}
   else
     if fn_defined 'build_make_package'; then
-      build_make_package ${xb_distdir}
+      fn_log 'pack' build_make_package ${xb_distdir}
     elif [ "$MAKE_EXECUTABLE" = "ninja" ];then
       DESTDIR=${xb_distdir} ninja -C ${dir_build} install
     else
@@ -816,10 +816,11 @@ build_packages_bin(){
       else
         cp ${dir_install_pc}/${pkg}.pc ${xb_pkgd}/
       fi
+      fn_undef build_pkgconfig_file
     fi
 
     if fn_defined 'on_editpack'; then
-      on_editpack
+      fn_log 'edit' on_editpack
     fi
 
     build_packages_filelist
@@ -2091,6 +2092,7 @@ while [ $1 ];do
   shift
 done
 
+fn_undef 'extraOpts'
 
 [ -z ${mingw_posix} ] && mingw_posix=false
 
