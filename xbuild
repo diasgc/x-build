@@ -111,8 +111,7 @@ export SRCDIR=${dir_src}
 # xv_x86_gnu (10)
 # xv_x64_gnu (10)
 # xv_x64_mingw (10)
-# 
-xv_x86_mingw="10"
+# xv_x86_mingw="10"
 
 aptInstallBr(){
   while [ -n "$1" ];do
