@@ -178,12 +178,12 @@ pushv(){
 popv(){
   if [ -z "${1}" ]; then
     local n=${#shell_vstack[@]}
-    if [ n -gt 0 ]; then
+    if [ $n -gt 0 ]; then
       echo ${shell_vstack[n-1]}
       unset shell_vstack[-1]
     fi
   else while [ -n "${1}" ]; do
-    eval 
+    eval "$1"="'$(popv)'"
     shift
     done
   fi

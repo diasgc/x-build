@@ -77,12 +77,12 @@ shell_dstack=
 logtime_start=0
 logtime_end=0
 
-export ROOTDIR=$(pwd)
+#export ROOTDIR=$(pwd)
 export CPPFLAGS=
 export target_trip=
-export dir_sources="${ROOTDIR}/sources"
+export dir_sources="${dir_root}/sources"
 export dir_src="${dir_sources}/${lib}"
-export dir_pkgdist="${ROOTDIR}/packages"
+export dir_pkgdist="${dir_root}/packages"
 
 # decaprated, backward compat only
 export SRCDIR=${dir_src}
@@ -157,11 +157,11 @@ main(){
   fi
 
   # show package info
+  export log_file="${dir_install}/${lib}.log"
   [ -f "${dir_install_pc}/${pkg}.pc" ] || show_packageinfo
 }
 
 show_packageinfo(){
-  log_file="${dir_install}/${lib}.log"
   local dp=
   local vs=
   local longdesc=$(package_long_desc)
@@ -671,9 +671,9 @@ check_install(){
 }
 
 check_xbautopatch(){
-  pushdir $ROOTDIR
+  pushdir ${dir_root}
   local match=$(grep -oP "(?<=^<<').*?(?=')" $0)
-  if [ -n "$match" ]; then
+  if [ -n "${match}" ]; then
     local block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $0)
     case $match in
       XB_CREATE_CMAKELISTS)
@@ -731,11 +731,11 @@ create_pkgconfig_file(){
 build_packages_getdistdir(){
   [ -f "${dir_install_pc}/${pkg}.pc" ] && vrs=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
   [ -z "$vrs" ] && set_git_version
-  echo "${ROOTDIR}/packages/${lib}_${vrs}_${arch}"
+  echo "${dir_root}/packages/${lib}_${vrs}_${arch}"
 }
 
 build_packages_filelist(){
-  local scfile="${ROOTDIR}/${lib}.sh"
+  local scfile="${dir_root}/${lib}.sh"
   if [ -z "$(cat $scfile | grep '# Filelist')" ]; then
     echo -e "\n\n# Filelist\n# --------" >> $scfile
     find ./ -type f | sed 's|^./|# |g' >> $scfile
@@ -777,7 +777,8 @@ build_package_cmake(){
       tar -czvf "${fn}" ${flist}
       ;;
   esac
-  mv "${fn}" ${dir_pkgdist}
+  [ -d "${dir_pkgdist}" ] || mkdir -p ${dir_pkgdist}
+  mv "${fn}" ${dir_pkgdist}/${fn}
   popdir
 }
 
@@ -1974,10 +1975,10 @@ set_env(){
       dir_install="/usr/${arch}/local"
       ;;
     gnu)     host_sys=linux;   host_mingw=false; host_os=gnu;     host_ndk=false; host_clang=false; PLATFORM="Linux"
-      dir_install="${ROOTDIR}/builds/${PLATFORM,,}/${target_trip[5]}"
+      dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
       ;;
     mingw32) host_sys=windows; host_mingw=true;  host_os=mingw32; host_ndk=false; host_clang=true;  PLATFORM="Windows"
-      dir_install="${ROOTDIR}/builds/${PLATFORM,,}/${target_trip[5]}"
+      dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
       ;;
   esac
   #LIBSDIR="$(pwd)/builds/${PLATFORM,,}/${target_trip[5]}"
@@ -2031,8 +2032,8 @@ while [ $1 ];do
                 build_dist=true
                 dep_build="--full"
                 ;;
-    --bra|--branch)
-                shift; export bra=$1;;
+    --bra| \
+    --branch)   shift; export bra=$1;;
     --shared)   build_shared=true; build_static=false;;
     --static)   build_static=true; build_shared=false;;
     --both)     build_static=true; build_shared=true;;
