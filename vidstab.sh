@@ -15,11 +15,16 @@ lst_bin=''
 lst_lic='LICENSE'
 lst_pc='vidstab.pc'
 
-CFG="-DUSE_OMP=OFF"
+dev_bra='main'
+dev_vrs='1.20'
+stb_bra=''
+stb_vrs=''
+
+cmake_config="-DUSE_OMP=OFF"
 
 . xbuilder.sh
 
-$host_arm && CFG+=" -DSSE2_FOUND=OFF"
+$host_arm && cmake_config+=" -DSSE2_FOUND=OFF"
 
 start
 

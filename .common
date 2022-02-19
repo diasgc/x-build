@@ -85,8 +85,8 @@ fn_undef(){
 }
 
 fn_log(){
-  do_log "$2" $1
-  unset -f $1
+  do_log "$1" $2
+  unset -f $2
 }
 
 isfn_defined(){
@@ -133,40 +133,6 @@ defvar(){
   done
 }
 
-pushvar_f(){
-  var_addl $@
-}
-
-pushvar_l(){
-  var_addr $@
-}
-
-popvar_f(){
-  local n=$1
-  local v=( ${!1} )
-  case ${#v[@]} in
-    0) echo;;
-    1) echo $v; eval $n=;;
-    *) local p="${v%% *} "
-       echo $p
-       eval $n=\"${v#$p}\"
-       ;;
-  esac
-}
-
-popvar_l(){
-  local n=$1
-  local v=( ${!1} )
-  case ${#v[@]} in
-    0) echo;;
-    1) echo $v; eval $n=;;
-    *) local p="${v## *} "
-       echo $p
-       eval $n=\"${v%$p}\"
-       ;;
-  esac
-}
-
 pushv(){
   while [ -n "${1}" ]; do
     shell_vstack+=("$1")
@@ -206,6 +172,11 @@ popdir(){
     *bash) popd >/dev/null 2>&1;;
     *) local d=$(popvar_f shell_dstack); [ -n "$d" ] && cd $d;;
   esac
+}
+
+# usage: set_bool <condition> <value_true> <value_false>
+set_bool(){
+  $1 && echo $2 || echo $3
 }
 
 prt_progress_old(){
@@ -664,16 +635,24 @@ git_version_remote(){
   version_parse "$(git_vremote $1)"
 }
 
+vrs_exclude='alpha|beta'
 git_vremote(){
-  awk -v vv="$1" -f - << 'EOF'
+  local lgit=$(git ls-remote $src)
+  local v=$(echo "${lgit}" | grep -oP '\d+\.\d+\.\d+.*' | grep -vP $vrs_exclude | tail -n1)
+  [ -z "${v}" ] && v=$(echo "${lgit}" | grep -oP '\d+\.\d+.*' | grep -vP $vrs_exclude | tail -n1)
+  if [ -n "${v}" ]; then
+    echo "${v}"
+    return 0
+  fi
+  awk -v vv="${lgit}" ss="${src}" -f - << 'EOF'
 BEGIN {
   FS = "[ /^]+"
-  while ("git ls-remote " vv "| sort -Vk2" | getline) {
+  while ("echo " vv "| sort -Vk2" | getline) {
     if (!sha)
       sha = substr($0, 1, 7)
     tag = $3
   }
-  while ("curl -s " vv "/releases/tag/" tag | getline)
+  while ("curl -s " ss "/releases/tag/" tag | getline)
     if ($3 ~ "commits")
       com = $2
   printf com ? "%s-%s-g%s\n" : "%s\n", tag, com, sha

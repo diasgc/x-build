@@ -9,8 +9,7 @@ dsc='Tree is a recursive directory listing command'
 lic='GPL-2'
 vrs='1.8.0'
 src="http://mama.indstate.edu/users/ice/tree/src/tree-${vrs}.tgz"
-sty='tgz'
-cfg='mk'
+cfg='make'
 eta='45'
 API=26
 

@@ -44,9 +44,11 @@ sudo=$(command -v sudo)
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
 : "${build_pkgdl:=false}"
+: "${config_timeout:=86400}"
 
 $req_update_deps && update=true
 pkg_fmt="tgz"
+timeout_days=3
 cmake_build_type=Release
 cmake_toolchain_file=
 mingw_posix_suffix=
@@ -126,8 +128,8 @@ aptInstallBr(){
 
 init(){
   [ -f ".config" ] && . .config
-  if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt 86400; then
-    ./xsetup.sh
+  if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
+    ./x-setup
     . .config || doErr 'Unable to initialize config file'
   fi
   [ -z "${indent}" ] && indent=0
@@ -192,9 +194,9 @@ show_packageinfo(){
   # Build Deps
   [ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}$dep"
   if str_contains $src "git"; then
-    local vgit=$(git_version_remote $src)
+    local vgit=$(git_version_remote $src | head -n1)
     if [ -d ${dir_src} ];then
-      local vrep=$(git_version_local ${dir_src})
+      local vrep=$(git_version_local ${dir_src} | head -n1)
       vs="${CT0}vrs: ${C0}$vrep "
       if str_contains $vgit $vrs; then
         vs+=" updated"
@@ -218,14 +220,6 @@ package_long_desc(){
   return 0
 }
 
-# Variables
-# mki: rule for install 'make $mkinstall' (default: install)
-# mkc: rule for clean 'make $mkclean' (default: clean)
-# mkf: additional rule for make
-# no_host  : while using autotools, no host will be set for cross-compile if no_host is not empty
-
-gitjson=
-
 guess_cfg(){
   if [ -f "${dir_config}/meson.build" ]; then
     build_tool="meson"
@@ -237,13 +231,13 @@ guess_cfg(){
     build_tool="automake"
     cfg='ac'
     if [ -f "${dir_config}/autogen.sh" ]; then
-      automake_cmd="${dir_config}/autogen.sh"
+      cfg_cmd="${dir_config}/autogen.sh"
     elif [ -f "${dir_config}/bootstrap.sh" ]; then
-      automake_cmd="${dir_config}/bootstrap.sh"
+      cfg_cmd="${dir_config}/bootstrap.sh"
     elif [ -f "${dir_config}/bootstrap" ]; then
-      automake_cmd="${dir_config}/bootstrap"
+      cfg_cmd="${dir_config}/bootstrap"
     elif [ ! -f "${dir_config}/configure" ]; then
-      automake_cmd="autoreconf -fiv ${dir_config}/bootstrap"
+      cfg_cmd="autoreconf -fiv ${dir_config}/bootstrap"
     else
       return 1
     fi
@@ -252,6 +246,14 @@ guess_cfg(){
   fi
   return 0
 }
+
+# Variables
+# mki: rule for install 'make $mkinstall' (default: install)
+# mkc: rule for clean 'make $mkclean' (default: clean)
+# mkf: additional rule for make
+# no_host  : while using autotools, no host will be set for cross-compile if no_host is not empty
+
+gitjson=
 
 start(){
   
@@ -273,15 +275,17 @@ start(){
   # check build tools
   check_tools $tls
 
-  o_vrs=$vrs
-  o_csh=$CSH
-  o_cbn=$CBN
+  local ovrs=$vrs
+  local ocsh=$CSH
+  local ocbn=$CBN
   unset vrs CSH CBN
+  
   build_dependencies $dep
-  vrs=$o_vrs
-  CSH=$o_csh
-  CBN=$o_cbn
-
+  
+  vrs=$ovrs
+  CSH=$ocsh
+  CBN=$ocbn
+  
   log_start $arch ${eta}s
   local bss=
   $build_static && bss="${SSB}[static]" || bss="${CD}[static]"
@@ -354,9 +358,9 @@ start(){
     # check whether to custom config source
     if fn_defined 'source_config'; then
       fn_log 'config' source_config
-    elif [ -n "$automake_cmd" ];then
-      do_log 'automake' $automake_cmd
-      unset automake_cmd
+    elif [ -n "${cfg_cmd}" ];then
+      do_log 'automake' ${cfg_cmd}
+      unset cfg_cmd
     else case $cfg in
       ab) [ -f "${dir_config}/boostrap" ] && do_log 'bootstrap' ${dir_config}/boostrap
           [ -f "${dir_config}/boostrap.sh" ] && do_log 'bootstrap' ${dir_config}/boostrap.sh
@@ -856,7 +860,7 @@ build_dependencies(){
     fi
     if [ -f "${pkgfile}" ]; then
       local cmi=$(./${1}.sh ${arch} --get cmake_include)
-      [ -n "$cmi" ] && pushvar_f cmake_includes $cmi
+      [ -n "$cmi" ] && cmake_includes="$cmi $cmake_includes"
       ldir="$(dirname ${pkgfile})"
       str_contains $PKG_CONFIG_LIBDIR ${ldir} || PKG_CONFIG_LIBDIR="${ldir}:${PKG_CONFIG_LIBDIR}"
     fi
@@ -1899,6 +1903,7 @@ menu_get(){
     var)           shift; echo "${!1}";;
     vrs_remote)    fn_defined 'vremote' && version_parse "$(vremote)" || git_version_remote $src;;
     vrs_tag)       git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
+    vrs_tags)      git ls-remote --tags --sort="v:refname" $src | grep -oP 'tags/.*\d+\.\d+\.\d+.*';;
     vrs_local)     git_version_local $dir_src;;
     vrs_latest)    echo "$(get_latest_release ${src})"; exit 0;;
     cmake_include) [ -z "$cmake_path" ] || echo "${dir_install}/${cmake_path}";exit 0;;
@@ -1920,6 +1925,17 @@ menu_list(){
     env)        $b && loadToolchain && print_vars CC CXX LD AS AR NM RANLIB STRIP ADDR2LINE OBJCOPY OBJDUMP READELF SIZE STRINGS WINDRES GCOV;;
   esac
   return 0
+}
+
+menu_goto(){
+  source $0
+  case $1 in
+    src|source) pushd ${dir_src};;
+    bin)        pushd ${dir_install_bin};;
+    lib)        pushd ${dir_install_lib};;
+    include)    pushd ${dir_install_include};;
+    pkgconfig)  pushd ${dir_install_pc};;
+  esac
 }
 
 skip_options(){
@@ -2073,6 +2089,8 @@ while [ $1 ];do
     --patch)    shift; create_patch $@; exit 0;;
 
     --skip)     shift; skip_options $@;;
+
+    --goto)     shift; menu_goto $@; exit 0;;
 
     --dirbuild) shift; dir_build=$1;;
     --inline)   inline=true;;

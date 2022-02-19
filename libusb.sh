@@ -13,7 +13,7 @@ lic='LGPL-2.1'
 src='https://github.com/libusb/libusb.git'
 cfg='ac'
 eta='10'
-automake_cmd='./bootstrap.sh'
+cfg_cmd='./bootstrap.sh'
 
 lst_inc=''
 lst_lib=''

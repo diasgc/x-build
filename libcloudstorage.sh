@@ -15,7 +15,7 @@ eta='60'
 dep='jsoncpp tinyxml2 libmega libcrypto++ libcurl'
 mki='install-strip'
 mkc='distclean'
-automake_cmd="./bootstrap"
+cfg_cmd="./bootstrap"
 
 lst_inc=''
 lst_lib=''

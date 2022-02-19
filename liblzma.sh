@@ -9,7 +9,7 @@ src='https://git.tukaani.org/xz.git'
 cfg='ac'
 eta='110'
 mki='install'
-automake_cmd='./autogen.sh --no-po4a'
+cfg_cmd='./autogen.sh --no-po4a'
 
 lst_inc='lzma.h lzma/*.h'
 lst_lib='liblzma'

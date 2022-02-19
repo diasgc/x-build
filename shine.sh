@@ -5,7 +5,7 @@ dsc='Super fast fixed-point MP3 encoder.'
 lic='GLP-2.0'
 src='https://github.com/toots/shine.git'
 cfg='ac'
-automake_cmd='./bootstrap'
+cfg_cmd='./bootstrap'
 eta='35'
 
 dev_bra='main'

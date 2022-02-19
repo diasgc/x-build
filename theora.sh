@@ -1,24 +1,42 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  +   .   .   .   .   .   .   .   .   .   .  static
-#  +   .   .   .   .   .   .   .   .   .   .  shared
-#  -   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='theora'
 apt='libtheora-dev'
 dsc='Theora video compression format'
 lic='BSD'
 src='https://github.com/xiph/theora.git'
-cfg='am'
+bra='tags/v1.1.1'
+cfg='ac'
 dep='ogg vorbis'
 eta='391'
 
+dev_bra='master'
+dev_vrs='1.2.0alpha1'
+stb_bra=''
+stb_vrs=''
+
+lst_inc='theora/*.h'
+lst_lib='libvorbisfile libvorbisenc libvorbis'
+lst_bin='libtheoraenc libtheoradec libtheora'
+lst_lic='COPYING LICENCE AUTHORS'
+lst_pc='theora.pc theoraenc.pc theoradec.pc'
+
 . xbuilder.sh
 
-CFG="--disable-doc --disable-spec --disable-examples --disable-oggtest --disable-vorbistest"
+source_config(){
+    # dont run configure on autogen
+    sed -i 's/^cd \$olddir/exit 0;&/' autogen.sh
+    ./autogen.sh
+}
 
+ac_config="--disable-doc --disable-spec --disable-examples --disable-oggtest --disable-vorbistest"
 
 start
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 # Filelist
 # --------
@@ -43,3 +61,5 @@ start
 # share/doc/libtheora/draft-ietf-avt-rtp-theora-00.xml
 # share/doc/libtheora/doxygen-build.stamp
 # share/doc/libtheora/vp3-format.txt
+# share/doc/theora/AUTHORS
+# share/doc/theora/COPYING

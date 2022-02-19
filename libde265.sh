@@ -7,7 +7,7 @@ lic='LGPL-3.0'
 src='https://github.com/strukturag/libde265.git'
 cfg='cmake'
 eta='140'
-automake_cmd='./autogen.sh'
+cfg_cmd='./autogen.sh'
 
 lst_inc='libde265/*.h'
 lst_lib='liblibde265'
