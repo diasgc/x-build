@@ -13,7 +13,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 CFG="--with-libgpg-error-prefix=${dir_install} --with-capabilities --disable-doc"
 

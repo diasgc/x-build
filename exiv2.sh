@@ -29,7 +29,7 @@ lst_lib=''
 lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc=''
-. xbuilder.sh
+. xbuild
 
 $host_mingw && CFG+=" -DCMAKE_TOOLCHAIN_FILE=${dir_src}/cmake/toolschains/ubuntu1804-mingw64.cmake -DEXIV2_ENABLE_WIN_UNICODE=ON"
 ! $build_shared && CFG+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=OFF" || CFG+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=ON"

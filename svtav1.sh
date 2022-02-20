@@ -22,7 +22,7 @@ lst_pc='SvtAv1Enc.pc SvtAv1Dec.pc'
 
 cmake_config="-DBUILD_TESTING=OFF"
 
-. xbuilder.sh
+. xbuild
 
 $host_ndk && LDFLAGS+=" -L$SYSROOT/usr/${arch}/lib -llog"
 WFLAGS='-Wno-unused-command-line-argument'

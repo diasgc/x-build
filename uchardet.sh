@@ -15,7 +15,7 @@ lst_inc='uchardet/uchardet.h'
 lst_lib='libuchardet'
 lst_bin='uchardet'
 
-. xbuilder.sh
+. xbuild
 
 cmake_config="-DUSE_OMP=OFF"
 $host_arm && cmake_config+=" -DCHECK_SSE2=OFF" || cmake_config+=" -DCHECK_SSE2=ON"

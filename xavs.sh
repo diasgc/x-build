@@ -17,7 +17,7 @@ lst_bin=''
 #lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 ac_opts='--update-config_sub --update-config_guess --no-sysroot --no-pic'
 ac_config="--disable-asm --enable-pic"

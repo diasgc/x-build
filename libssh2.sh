@@ -23,7 +23,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='libssh2.pc'
 
-. xbuilder.sh
+. xbuild
 
 on_editpack(){
     $build_man || rm -rf share/man

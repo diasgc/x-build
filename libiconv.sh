@@ -23,7 +23,7 @@ dev_vrs='1.16'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 ac_config=" --enable-extra-encodings"
 

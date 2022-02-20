@@ -22,7 +22,7 @@ vremote(){
      git ls-remote -t "$src" | grep -o 'v.*' | tail -n1
 }
 
-. xbuilder.sh
+. xbuild
 
 cmake_static='CONFIG_STATIC=0|CONFIG_STATIC=1'
 cmake_bin='ENABLE_EXAMPLES'

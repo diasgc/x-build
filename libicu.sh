@@ -31,7 +31,7 @@ lst_bin='genrb makeconv icuexportdata pkgdata gencnval gencfu gendict uconv icu-
 lst_lic='COPYING'
 lst_pc='icu-i18n.pc icu-uc.pc icu-io.pc'
 
-. xbuilder.sh
+. xbuild
 
 dir_build="${dir_src}/${config_dir}/build_${arch}"
 ac_config="--with-data-packaging=archive"

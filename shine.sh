@@ -19,7 +19,7 @@ lst_bin='shineenc'
 lst_lic='COPYING'
 lst_pc='shine.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

@@ -28,7 +28,7 @@ extraOpts(){
   esac
 }
 
-. xbuilder.sh
+. xbuild
 
 $host_arm || cmake_config+=" -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_AVX=ON -DENABLE_AVX2=ON"
 

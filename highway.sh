@@ -22,7 +22,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='libhwy.pc libhwy-test.pc libhwy-contrib.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

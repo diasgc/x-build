@@ -17,7 +17,7 @@ lst_bin=''
 lst_lic='COPYING.LESSERv3 COPYINGv2 COPYINGv3 AUTHORS'
 lst_pc='gmp.pc'
 
-. xbuilder.sh
+. xbuild
 
 ac_config="CC_FOR_BUILD=cc"
 unset ABI

@@ -22,7 +22,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='libiso9660.pc libiso9660++.pc libcdio.pc libcdio++.pc libudf.pc'
 
-. xbuilder.sh
+. xbuild
 
 WFLAGS="-Wno-header-guard"
 

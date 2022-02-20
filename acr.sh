@@ -12,7 +12,7 @@ lst_inc=''
 lst_lib=''
 lst_bin='amr acr acr-install acr-sh acr-cat'
 
-. xbuilder.sh
+. xbuild
 
 start
 

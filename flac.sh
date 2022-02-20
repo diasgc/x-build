@@ -22,7 +22,7 @@ dev_vrs='1.3.3'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 $host_arm && ac_config=" --disable-asm-optimizations --disable-vsx --disable-avx --disable-sse --disable-altivec"
 if [ "$build_tool" == "cmake" ] && $host_mingw; then

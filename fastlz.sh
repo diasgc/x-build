@@ -14,7 +14,7 @@ lst_bin='6pack 6unpack'
 lst_lic='LICENSE.MIT README.md'
 lst_pc='fastlz.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

@@ -17,7 +17,7 @@ lst_pc='avisynth.pc'
 
 eta=240
 
-. xbuilder.sh
+. xbuild
 
 # dont pass LT_SYS_LIBRARY_PATH to avoid redefinition error
 $host_mingw && unset PKG_CONFIG_LIBDIR

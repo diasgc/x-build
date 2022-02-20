@@ -11,7 +11,7 @@ src='https://github.com/jinfeihan57/p7zip.git'
 cfg='make'
 eta='600'
 
-. xbuilder.sh
+. xbuild
 
 static_ldflag=-static
 CXXFLAGS+=" $CPPFLAGS -Wno-c++11-narrowing -Wno-dangling-else -Wno-switch"

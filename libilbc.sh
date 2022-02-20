@@ -22,7 +22,7 @@ lst_bin='ilbc_test'
 lst_lic='COPYING AUTHORS'
 lst_pc='libilbc.pc'
 
-. xbuilder.sh
+. xbuild
 
 source_get(){
     do_progress 'git' git clone --depth=1 $src $lib

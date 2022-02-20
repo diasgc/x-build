@@ -25,7 +25,7 @@ ac_config="--enable-experimental-postfilter \
      --enable-custom-modes"
 
 
-. xbuilder.sh
+. xbuild
 
 source_patch(){
   sed -i 's|XIPH_PATH_OGG|#XIPH_PATH_OGG|g' configure

@@ -29,7 +29,7 @@ lst_bin=''
 lst_lic='LICENSE.md AUTHORS'
 lst_pc='libcares.pc'
 
-. xbuilder.sh
+. xbuild
 
 on_editpack(){
     $build_man || rm -rf share/man

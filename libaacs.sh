@@ -21,7 +21,7 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
-. xbuilder.sh
+. xbuild
 
 CFG="--with-libgcrypt-prefix=${LIBSDIR} --with-libgpg-error-prefix=${LIBSDIR}"
 export YACC='byacc' YFLAGS='--update'

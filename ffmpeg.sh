@@ -66,7 +66,7 @@ extraOpts(){
      esac
 }
 
-. xbuilder.sh
+. xbuild
 
 nonfree=false
 gpl=false

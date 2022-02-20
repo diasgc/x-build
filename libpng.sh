@@ -24,7 +24,7 @@ lst_pc='libpng16.pc'
 
 eta='20'
 
-. xbuilder.sh
+. xbuild
 
 cmake_config="-DPNG_TESTS=OFF -DPNG_HARDWARE_OPTIMIZATIONS=OFF -DHAVE_LD_VERSION_SCRIPT=OFF"
 

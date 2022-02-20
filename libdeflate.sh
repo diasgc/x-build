@@ -18,7 +18,7 @@ lst_bin='gzip'
 lst_lic='COPYING'
 lst_pc='libdeflate.pc'
 
-. xbuilder.sh && start
+. xbuild && start
 
 # Patch 01: create CMakeLists.txt with dual static and shared build support
 <<'XB64_PATCH'

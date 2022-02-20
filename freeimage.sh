@@ -32,7 +32,7 @@ lst_pc='freeimage.pc'
 WFLAGS='-Wno-switch -Wno-deprecated-register -Wno-unused-value -Wno-format -Wno-format-extra-args'
 
 >>>>>>> 4fccb347cf2eb37d6ea1d35e7eb3c9b3c8b73695
-. xbuilder.sh
+. xbuild
 
 source_patch(){
     cd ${dir_src}

@@ -15,7 +15,7 @@ cfg='ag'
 dep='ogg vorbis speex flac sndfile'
 eta='20'
 
-. xbuilder.sh
+. xbuild
 
 unset SYSROOT
 start

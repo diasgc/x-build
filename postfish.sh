@@ -24,7 +24,7 @@ lst_bin=''
 lst_lic='COPYING'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 _source_patch(){
   sed -i 's|gtk+-2.0 ao|gtk+-2.0 ao fftw|' Makefile

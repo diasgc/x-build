@@ -19,7 +19,7 @@ lst_pc=''
 
 eta='20'
 
-. xbuilder.sh
+. xbuild
 
 start
 

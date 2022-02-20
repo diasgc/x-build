@@ -15,7 +15,7 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
-. xbuilder.sh
+. xbuild
 mki="PREFIX=${INSTALL_DIR} install"
 start
 

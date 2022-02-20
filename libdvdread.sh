@@ -22,7 +22,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='dvdread.pc'
 
-. xbuilder.sh
+. xbuild
 
 CFG="--disable-apidoc"
 

@@ -24,7 +24,7 @@ lst_pc='wavpack.pc'
 
 mki='install'
 
-. xbuilder.sh
+. xbuild
 
 # cli has glob header that requires api28 for ndk
 $build_bin && $host_ndk && [ $API -lt 28 ] && set_ndk_api 28

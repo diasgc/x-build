@@ -20,7 +20,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='vorbisfile.pc vorbisenc.pc vorbis.pc'
 
-. xbuilder.sh
+. xbuild
 
 cmake_config='-DBUILD_TESTING=OFF'
 ac_config='--disable-docs --disable-examples --disable-oggtest'

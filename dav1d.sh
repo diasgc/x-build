@@ -24,7 +24,7 @@ lst_bin='dav1d'
 lst_lic='COPYING'
 lst_pc='dav1d.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

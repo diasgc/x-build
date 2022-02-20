@@ -15,7 +15,7 @@ lst_bin=''
 lst_lic='LICENSE NOTICE'
 lst_pc='Lerc.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

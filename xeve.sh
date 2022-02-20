@@ -11,7 +11,7 @@ src='https://github.com/mpeg5/xeve.git'
 cfg='cmake'
 cmake_static="XEVE_APP_STATIC_BUILD"
 
-. xbuilder.sh
+. xbuild
 
 # see https://github.com/lighttransport/embree-aarch64/blob/master/common/math/SSE2NEON.h
 # and https://github.com/lighttransport/embree-aarch64/blob/master/common/math/AVX2NEON.h

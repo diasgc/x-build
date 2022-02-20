@@ -27,7 +27,7 @@ lst_bin='lame'
 lst_lic='LICENSE COPYING'
 lst_pc='lame.pc'
 
-. xbuilder.sh
+. xbuild
 
 # update latest version
 vrs=$(svn log ${svn}/tags --limit 1 | grep 'tag' | sed "s/tag \(\) release/\1/")

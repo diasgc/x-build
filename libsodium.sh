@@ -23,7 +23,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='libsodium'
 
-. xbuilder.sh
+. xbuild
 
 start
 

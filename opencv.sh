@@ -25,7 +25,7 @@ lst_bin=''
 lst_lic='LICENSE COPYRIGHT'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 $host_ndk && cmake_config+=' -DBUILD_ANDROID_EXAMPLES=OFF -DBUILD_ANDROID_PROJECTS=OFF'
 

@@ -33,7 +33,7 @@ dev_vrs=''
 stb_bra=''
 stb_vrs='1.11.0'
 
-. xbuilder.sh
+. xbuild
 
 $build_shared && unset CSH #--enable-shared only supported on ELF, OS/2, and Darwin for now
 

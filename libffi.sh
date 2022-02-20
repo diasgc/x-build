@@ -14,7 +14,7 @@ lst_bin=''
 lst_lic='LICENSE LICENSE-BUILDTOOLS'
 lst_pc='libffi.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

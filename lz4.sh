@@ -22,7 +22,7 @@ lst_bin='lz4'
 lst_lic='LICENSE'
 lst_pc='liblz4.pc'
 
-. xbuilder.sh
+. xbuild
 
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='LZ4_BUILD_CLI'

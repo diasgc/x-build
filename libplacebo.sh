@@ -19,7 +19,7 @@ lst_bin=''
 lst_lic='LICENSE'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 meson_cfg="-Ddemos=false"
 case $host_os in
     android) dep='glslang vulkan' meson_cfg+=" -Dvulkan-registry=${dir_install}/share/vulkan/registry/vk.xml";;

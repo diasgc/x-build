@@ -17,7 +17,7 @@ lst_bin='sphinx_jsgf2fsg sphinx_fe sphinx_pitch sphinx_lm_convert sphinx_lm_eval
 
 ac_config='--without-python'
 
-. xbuilder.sh
+. xbuild
 
 $host_mingw && mki='install'
 

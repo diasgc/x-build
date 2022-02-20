@@ -17,7 +17,7 @@ lst_bin=''
 lst_lic='COPYING COPYING.LIB AUTHORS'
 lst_pc='libunistring'
 
-. xbuilder.sh
+. xbuild
 
 before_make(){
     #No docs

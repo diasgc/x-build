@@ -19,7 +19,7 @@ lst_bin='gav1_decode'
 lst_lic='LICENSE AUTHORS'
 lst_pc='libgav1.pc'
 
-. xbuilder.sh
+. xbuild
 
 source_config(){
 	git_clone https://github.com/abseil/abseil-cpp.git third_party/abseil-cpp

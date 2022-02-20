@@ -15,7 +15,7 @@ lst_lic='LICENSE'
 lst_pc='openh264.pc'
 
 
-. xbuilder.sh
+. xbuild
 
 start
 

@@ -15,7 +15,7 @@ lst_bin='fribidi'
 lst_lic='COPYING AUTHORS'
 lst_pc='fribidi.pc'
 
-. xbuilder.sh
+. xbuild
 
 $host_mingw || meson_cfg+=' -Db_pie=true'
 

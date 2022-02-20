@@ -14,7 +14,7 @@ lic='LGPL-2.1'
 src='https://git.code.sf.net/p/libdc1394/code.git'
 eta='60'
 
-. xbuilder.sh
+. xbuild
 
 $host_clang && doErr "Clang does not support compile code with VLAiS. Aborting."
 CFG='--disable-examples'

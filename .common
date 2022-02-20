@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # ................................................
 # Commons 0.3.2-dev 2021-diasgc
 # Definition constants and functions
@@ -9,6 +9,10 @@ vsh='0.3.2-main'
 #b="\u25ba"
 b="\u2605"
 c="\u2714"
+
+# box chars
+BX0="\u2502" BX1="\u251C" BX2="\u250C" BX3="\u2514" BX4="\u252C" BX5="\u2500"
+BXH="${BX1}${BX5}${BX4}${BX5}${CY1}" BXL="${BX0} ${BX1}${BX5}${CY2}" BXE="${BX0} ${BX3}${BX5}${CY1}"
 
 # def theme colors
 C0="\e[0m" CW="\e[97m"  CD="\e[90m" CW2="\e[38;5;234m" CW3="\e[38;5;238m" CW4="\e[38;5;242m"  CW5="\e[38;5;246m" CW6="\e[38;5;250m"
@@ -39,8 +43,6 @@ trap trap_sigint SIGINT
 
 # Logger
 logtime_start=
-export indent=0
-export ind=''
 export dir_root=$(pwd)
 
 hwinfoCountCoresReadable(){
@@ -199,14 +201,19 @@ prt_progress(){
 }
 
 inc_tab(){
-  indent=$((indent+2))
-  ind=$(printf '%*s' "$indent")
+  export indent=$((indent+2))
+  export inds="${ind}├─"
+  export inde="${ind}└─"
+  export ind+="│ "
+  #echo "inctab: $indent $ind............"
 }
 
 dec_tab(){
-  indent=$((indent-2))
-  [ $indent -gt 0 ] && ind=$(printf '%*s' "$indent") || unset ind
+  export indent=$((indent-2))
+  [ ${#ind} -gt 1 ] && export ind="${ind::-2}"
+  #echo "dectab: $indent $ind............"
 }
+
 
 # exclusive variable add substrings left var_xaddl <var> <substrings...>
 # appends substrings to the left/start of var iff main doesnt contains substring
@@ -626,7 +633,7 @@ version_parse(){
 
 git_version_local(){
   if [ -d "${1}/.git" ]; then
-    version_parse "$(git --git-dir="${1}/.git" describe --match=?[0-9]* 2>/dev/null || git --git-dir=.git describe)"
+    version_parse "$(git --git-dir="${1}/.git" describe --match=?[0-9]* 2>/dev/null || git --git-dir="${1}.git" describe 2>/dev/null)"
   fi
   return 0
 }

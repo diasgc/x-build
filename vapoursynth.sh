@@ -23,7 +23,7 @@ lst_inc='vapoursynth/VSScript4.h
 lst_lib='libvapoursynth'
 lst_bin=''
 
-. xbuilder.sh
+. xbuild
 
 CFG="--enable-python-module=no --enable-vspipe=no --enable-vsscript=no"
 $host_arm && CFG+=" --enable-x86-asm=no"

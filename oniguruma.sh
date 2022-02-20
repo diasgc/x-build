@@ -21,7 +21,7 @@ lst_pc='oniguruma.pc'
 cmake_config='-DINSTALL_DOCUMENTATION=OFF'
 cmake_static='BUILD_STATIC_LIBS'
 
-. xbuilder.sh
+. xbuild
 
 start
 

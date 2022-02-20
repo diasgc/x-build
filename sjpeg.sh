@@ -19,7 +19,7 @@ lst_bin='vjpeg sjpeg'
 lst_lic='COPYING AUTHORS'
 lst_pc='sjpeg.pc'
 
-. xbuilder.sh
+. xbuild
 
 CFG="-DSJPEG_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"
 

@@ -16,7 +16,7 @@ lst_bin='jq'
 lst_lic='COPYING AUTHORS'
 lst_pc='jq.pc'
 
-. xbuilder.sh
+. xbuild
 
 ac_config="--disable-maintainer-mode --disable-docs --with-oniguruma=${dir_install}"
 unset CSH

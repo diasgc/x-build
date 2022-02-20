@@ -8,7 +8,7 @@ cfg='mk'
 dep='sdl2'
 eta='10'
 
-. xbuilder.sh
+. xbuild
 
 pushvar_f CXXFLAGS $(./sdl2.sh --get cflags)
 pushvar_f LDFLAGS $(./sdl2.sh --get ldstatic)

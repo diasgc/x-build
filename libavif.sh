@@ -17,7 +17,7 @@ lst_inc='avif/avif.h'
 lst_lib='libavif'
 lst_bin='avifenc avifdec'
 
-. xbuilder.sh
+. xbuild
 
 CFG="-DAVIF_BUILD_EXAMPLES=OFF -DAVIF_BUILD_TESTS=OFF -DAVIF_CODEC_AOM=ON"
 $host_mingw && CPPFLAGS+=" -D__USE_MINGW_ANSI_STDIO=1"

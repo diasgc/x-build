@@ -21,7 +21,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='samplerate.pc'
 
-. xbuilder.sh
+. xbuild
 
 cmake_config="-DBUILD_TESTING=OFF -DLIBSAMPLERATE_EXAMPLES=OFF"
 

@@ -19,7 +19,7 @@ dev_vrs=''
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 ac_config="--with-python_prefix=${dir_install}"
 export PYTHON_PREFIX=${dir_install}
 start

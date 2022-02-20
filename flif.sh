@@ -25,7 +25,7 @@ lst_lic='share/licenses/FLIF/LICENSE_Apache2
 pc_llibs=$lst_lib
 config_dir='src'
 
-. xbuilder.sh
+. xbuild
 
 CPPFLAGS+=" -Wno-sign-compare -Wno-type-limits"
 HOST_NPROC=16

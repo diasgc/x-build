@@ -19,7 +19,7 @@ dev_vrs='3.0.3'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 on_editpack(){
     rm -rf share/doc/zimg/example

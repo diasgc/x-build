@@ -20,7 +20,7 @@ ls_inc='google/output_string.h google/vcencoder.h
 ls_bin='vcdiff'
 eta='0'
 
-. xbuilder.sh
+. xbuild
 
 start
 

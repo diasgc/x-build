@@ -13,7 +13,7 @@ sty='git'
 cfg='ar'
 eta='40'
 
-. xbuilder.sh
+. xbuild
 
 start
 

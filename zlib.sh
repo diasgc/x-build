@@ -25,7 +25,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='zlib.pc'
 
-. xbuilder.sh
+. xbuild
 
 on_end(){
     $host_mingw && {

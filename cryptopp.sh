@@ -25,7 +25,7 @@ pc_llib='-lcryptopp'
 
 eta='190'
 
-. xbuilder.sh
+. xbuild
 
 source_config(){
     local url="https://raw.githubusercontent.com/noloader/cryptopp-cmake/master/"

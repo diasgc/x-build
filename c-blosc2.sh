@@ -15,7 +15,7 @@ lst_bin=''
 lst_lic='LICENSE.txt LICENSES/*.txt'
 lst_pc='blosc2.pc'
 
-. xbuilder.sh
+. xbuild
 
 WFLAGS='-Wno-pointer-sign -Wno-int-conversion'
 

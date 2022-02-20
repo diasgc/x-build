@@ -13,7 +13,7 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
-. xbuilder.sh
+. xbuild
 
 source_config(){
     autoheader 2>/dev/null

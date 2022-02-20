@@ -22,7 +22,7 @@ lst_bin='gdk-pixbuf-pixdata gdk-pixbuf-query-loaders gdk-pixbuf-csource'
 lst_lic='COPYING'
 lst_pc='gdk-pixbuf-2.0.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

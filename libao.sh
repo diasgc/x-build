@@ -15,7 +15,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='ao.pc'
 
-. xbuilder.sh
+. xbuild
 
 before_make(){
 	#no docs

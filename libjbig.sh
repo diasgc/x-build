@@ -21,7 +21,7 @@ lst_bin='pbmtojbg85 pbmtojbg jbgtopbm85 jbgtopbm'
 
 cbk="BUILD_EXECUTABLES"
 
-. xbuilder.sh
+. xbuild
 
 start
 

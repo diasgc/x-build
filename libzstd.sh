@@ -21,7 +21,7 @@ lst_bin='zstdgrep zstd zstdless'
 lst_lic='LICENSE COPYING'
 lst_pc='libzstd.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

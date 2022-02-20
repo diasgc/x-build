@@ -1,4 +1,4 @@
-#!$SHELL
+#!/bin/bash
 # ................................................
 # X-Builder util 0.3.2 2021-diasgc
 # ................................................
@@ -12,7 +12,7 @@ function trap_sigint {
 
 # first load .common functions and error trap
 if [ -z ${vsh+x} ];then
-  source .common
+  . .common
   set -o pipefail
   if [ "${1}" == "--debug" ];then
     shift
@@ -45,6 +45,8 @@ sudo=$(command -v sudo)
 : "${inline:=false}"
 : "${build_pkgdl:=false}"
 : "${config_timeout:=86400}"
+: "${indent:=0}"
+: "${ind:=}"
 
 $req_update_deps && update=true
 pkg_fmt="tgz"
@@ -125,32 +127,28 @@ aptInstallBr(){
   done
 }
 
-
 init(){
   [ -f ".config" ] && . .config
   if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
     ./x-setup
     . .config || doErr 'Unable to initialize config file'
   fi
-  [ -z "${indent}" ] && indent=0
-  export is_init=true indent ind
+  export is_init=true
 }
 
 ! $is_init && init
-
-inc_tab
 
 main(){
   $debug && set -x
   # exit if missing vars lib arch or src
   test -z ${lib} && {
     echo -e "\n\n${ind}${CB1}${ind}Toolchain is loadad.\n${ind}Now exiting...\n\n${C0}"
-    indent=0
     return 0
   }
 
   test -z ${dir_install} || test -z $src && errCall
 
+  inc_tab
   gitjson=$(git_api_tojson $src)
   if [ -n "${gitjson}" ];then
     #echo -ne "${CY1}${b}${C0}"
@@ -170,7 +168,7 @@ show_packageinfo(){
   [ -z "$(echo $longdesc | xargs 2>/dev/null)" ] && unset longdesc
 
   # Main Description
-  [ -n "${dsc}" ] && echo -e "\n${CW}${ind}${lib^^} - ${C0}${dsc}"
+  [ -n "${dsc}" ] && echo -e "\n${ind}${CW}${lib^^} - ${C0}${dsc}"
   [ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
 
   # Licence
@@ -193,6 +191,7 @@ show_packageinfo(){
 
   # Build Deps
   [ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}$dep"
+
   if str_contains $src "git"; then
     local vgit=$(git_version_remote $src | head -n1)
     if [ -d ${dir_src} ];then
@@ -215,7 +214,7 @@ package_long_desc(){
     echo -e $(apt-cache show ${apt} 2>/dev/null | \
     grep -E "Description-..^|^ " | \
     sed $'s/\*/\u2605/g' | \
-    sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/'"${ind}"'/g'
+    sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/│ /g'
   fi
   return 0
 }
@@ -256,7 +255,7 @@ guess_cfg(){
 gitjson=
 
 start(){
-  
+
   # check whether to update source of main lib and dependencies
   if $update; then
     [ -d "${dir_src}" ] && rm -rf "${dir_src}" 2>/dev/null
@@ -264,7 +263,7 @@ start(){
   else
     [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
   fi
-  
+
   # Reset LOGFILE
   [ -f "${log_file}" ] && rm -f ${log_file}
 
@@ -854,7 +853,9 @@ build_dependencies(){
       o_cbh=$CBH
       $build_pkgdl && local dl="--dl" || local dl=''
       unset CSH CBH
-      ./${1}.sh ${arch} ${dep_build} ${dl} || err
+    
+      ./${1}.sh ${arch} ${dep_build} ${dl}
+      
       CSH=$o_csh
       CBH=$o_cbh
     fi
@@ -1060,7 +1061,7 @@ log_start(){
   logtime_start=$(date +%s)
   #echo -ne "$CC1  $@: "
   if ! $inline; then
-    echo -ne "${C0}${ind}$(date '+%H:%M')"
+    echo -ne "${ind}${C0}$(date '+%H:%M')"
     [ $eta ] && echo -ne "-${CW}$(date '+%H:%M' --date="$eta seconds")"
     printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
   fi
@@ -1110,7 +1111,7 @@ doErr(){
       echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
       cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
     fi
-    echo -ne "${CY1}${ind}Open log? [Y|n]:${C0}" && read openlog
+    echo -ne "${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
     [ "$openlog" != "n" ] && nano ${log_file}
   fi
   exit 1
@@ -1126,7 +1127,7 @@ err(){
       echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
       cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
     fi
-    echo -ne "${CY1}${ind}Open log? [Y|n]:${C0}" && read openlog
+    echo -ne "${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
     [ "$openlog" != "n" ] && nano ${log_file}
   fi
   echo
@@ -1434,7 +1435,7 @@ showOpts(){
     [ -f configure ] && ./configure --help >${od}/builds/${lib}_aconf.opts && nano "${od}/builds/${lib}_aconf.opts"
     cd $od
   else
-    echo -e "${ind}${CR0}no configuration file found in ${CR1}$1${CD}\n\n"
+    echo -e "${ind}${CR0}no configuration file found in ${CR1}${1}${CD}\n\n"
   fi
 }
 
@@ -1834,7 +1835,7 @@ showBanner(){
       echo -ne "WSL "
     fi
     echo -e "$(uname -o) $(uname -m) ${C0} $(uname -r)"
-    echo -e "${CW}${ind}$(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
+    echo -e "${ind}${CW}$(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
   fi
 }
 

@@ -27,7 +27,7 @@ stb_vrs=''
 # cb0="-DBUILD_TOOLS=OFF"
 # cb1="-DBUILD_TOOLS=OFF" # disable bin: cannot build bin (requires FFMPEG_LIBXXXXX_INCLUDE_DIRS)
 
-. xbuilder.sh
+. xbuild
 
 cmake_config="-DKISSFFT_SOURCE_DIR=${dir_src}/src/3rdparty/kissfft -DBUILD_TOOLS=OFF -DBUILD_TESTS=OFF"
 

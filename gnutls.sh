@@ -17,7 +17,7 @@ lst_bin='gnutls-serv srptool psktool gnutls-cli ocsptool certtool gnutls-cli-deb
 lst_lic='LICENSE'
 lst_pc='gnutls.pc'
 
-. xbuilder.sh
+. xbuild
 
 vrs="3.6.16"
 src="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-${vrs}.tar.xz"

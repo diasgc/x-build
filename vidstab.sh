@@ -22,7 +22,7 @@ stb_vrs=''
 
 cmake_config="-DUSE_OMP=OFF"
 
-. xbuilder.sh
+. xbuild
 
 $host_arm && cmake_config+=" -DSSE2_FOUND=OFF"
 

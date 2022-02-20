@@ -20,7 +20,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='xau.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

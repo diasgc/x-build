@@ -11,7 +11,7 @@ src='https://github.com/mpeg5/xeve.git'
 cfg='cmake'
 cmake_static="XEVD_APP_STATIC_BUILD"
 
-. xbuilder.sh
+. xbuild
 
 $host_arm && doErr "${lib} does not support cross-build for arm (${arch})."
 

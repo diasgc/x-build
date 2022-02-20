@@ -22,7 +22,7 @@ stb_vrs='0.4.39'
 
 cmake_static='BUILD_STATIC_LIBS'
 
-. xbuilder.sh
+. xbuild
 
 start
 

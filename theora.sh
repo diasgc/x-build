@@ -21,7 +21,7 @@ lst_bin='libtheoraenc libtheoradec libtheora'
 lst_lic='COPYING LICENCE AUTHORS'
 lst_pc='theora.pc theoraenc.pc theoradec.pc'
 
-. xbuilder.sh
+. xbuild
 
 source_config(){
     # dont run configure on autogen

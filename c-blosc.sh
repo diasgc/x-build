@@ -19,7 +19,7 @@ lst_bin=''
 lst_lic='LICENSES/*'
 lst_pc='blosc.pc'
 
-. xbuilder.sh
+. xbuild
 
 
 WFLAGS='-Wno-unused-variable -Wno-unused-but-set-variable'

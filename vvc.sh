@@ -16,7 +16,7 @@ eta='480'
 cbk="BUILD_TOOLS"
 mkinstall='all'
 
-. xbuilder.sh
+. xbuild
 
 case $arch in
   aarch64*|arm*) doErr "VVC not available for arm archs";;

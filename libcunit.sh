@@ -13,7 +13,7 @@ cfg='ac'
 pkg='cunit'
 eta='27'
 
-. xbuilder.sh
+. xbuild
 
 source_config(){
     libtoolize --force --copy

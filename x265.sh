@@ -38,7 +38,7 @@ extraOpts(){
     return 0
 }
 
-. xbuilder.sh
+. xbuild
 
 $build_shared && cmake_config="-DENABLE_SHARED=ON" || cmake_config="-DENABLE_SHARED=OFF"
 $host_mingw && cmake_config+=" -DENABLE_PIC=OFF"

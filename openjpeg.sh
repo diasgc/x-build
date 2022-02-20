@@ -20,7 +20,7 @@ lst_bin='opj_dump opj_decompress opj_compress'
 lst_lic='LICENSE AUTHORS'
 lst_pc='libopenjp2.pc'
 
-. xbuilder.sh
+. xbuild
 
 WFLAGS='-Wno-implicit-const-int-float-conversion'
 

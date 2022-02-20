@@ -20,7 +20,7 @@ lst_bin='davs2'
 lst_lic='COPYING'
 lst_pc='davs2.pc'
 
-. xbuilder.sh
+. xbuild
 
 AS=nasm
 $host_ndk && LDFLAGS+=" -L${SYSROOT}/usr/lib -llog"

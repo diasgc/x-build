@@ -27,7 +27,7 @@ lst_bin=''
 lst_lic='COPYING BSD AUTHORS'
 lst_pc='libssh.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

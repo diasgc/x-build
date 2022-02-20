@@ -13,7 +13,7 @@ cfg='cmake'
 eta='150'
 pc_llib="-lexhale"
 
-. xbuilder.sh
+. xbuild
 
 cmake_config="-DBUILD_TESTS=OFF -DCMAKE_DL_LIBS=ON"
 

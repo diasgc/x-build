@@ -23,7 +23,7 @@ eta='20'
 
 CFG='--with-x=no --without-x-shm-fd --without-svg --without-id3 --without-heif'
 
-. xbuilder.sh
+. xbuild
 
 start
 

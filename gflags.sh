@@ -23,7 +23,7 @@ lst_pc='gflags.pc'
 
 eta='20'
 
-. xbuilder.sh
+. xbuild
 
 start
 

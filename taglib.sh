@@ -58,7 +58,7 @@ lst_bin='tagreader
   tagreader_c 
   tagwriter'
 
-. xbuilder.sh
+. xbuild
 
 start
 

@@ -32,7 +32,7 @@ lst_pc='cairo-gobject.pc
   cairo-svg.pc
   cairo-script.pc'
 
-. xbuilder.sh
+. xbuild
 
 WFLAGS=' -Wno-unused-function -Wno-parentheses-equality -Wno-implicit-const-int-float-conversion -Wno-sometimes-uninitialized -Wno-switch-enum'
 

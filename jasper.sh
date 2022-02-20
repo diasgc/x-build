@@ -25,7 +25,7 @@ lst_bin='jasper multithread imgcmp imginfo'
 lst_lic='COPYRIGHT.txt LICENSE.txt'
 lst_pc='jasper.pc'
 
-. xbuilder.sh
+. xbuild
 
 $host_mingw && cmake_config="-DWITH_STACK_PROTECTOR=OFF"
 

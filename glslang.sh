@@ -15,7 +15,7 @@ lst_bin='spirv-remap glslangValidator'
 lst_lic='LICENSE.txt'
 lst_pc='libSPIRV.pc libOSDependent.pc libSPVRemapper.pc libOGLCompiler.pc libHLSL.pc libglslang.pc libglslang-default-resource-limits.pc'
 
-. xbuilder.sh
+. xbuild
 
 cmake_config="-DBUILD_TESTING=OFF -DENABLE_OPT=OFF -DINSTALL_GTEST=OFF"
 

@@ -12,7 +12,7 @@ cfg='ccm'
 
 eta='1095'
 
-. xbuilder.sh
+. xbuild
 
 source_config(){
     git submodule init && git submodule update

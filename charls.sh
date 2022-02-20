@@ -21,7 +21,7 @@ lst_bin=''
 lst_lic='LICENSE.md'
 lst_pc='charls.pc'
 
-. xbuilder.sh
+. xbuild
 
 # unsupported dual static shared build
 # todo patch src/CMakeLists.txt

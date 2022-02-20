@@ -14,7 +14,7 @@ eta='40'
 cb0="--disable-examples"
 cb1="--enable-examples"
 
-. xbuilder.sh
+. xbuild
 
 CFG="--disable-doc"
 

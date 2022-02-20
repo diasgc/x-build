@@ -25,7 +25,7 @@ stb_vrs=''
 
 WFLAGS='-Wno-sign-conversion'
 
-. xbuilder.sh
+. xbuild
 
 start
 

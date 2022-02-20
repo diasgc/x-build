@@ -21,6 +21,6 @@ mki='install'
 
 CFG='--enable-introspection=no'
 
-. xbuilder.sh
+. xbuild
 
 start

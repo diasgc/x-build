@@ -23,7 +23,7 @@ stb_vrs=''
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config='-DENABLE_SDL=OFF'
 
-. xbuilder.sh
+. xbuild
 
 
 if $host_arm; then

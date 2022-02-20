@@ -27,7 +27,7 @@ lst_bin=''
 lst_lic='COPYING'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 unset CPPFLAGS CSH
 ac_config='--with-pic'

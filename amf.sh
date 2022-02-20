@@ -14,7 +14,7 @@ lst_bin=''
 lst_pc=''
 lst_lic='LICENSE.txt'
 
-. xbuilder.sh
+. xbuild
 
 start
 

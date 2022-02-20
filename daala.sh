@@ -31,7 +31,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='daaladec.pc daalaenc.pc'
 
-. xbuilder.sh
+. xbuild
 
 $build_bin && dep+=" libjpeg"
 

@@ -13,7 +13,7 @@ cfg='make'
 eta='45'
 API=26
 
-. xbuilder.sh
+. xbuild
 # todo clean & simplify
 
 OBJS="tree.o unix.o html.o xml.o json.o hash.o color.o file.o"

@@ -16,7 +16,7 @@ ils='lizard_frame.h lizard_common.h lizard_compress.h'
 lls='liblizard'
 bls='lizard'
 
-. xbuilder.sh
+. xbuild
 
 config_dir='cmake_unofficial'
 LDFLAGS="$LDFLAGS $(./libzstd.sh --get ldstatic)"

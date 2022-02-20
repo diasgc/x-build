@@ -26,7 +26,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='libdvdcss.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

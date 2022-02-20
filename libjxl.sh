@@ -23,7 +23,7 @@ lst_bin=''
 lst_lic='LICENSE PATENTS AUTHORS'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 
 
