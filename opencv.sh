@@ -1,8 +1,4 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK  +   .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
 
 lib='opencv'
 dsc='Open Source Computer Vision Library'
@@ -30,6 +26,11 @@ lst_pc=''
 $host_ndk && cmake_config+=' -DBUILD_ANDROID_EXAMPLES=OFF -DBUILD_ANDROID_PROJECTS=OFF'
 
 start
+
+# cpu av8 av7 x86 x64
+# NDK  +   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 # Filelist
 # --------

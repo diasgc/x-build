@@ -36,6 +36,7 @@ function trap_sigint {
   local l
   [ -f "${log_file}" ] && l="  Log available at ${log_file}\n"
   echo -e "\n\n${CY1}  Interrupted by user${C0}\n${l}\n"
+  trap - SIGINT
   exit 1
 }
 
@@ -44,6 +45,21 @@ trap trap_sigint SIGINT
 # Logger
 logtime_start=
 export dir_root=$(pwd)
+
+color_table(){
+  local i=16
+  while [ $i -lt 52 ]; do
+    j=$i
+    k=0
+    until [ $k == 7 ]; do
+      printf "\e[38;5;%dm\u25cf %03d   " ${j} ${j}
+      j=$(((j+36)%256))
+      k=$((k+1))
+    done
+    i=$((i+1))
+    printf '\r\n'
+  done
+}
 
 hwinfoCountCoresReadable(){
   case $(nproc) in
@@ -202,7 +218,7 @@ prt_progress(){
 
 inc_tab(){
   export indent=$((indent+2))
-  export inds="${ind}├─"
+  export inds="${ind}┬─"
   export inde="${ind}└─"
   export ind+="│ "
   #echo "inctab: $indent $ind............"

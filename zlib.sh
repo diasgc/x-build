@@ -32,6 +32,7 @@ on_end(){
         ln -s ${dir_install_lib}/libzlib.dll.a ${dir_install_lib}/libz.a 2>/dev/null
         ln -s ${dir_install_lib}/libzlibstatic.a ${dir_install_lib}/libzstatic.a 2>/dev/null
     }
+    return 0
 }
 
 if $host_ndk;then

@@ -120,7 +120,7 @@ xv_x86_mingw="10"
 
 aptInstallBr(){
   while [ -n "$1" ];do
-    echo -ne "${ind}${CT0}install $1${C0} "
+    echo -ne "${CD}${ind}${CT0}install $1${C0} "
     $sudo apt -qq install $1 -y >/dev/null 2>&1
     echo -e "${C0}ok ${CT1}done${C0} $(apt-cache show $1 | grep Version)"
     shift
@@ -142,7 +142,7 @@ main(){
   $debug && set -x
   # exit if missing vars lib arch or src
   test -z ${lib} && {
-    echo -e "\n\n${ind}${CB1}${ind}Toolchain is loadad.\n${ind}Now exiting...\n\n${C0}"
+    echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
     return 0
   }
 
@@ -158,7 +158,9 @@ main(){
 
   # show package info
   export log_file="${dir_install}/${lib}.log"
-  [ -f "${dir_install_pc}/${pkg}.pc" ] || show_packageinfo
+  if $update || [ ! -f "${dir_install_pc}/${pkg}.pc" ]; then
+    show_packageinfo
+  fi
 }
 
 show_packageinfo(){
@@ -168,11 +170,11 @@ show_packageinfo(){
   [ -z "$(echo $longdesc | xargs 2>/dev/null)" ] && unset longdesc
 
   # Main Description
-  [ -n "${dsc}" ] && echo -e "\n${ind}${CW}${lib^^} - ${C0}${dsc}"
+  [ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}${lib^^} - ${C0}${dsc}"
   [ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
 
   # Licence
-  echo -ne "${CT0}${ind}Licence ${C0}$lic "
+  echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "
   
   # Build Tools
   if [ -n "${tls}" ]; then
@@ -214,7 +216,7 @@ package_long_desc(){
     echo -e $(apt-cache show ${apt} 2>/dev/null | \
     grep -E "Description-..^|^ " | \
     sed $'s/\*/\u2605/g' | \
-    sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/│ /g'
+    sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/'"${ind}"'/g'
   fi
   return 0
 }
@@ -608,7 +610,7 @@ end_script(){
   log_end
   # check if parent process is shell script
   local parent=$(ps -o comm= $PPID)
-  [ "${parent: -3}" == ".sh" ] || echo -e "\n${ind}${CT1}::Done${C0}\n"
+  [ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done${C0}\n"
   $debug && set +x
   unset dir_config dir_build dir_src \
         CSH CBN exec_config vrs \
@@ -1061,7 +1063,7 @@ log_start(){
   logtime_start=$(date +%s)
   #echo -ne "$CC1  $@: "
   if ! $inline; then
-    echo -ne "${ind}${C0}$(date '+%H:%M')"
+    echo -ne "${CD}${inde}${C0}$(date '+%H:%M')"
     [ $eta ] && echo -ne "-${CW}$(date '+%H:%M' --date="$eta seconds")"
     printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
   fi
@@ -1111,7 +1113,7 @@ doErr(){
       echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
       cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
     fi
-    echo -ne "${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
+    echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
     [ "$openlog" != "n" ] && nano ${log_file}
   fi
   exit 1
@@ -1127,7 +1129,7 @@ err(){
       echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
       cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
     fi
-    echo -ne "${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
+    echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
     [ "$openlog" != "n" ] && nano ${log_file}
   fi
   echo
@@ -1435,7 +1437,7 @@ showOpts(){
     [ -f configure ] && ./configure --help >${od}/builds/${lib}_aconf.opts && nano "${od}/builds/${lib}_aconf.opts"
     cd $od
   else
-    echo -e "${ind}${CR0}no configuration file found in ${CR1}${1}${CD}\n\n"
+    echo -e "${CD}${ind}${CR0}no configuration file found in ${CR1}${1}${CD}\n\n"
   fi
 }
 
@@ -1700,9 +1702,9 @@ getMinGwVersion(){
 
 errUnknownTarget(){
   if [ $arch ];then
-    echo -e "\n${ind}${CR1}unknown target ${arch}${C0}\n" && exit 1
+    echo -e "\n${CD}${ind}${CR1}unknown target ${arch}${C0}\n" && exit 1
   else
-    echo -e "\n${ind}${CR1}must specify a target${C0}\n" && usage && exit 1
+    echo -e "\n${CD}${ind}${CR1}must specify a target${C0}\n" && usage && exit 1
   fi
 }
 
@@ -1827,7 +1829,7 @@ prompt_remove(){
 
 showBanner(){
   if $banner; then
-    echo -ne "\n\n${ind}${CW}Cross Builder Scripts ${vsh} for Linux${C0}\n${ind}"
+    echo -ne "\n\n${CW}Cross Builder Scripts ${vsh} for Linux${C0}\n"
     [ -n $(command -v lsb_release) ] && echo -ne "$(lsb_release -sd) "
     if [ -n "$(uname -r | grep 'microsoft')" ];then
       echo -ne "WSL2 "
@@ -1835,7 +1837,7 @@ showBanner(){
       echo -ne "WSL "
     fi
     echo -e "$(uname -o) $(uname -m) ${C0} $(uname -r)"
-    echo -e "${ind}${CW}$(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
+    echo -e "${CW}$(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
   fi
 }
 
@@ -2022,9 +2024,9 @@ while [ $1 ];do
       set_target '3' 'x86_64' '' 'linux' 'android' '' 'x86_64' '64' $CG0 $CG1
       ;;
     la8|la64|a*64-linux|a*64-*gnu|a*64-linux-gnu)
-      set_target '4' 'aarch64' '' 'linux' 'gnu' '' 'aarch64' '64' $CY0 $CY1;;
+      set_target '4' 'aarch64' '' 'linux' 'gnu' '' 'aarch64' '64' $CM4 $CM6;;
     la7|lahf|arm*hf|arm-linux*|rpi*32|rpi2*)
-      set_target '5' 'arm' '' 'linux' 'gnu' 'eabihf' 'armv7' '32' $CY0 $CY1;;
+      set_target '5' 'arm' '' 'linux' 'gnu' 'eabihf' 'armv7' '32' $CM4 $CM6;;
     l86|lx86|*86-linux*|linux*32 )
       set_target '6' 'i686' '' 'linux' 'gnu' '' 'x86' '32' $CM0 $CM1;;
     l64|lx64|*64-linux*|linux*64|linux )
@@ -2136,7 +2138,7 @@ if [ -z "$ISRUNNING" ]; then
   export ISRUNNING=1
 fi
 if [ -n "${sudo}" ] && ! ${sudo} -n true 2>/dev/null; then
-  echo -ne "${ind}${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
+  echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
 fi
 
 # usage: set_buildtype_key <input> <prefix> <on-val> <off-val>
