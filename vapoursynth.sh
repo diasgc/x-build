@@ -28,7 +28,7 @@ start
 
 # cpu av8 av7 x86 x64
 # NDK ++  +F   .  +F  clang
-# GNU ++´ ++   .   .  gcc
+# GNU ++  ++   .   .  gcc
 # WIN FF   .   .   .  clang/gcc
 
 # Filelist

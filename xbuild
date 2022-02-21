@@ -784,6 +784,11 @@ build_package_cmake(){
   esac
   [ -d "${dir_pkgdist}" ] || mkdir -p ${dir_pkgdist}
   mv "${fn}" ${dir_pkgdist}/${fn}
+
+  if [ -z "$(cat ${dir_root}/${lib}.sh | grep '# Filelist')" ]; then
+    echo -e "\n\n# Filelist\n# --------" >> ${dir_root}/${lib}.sh
+    cat ${dir_build}/install_manifest.txt | sed 's|'${dir_install}'/|# |g' >> ${dir_root}/${lib}.sh
+  fi
   popdir
 }
 
