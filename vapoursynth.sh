@@ -1,8 +1,4 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK +F   .   .   .  clang
-# GNU ++´ ++   .   .  gcc
-# WIN  F   .   .   .  clang/gcc
 
 lib='vapoursynth'
 dsc='A video processing framework with simplicity in mind'
@@ -13,25 +9,27 @@ tls='python'
 dep='zimg'
 eta='60'
 
-lst_inc='vapoursynth/VSScript4.h
-	vapoursynth/VapourSynth4.h
-	vapoursynth/VSConstants4.h
-	vapoursynth/VSHelper.h
-	vapoursynth/VSScript.h
-	vapoursynth/VSHelper4.h
-	vapoursynth/VapourSynth.h'
-lst_lib='libvapoursynth'
+lst_inc='vapoursynth/*.h'
 lst_bin=''
+lst_lic='COPYING.LESSER'
+lst_pc='libdeflate.pc'
+
+dev_bra='main'
+dev_vrs='58'
+stb_bra=''
+stb_vrs=''
 
 . xbuild
 
-CFG="--enable-python-module=no --enable-vspipe=no --enable-vsscript=no"
-$host_arm && CFG+=" --enable-x86-asm=no"
-
+ac_config="--enable-python-module=no --enable-vspipe=no --enable-vsscript=no"
+$host_arm && ac_config+=" --enable-x86-asm=no"
+$host_arm64 && $host_clang && CXX+=' -mno-outline-atomics'
 start
 
-# ndk shared libs: ld.lld undefined symbol: __emutls_get_address
-# mingw: src/zimg/common/arm/cpuinfo_arm.cpp:7:12: fatal error: 'Windows.h' file not found
+# cpu av8 av7 x86 x64
+# NDK ++  +F   .  +F  clang
+# GNU ++´ ++   .   .  gcc
+# WIN FF   .   .   .  clang/gcc
 
 # Filelist
 # --------
@@ -46,3 +44,4 @@ start
 # lib/libvapoursynth.la
 # lib/libvapoursynth.a
 # lib/libvapoursynth.so
+# share/doc/vapoursynth/COPYING.LESSER
