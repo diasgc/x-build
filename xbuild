@@ -750,11 +750,13 @@ build_packages_filelist(){
 build_package_cmake(){
   local brk=false
   local flist=
+  
   until $brk; do
     read l || brk=true
     flist="$(echo $l | sed 's|'${dir_install}'/||') $flist"
   done < ${dir_build}/install_manifest.txt
   
+  # add manual pc files
   if [ -n "${pc_llib}" ]; then
     flist="lib/pkgconfig/${pc_llib//-l/lib}.pc ${flist}"
   elif [ -n "${pc_llibs}" ]; then
@@ -762,12 +764,24 @@ build_package_cmake(){
       flist="lib/pkgconfig/${ll//-l/lib}.pc ${flist}"
     done
   fi
-    
+  
+  # check licence files
+  if [ -n "${lst_lic}" ]; then
+    [ -d "${dir_install}/share/doc/${lib}" ] || mkdir -p "${dir_install}/share/doc/${lib}"
+    for f in ${lst_lic}; do
+      [ -f "${dir_install}/share/doc/${lib}/${f}" ] || cp ${dir_src}/${f} "${dir_install}/share/doc/${lib}/"
+      flist="share/doc/${lib}/${f} ${flist}"
+    done
+  fi
+
   [ -z "${flist}" ] && return 0
+
   pushdir ${dir_install}
+  
   local v=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
   v=$(version_parse $v)
   local fn="${lib}_${v}_${arch}"
+  
   case ${pkg_fmt} in
     tbz)
       fn="${fn}.tar.bz2"
@@ -787,7 +801,7 @@ build_package_cmake(){
 
   if [ -z "$(cat ${dir_root}/${lib}.sh | grep '# Filelist')" ]; then
     echo -e "\n\n# Filelist\n# --------" >> ${dir_root}/${lib}.sh
-    cat ${dir_build}/install_manifest.txt | sed 's|'${dir_install}'/|# |g' >> ${dir_root}/${lib}.sh
+    echo "# ${flist}" | sed 's| |\n# |g' >> ${dir_root}/${lib}.sh
   fi
   popdir
 }
