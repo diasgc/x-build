@@ -258,6 +258,18 @@ gitjson=
 
 start(){
 
+  case ${target_trip[3]} in
+    android) fn_defined 'on_config_ndk' && fn_log 'cfg-ndk' on_config_ndk;;
+    gnu)     fn_defined 'on_config_gnu' && fn_log 'cfg-gnu' on_config_gnu;;
+    mingw32) fn_defined 'on_config_mingw' && fn_log 'cfg-mingw' on_config_mingw;;
+  esac
+
+  if $host_arm; then 
+    fn_defined 'on_config_arm' && fn_log 'cfg-arm' on_config_arm
+  else
+    fn_defined 'on_config_x86x' && fn_log 'cfg-x86x' on_config_x86x
+  fi
+
   # check whether to update source of main lib and dependencies
   if $update; then
     [ -d "${dir_src}" ] && rm -rf "${dir_src}" 2>/dev/null
@@ -1769,49 +1781,7 @@ create_patch(){
 }
 
 usage(){
-  echo -e "$(
-  cat <<-EOF
-    \n
-    ${CW}usage: $0 ${CC1}<target> ${CB1}<build-options> ${CM1}<builder-options> ${CM0}<other-options>${C0}\n
-    ${CC1}<target>
-    ${CC1}<android> ${C0}\taarch64-linux-android | arm-linux-androideabi | i686-linux-android | x86_64-linux-android
-    ${CC1}<linux>   ${C0}\taarch64-linux-gnu     | arm-linux-gnueabihf   | i686-linux-gnu     | x86_64-linux-gnu
-    ${CC1}<windows> ${C0}\ti686-w64-mingw32      | x86_64-w64-ming32\n
-    ${CB1}<build-options>
-    ${CB1}--shared  ${C0}\tbuild shared/dynamic libs
-    ${CB1}--static  ${C0}\tbuild static libs
-    ${CB1}--bin     ${C0}\tbuild executables
-    ${CB1}--nobin   ${C0}\tdon't build executables
-    ${CB1}--prefix d${C0}\tset build directory <d>
-    ${CB1}--api n   ${C0}\tset api level <n>
-    ${CB1}--stable  ${C0}\tuse git stable branch\n
-    ${CM1}<builder-options>
-    ${CM1}--cmake   ${C0}\tforce cmake build when available
-    ${CM1}--ndkcmake${C0}\tuse android ndk cmake 3.10.2 instead
-    ${CM1}--ccmake  ${C0}\tforce cmake + gui ccmake when available
-    ${CM1}--vrep    ${C0}\tget repository version
-    ${CM1}--checkPkg${C0}\tget pkgconfig file's path\n
-    ${CM0}<other-options>
-    ${CM0}--get <o> ${C0}\tdelete all (builds + sources)
-    ${CM0}   cflags ${C0}\tpkgconfig cflags
-    ${CM0}   libs   ${C0}\tpkgconfig link flags
-    ${CM0}   ldstatic${C0}\tpkgconfigstatic link flags
-    ${CM0}   pc-ver ${C0}\tpkgconfig lib version
-    ${CM0}   pc-path${C0}\tpkgconfig.pc file path
-    ${CM0}   pc-name${C0}\tfilename (without .pc)
-    ${CM0}   prefix ${C0}\tinstall prefix path
-    ${CM0}   libname${C0}\tlib name
-    ${CM0}   aptname${C0}\tdebian package name for lib
-    ${CM0}--wipeall ${C0}\tdelete all (builds + sources)
-    ${CM0}--update  ${C0}\tforce source update/download (git/svn/etc)
-    ${CM0}--rebuild ${C0}\tforce remake project
-    ${CM0}--retry   ${C0}\tretry build without clear cache
-    ${CM0}--clean   ${C0}\tclean up last build
-    ${CM0}--clearsrc${C0}\tdelete source
-    ${CM0}--opts    ${C0}\tshow available configuration options/flags
-    ${CM0}--nobanner${C0}\tdon't show banner/packageinfo\n\n
-EOF
-)" 
+  printf "\n\n${CW}Usage: ${0} ${CC1}<target> ${CC0}<build-options> ${CB1}<builder-options> ${CB0}<other-options>${C0}" 
 }
 
 hwinfoCountCores(){
@@ -1910,9 +1880,28 @@ menu_clear(){
   return 0
 }
 
+prt_hmenu(){
+  echo -e "\n${1}\n"
+  shift
+  local a
+  local b
+  while [ -n "$1" ]; do
+    a="$1"; shift
+    b="$1"; shift
+    printf "  ${CC0}%-20s: ${C0}%s\n" "$a" "$b"
+  done
+  echo
+}
 menu_get(){
   local pkgfile="${dir_install_pc}/${pkg}.pc"
   case $1 in
+    help)          prt_hmenu "${CW}usage: $0 --get ${CC0}<opt>" \
+                   'cflags' 'get pkg-config --cflags' 'ldflags' 'get pkg-config --libs' 'ldstatic' 'get pkg-config --libs --static' \
+                   'pc-ver' 'get package version' 'pc-path|pc' 'get pkg-config file path' 'pc-name' 'get pkg-config file name without .pc' \
+                   'prefix' 'get prefix / install dir' 'libname' 'get the libname' 'aptname' 'get the debian package name' 'var <variable>' \
+                   'get <variable> value' 'vrs_remote' 'get git remote latest version' 'vrs_tag' 'get git remote latest tag' 'vrs_tags' \
+                   'get git remote tag list' 'vrs_local' 'get git local version' 'options|opts' 'show build options' 'log' 'edit (nano) log file'
+                   ;;
     cflags)        [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --cflags)";;
     ldflags)       [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs)";;
     ldstatic)      [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs --static)";;
@@ -1924,11 +1913,9 @@ menu_get(){
     aptname)       echo "${apt}";;
     var)           shift; echo "${!1}";;
     vrs_remote)    fn_defined 'vremote' && version_parse "$(vremote)" || git_version_remote $src;;
-    vrs_tag)       git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
+    vrs_taglist)   git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
     vrs_tags)      git ls-remote --tags --sort="v:refname" $src | grep -oP 'tags/.*\d+\.\d+\.\d+.*';;
     vrs_local)     git_version_local $dir_src;;
-    vrs_latest)    echo "$(get_latest_release ${src})"; exit 0;;
-    cmake_include) [ -z "$cmake_path" ] || echo "${dir_install}/${cmake_path}";exit 0;;
     options|opts)  showOpts "$(pwd)/sources/$lib"; exit 0;;
     log)           [ -f "${dir_install}/${lib}.log" ] && nano ${dir_install}/${lib}.log;;
   esac
@@ -1939,25 +1926,34 @@ menu_list(){
   local b=false
   [ -n "${arch}" ] && [ -n "${lib}" ] && b=true
   case $1 in
-    help)       printf "${CC0}%-20s: ${C0}%s\n" '  --list tar' 'list contents of tarball, if available'
-                printf "${CC0}%-20s: ${C0}%s\n" '  --list env' 'list environment variables';;
+    help)       prt_hmenu "${CW}usage: $0 --list ${CC0}<opt>" \
+                'tar*' 'list current tarball contents' 'branches' 'list all local git available branches' \
+                'tags' 'list all local git available branches' \
+                'env' 'list toolchain environment variables' 'deps' 'list packages that depend on '${lib}''
+                ;;
     tar*)       $b && list_tarball;;
     branches)   [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" branch -a;;
     tags)       [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" tag --list;;
     env)        $b && loadToolchain && print_vars CC CXX LD AS AR NM RANLIB STRIP ADDR2LINE OBJCOPY OBJDUMP READELF SIZE STRINGS WINDRES GCOV;;
+    deps)       for f in ${dir_root}/*.sh; do
+                  [ -n "$(cat $f | grep -oP 'dep=.*'${lib}'.*')" ] && echo $(basename $f) | sed 's|\.sh||'
+                done
+                ;;
   esac
   return 0
 }
 
 menu_goto(){
-  source $0
   case $1 in
     src|source) pushd ${dir_src};;
     bin)        pushd ${dir_install_bin};;
     lib)        pushd ${dir_install_lib};;
     include)    pushd ${dir_install_include};;
     pkgconfig)  pushd ${dir_install_pc};;
+    *)          exit 0;;
   esac
+  PS1="${CM1}\u@${CC1}\w:"
+  bash
 }
 
 skip_options(){

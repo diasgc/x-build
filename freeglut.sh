@@ -31,7 +31,9 @@ eta='20'
 
 . xbuild
 
-$host_ndk && cmake_config+=' -DFREEGLUT_GLES=ON'
+on_config_ndk(){
+    cmake_config+=' -DFREEGLUT_GLES=ON'
+}
 
 start
 

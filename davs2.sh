@@ -20,11 +20,17 @@ lst_bin='davs2'
 lst_lic='COPYING'
 lst_pc='davs2.pc'
 
+on_config_arm(){
+    ac_config+=" --disable-asm"
+}
+
+on_config_ndk(){
+    LDFLAGS+=" -L${SYSROOT}/usr/lib -llog"
+}
+
 . xbuild
 
 AS=nasm
-$host_ndk && LDFLAGS+=" -L${SYSROOT}/usr/lib -llog"
-$host_arm && ac_config+=" --disable-asm"
 
 start
 

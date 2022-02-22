@@ -12,11 +12,11 @@ cfg='cmake'
 
 cmake_static="XEVE_APP_STATIC_BUILD"
 
-. xbuild
+on_config_arm(){
+    doErr "${lib} does not support cross-build for arm (${arch})."
+}
 
-$host_arm && doErr "${lib} does not support cross-build for arm (${arch})."
-
-start
+. xbuild && start
 
 # Filelist
 # --------

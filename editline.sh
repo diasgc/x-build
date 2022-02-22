@@ -21,14 +21,14 @@ dev_vrs=''
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
-$host_mingw && {
+on_config_mingw(){
     doErr 'Unavailable for mingw'
     src='https://svn.code.sf.net/p/mingweditline/code/'
     sty='svn'
     cfg='cmake'
 }
+
+. xbuild
 
 start
 

@@ -11,17 +11,18 @@ cfg='ac'
 eta='272'
 mkc='distclean'
 
+ac_config="CC_FOR_BUILD=cc"
+
 lst_inc='gmp.h'
 lst_lib='libgmp'
 lst_bin=''
 lst_lic='COPYING.LESSERv3 COPYINGv2 COPYINGv3 AUTHORS'
 lst_pc='gmp.pc'
 
-. xbuild
-
-ac_config="CC_FOR_BUILD=cc"
-unset ABI
-$host_mingw && CFG+=" --enable-fat"
+on_start(){
+  unset ABI
+  $host_mingw && ac_config+=" --enable-fat"
+}
 
 source_config(){
   # from bootstrap:
@@ -35,7 +36,7 @@ source_config(){
 	EOF
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++  ++   .   .  clang
@@ -43,7 +44,6 @@ start
 # WIN  .   .   .   .  clang/gcc
 
 
-# Filelist
 # --------
 # include/gmp.h
 # lib/pkgconfig/gmp.pc

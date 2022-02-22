@@ -16,6 +16,10 @@ xmp="OFF"
 png="OFF"
 mingw_posix=true
 
+cmake_config="-DINSTALL_EXAMPLES=OFF -DEXIV2_BUILD_DOC=OFF \
+	-DEXIV2_BUILD_SAMPLES=OFF -DBUILD_TESTING=OFF \
+	-DEXIV2_TEAM_PACKAGING=ON"
+
 extraOpts(){
 	if [ "$1" == "--min" ];then
 		png="ON"
@@ -29,18 +33,16 @@ lst_lib=''
 lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc=''
+
+cmake_config+=" -DEXIV2_ENABLE_PNG=$png -DEXIV2_ENABLE_XMP=$xmp"
+
+on_config_mingw(){
+	cmake_config+=" -DCMAKE_TOOLCHAIN_FILE=${dir_src}/cmake/toolschains/ubuntu1804-mingw64.cmake -DEXIV2_ENABLE_WIN_UNICODE=ON"
+}
+
 . xbuild
 
-$host_mingw && CFG+=" -DCMAKE_TOOLCHAIN_FILE=${dir_src}/cmake/toolschains/ubuntu1804-mingw64.cmake -DEXIV2_ENABLE_WIN_UNICODE=ON"
-! $build_shared && CFG+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=OFF" || CFG+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=ON"
-
-CFG+=" -DINSTALL_EXAMPLES=OFF \
-	-DEXIV2_BUILD_DOC=OFF \
-	-DEXIV2_BUILD_SAMPLES=OFF \
-	-DBUILD_TESTING=OFF \
-	-DEXIV2_TEAM_PACKAGING=ON \
-	-DEXIV2_ENABLE_PNG=$png \
-	-DEXIV2_ENABLE_XMP=$xmp"
+$build_shared && cmake_config+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=ON" || cmake_config+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=OFF"
 
 source_patch(){
 	# update mingw toolchain to <xv_x64_mingw> in .config
