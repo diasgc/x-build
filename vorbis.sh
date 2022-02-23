@@ -5,7 +5,7 @@ apt='libvorbis0a'
 dsc='Ogg Vorbis audio format'
 lic='BSD'
 src='https://github.com/xiph/vorbis.git'
-cfg='ag'
+cfg='cmake'
 dep='ogg'
 eta='77'
 
@@ -23,43 +23,80 @@ lst_pc='vorbisfile.pc vorbisenc.pc vorbis.pc'
 . xbuild
 
 cmake_config='-DBUILD_TESTING=OFF'
+cmake_static='BUILD_STATIC_LIBS'
 ac_config='--disable-docs --disable-examples --disable-oggtest'
-
-before_make(){
-  # patch lib/Makefile on x86-android
-  $host_ndk && $host_x86 && sed -i 's| -mno-ieee-fp||g' ${dir_src}/lib/Makefile
-  # Build No Docs
-  sed -i 's|SUBDIRS = m4 include vq lib test doc|SUBDIRS = m4 include vq lib test|' Makefile
-}
 
 start
 
+# patch 01 on lib/CMakeLists.txt to support dual static/shared builds
+<<'XB64_PATCH'
+LS0tIGxpYi9DTWFrZUxpc3RzLnR4dAkyMDIyLTAyLTIzIDE5OjUzOjExLjQ3NDE0NDkwMCArMDAwMAorKysgbGliL0
+NNYWtlTGlzdHMudHh0CTIwMjItMDItMjMgMjA6MjM6NTIuNDE0MTQ0OTAwICswMDAwCkBAIC03Myw2ICs3MywxMCBA
+QAogICAgIGFkZF9kZWZpbml0aW9ucygtRF9DUlRfTk9OU1REQ19OT19ERVBSRUNBVEUpCiBlbmRpZigpCiAKK2Z1bm
+N0aW9uKGFkZF9saWIgbGliIGxpbmspCisgICAgCitlbmRmdW5jdGlvbihhZGRfbGliIGxpYiBsaW5rKQorCiBpZiAo
+Tk9UIEJVSUxEX0ZSQU1FV09SSykKICAgICBhZGRfbGlicmFyeSh2b3JiaXMgJHtWT1JCSVNfSEVBREVSU30gJHtWT1
+JCSVNfU09VUkNFU30pCiAgICAgYWRkX2xpYnJhcnkodm9yYmlzZW5jICR7Vk9SQklTRU5DX1NPVVJDRVN9KQpAQCAt
+MTI1LDYgKzEyOSw1MiBAQAogICAgICAgICBBUkNISVZFIERFU1RJTkFUSU9OICR7Q01BS0VfSU5TVEFMTF9MSUJESV
+J9CiAgICAgICAgIEZSQU1FV09SSyBERVNUSU5BVElPTiAke0NNQUtFX0lOU1RBTExfTElCRElSfQogICAgICkKKwor
+ICAgIGlmKEJVSUxEX1NIQVJFRF9MSUJTIEFORCBCVUlMRF9TVEFUSUNfTElCUykKKyAgICAgICAgYWRkX2xpYnJhcn
+kodm9yYmlzLXN0YXRpYyBTVEFUSUMgJHtWT1JCSVNfSEVBREVSU30gJHtWT1JCSVNfU09VUkNFU30pCisgICAgICAg
+IGFkZF9saWJyYXJ5KHZvcmJpc2VuYy1zdGF0aWMgU1RBVElDICR7Vk9SQklTRU5DX1NPVVJDRVN9KQorICAgICAgIC
+BhZGRfbGlicmFyeSh2b3JiaXNmaWxlLXN0YXRpYyBTVEFUSUMgJHtWT1JCSVNGSUxFX1NPVVJDRVN9KQorCisgICAg
+ICAgIHNldF90YXJnZXRfcHJvcGVydGllcyh2b3JiaXMtc3RhdGljIFBST1BFUlRJRVMgU09WRVJTSU9OICR7Vk9SQk
+lTX1ZFUlNJT05fSU5GT30gT1VUUFVUX05BTUUgdm9yYmlzKQorICAgICAgICBzZXRfdGFyZ2V0X3Byb3BlcnRpZXMo
+dm9yYmlzZW5jLXN0YXRpYyBQUk9QRVJUSUVTIFNPVkVSU0lPTiAke1ZPUkJJU0VOQ19WRVJTSU9OX0lORk99IE9VVF
+BVVF9OQU1FIHZvcmJpc2VuYykKKyAgICAgICAgc2V0X3RhcmdldF9wcm9wZXJ0aWVzKHZvcmJpc2ZpbGUtc3RhdGlj
+IFBST1BFUlRJRVMgU09WRVJTSU9OICR7Vk9SQklTRklMRV9WRVJTSU9OX0lORk99IE9VVFBVVF9OQU1FIHZvcmJpc2
+ZpbGUpCisKKyAgICAgICAgdGFyZ2V0X2luY2x1ZGVfZGlyZWN0b3JpZXModm9yYmlzLXN0YXRpYworICAgICAgICAg
+ICAgUFVCTElDCisgICAgICAgICAgICAgICAgJDxCVUlMRF9JTlRFUkZBQ0U6JHtQUk9KRUNUX1NPVVJDRV9ESVJ9L2
+luY2x1ZGU+CisgICAgICAgICAgICAgICAgJDxJTlNUQUxMX0lOVEVSRkFDRToke0NNQUtFX0lOU1RBTExfSU5DTFVE
+RURJUn0+CisgICAgICAgIFBSSVZBVEUKKyAgICAgICAgICAgICAgICAke0NNQUtFX0NVUlJFTlRfU09VUkNFX0RJUn
+0KKyAgICAgICAgKQorICAgICAgICB0YXJnZXRfaW5jbHVkZV9kaXJlY3Rvcmllcyh2b3JiaXNlbmMtc3RhdGljCisg
+ICAgICAgICAgICBQVUJMSUMKKyAgICAgICAgICAgICAgICAkPEJVSUxEX0lOVEVSRkFDRToke1BST0pFQ1RfU09VUk
+NFX0RJUn0vaW5jbHVkZT4KKyAgICAgICAgICAgICAgICAkPElOU1RBTExfSU5URVJGQUNFOiR7Q01BS0VfSU5TVEFM
+TF9JTkNMVURFRElSfT4KKyAgICAgICAgICAgIFBSSVZBVEUKKyAgICAgICAgICAgICAgICAke0NNQUtFX0NVUlJFTl
+RfU09VUkNFX0RJUn0KKyAgICAgICAgKQorICAgICAgICB0YXJnZXRfaW5jbHVkZV9kaXJlY3Rvcmllcyh2b3JiaXNm
+aWxlLXN0YXRpYworICAgICAgICAgICAgUFVCTElDCisgICAgICAgICAgICAgICAgJDxCVUlMRF9JTlRFUkZBQ0U6JH
+tQUk9KRUNUX1NPVVJDRV9ESVJ9L2luY2x1ZGU+CisgICAgICAgICAgICAgICAgJDxJTlNUQUxMX0lOVEVSRkFDRTok
+e0NNQUtFX0lOU1RBTExfSU5DTFVERURJUn0+CisgICAgICAgICkKKworICAgICAgICB0YXJnZXRfbGlua19saWJyYX
+JpZXModm9yYmlzLXN0YXRpYworICAgICAgICAgICAgUFVCTElDIE9nZzo6b2dnCisgICAgICAgICAgICBQUklWQVRF
+ICQ8JDxCT09MOiR7SEFWRV9MSUJNfT46bT4KKyAgICAgICAgKQorICAgICAgICB0YXJnZXRfbGlua19saWJyYXJpZX
+Modm9yYmlzZW5jLXN0YXRpYyBQVUJMSUMgdm9yYmlzLXN0YXRpYykKKyAgICAgICAgdGFyZ2V0X2xpbmtfbGlicmFy
+aWVzKHZvcmJpc2ZpbGUtc3RhdGljIFBVQkxJQyB2b3JiaXMtc3RhdGljKQorCisgICAgICAgIGluc3RhbGwoVEFSR0
+VUUyB2b3JiaXMtc3RhdGljIHZvcmJpc2VuYy1zdGF0aWMgdm9yYmlzZmlsZS1zdGF0aWMKKyAgICAgICAgICAgIEVY
+UE9SVCBWb3JiaXNUYXJnZXRzCisgICAgICAgICAgICBSVU5USU1FIERFU1RJTkFUSU9OICR7Q01BS0VfSU5TVEFMTF
+9CSU5ESVJ9CisgICAgICAgICAgICBMSUJSQVJZIERFU1RJTkFUSU9OICR7Q01BS0VfSU5TVEFMTF9MSUJESVJ9Cisg
+ICAgICAgICAgICBBUkNISVZFIERFU1RJTkFUSU9OICR7Q01BS0VfSU5TVEFMTF9MSUJESVJ9CisgICAgICAgICAgIC
+BGUkFNRVdPUksgREVTVElOQVRJT04gJHtDTUFLRV9JTlNUQUxMX0xJQkRJUn0KKyAgICAgICAgKQorICAgIGVuZGlm
+KCkKKwogICAgIGV4cG9ydChFWFBPUlQgVm9yYmlzVGFyZ2V0cyBOQU1FU1BBQ0UgVm9yYmlzOjogRklMRSBWb3JiaX
+NUYXJnZXRzLmNtYWtlKQogCiAgICAgaWYoSU5TVEFMTF9DTUFLRV9QQUNLQUdFX01PRFVMRSkK
+XB64_PATCH
+
 # cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
+# NDK ++  ++   .   .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
-
-# note: vorbis --shared build requires ogg --shared
-# otherwise relocation errors may occur
 
 
 # Filelist
 # --------
+#
+# share/doc/vorbis/AUTHORS
+# share/doc/vorbis/COPYING
+# lib/cmake/Vorbis/VorbisConfigVersion.cmake
+# lib/cmake/Vorbis/VorbisConfig.cmake
+# lib/cmake/Vorbis/VorbisTargets-release.cmake
+# lib/cmake/Vorbis/VorbisTargets.cmake
+# lib/libvorbisfile.a
+# lib/libvorbisenc.a
+# lib/libvorbis.a
+# lib/libvorbisfile.so
+# lib/libvorbisenc.so
+# lib/libvorbis.so
 # include/vorbis/vorbisfile.h
 # include/vorbis/vorbisenc.h
 # include/vorbis/codec.h
 # lib/pkgconfig/vorbisfile.pc
 # lib/pkgconfig/vorbisenc.pc
 # lib/pkgconfig/vorbis.pc
-# lib/libvorbisenc.a
-# lib/libvorbisfile.so
-# lib/libvorbisenc.la
-# lib/libvorbisfile.a
-# lib/libvorbisenc.so
-# lib/libvorbis.a
-# lib/libvorbis.so
-# lib/libvorbisfile.la
-# lib/libvorbis.la
-# share/doc/vorbis/AUTHORS
-# share/doc/vorbis/COPYING
-# share/aclocal/vorbis.m4
+# 

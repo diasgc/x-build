@@ -24,7 +24,8 @@ fi
 
 sudo=$(command -v sudo)
 
-# defvar debug=false 
+# defvar debug=false
+: "${host_native:=false}"
 : "${debug:=false}"
 : "${nodev:=false}"
 : "${is_init:=false}"
@@ -48,6 +49,8 @@ sudo=$(command -v sudo)
 : "${indent:=0}"
 : "${ind:=}"
 
+ndk_testtc=true
+
 $req_update_deps && update=true
 pkg_fmt="tgz"
 timeout_days=3
@@ -58,7 +61,7 @@ update=false
 retry=false
 use_llvm_mingw=true
 use_clang=true
-ndk_testtc=false
+
 skip_pc=false
 skip_dl=false
 
@@ -438,7 +441,8 @@ start(){
 
   local arr
   if fn_defined 'build_config'; then
-    fn_log 'config' build_config
+    build_config
+    unset -f build_config
   else case $build_tool in
     cmake)
       : "${exec_config:=${CMAKE_EXECUTABLE}}"
@@ -1695,10 +1699,17 @@ loadToolchain(){
         ;;
     esac
   else
-    CROSS_PREFIX=
     TOOLCHAIN=/usr/bin
     SYSROOT=/usr
-    CC=cc CXX=cpp AS=as LD=ld
+    if $use_clang; then
+      CROSS_PREFIX=llvm-
+      CC=clang CXX=clang++ AS=llvm-as LD=ld.lld
+      $host_native && CPPFLAGS='-mtune=native'
+    else
+      CROSS_PREFIX=
+      CC=gcc CXX=g++ AS=as LD=ld
+      $host_native && CPPFLAGS='-march=native'
+    fi
   fi
 
   AR=${CROSS_PREFIX}ar
@@ -1952,8 +1963,7 @@ menu_goto(){
     pkgconfig)  pushd ${dir_install_pc};;
     *)          exit 0;;
   esac
-  PS1="${CM1}\u@${CC1}\w:"
-  bash
+  #bash
 }
 
 skip_options(){
@@ -2027,8 +2037,8 @@ set_env(){
 
 while [ $1 ];do
   case $1 in
-    native) set_target_build
-      $host_clang && CPPFLAGS='-mtune=native' || CPPFLAGS='-march=native';;
+    native) set_target_build; host_native=true
+      ;;
     aa64|aa8|a*64-*android|android )
       set_target '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6;;
     aa7|arm-*android*eabi|arm-android)

@@ -189,7 +189,7 @@ bash_clang(){
     # echo "${2}"
 	cat <<-eof | sudo tee ${3} >/dev/null
 	#!/bin/bash
-	[ "\$1" != "-cc1" ] && ${1}/ --target=${2}\${NDK_API} "\$@" || ${1} "\$@"
+	\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${2}\${API}-${1} "\$@"
 	eof
     sudo chmod +x ${3}
 }
@@ -239,8 +239,8 @@ if [ "${OSTYPE}" != "linux-android" ];then
             dir_toolchain="/usr/${c_lib[${i}]}"
             #
             [ -d "${dir_toolchain}/bin" ] || sudo mkdir -p "${dir_toolchain}/bin"
-            [ -f "${dir_toolchain}/bin/clang" ] || bash_clang "${ndk_toolchain}/bin/clang" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang"
-            [ -f "${dir_toolchain}/bin/clang++" ] || bash_clang "${ndk_toolchain}/bin/clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
+            [ -f "${dir_toolchain}/bin/clang" ] || bash_clang "clang" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang"
+            [ -f "${dir_toolchain}/bin/clang++" ] || bash_clang "clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
             #[ -f "${dir_toolchain}/bin/as" ] || sudo ln -s "${ndk_toolchain}/bin/${c_lib[${i}]}-as" "${dir_toolchain}/bin/as"
             [ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s "${ndk_toolchain}/bin/lld" "${dir_toolchain}/bin/ld"
             
@@ -333,6 +333,7 @@ esac
 
 xv_x64_mingw=$(ls -t /usr/lib/gcc/x86_64-w64-mingw32 2>/dev/null | grep -E "*-win32" | head -n1)
 xv_x86_mingw=$(ls -t /usr/lib/gcc/i686-w64-mingw32 2>/dev/null | grep -E "*-win32" | head -n1)
+: "${API:=24}"
 
 cat <<-EOF >${dir_root}/.config
 #!/bin/bash
@@ -342,6 +343,7 @@ export config_lastupdate=$(date +%s) \\
     cmd_apt_install="${cmd_apt_install}" \\
     build_arch="${build_arch}" \\
     ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
+    API="${API}" \\
     ndk_cc=(clang clang++) \\
     vrs_ndk="${ndk_version}" \\
     vrs_ndk_major="$(echo ${ndk_version} | sed 's/\..*//')" \\
