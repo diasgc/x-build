@@ -174,7 +174,7 @@ show_packageinfo(){
 
   # Main Description
   [ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}\e[1m${lib^^} - ${C0}${dsc}\e[0m"
-  [ -n "${longdesc}" ] && echo -ne "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
+  [ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
 
   # log file link
   echo -e "${CD}${ind}${CD}see log at \e[4m${log_file}\e[24m${C0}"
