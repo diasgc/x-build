@@ -14,7 +14,7 @@ lic='TEST'
 src='https://chromium.googlesource.com/codecs/libwebp2.git'
 cfg='cmake'
 cmake_path='lib/wp2/cmake'
-. xbuilder.sh
+. xbuild
 CFG="-DWP2_BUILD_TESTS=OFF"
 
 # Default CMake Options:

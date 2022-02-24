@@ -5,7 +5,7 @@ dsc='GnuTLS implements the TLS/SSL (Transport Layer Security aka Secure Sockets 
 lic='LGPL-2.1'
 src='https://gitlab.com/gnutls/gnutls.git'
 cfg='ac'
-#automake_cmd='./bootstrap'
+#cfg_cmd='./bootstrap'
 dep='libiconv gmp nettle'
 eta='690'
 ac_bin='--disable-tools|--enable-tools'
@@ -17,7 +17,7 @@ lst_bin='gnutls-serv srptool psktool gnutls-cli ocsptool certtool gnutls-cli-deb
 lst_lic='LICENSE'
 lst_pc='gnutls.pc'
 
-. xbuilder.sh
+. xbuild
 
 vrs="3.6.16"
 src="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-${vrs}.tar.xz"

@@ -17,7 +17,7 @@ lst_bin='exrmultipart exrmakepreview exrenvmap exrmaketiled exrmultiview exrhead
 lst_lic='LICENSE.md PATENTES CODEOWNERS'
 lst_pc='OpenEXR.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

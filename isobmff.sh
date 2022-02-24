@@ -11,7 +11,7 @@ src='https://github.com/MPEGGroup/isobmff.git'
 cfg='cmake'
 eta='60'
 
-. xbuilder.sh
+. xbuild
 
 #case $host_sys in
 #    linux)   xinclude="-I${dir_src}/IsoLib/libisomediafile/linux";;

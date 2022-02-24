@@ -19,7 +19,7 @@ lst_bin='JxrEncApp JxrDecApp'
 lst_lic='LICENSE AUTHORS'
 lst_pc='jpegxr.pc xrglue.pc'
 
-. xbuilder.sh
+. xbuild
 
 WFLAGS='-Wno-implicit-int
   -Wno-endif-labels

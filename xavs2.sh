@@ -21,7 +21,7 @@ lst_bin='xavs2'
 lst_lic='LICENSE AUTHORS'
 lst_pc='xavs2.pc'
 
-. xbuilder.sh
+. xbuild
 
 ac_config="--sysroot=${SYSROOT} --enable-lto --enable-strip --enable-pic"
 $host_x86 && AS=nasm || ac_config+=' --disable-asm'

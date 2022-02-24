@@ -18,7 +18,7 @@ pc_llib='-lladspa'
 cmake_static='BUILD_STATIC_LIBS'
 build_strip=false
 
-. xbuilder.sh
+. xbuild
 
 start
 

@@ -20,7 +20,7 @@ lst_bin='klvanc_eia708 klvanc_genscte104
          klvanc_smpte12_2 klvanc_smpte2038 klvanc_parse'
 lst_pc='libklvanc.pc'
 
-. xbuilder.sh
+. xbuild
 
 source_patch(){
     ./autogen.sh --build

@@ -16,7 +16,7 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
-. xbuilder.sh
+. xbuild
 
 export XCFLAGS=$CFLAGS XLDFLAGS=$LDFLAGS INC=$CPPFLAGS
 mkf="prefix=${dir_install}"

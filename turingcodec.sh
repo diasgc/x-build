@@ -13,7 +13,7 @@ pkg='libturing'
 eta='1095'
 #CFG="-DUSE_SYSTEM_BOOST=OFF"
 
-. xbuilder.sh
+. xbuild
 
 nodev=true
 

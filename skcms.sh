@@ -7,7 +7,7 @@ src='(https://skia.googlesource.com/skcms'
 cfg='bazel'
 eta='10'
 
-. xbuilder.sh
+. xbuild
 
 build_all(){
 

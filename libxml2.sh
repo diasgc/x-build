@@ -25,7 +25,7 @@ lst_bin='xmllint xmlcatalog xml2-config'
 lst_lic='Copyright'
 lst_pc='libxml-2.0.pc'
 
-. xbuilder.sh
+. xbuild
 
 before_make(){
   case $build_tool in

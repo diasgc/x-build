@@ -9,7 +9,7 @@ dsc='A modern, portable, easy to use crypto library.'
 lic='ISC'
 src='https://github.com/jedisct1/libsodium.git'
 bra='stable'
-automake_cmd="./autogen.sh -s"
+cfg_cmd="./autogen.sh -s"
 eta='144'
 
 dev_bra='master'
@@ -23,7 +23,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='libsodium'
 
-. xbuilder.sh
+. xbuild
 
 start
 

@@ -21,7 +21,7 @@ dev_vrs='v0.2'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 CFLAGS="-fPIE -fPIC"
 LDFLAGS="-pie"

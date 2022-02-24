@@ -17,7 +17,7 @@ lst_inc='gcrypt.h'
 lst_lib='libgcrypt'
 lst_bin='mpicalc libgcrypt-config dumpsexp hmac256'
 
-. xbuilder.sh
+. xbuild
 
 CFG="--disable-doc --with-libgpg-error-prefix=${LIBSDIR}"
 

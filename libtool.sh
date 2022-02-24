@@ -5,7 +5,7 @@ dsc='A library for reading and writing audio files'
 lic='LGPL-3.0'
 src='https://git.savannah.gnu.org/git/libtool.git'
 cfg='ac'
-automake_cmd='./bootstrap'
+cfg_cmd='./bootstrap'
 tls='help2man'
 eta='35'
 pc_llib="-ltdl"
@@ -23,7 +23,7 @@ dev_vrs='2.4.6'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 start
 

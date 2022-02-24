@@ -21,7 +21,7 @@ dev_vrs='24.1.18'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 start
 

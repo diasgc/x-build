@@ -1,24 +1,29 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  +   .   .   .   .   +   +   .   .   .   .  static
-#  +   .   .   .   .   .   .   .   .   .   .  shared
-#  -   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='rnnoise'
 dsc='Recurrent neural network for audio noise reduction'
 lic='BSD'
 src='https://gitlab.xiph.org/xiph/rnnoise.git'
-sty='git'
 cfg='ag'
 eta='40'
-cb0="--disable-examples"
-cb1="--enable-examples"
 
-. xbuilder.sh
+ac_bin="--disable-examples|--enable-examples"
+ac_config="--disable-doc"
 
-CFG="--disable-doc"
+lst_inc='rnnoise.h'
+lst_lib='librnnoise'
+lst_bin=''
+lst_lic='AUTHORS COPYING'
+lst_pc='rnnoise.pc'
+
+. xbuild
 
 start
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .   clang
+# GNU  .   .   .   .   gcc
+# WIN  .   .   .   .   clang/gcc
 
 # Filelist
 # --------

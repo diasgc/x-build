@@ -18,7 +18,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='xvidcore.pc'
 
-. xbuilder.sh
+. xbuild
 
 unset CSH # unsupported static/shared tags
 

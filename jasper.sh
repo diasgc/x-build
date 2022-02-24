@@ -12,7 +12,7 @@ eta='26'
 
 cmake_static="BUILD_STATIC_LIBS"
 cmake_bin="JAS_ENABLE_PROGRAMS"
-cmake_config="-DBUILD_TESTING=OFF -DJAS_ENABLE_DOC=OFF"
+cmake_config="-DBUILD_TESTING=OFF -DJAS_ENABLE_DOC=OFF -DJAS_STDC_VERSION=20220220"
 
 dev_bra='master'
 dev_vrs='3.0.0'
@@ -25,11 +25,11 @@ lst_bin='jasper multithread imgcmp imginfo'
 lst_lic='COPYRIGHT.txt LICENSE.txt'
 lst_pc='jasper.pc'
 
-. xbuilder.sh
+on_config_mingw(){
+    cmake_config="-DWITH_STACK_PROTECTOR=OFF"
+}
 
-$host_mingw && cmake_config="-DWITH_STACK_PROTECTOR=OFF"
-
-start
+. xbuild && start
 
 # patch 01 on src/libjasper/CMakeLists.txt to support dual static shared build
 <<'XB64_PATCH'

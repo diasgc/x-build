@@ -17,12 +17,12 @@ lst_pc='avisynth.pc'
 
 eta=240
 
-. xbuilder.sh
+on_config_mingw(){
+    # dont pass LT_SYS_LIBRARY_PATH to avoid redefinition error
+    unset PKG_CONFIG_LIBDIR
+}
 
-# dont pass LT_SYS_LIBRARY_PATH to avoid redefinition error
-$host_mingw && unset PKG_CONFIG_LIBDIR
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  P   P   F   P  clang

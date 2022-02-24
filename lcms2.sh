@@ -19,7 +19,7 @@ lst_bin='linkicc psicc tificc jpgicc transicc'
 lst_lic='COPYING AUTHORS'
 lst_pc='lcms2.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

@@ -17,7 +17,7 @@ eta='60'
 lst_inc=''
 lst_lib=''
 
-. xbuilder.sh
+. xbuild
 
 CFG="-Drootprefix=${ROOTDIR}/builds"
 

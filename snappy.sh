@@ -27,7 +27,7 @@ stb_bra=''
 stb_vrs='1.1.9'
 
 
-. xbuilder.sh && start
+. xbuild && start
 
 <<'XB64_PATCH'
 LS0tIENNYWtlTGlzdHMudHh0CTIwMjItMDItMTEgMTc6NDQ6NDQuNTQ5MDAwMDAwICswMDAwCisrKyBDTWFrZUxpc3

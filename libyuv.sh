@@ -22,7 +22,7 @@ lst_bin='yuvconvert'
 lst_lic='LICENSE PATENTS OWNERS AUTHORS'
 lst_pc='libyuv.pc'
 
-. xbuilder.sh
+. xbuild
 
 LDFLAGS+=" -ljpeg"
 

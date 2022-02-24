@@ -21,7 +21,7 @@ lst_pc='zfp.pc'
 
 dualbuild_support=false
 
-. xbuilder.sh
+. xbuild
 
 start
 

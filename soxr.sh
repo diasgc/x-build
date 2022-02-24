@@ -1,24 +1,26 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK ++  ++  ++  ++  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
 
 lib='soxr'
 apt='libsoxr-dev'
 dsc='The SoX resampler library'
 lic='LGPL-2.1'
-src='https://git.code.sf.net/p/soxr/code' sty='git'
+src='https://git.code.sf.net/p/soxr/code.git'
 cfg='cmake'
 eta='45'
-cbk='DBUILD_EXAMPLES'
-CFG='-DBUILD_TESTS=OFF'
+cmake_bin='BUILD_EXAMPLES'
+cmake_config='-DBUILD_TESTS=OFF'
+
 lst_inc='soxr.h soxr-lsr.h'
 lst_lib='libsoxr.a libsoxr-lsr.a'
 lst_bin=''
 lst_lic='share/doc/libsoxr/LICENCE'
 
-. xbuilder.sh
+dev_bra='master'
+dev_vrs='1.2.0'
+stb_bra=''
+stb_vrs=''
+
+. xbuild
 
 start
 
@@ -51,6 +53,11 @@ Un0gJHtMU1JfU1RBVElDfQogICBGUkFNRVdPUksgREVTVElOQVRJT04gJHtGUkFNRVdPUktfSU5T
 VEFMTF9ESVJ9CiAgIExJQlJBUlkgREVTVElOQVRJT04gJHtMSUJfSU5TVEFMTF9ESVJ9CiAgIFJV
 TlRJTUUgREVTVElOQVRJT04gJHtCSU5fSU5TVEFMTF9ESVJ9Cg==
 XB64_PATCH
+
+# cpu av8 av7 x86 x64
+# NDK ++  ++  ++  ++  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 # Filelist
 # --------

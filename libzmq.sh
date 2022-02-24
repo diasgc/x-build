@@ -19,7 +19,7 @@ dev_vrs='4.3.5'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 CFG='--disable-Werror --with-libsodium'
 

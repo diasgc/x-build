@@ -19,7 +19,7 @@ dev_vrs='0.15.99'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 # CMAKE OPTIONS
 # DISABLE_STATIC_FPIC	Bool	The default builds position independent code. Set this to OFF to create a shared library only.

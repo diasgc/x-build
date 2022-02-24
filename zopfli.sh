@@ -23,7 +23,7 @@ dev_vrs='zopfli-1.0.3'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 start
 

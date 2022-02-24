@@ -14,7 +14,7 @@ eta='480'
 cbk="BUILD_TOOLS"
 #mkinstall='all'
 
-. xbuilder.sh
+. xbuild
 
 $host_arm && CFG+=" -DVVENC_ENABLE_X86_SIMD=FALSE -DVVENC_ENABLE_ARM_SIMD=TRUE"
 

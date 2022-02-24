@@ -18,7 +18,7 @@ mkc='distclean'
 lst_inc=''
 lst_lib=''
 
-. xbuilder.sh
+. xbuild
 
 CFG="--disable-libsystemd --disable-libudev"
 

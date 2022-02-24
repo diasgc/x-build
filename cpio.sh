@@ -34,7 +34,7 @@ lst_inc=''
 lst_lib=''
 lst_bin='cpio'
 
-. xbuilder.sh
+. xbuild
 
 start
 

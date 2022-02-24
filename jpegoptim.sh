@@ -12,7 +12,7 @@ cfg='ac'
 dep='libjpeg'
 eta='60'
 
-. xbuilder.sh
+. xbuild
 
 
 start

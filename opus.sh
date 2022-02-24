@@ -19,7 +19,7 @@ lst_pc='opus.pc'
 ac_config="--disable-doc"
 meson_cfg='-Dtests=disabled -Ddocs=disabled'
 
-. xbuilder.sh
+. xbuild
 
 $build_bin && ac_config+=' --enable-extra-programs' && meson_cfg+=' -Dextra-programs=enabled'
 

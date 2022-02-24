@@ -41,7 +41,7 @@ lst_bin='sndfile-convert
 lst_lic='COPYING AUTHORS'
 lst_pc='sndfile.pc'
 
-. xbuilder.sh
+. xbuild
 
 before_make(){
 	$host_clang && sed -i 's/-Wno-format-truncation//g' Makefile

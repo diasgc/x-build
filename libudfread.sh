@@ -18,7 +18,7 @@ lst_bin=''
 lst_lic='COPYING'
 lst_pc='libudfread.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

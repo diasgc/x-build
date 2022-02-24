@@ -13,7 +13,7 @@ cfg='waf'
 tls='python'
 eta='30'
 
-. xbuilder.sh
+. xbuild
 
 CFG="--prefix=${dir_install} --doxygen=no"
 

@@ -16,7 +16,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='frei0r.pc'
 
-. xbuilder.sh
+. xbuild
 
 unset CSH
 cmake_config='-DWITHOUT_GAVL=ON -DWITHOUT_OPENCV=ON -DBUILD_SHARED_LIBS=ON'

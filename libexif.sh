@@ -13,7 +13,7 @@ dep='libiconv'
 cfg='ar'
 eta='33'
 
-. xbuilder.sh
+. xbuild
 
 case $cfg in
   ac|ag|am|ar|automake) CFG="--with-sysroot=${SYSROOT} --with-pic=1 --disable-docs";;

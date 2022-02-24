@@ -14,7 +14,7 @@ pkg='lv2'
 dep='sndfile'
 eta='19'
 
-. xbuilder.sh
+. xbuild
 
 CFG="--prefix=${dir_install} --no-plugins"
 

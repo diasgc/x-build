@@ -24,7 +24,7 @@ lst_bin='toast untoast tcat'
 lst_lic='COPYRIGHT'
 lst_pc='libgsm.pc'
 
-. xbuilder.sh
+. xbuild
 
 LD=${CC}
 

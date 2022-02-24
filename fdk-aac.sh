@@ -15,7 +15,7 @@ lst_bin='aac-enc'
 lst_lic='MODULE_LICENSE_FRAUNHOFER OWNERS NOTICE'
 lst_pc='fdk-aac.pc'
 
-. xbuilder.sh
+. xbuild
   
 case $build_tool in
   cmake) cbk="BUILD_PROGRAMS";;

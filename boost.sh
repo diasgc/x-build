@@ -32,7 +32,7 @@ lst_pc=''
 dir_build='build'
 
 # see https://github.com/moritz-wundke/Boost-for-Android for android
-. xbuilder.sh
+. xbuild
 
 source_config(){
 	# git checkout master # or whatever branch you want to use

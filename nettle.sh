@@ -5,7 +5,7 @@ dsc='Nettle - a low-level cryptographic library'
 lic='LGPL-3.0'
 src='https://git.lysator.liu.se/nettle/nettle.git'
 cfg='ac'
-automake_cmd='./.bootstrap'
+cfg_cmd='./.bootstrap'
 dep='gmp'
 prp='lib64/pkgconfig/nettle.pc'
 eta='90'
@@ -17,7 +17,7 @@ lst_bin='pkcs1-conv nettle-lfib-stream nettle-hash nettle-pbkdf2 sexp-conv'
 lst_lic='COPYINGv2 COPYINGv3 COPYING.LESSERv3'
 lst_pc='hogweed.pc nettle.pc'
 
-. xbuilder.sh
+. xbuild
 
 CFG="--disable-documentation --disable-mini-gmp --enable-pic CC_FOR_BUILD=gcc"
 

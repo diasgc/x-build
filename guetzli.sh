@@ -21,7 +21,7 @@ lst_pc=''
 
 cmake_static='BUILD_STATIC_LIBS'
 
-. xbuilder.sh
+. xbuild
 
 start
 

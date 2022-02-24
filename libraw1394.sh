@@ -18,7 +18,7 @@ lst_bin=''
 lst_lic='COPYING.LIB AUTHORS'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 start
 

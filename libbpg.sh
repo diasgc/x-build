@@ -17,7 +17,7 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
-. xbuilder.sh
+. xbuild
 
 CFG="-i AS=$YASM CC=$CC CXX=$CXX AR=$AR CFLAGS=$CPPFLAGS CXXFLAGS=$CPPFLAGS prefix=${INSTALL_DIR} USE_BPGVIEW=n USE_EMCC=n"
 $host_mingw && CFG+=" CONFIG_WIN32=y"

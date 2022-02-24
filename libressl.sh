@@ -23,7 +23,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='libssl.pc libtls.pc libcrypto.pc openssl.pc'
 
-. xbuilder.sh
+. xbuild
 
 source_patch(){
   doAutogen ${dir_src} # do not remove

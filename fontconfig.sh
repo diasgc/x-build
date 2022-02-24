@@ -21,7 +21,7 @@ dev_vrs='2.13.96'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 ac_config='--disable-docs'
 exec_config="autogen.sh"

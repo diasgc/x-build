@@ -23,6 +23,6 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 start

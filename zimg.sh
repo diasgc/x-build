@@ -19,7 +19,11 @@ dev_vrs='3.0.3'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
+
+source_patch(){
+    sed 's/Windows.h/windows.h/g' src/zimg/common/arm/cpuinfo_arm.cpp
+}
 
 on_editpack(){
     rm -rf share/doc/zimg/example
@@ -30,7 +34,7 @@ start
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang
 # GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
+# WIN +F   .   .   .  clang/gcc
 
 
 # Filelist

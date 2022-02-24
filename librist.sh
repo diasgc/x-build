@@ -24,7 +24,7 @@ lst_bin=''
 lst_lic='COPYING'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 start
 

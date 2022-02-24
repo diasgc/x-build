@@ -30,7 +30,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='-ss 19:20 -to 25:20'
 
-. xbuilder.sh
+. xbuild
 
 start
 

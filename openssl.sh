@@ -26,7 +26,7 @@ lst_bin='c_rehash openssl'
 lst_lic='LICENSE.txt AUTHORS.md'
 lst_pc='libssl.pc libcrypto.pc openssl.pc'
 
-. xbuilder.sh
+. xbuild
 
 BUILD_DIR="${dir_src}/build_${arch}"
 PATH=$TOOLCHAIN/bin:$PATH

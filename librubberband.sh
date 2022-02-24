@@ -20,7 +20,7 @@ lst_bin='rubberband'
 lst_lic='COPYING'
 lst_pc='rubberband.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

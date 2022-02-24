@@ -22,7 +22,7 @@ dev_vrs=''
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 start
 

@@ -22,7 +22,7 @@ lst_inc='MediaInfo/MediaInfoList.h
 lst_lib='libmediainfo'
 lst_bin=''
 
-. xbuilder.sh
+. xbuild
 
 start
 

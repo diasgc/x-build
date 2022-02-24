@@ -18,7 +18,7 @@ lst_bin='dcadec extract_dca dtsdec extract_dts'
 lst_lic='COPYING AUTHORS'
 lst_pc='libdca.pc libdts.pc'
 
-. xbuilder.sh
+. xbuild
 
 ndk_assert_h_sys_soundcard
 

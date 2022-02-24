@@ -29,7 +29,7 @@ lst_bin='dcraw_half
 	mem_image
 	simple_dcraw'
 
-. xbuilder.sh
+. xbuild
 
 WFLAGS=" -Wno-deprecated-register"
 

@@ -15,7 +15,7 @@ cfg='ar'
 eta='100'
 cbk="able-examples"
 
-. xbuilder.sh
+. xbuild
 
 start
 

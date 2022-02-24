@@ -7,7 +7,7 @@ src='https://github.com/jinhr9801/filename-extension-signature.git'
 cfg='cmake'
 eta='30'
 
-. xbuilder.sh
+. xbuild
 
 skip_pc=true
 

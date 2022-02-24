@@ -16,7 +16,7 @@ dep='fontconfig libtiff libjpeg openjpeg'
 cb0="-DENABLE_UTILS=OFF"
 cb1="-DENABLE_UTILS=ON"
 
-. xbuilder.sh
+. xbuild
 
 CFG="-DENABLE_BOOST=OFF -DBUILD_GTK_TESTS=OFF -DBUILD_QT5_TESTS=OFF \
      -DBUILD_QT6_TESTS=OFF -DENABLE_QT5=OFF -DENABLE_QT6=OFF \

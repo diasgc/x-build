@@ -35,7 +35,7 @@ lst_lic='asio/LICENSE_1_0.txt asio/COPYING'
 lst_pc=''
 
 
-. xbuilder.sh
+. xbuild
 
 start
 

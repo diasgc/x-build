@@ -22,7 +22,7 @@ lst_bin=''
 lst_lic='LICENSE COPYING AUTHORS'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 $host_mingw || cmake_config+=' -DPCRE2_STATIC_PIC=ON'
 

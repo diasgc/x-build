@@ -5,7 +5,7 @@ dsc='Character set conversion library'
 lic='LGPL2.1'
 vrs='1.16' src="https://ftp.gnu.org/gnu/libiconv/libiconv-${vrs}.tar.gz"
 #vrs='v1.16' src='https://git.savannah.gnu.org/git/libiconv.git'
-#automake_cmd='./autogen.sh --skip-gnulib'
+#cfg_cmd='./autogen.sh --skip-gnulib'
 cfg='ac'
 eta='90'
 mki='install'
@@ -23,7 +23,7 @@ dev_vrs='1.16'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 ac_config=" --enable-extra-encodings"
 

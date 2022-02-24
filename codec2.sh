@@ -22,7 +22,7 @@ lst_bin=''
 lst_lic='COPYING'
 lst_pc='codec2.pc'
 
-. xbuilder.sh
+. xbuild
 
 unset LDFLAGS
 

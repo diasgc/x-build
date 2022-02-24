@@ -24,7 +24,7 @@ lst_pc=''
 
 eta='20'
 
-. xbuilder.sh
+. xbuild
 
 mkf='CC='$CC' -Wl,-rpath='${dir_install_lib}' -Wl,--enable-new-dtags OBJCOPY='$OBJCOPY' PREFIX="'${dir_install}'" PTHREADS=no'
 mki='CC='$CC' -Wl,-rpath='${dir_install_lib}' -Wl,--enable-new-dtags OBJCOPY='$OBJCOPY' prefix="'${dir_install}'" RAISE_SETFCAP=no lib=/lib PTHREADS=no install'

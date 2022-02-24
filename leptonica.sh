@@ -47,7 +47,7 @@ extraOpts(){
 
 WFLAGS="-Wno-address-of-packed-member"
 
-. xbuilder.sh
+. xbuild
 
 
 case $build_tool in

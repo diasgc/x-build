@@ -12,7 +12,7 @@ cfg='ac'
 dep='sndfile'
 eta='225'
 
-. xbuilder.sh
+. xbuild
 
 CFG="--disable-maintainer-mode"
 

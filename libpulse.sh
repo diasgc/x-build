@@ -18,7 +18,7 @@ lst_bin='pacat pactl pa-info padsp'
 lst_lic='LICENSE GPL LGPL'
 lst_pc='libpulse.pc libpulse-simple.pc libpulse-mainloop-glib.pc'
 
-. xbuilder.sh
+. xbuild
 
 meson_cfg="-Ddaemon=false -Ddoxygen=false -Dman=false -Dtests=false -Ddatabase=simple -Dalsa=disabled -Dglib=enabled \
     -D stream-restore-clear-old-devices=true \

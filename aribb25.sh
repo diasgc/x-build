@@ -12,7 +12,7 @@ dep='pscs'
 lst_inc=''
 lst_lib=''
 
-. xbuilder.sh
+. xbuild
 
 start
 

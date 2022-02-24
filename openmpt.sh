@@ -28,7 +28,7 @@ lst_bin=''
 lst_lic='LICENSE'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 source_config(){
     cd build/autotools

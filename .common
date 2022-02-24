@@ -1,15 +1,20 @@
-#!/bin/sh
+#!/bin/bash
 # ................................................
-# Commons 0.3.1-dev 2021-diasgc
+# Commons 0.3.2-dev 2021-diasgc
 # Definition constants and functions
 # ................................................
 
-vsh='0.3.1-dev'
+vsh='0.3.2-main'
 
 #b="\u25ba"
 b="\u2605"
 c="\u2714"
-# def colors
+
+# box chars
+BX0="\u2502" BX1="\u251C" BX2="\u250C" BX3="\u2514" BX4="\u252C" BX5="\u2500"
+BXH="${BX1}${BX5}${BX4}${BX5}${CY1}" BXL="${BX0} ${BX1}${BX5}${CY2}" BXE="${BX0} ${BX3}${BX5}${CY1}"
+
+# def theme colors
 C0="\e[0m" CW="\e[97m"  CD="\e[90m" CW2="\e[38;5;234m" CW3="\e[38;5;238m" CW4="\e[38;5;242m"  CW5="\e[38;5;246m" CW6="\e[38;5;250m"
 CR0="\e[31m" CR1="\e[91m" CR2="\e[38;5;52m" CR3="\e[38;5;88m" CR4="\e[38;5;124m" CR5="\e[38;5;160m"  CR6="\e[38;5;196m"
 CY0="\e[33m" CY1="\e[93m" CY2="\e[38;5;58m" CY3="\e[38;5;94m" CY4="\e[38;5;136m" CY5="\e[38;5;178m"  CY6="\e[38;5;220m"
@@ -31,6 +36,7 @@ function trap_sigint {
   local l
   [ -f "${log_file}" ] && l="  Log available at ${log_file}\n"
   echo -e "\n\n${CY1}  Interrupted by user${C0}\n${l}\n"
+  trap - SIGINT
   exit 1
 }
 
@@ -38,10 +44,23 @@ trap trap_sigint SIGINT
 
 # Logger
 logtime_start=
-export indent=0
-export ind=''
 export dir_root=$(pwd)
 export PS1='\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;95m\]\u@\e[0;95m\h\[\033[00m\]:\[\033[01;96m\]\w\[\033[00m\]\$'
+
+color_table(){
+  local i=16
+  while [ $i -lt 52 ]; do
+    j=$i
+    k=0
+    until [ $k == 7 ]; do
+      printf "\e[38;5;%dm\u25cf %03d   " ${j} ${j}
+      j=$(((j+36)%256))
+      k=$((k+1))
+    done
+    i=$((i+1))
+    printf '\r\n'
+  done
+}
 
 hwinfoCountCoresReadable(){
   case $(nproc) in
@@ -80,6 +99,19 @@ fn_defined(){
   [ "$(type -t $1)" = 'function' ]
 }
 
+fn_undef(){
+  unset -f $1
+}
+
+fn_log(){
+  if [ -z "$1" ]; then
+    $2
+  else
+    do_log "$1" $2
+  fi
+  unset -f $2
+}
+
 isfn_defined(){
   [ "$(type -t $1)" = 'function' ]
 }
@@ -88,10 +120,18 @@ git_getversion(){
   [ -d "${1}" ] && git --git-dir=${1}/.git --work-tree=${1} describe --abbrev=0 --tags || git describe --abbrev=0 --tags
 }
 
+#usage: str_concat 'sep' [arg_list]
+str_concat(){
+  local IFS="$1" && shift
+  echo "$*"
+}
+
+# usage: str_contains str1 substr2
 str_contains(){
    [ -z "${1##*${2}*}" ]
 }
 
+# usage: str_starts str1 substr2
 str_starts(){
    [ "${1#${2}}" != "${1}" ]
 }
@@ -116,38 +156,31 @@ defvar(){
   done
 }
 
-pushvar_f(){
-  var_addl $@
+pushv(){
+  while [ -n "${1}" ]; do
+    shell_vstack+=("$1")
+    shift
+  done
+  return 0
 }
 
-pushvar_l(){
-  var_addr $@
+popv(){
+  if [ -z "${1}" ]; then
+    local n=${#shell_vstack[@]}
+    if [ $n -gt 0 ]; then
+      echo ${shell_vstack[n-1]}
+      unset shell_vstack[-1]
+    fi
+  else while [ -n "${1}" ]; do
+    eval "$1"="'$(popv)'"
+    shift
+    done
+  fi
+  return 0
 }
 
-popvar_f(){
-  local n=$1
-  local v=( ${!1} )
-  case ${#v[@]} in
-    0) echo;;
-    1) echo $v; eval $n=;;
-    *) local p="${v%% *} "
-       echo $p
-       eval $n=\"${v#$p}\"
-       ;;
-  esac
-}
-
-popvar_l(){
-  local n=$1
-  local v=( ${!1} )
-  case ${#v[@]} in
-    0) echo;;
-    1) echo $v; eval $n=;;
-    *) local p="${v## *} "
-       echo $p
-       eval $n=\"${v%$p}\"
-       ;;
-  esac
+clearv(){
+  unset shell_vstack
 }
 
 pushdir(){
@@ -162,6 +195,11 @@ popdir(){
     *bash) popd >/dev/null 2>&1;;
     *) local d=$(popvar_f shell_dstack); [ -n "$d" ] && cd $d;;
   esac
+}
+
+# usage: set_bool <condition> <value_true> <value_false>
+set_bool(){
+  $1 && echo $2 || echo $3
 }
 
 prt_progress_old(){
@@ -184,14 +222,19 @@ prt_progress(){
 }
 
 inc_tab(){
-  indent=$((indent+2))
-  ind=$(printf '%*s' "$indent")
+  export indent=$((indent+2))
+  export inds="${ind}┬─"
+  export inde="${ind}└─"
+  export ind+="│ "
+  #echo "inctab: $indent $ind............"
 }
 
 dec_tab(){
-  indent=$((indent-2))
-  [ $indent -gt 0 ] && ind=$(printf '%*s' "$indent") || unset ind
+  export indent=$((indent-2))
+  [ ${#ind} -gt 1 ] && export ind="${ind::-2}"
+  #echo "dectab: $indent $ind............"
 }
+
 
 # exclusive variable add substrings left var_xaddl <var> <substrings...>
 # appends substrings to the left/start of var iff main doesnt contains substring
@@ -415,12 +458,6 @@ github_jq(){
   echo "${1}" | jq "${2}" | sed 's/"//g'
 }
 
-#usage: str_concat 'sep' [arg_list]
-str_concat(){
-  local IFS="$1" && shift
-  echo "$*"
-}
-
 #usage: arch_fromid out_arm64 out_arm out_x86 out_x64
 arch_fromid(){
   local xid=$(expr "$cpu_id" % 4)
@@ -434,145 +471,6 @@ os_fromid(){
   local args=("$@")
   echo "${args[${xid}]}"
 }
-
-set_host(){ 
-  host_id=$1
-  host_cpuid=$(expr "$host_id" % 4)
-  host_osid=$(expr "$host_id" / 4 % 3)
-  host_cross=true
-  host_arm=false; host_arm32=false; host_arm64=false; host_x86=false; host_x64=false
-  host_ndk=false; host_gnu=false; host_mingw=false; host_osx=false; host_ios=false
-
-  case $host_osid in 
-    0)	host_ndk=true; host_sys=linux; host_clang=true; host_os="android"; host_sys="linux"
-        PLATFORM="Android"
-        : "${API:=24}"
-        TOOLCHAIN="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64"
-        SYSROOT="${TOOLCHAIN}/sysroot"
-        LIBSDIR="$ROOTDIR/builds/android/"
-
-        arch_list=["aarch64-linux-android","arm-linux-androideabi","i686-linux-android","x86_64-linux-android"]
-        ldir_list=["arm64-v8a","armeabi-v7a","x86","x86_64"]
-        load_hostfeats
-        
-        $host_arm && CT0=$CG2 CT1=$CG5 || CT0=$CG0 CT1=$CG1
-        $host_arm32 && CC="${TOOLCHAIN}/bin/armv7a-linux-androideabi${API}-clang" || CC="${TOOLCHAIN}/bin/${arch}${API}-clang"
-        CXX="${CC}++"; AS="${CC}"
-        LD="${TOOLCHAIN}/bin/ld.${clang_ld}"
-        GCOV="${TOOLCHAIN}/bin/llvm-cov"
-        CROSS_PREFIX="${TOOLCHAIN}/bin/${arch}-"
-        [ ! -f "${CROSS_PREFIX}ar" ] && CROSS_PREFIX="${TOOLCHAIN}/bin/llvm-"
-        YASM="${TOOLCHAIN}/bin/yasm"
-        
-        i_syspath="${SYSROOT}/usr/include/${arch}"
-        l_syspath="${SYSROOT}/usr/lib/${arch} ${SYSROOT}/usr/lib/${arch}/${API}"
-        #LT_SYS_LIBRARY_PATH="$SYSROOT/usr/lib/$arch:$SYSROOT/usr/lib/${arch}/${API}"
-        #LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-        #CPPFLAGS="-I${SYSROOT}/usr/include/${arch}"
-        CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
-        ${use_ndk_cmake} && [ -d "${ANDROID_HOME}/cmake" ] && CMAKE_EXECUTABLE="${ANDROID_HOME}/cmake/3.10.2.4988404/bin/cmake"
-        ;;
-
-    1)	host_gnu=true; host_sys=linux; host_clang=false; host_os="linux"; host_sys="linux"
-        PLATFORM="Linux"
-        LIBSDIR="$ROOTDIR/builds/linux/"
-        
-        arch_list=["aarch64-linux-gnu","arm-linux-gnueabihf","i686-linux-gnu","x86_64-linux-gnu"]
-        ldir_list=["aarch64","arm","x86","x86_64"]
-        load_hostfeats
-
-        $host_arm && CT0=$CY0 CT1=$CY1 || CT0=$CM0 CT1=$CM1
-        local ltsdir=("$xv_aarch64_gnu" "$xv_armeabi_gnu" "$xv_x86_gnu" "$xv_x64_gnu")
-        ltsdir=${ltsdir[$(expr $cpu_id % 4)]}
-        if $host_cross; then
-          SYSROOT="/usr/${arch}"
-          TOOLCHAIN="/usr/${arch}/bin"
-          CROSS_PREFIX="${arch}-"
-          local cross="-cross"
-        else
-          unset SYSROOT TOOLCHAIN CROSS_PREFIX
-        fi
-        CC=${CROSS_PREFIX}gcc
-        CXX=${CROSS_PREFIX}g++
-        AS=${CROSS_PREFIX}as
-        LD=${CROSS_PREFIX}ld
-
-        i_syspath="${SYSROOT}/usr/include ${SYSROOT}/usr/local/include"
-        l_syspath="/usr/lib/gcc${cross}/${arch}/${ltsdir}"
-        
-        [ -n "$ltsdir" ] && LT_SYS_LIBRARY_PATH="/usr/lib/gcc${cross}/${arch}/${ltsdir}"
-        LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-        CPPFLAGS=" -I$SYSROOT/usr/include -I$SYSROOT/usr/local/include -I$LIBSDIR/include"
-        ;;
-
-    2)  host_mingw=true; host_os="windows"; host_sys="windows"
-        PLATFORM="Windows"
-        LIBSDIR="$ROOTDIR/builds/windows/"
-
-        arch_list=["aarch64-w64-mingw32","armv7-w64-mingw32","i686-w64-mingw32","x86_64-w64-mingw32"]
-        ldir_list=["aarch64","armv7","x86","x86_64"]
-        load_hostfeats
-
-        [ -z ${2} ] && host_abi="${1}" || host_abi="${2}"
-        arch="${1}-w64-mingw32"
-        [ "$p_id" -lt 2 ] && CT0=$CC0 CT1=$CC1 || CT0=$CB0 CT1=$CB1
-        TOOLCHAIN="${LLVM_MINGW_HOME}/bin"
-        SYSROOT="${LLVM_MINGW_HOME}/${arch}"
-        CROSS_PREFIX="${TOOLCHAIN}/${arch}-"
-        
-        CC="${CROSS_PREFIX}clang"
-        CXX="${CC}++"
-        LD="${CROSS_PREFIX}ld"
-        AS="${CROSS_PREFIX}as"
-        RC="${CROSS_PREFIX}windres"
-
-        LT_SYS_LIBRARY_PATH="${LLVM_MINGW_HOME}/lib/clang/${xv_llvm_mingw}"
-        CPPFLAGS="-I$LT_SYS_LIBRARY_PATH/include"
-        LDFLAGS="-L${LT_SYS_LIBRARY_PATH}/lib -L${SYSROOT}/lib"
-        ;;
-    3)  host_osx=true; host_os="darwin"; host_sys="darwin"
-        PLATFORM="OSX"
-        LIBSDIR="$ROOTDIR/builds/mac"
-        # todo
-        ;;
-
-  esac
-
-  LDFLAGS="-Wl,-rpath,$(format_pathlist ${l_syspath} '' ':') ${LDFLAGS}"
-  CPPFLAGS="$(format_pathlist ${i_syspath} '-I' ' ') -I$LIBSDIR/include"
-  
-  AR=${CROSS_PREFIX}ar
-  NM=${CROSS_PREFIX}nm
-  RANLIB=${CROSS_PREFIX}ranlib
-  STRIP=${CROSS_PREFIX}strip
-  WINDRES=${CROSS_PREFIX}windres
-
-  ADDR2LINE=${CROSS_PREFIX}addr2line
-  OBJCOPY=${CROSS_PREFIX}objcopy
-  OBJDUMP=${CROSS_PREFIX}objdump
-  READELF=${CROSS_PREFIX}readelf
-  SIZE=${CROSS_PREFIX}size
-  STRINGS=${CROSS_PREFIX}strings
-  
-  [ -z ${GCOV+x} ] && GCOV=${CROSS_PREFIX}gcov
-
-  #reset flags
-  LIBSDIR="$(pwd)/builds/${host_os}/${host_abi}"
-  LDFLAGS+=" -L$LIBSDIR/lib"
-  
-  [ "$arch" == "$build_arch" ] && host_cross=false
-  
-  # export
-  export arch host_id host_osid host_arm host_arm32 host_arm64 host_x86 host_x64 \
-    host_ndk host_gnu host_mingw host_osx host_ios \
-    PLATFORM TOOLCHAIN SYSROOT CROSS_PREFIX \
-    CC CXX LD AS AR NM RANLIB STRIP WINDRES YASM \
-    ADDR2LINE GCOV OBJCOPY OBJDUMP READELF SIZE STRINGS \
-    LT_SYS_LIBRARY_PATH CPPFLAGS LDFLAGS LIBSDIR \
-    CMAKE_EXECUTABLE PKG_CONFIG API
-}
-
-
 
 load_hostfeats(){
   case $host_cpuid in
@@ -763,7 +661,7 @@ version_parse(){
 
 git_version_local(){
   if [ -d "${1}/.git" ]; then
-    version_parse "$(git --git-dir="${1}/.git" describe --match=?[0-9]* 2>/dev/null || git --git-dir=.git describe)"
+    version_parse "$(git --git-dir="${1}/.git" describe --match=?[0-9]* 2>/dev/null || git --git-dir="${1}.git" describe 2>/dev/null)"
   fi
   return 0
 }
@@ -772,16 +670,24 @@ git_version_remote(){
   version_parse "$(git_vremote $1)"
 }
 
+vrs_exclude='alpha|beta'
 git_vremote(){
-  awk -v vv="$1" -f - << 'EOF'
+  local lgit=$(git ls-remote $src)
+  local v=$(echo "${lgit}" | grep -oP '\d+\.\d+\.\d+.*' | grep -vP $vrs_exclude | tail -n1)
+  [ -z "${v}" ] && v=$(echo "${lgit}" | grep -oP '\d+\.\d+.*' | grep -vP $vrs_exclude | tail -n1)
+  if [ -n "${v}" ]; then
+    echo "${v}"
+  fi
+  return 0
+  awk -v vv="${lgit}" ss="${src}" -f - << 'EOF'
 BEGIN {
   FS = "[ /^]+"
-  while ("git ls-remote " vv "| sort -Vk2" | getline) {
+  while ("echo " vv "| sort -Vk2" | getline) {
     if (!sha)
       sha = substr($0, 1, 7)
     tag = $3
   }
-  while ("curl -s " vv "/releases/tag/" tag | getline)
+  while ("curl -s " ss "/releases/tag/" tag | getline)
     if ($3 ~ "commits")
       com = $2
   printf com ? "%s-%s-g%s\n" : "%s\n", tag, com, sha

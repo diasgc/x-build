@@ -20,7 +20,7 @@ lst_bin=''
 lst_lic='COPYING README.md'
 lst_pc='aribb24.pc'
 
-. xbuilder.sh
+. xbuild
 
 before_make(){
     # to build shared libs on mingw

@@ -22,7 +22,7 @@ lst_lib='liblzf'
 lst_bin='lzf'
 lst_lic='LICENSE'
 
-. xbuilder.sh
+. xbuild
 
 start
 

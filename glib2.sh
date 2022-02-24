@@ -17,7 +17,7 @@ lst_bin='glib-gettextize gdbus glib-genmarshal gdbus-codegen gio-querymodules go
 lst_lic='COPYING AUTHORS'
 lst_pc='glib-2.0.pc gio-2.0.pc gio-windows-2.0.pc gmodule-2.0.pc gmodule-export-2.0.pc gobject-2.0.pc gthread-2.0.pc gmodule-no-export-2.0.pc'
 
-. xbuilder.sh
+. xbuild
 
 before_make(){
     mkf="-C ${dir_build}"

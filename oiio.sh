@@ -26,6 +26,6 @@ lst_pc=''
 
 cmake_config="-DBoost_ROOT=/home/gcdias/git/boost-ndk/build/out/arm64-v8a"
 
-. xbuilder.sh
+. xbuild
 
 start

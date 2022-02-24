@@ -11,7 +11,7 @@ dep='libpng'
 eta='275'
 mki='install'
 
-. xbuilder.sh
+. xbuild
 
 dev_bra='master'
 dev_vrs=''

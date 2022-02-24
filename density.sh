@@ -24,7 +24,7 @@ lst_pc='density.pc'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config="-DBUILD_BENCHMARK=ON"
 
-. xbuilder.sh
+. xbuild
 
 source_config(){
   git submodule update --init --recursive

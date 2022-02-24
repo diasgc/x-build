@@ -17,7 +17,7 @@ lst_inc='pcre.h pcreposix.h pcrecpparg.h pcre_scanner.h pcre_stringpiece.h pcrec
 lst_lib='libpcreposix libpcrecpp libpcre'
 lst_bin='pcre_scanner_unittest pcrecpp_unittest pcregrep pcre-config pcretest pcre_stringpiece_unittest'
 
-. xbuilder.sh
+. xbuild
 
 $build_static && CSH="-DBUILD_SHARED_LIBS=OFF"
 

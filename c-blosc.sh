@@ -9,6 +9,8 @@ src='https://github.com/Blosc/c-blosc.git'
 cfg='cmake'
 eta='100'
 
+WFLAGS='-Wno-unused-variable -Wno-unused-but-set-variable'
+
 cmake_static='BUILD_STATIC'
 cmake_shared='BUILD_SHARED'
 cmake_config='-DBUILD_TESTS=OFF'
@@ -19,13 +21,11 @@ lst_bin=''
 lst_lic='LICENSES/*'
 lst_pc='blosc.pc'
 
-. xbuilder.sh
+on_config_arm(){
+    cmake_config+=" -DDEACTIVATE_SSE2=ON -DDEACTIVATE_AVX2=ON"
+}
 
-
-WFLAGS='-Wno-unused-variable -Wno-unused-but-set-variable'
-$host_arm && cmake_config+=" -DDEACTIVATE_SSE2=ON -DDEACTIVATE_AVX2=ON"
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++. ++. ++. ++. clang

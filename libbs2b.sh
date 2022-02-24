@@ -20,7 +20,7 @@ lst_bin='bs2bstream bs2bconvert'
 lst_lic='COPYING AUTHORS'
 lst_pc='libbs2b.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

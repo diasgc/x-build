@@ -26,7 +26,7 @@ dev_vrs='2.4.4'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 source_config(){
     ./buildconf.sh

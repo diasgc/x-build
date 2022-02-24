@@ -5,7 +5,7 @@ apt='libdeflate-dev'
 dsc='Fast, whole-buffer DEFLATE-based compression and decompression'
 lic='MIT'
 src="https://github.com/ebiggers/libdeflate.git"
-sty='git'
+dep='zlib'
 cfg='cmake'
 cmake_static='BUILD_STATIC_LIBS'
 eta='10'
@@ -18,7 +18,9 @@ lst_bin='gzip'
 lst_lic='COPYING'
 lst_pc='libdeflate.pc'
 
-. xbuilder.sh && start
+. xbuild 
+$host_arm32 && cmake_config='-DENABLE_CRC=OFF'
+start
 
 # Patch 01: create CMakeLists.txt with dual static and shared build support
 <<'XB64_PATCH'

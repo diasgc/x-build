@@ -27,7 +27,7 @@ dev_vrs=''
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 $host_ndk && CFG+=" -DANDROID=ON"
 $host_arm && CFG+=" -DARMNEON=ON -DARMSIMD=ON -DMMX=OFF"

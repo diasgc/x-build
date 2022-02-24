@@ -14,7 +14,7 @@ eta='480'
 cbk="BUILD_TOOLS"
 #mki='all'
 
-. xbuilder.sh
+. xbuild
 
 lst_inc=''
 lst_lib=''

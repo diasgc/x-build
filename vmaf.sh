@@ -20,7 +20,7 @@ dev_vrs='2.3.0'
 stb_bra=''
 stb_vrs=''
 
-. xbuilder.sh
+. xbuild
 
 $host_arm || meson_cfg+=' -Denable_avx512=true'
 

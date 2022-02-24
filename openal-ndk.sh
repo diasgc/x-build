@@ -26,7 +26,7 @@ stb_vrs=''
 
 cmake_config="-DEXAMPLES=OFF"
 
-. xbuilder.sh
+. xbuild
 
 $host_ndk && cmake_config+=' -DANDROID_LOW_LATENCY=ON'
 $host_mingw && cmake_config+=' -DALSA=OFF'

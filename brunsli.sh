@@ -18,7 +18,7 @@ pc_llibs='libbrunslidec-c libbrunslienc-c'
 
 cmake_config="-DBUILD_TESTING=OFF -DINSTALL_GTEST=OFF"
 
-. xbuilder.sh
+. xbuild
 
 source_patch(){
     git submodule update --init

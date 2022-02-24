@@ -16,7 +16,7 @@ lst_bin='aec'
 lst_lic='LICENSE.txt AUTHORS'
 lst_pc='aec.pc sz.pc'
 
-. xbuilder.sh
+. xbuild
 
 CFG="-DBUILD_TESTING=OFF"
 

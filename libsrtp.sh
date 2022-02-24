@@ -14,7 +14,7 @@ lst_bin=''
 lst_lic='LICENSE CODEOWNERS'
 lst_pc='libsrtp2.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

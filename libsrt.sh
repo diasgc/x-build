@@ -21,7 +21,7 @@ lst_bin='srt-live-transmit srt-ffplay srt-tunnel srt-file-transmit'
 lst_lic='LICENSE'
 lst_pc='srt.pc haisrt.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

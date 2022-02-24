@@ -20,7 +20,7 @@ lst_bin=''
 lst_lic='COPYING'
 lst_pc='libb2.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

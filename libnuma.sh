@@ -18,7 +18,7 @@ lst_bin='numademo memhog migspeed numastat numactl migratepages'
 lst_lic='LICENSE.GPL2 LICENSE.LGPL2.1'
 lst_pc='numa.pc'
 
-. xbuilder.sh
+. xbuild
 
 $host_mingw && doErr "Non-posix OS cannot use LUMA. Exiting...\n"
 

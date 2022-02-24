@@ -23,7 +23,7 @@ lst_bin=''
 lst_lic='LICENSE'
 lst_pc='libmysofa.pc'
 
-. xbuilder.sh
+. xbuild
 
 # CMAKE OPTIONS (default): -DADDRESS_SANITIZE=OFF -DCODE_COVERAGE=OFF 
 

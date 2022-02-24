@@ -24,7 +24,7 @@ lst_pc='openal.pc'
 
 CFG="-DALSOFT_INSTALL_EXAMPLES=OFF -DALSOFT_EXAMPLES=OFF"
 
-. xbuilder.sh
+. xbuild
 
 start
 

@@ -12,7 +12,7 @@ src="http://ftp.debian.org/debian/pool/main/f/file/file_${vrs}.orig.tar.gz"
 cfg='ac'
 eta='60'
 
-. xbuilder.sh
+. xbuild
 
 start
 

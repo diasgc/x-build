@@ -23,7 +23,7 @@ lst_bin=''
 lst_lic='COPYING* AUTHORS'
 lst_pc=''
 
-. xbuilder.sh
+. xbuild
 
 on_editpack(){
     ln -s share/pkgconfig/${pkg}.pc lib/pkgconfig/${pkg}.pc

@@ -13,7 +13,7 @@ src='https://github.com/gpg/libgpg-error.git'
 cfg='ar'
 eta='60'
 
-. xbuilder.sh
+. xbuild
 
 CFG="--disable-languages --disable-doc --disable-tests"
 CPPFLAGS+=" -I${SRCDIR}/src"

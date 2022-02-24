@@ -23,7 +23,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='xtrans.pc'
 
-. xbuilder.sh
+. xbuild
 
 on_editpack(){
     ln -s share/pkgconfig/xtrans.pc lib/pkgconfig/xtrans.pc

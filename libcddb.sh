@@ -19,7 +19,7 @@ lst_pc='libcddb.pc'
 CFG="--without-cdio"
 WFLAGS='-Wno-header-guard'
 
-. xbuilder.sh
+. xbuild
 
 source_patch(){
     # ix clang undefined symbol rpl_malloc error by disabling AC_FUNC_MALLOC

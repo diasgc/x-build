@@ -27,7 +27,7 @@ extraOpts(){
   esac
 }
 
-. xbuilder.sh
+. xbuild
 
 start
 

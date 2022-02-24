@@ -25,7 +25,7 @@ lst_pc=''
 
 eta='20'
 
-. xbuilder.sh
+. xbuild
 
 source_config(){
     exit 0

@@ -20,7 +20,7 @@ lst_pc=''
 WFLAGS='-Wno-macro-redefined'
 CFLAGS=' -O3 -flto'
 
-. xbuilder.sh
+. xbuild
 
 CSH="--disable-shared" # error in make install with --enable-shared
 

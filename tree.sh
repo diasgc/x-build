@@ -9,12 +9,11 @@ dsc='Tree is a recursive directory listing command'
 lic='GPL-2'
 vrs='1.8.0'
 src="http://mama.indstate.edu/users/ice/tree/src/tree-${vrs}.tgz"
-sty='tgz'
-cfg='mk'
+cfg='make'
 eta='45'
 API=26
 
-. xbuilder.sh
+. xbuild
 # todo clean & simplify
 
 OBJS="tree.o unix.o html.o xml.o json.o hash.o color.o file.o"

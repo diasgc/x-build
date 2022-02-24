@@ -16,7 +16,7 @@ lst_inc='tinyxml2.h'
 lst_lib='libtinyxml2'
 lst_bin=''
 
-. xbuilder.sh
+. xbuild
 
 start
 

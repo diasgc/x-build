@@ -26,7 +26,7 @@ lst_pc=''
 
 eta='20'
 
-. xbuilder.sh
+. xbuild
 
 cfg_cmd+=" --prefix=${dir_install} --disable-python --without-ad-dc"
 

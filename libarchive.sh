@@ -16,7 +16,7 @@ lst_bin='bsdcat bsdtar bsdcpio'
 lst_lic='COPYING'
 lst_pc='libarchive.pc'
 
-. xbuilder.sh
+. xbuild
 
 $host_ndk && CPPFLAGS+=" -I./contrib/android/include"
 

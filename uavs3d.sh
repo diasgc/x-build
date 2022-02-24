@@ -22,7 +22,7 @@ lst_bin=''
 lst_lic='COPYING'
 lst_pc='uavs3d.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

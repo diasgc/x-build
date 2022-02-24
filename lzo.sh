@@ -23,7 +23,7 @@ lst_bin='../libexec/lzo/examples/*'
 lst_lic='COPYING AUTHORS'
 lst_pc='lzo2.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

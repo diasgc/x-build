@@ -14,7 +14,7 @@ dep='libxml2 freetype fontconfig libudfread'
 pkg='libbluray'
 eta='60'
 
-. xbuilder.sh
+. xbuild
 CFG="--with-sysroot=${SYSROOT} --disable-bdjava-jar --disable-examples --with-pic=1"
 
 #export FT2_CFLAGS="-I$LIBSDIR/freetype/include/freetype2" \

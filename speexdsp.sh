@@ -15,7 +15,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='speexdsp.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

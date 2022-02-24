@@ -23,7 +23,7 @@ lst_bin='caca-config cacafire cacaserver img2txt cacaclock cacademo cacaview cac
 lst_lic='COPYING COPYING.GPL COPYING.LGPL COPYING.ISC AUTHORS'
 lst_pc='caca++.pc caca.pc'
 
-. xbuilder.sh
+. xbuild
 
 CFG="--disable-doc --disable-imlib2 --disable-java --disable-win32 --disable-cppunit --disable-zzuf --disable-conio"
 

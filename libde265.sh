@@ -7,7 +7,7 @@ lic='LGPL-3.0'
 src='https://github.com/strukturag/libde265.git'
 cfg='cmake'
 eta='140'
-automake_cmd='./autogen.sh'
+cfg_cmd='./autogen.sh'
 
 lst_inc='libde265/*.h'
 lst_lib='liblibde265'
@@ -23,7 +23,7 @@ stb_vrs=''
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config='-DENABLE_SDL=OFF'
 
-. xbuilder.sh
+. xbuild
 
 
 if $host_arm; then

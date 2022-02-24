@@ -46,7 +46,7 @@ lst_bin='cert_app crypto_examples key_app_writer
 lst_lic='LICENSE'
 lst_pc='libmbedx509.pc libmbedcrypto.pc libmbedtls.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 

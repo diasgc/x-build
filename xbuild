@@ -1,4 +1,4 @@
-#!$SHELL
+#!/bin/bash
 # ................................................
 # X-Builder util 0.3.2 2021-diasgc
 # ................................................
@@ -12,7 +12,7 @@ function trap_sigint {
 
 # first load .common functions and error trap
 if [ -z ${vsh+x} ];then
-  source .common
+  . .common
   set -o pipefail
   if [ "${1}" == "--debug" ];then
     shift
@@ -24,7 +24,8 @@ fi
 
 sudo=$(command -v sudo)
 
-# defvar debug=false 
+# defvar debug=false
+: "${host_native:=false}"
 : "${debug:=false}"
 : "${nodev:=false}"
 : "${is_init:=false}"
@@ -44,9 +45,15 @@ sudo=$(command -v sudo)
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
 : "${build_pkgdl:=false}"
+: "${config_timeout:=86400}"
+: "${indent:=0}"
+: "${ind:=}"
+
+ndk_testtc=true
 
 $req_update_deps && update=true
 pkg_fmt="tgz"
+timeout_days=3
 cmake_build_type=Release
 cmake_toolchain_file=
 mingw_posix_suffix=
@@ -54,7 +61,7 @@ update=false
 retry=false
 use_llvm_mingw=true
 use_clang=true
-ndk_testtc=false
+
 skip_pc=false
 skip_dl=false
 
@@ -77,12 +84,12 @@ shell_dstack=
 logtime_start=0
 logtime_end=0
 
-export ROOTDIR=$(pwd)
+#export ROOTDIR=$(pwd)
 export CPPFLAGS=
 export target_trip=
-export dir_sources="${ROOTDIR}/sources"
+export dir_sources="${dir_root}/sources"
 export dir_src="${dir_sources}/${lib}"
-export dir_pkgdist="${ROOTDIR}/packages"
+export dir_pkgdist="${dir_root}/packages"
 
 # decaprated, backward compat only
 export SRCDIR=${dir_src}
@@ -116,39 +123,35 @@ xv_x86_mingw="10"
 
 aptInstallBr(){
   while [ -n "$1" ];do
-    echo -ne "${ind}${CT0}install $1${C0} "
+    echo -ne "${CD}${ind}${CT0}install $1${C0} "
     $sudo apt -qq install $1 -y >/dev/null 2>&1
     echo -e "${C0}ok ${CT1}done${C0} $(apt-cache show $1 | grep Version)"
     shift
   done
 }
 
-
 init(){
   [ -f ".config" ] && . .config
-  if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt 86400; then
-    ./xsetup.sh
+  if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
+    ./x-setup
     . .config || doErr 'Unable to initialize config file'
   fi
-  [ -z "${indent}" ] && indent=0
-  export is_init=true indent ind
+  export is_init=true
 }
 
 ! $is_init && init
-
-inc_tab
 
 main(){
   $debug && set -x
   # exit if missing vars lib arch or src
   test -z ${lib} && {
-    echo -e "\n\n${ind}${CB1}${ind}Toolchain is loadad.\n${ind}Now exiting...\n\n${C0}"
-    indent=0
+    echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
     return 0
   }
 
   test -z ${dir_install} || test -z $src && errCall
 
+  inc_tab
   gitjson=$(git_api_tojson $src)
   if [ -n "${gitjson}" ];then
     #echo -ne "${CY1}${b}${C0}"
@@ -157,22 +160,26 @@ main(){
   fi
 
   # show package info
-  [ -f "${dir_install_pc}/${pkg}.pc" ] || show_packageinfo
+  export log_file="${dir_install}/${lib}.log"
+  if $update || [ ! -f "${dir_install_pc}/${pkg}.pc" ]; then
+    show_packageinfo
+  fi
 }
 
 show_packageinfo(){
-  log_file="${dir_install}/${lib}.log"
   local dp=
   local vs=
   local longdesc=$(package_long_desc)
   [ -z "$(echo $longdesc | xargs 2>/dev/null)" ] && unset longdesc
 
   # Main Description
-  [ -n "${dsc}" ] && echo -e "\n${CW}${ind}${lib^^} - ${C0}${dsc}"
-  [ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
+  [ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}\e[1m${lib^^} - ${C0}${dsc}\e[0m"
+  [ -n "${longdesc}" ] && echo -ne "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
 
+  # log file link
+  echo -e "${CD}${ind}${CD}see log at \e[4m${log_file}\e[24m${C0}"
   # Licence
-  echo -ne "${CT0}${ind}Licence ${C0}$lic "
+  echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "
   
   # Build Tools
   if [ -n "${tls}" ]; then
@@ -191,10 +198,11 @@ show_packageinfo(){
 
   # Build Deps
   [ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}$dep"
+
   if str_contains $src "git"; then
-    local vgit=$(git_version_remote $src)
+    local vgit=$(git_version_remote $src | head -n1)
     if [ -d ${dir_src} ];then
-      local vrep=$(git_version_local ${dir_src})
+      local vrep=$(git_version_local ${dir_src} | head -n1)
       vs="${CT0}vrs: ${C0}$vrep "
       if str_contains $vgit $vrs; then
         vs+=" updated"
@@ -205,7 +213,8 @@ show_packageinfo(){
       vs="${CT0}vrs: ${C0}${vgit}"
     fi
   fi
-  echo -e " ${vs} ${CD} see log at \e[4m${log_file}\e[24m${C0}"
+  echo -e " ${vs} ${C0}"
+  
 }
 
 package_long_desc(){
@@ -218,14 +227,6 @@ package_long_desc(){
   return 0
 }
 
-# Variables
-# mki: rule for install 'make $mkinstall' (default: install)
-# mkc: rule for clean 'make $mkclean' (default: clean)
-# mkf: additional rule for make
-# no_host  : while using autotools, no host will be set for cross-compile if no_host is not empty
-
-gitjson=
-
 guess_cfg(){
   if [ -f "${dir_config}/meson.build" ]; then
     build_tool="meson"
@@ -237,13 +238,13 @@ guess_cfg(){
     build_tool="automake"
     cfg='ac'
     if [ -f "${dir_config}/autogen.sh" ]; then
-      automake_cmd="${dir_config}/autogen.sh"
+      cfg_cmd="${dir_config}/autogen.sh"
     elif [ -f "${dir_config}/bootstrap.sh" ]; then
-      automake_cmd="${dir_config}/bootstrap.sh"
+      cfg_cmd="${dir_config}/bootstrap.sh"
     elif [ -f "${dir_config}/bootstrap" ]; then
-      automake_cmd="${dir_config}/bootstrap"
+      cfg_cmd="${dir_config}/bootstrap"
     elif [ ! -f "${dir_config}/configure" ]; then
-      automake_cmd="autoreconf -fiv ${dir_config}/bootstrap"
+      cfg_cmd="autoreconf -fiv ${dir_config}/bootstrap"
     else
       return 1
     fi
@@ -253,8 +254,28 @@ guess_cfg(){
   return 0
 }
 
+# Variables
+# mki: rule for install 'make $mkinstall' (default: install)
+# mkc: rule for clean 'make $mkclean' (default: clean)
+# mkf: additional rule for make
+# no_host  : while using autotools, no host will be set for cross-compile if no_host is not empty
+
+gitjson=
+
 start(){
-  
+
+  case ${target_trip[3]} in
+    android) fn_defined 'on_config_ndk' && fn_log 'cfg-ndk' on_config_ndk;;
+    gnu)     fn_defined 'on_config_gnu' && fn_log 'cfg-gnu' on_config_gnu;;
+    mingw32) fn_defined 'on_config_mingw' && fn_log 'cfg-mingw' on_config_mingw;;
+  esac
+
+  if $host_arm; then 
+    fn_defined 'on_config_arm' && fn_log '' on_config_arm
+  else
+    fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
+  fi
+
   # check whether to update source of main lib and dependencies
   if $update; then
     [ -d "${dir_src}" ] && rm -rf "${dir_src}" 2>/dev/null
@@ -262,7 +283,7 @@ start(){
   else
     [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
   fi
-  
+
   # Reset LOGFILE
   [ -f "${log_file}" ] && rm -f ${log_file}
 
@@ -273,15 +294,17 @@ start(){
   # check build tools
   check_tools $tls
 
-  o_vrs=$vrs
-  o_csh=$CSH
-  o_cbn=$CBN
+  local ovrs=$vrs
+  local ocsh=$CSH
+  local ocbn=$CBN
   unset vrs CSH CBN
+  
   build_dependencies $dep
-  vrs=$o_vrs
-  CSH=$o_csh
-  CBN=$o_cbn
-
+  
+  vrs=$ovrs
+  CSH=$ocsh
+  CBN=$ocbn
+  
   log_start $arch ${eta}s
   local bss=
   $build_static && bss="${SSB}[static]" || bss="${CD}[static]"
@@ -318,7 +341,7 @@ start(){
       [ ! $? -eq 0 ] && doErr 'No Internet Connection. Aborting...'
       # check whether to custom get source
       if fn_defined 'source_get'; then
-        source_get
+        fn_log 'get' source_get
       elif [ -n "${sty}" ]; then
         case $sty in
           git)         git_clone $src $lib $src_opt;;
@@ -353,10 +376,10 @@ start(){
   if $req_src_config; then
     # check whether to custom config source
     if fn_defined 'source_config'; then
-      do_log 'config' source_config
-    elif [ -n "$automake_cmd" ];then
-      do_log 'automake' $automake_cmd
-      unset automake_cmd
+      fn_log 'config' source_config
+    elif [ -n "${cfg_cmd}" ];then
+      do_log 'automake' ${cfg_cmd}
+      unset cfg_cmd
     else case $cfg in
       ab) [ -f "${dir_config}/boostrap" ] && do_log 'bootstrap' ${dir_config}/boostrap
           [ -f "${dir_config}/boostrap.sh" ] && do_log 'bootstrap' ${dir_config}/boostrap.sh
@@ -382,7 +405,7 @@ start(){
     check_xbautopatch
     # check whether to custom patch source
     if fn_defined 'source_patch'; then
-      do_log 'patch' source_patch
+      fn_log 'patch' source_patch
     fi
   fi
 
@@ -404,16 +427,16 @@ start(){
   log_vars CC CXX LD AS AR NM RANLIB STRIP
   
   if fn_defined 'build_all'; then
-    build_all
+    fn_log 'build' build_all
     end_script
   fi
 
   if fn_defined 'build_prepare'; then
-    build_prepare
+    fn_log 'prepare' build_prepare
   fi
 
   if fn_defined 'build_clean'; then
-    build_clean
+    fn_log 'clean' build_clean
   elif [ -f "Makefile" ]; then
     mkc=$(make_findtarget "distclean" "clean")
     [ -n "${mkc}" ] && do_quietly 'clean' ${MAKE_EXECUTABLE} $mkc
@@ -422,6 +445,7 @@ start(){
   local arr
   if fn_defined 'build_config'; then
     build_config
+    unset -f build_config
   else case $build_tool in
     cmake)
       : "${exec_config:=${CMAKE_EXECUTABLE}}"
@@ -499,7 +523,7 @@ start(){
   fi
 
   if fn_defined 'before_make'; then
-    do_log 'preparing' before_make
+    fn_log 'preparing' before_make
   fi
 
   [ -n "${WFLAGS}" ] && CPPFLAGS+=" ${WFLAGS}"
@@ -519,27 +543,27 @@ start(){
   : "${skip_make:=false}"
 
   if fn_defined 'on_make'; then
-    do_log 'make' on_make
+    fn_log 'make' on_make
   elif ! $skip_make; then
     do_progress 'make' ${MAKE_EXECUTABLE} ${mkf} -j${HOST_NPROC} || err
     unset skip_make
   fi
   
   if fn_defined 'before_install'; then
-    do_log 'preparing' before_install
+    fn_log 'preparing' before_install
   fi
 
   # strip libs
   if ! $host_mingw; then
     if fn_defined 'on_strip'; then
-      do_log 'strip' on_strip
+      fn_log 'strip' on_strip
     elif $build_strip; then
       do_log 'strip' doStrip
     fi
   fi
 
   if fn_defined 'on_install'; then
-    do_log 'install' on_install
+    fn_log 'install' on_install
   else
     cd $dir_build
     do_log 'install' ${MAKE_EXECUTABLE} ${mki}
@@ -548,7 +572,7 @@ start(){
   # check whether to create pkg-config .pc file
   if ! $skip_pc; then
     if fn_defined 'on_create_pc'; then
-      do_log 'pkgconfig' on_create_pc
+      fn_log 'pkgconfig' on_create_pc
     elif [ -n "$pc_llib" ]; then
       do_log 'pkgconfig' create_pkgconfig_file $pkg $pc_llib
     elif [ -n "${pc_llibs}" ]; then
@@ -561,7 +585,7 @@ start(){
   fi
 
   if fn_defined 'on_pack'; then
-    do_log 'pack' on_pack
+    fn_log 'pack' on_pack
   elif $build_package; then
     if [ -f "${dir_build}/install_manifest.txt" ]; then
       do_log 'cpack' build_package_cmake
@@ -574,7 +598,7 @@ start(){
 
   $skip_pc || logver "${dir_install_pc}/${pkg}.pc"
 
-  fn_defined 'on_end' && on_end
+  fn_defined 'on_end' && fn_log 'end' on_end
 
   #stat_savestats
   end_script
@@ -605,7 +629,7 @@ end_script(){
   log_end
   # check if parent process is shell script
   local parent=$(ps -o comm= $PPID)
-  [ "${parent: -3}" == ".sh" ] || echo -e "\n${ind}${CT1}::Done${C0}\n"
+  [ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done${C0}\n"
   $debug && set +x
   unset dir_config dir_build dir_src \
         CSH CBN exec_config vrs \
@@ -671,9 +695,9 @@ check_install(){
 }
 
 check_xbautopatch(){
-  pushdir $ROOTDIR
+  pushdir ${dir_root}
   local match=$(grep -oP "(?<=^<<').*?(?=')" $0)
-  if [ -n "$match" ]; then
+  if [ -n "${match}" ]; then
     local block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $0)
     case $match in
       XB_CREATE_CMAKELISTS)
@@ -731,11 +755,11 @@ create_pkgconfig_file(){
 build_packages_getdistdir(){
   [ -f "${dir_install_pc}/${pkg}.pc" ] && vrs=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
   [ -z "$vrs" ] && set_git_version
-  echo "${ROOTDIR}/packages/${lib}_${vrs}_${arch}"
+  echo "${dir_root}/packages/${lib}_${vrs}_${arch}"
 }
 
 build_packages_filelist(){
-  local scfile="${ROOTDIR}/${lib}.sh"
+  local scfile="${dir_root}/${lib}.sh"
   if [ -z "$(cat $scfile | grep '# Filelist')" ]; then
     echo -e "\n\n# Filelist\n# --------" >> $scfile
     find ./ -type f | sed 's|^./|# |g' >> $scfile
@@ -745,11 +769,13 @@ build_packages_filelist(){
 build_package_cmake(){
   local brk=false
   local flist=
+  
   until $brk; do
     read l || brk=true
     flist="$(echo $l | sed 's|'${dir_install}'/||') $flist"
   done < ${dir_build}/install_manifest.txt
   
+  # add manual pc files
   if [ -n "${pc_llib}" ]; then
     flist="lib/pkgconfig/${pc_llib//-l/lib}.pc ${flist}"
   elif [ -n "${pc_llibs}" ]; then
@@ -757,12 +783,24 @@ build_package_cmake(){
       flist="lib/pkgconfig/${ll//-l/lib}.pc ${flist}"
     done
   fi
-    
+  
+  # check licence files
+  if [ -n "${lst_lic}" ]; then
+    [ -d "${dir_install}/share/doc/${lib}" ] || mkdir -p "${dir_install}/share/doc/${lib}"
+    for f in ${lst_lic}; do
+      [ -f "${dir_install}/share/doc/${lib}/${f}" ] || cp ${dir_src}/${f} "${dir_install}/share/doc/${lib}/"
+      flist="share/doc/${lib}/${f} ${flist}"
+    done
+  fi
+
   [ -z "${flist}" ] && return 0
+
   pushdir ${dir_install}
+  
   local v=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
   v=$(version_parse $v)
   local fn="${lib}_${v}_${arch}"
+  
   case ${pkg_fmt} in
     tbz)
       fn="${fn}.tar.bz2"
@@ -777,17 +815,23 @@ build_package_cmake(){
       tar -czvf "${fn}" ${flist}
       ;;
   esac
-  mv "${fn}" ${dir_pkgdist}
+  [ -d "${dir_pkgdist}" ] || mkdir -p ${dir_pkgdist}
+  mv "${fn}" ${dir_pkgdist}/${fn}
+
+  if [ -z "$(cat ${dir_root}/${lib}.sh | grep '# Filelist')" ]; then
+    echo -e "\n\n# Filelist\n# --------" >> ${dir_root}/${lib}.sh
+    echo "# ${flist}" | sed 's| |\n# |g' >> ${dir_root}/${lib}.sh
+  fi
   popdir
 }
 
 build_packages_bin(){
   local xb_distdir=$(build_packages_getdistdir)
   if fn_defined 'create_package'; then
-    create_package ${xb_distdir}
+    fn_log 'pack' create_package ${xb_distdir}
   else
     if fn_defined 'build_make_package'; then
-      build_make_package ${xb_distdir}
+      fn_log 'pack' build_make_package ${xb_distdir}
     elif [ "$MAKE_EXECUTABLE" = "ninja" ];then
       DESTDIR=${xb_distdir} ninja -C ${dir_build} install
     else
@@ -816,10 +860,11 @@ build_packages_bin(){
       else
         cp ${dir_install_pc}/${pkg}.pc ${xb_pkgd}/
       fi
+      fn_undef build_pkgconfig_file
     fi
 
     if fn_defined 'on_editpack'; then
-      on_editpack
+      fn_log 'edit' on_editpack
     fi
 
     build_packages_filelist
@@ -848,13 +893,15 @@ build_dependencies(){
       o_cbh=$CBH
       $build_pkgdl && local dl="--dl" || local dl=''
       unset CSH CBH
-      ./${1}.sh ${arch} ${dep_build} ${dl} || err
+    
+      ./${1}.sh ${arch} ${dep_build} ${dl}
+      
       CSH=$o_csh
       CBH=$o_cbh
     fi
     if [ -f "${pkgfile}" ]; then
       local cmi=$(./${1}.sh ${arch} --get cmake_include)
-      [ -n "$cmi" ] && pushvar_f cmake_includes $cmi
+      [ -n "$cmi" ] && cmake_includes="$cmi $cmake_includes"
       ldir="$(dirname ${pkgfile})"
       str_contains $PKG_CONFIG_LIBDIR ${ldir} || PKG_CONFIG_LIBDIR="${ldir}:${PKG_CONFIG_LIBDIR}"
     fi
@@ -1054,7 +1101,7 @@ log_start(){
   logtime_start=$(date +%s)
   #echo -ne "$CC1  $@: "
   if ! $inline; then
-    echo -ne "${C0}${ind}$(date '+%H:%M')"
+    echo -ne "${CD}${inde}${C0}$(date '+%H:%M')"
     [ $eta ] && echo -ne "-${CW}$(date '+%H:%M' --date="$eta seconds")"
     printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
   fi
@@ -1104,7 +1151,7 @@ doErr(){
       echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
       cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
     fi
-    echo -ne "${CY1}${ind}Open log? [Y|n]:${C0}" && read openlog
+    echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
     [ "$openlog" != "n" ] && nano ${log_file}
   fi
   exit 1
@@ -1120,7 +1167,7 @@ err(){
       echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
       cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
     fi
-    echo -ne "${CY1}${ind}Open log? [Y|n]:${C0}" && read openlog
+    echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
     [ "$openlog" != "n" ] && nano ${log_file}
   fi
   echo
@@ -1428,7 +1475,7 @@ showOpts(){
     [ -f configure ] && ./configure --help >${od}/builds/${lib}_aconf.opts && nano "${od}/builds/${lib}_aconf.opts"
     cd $od
   else
-    echo -e "${ind}${CR0}no configuration file found in ${CR1}$1${CD}\n\n"
+    echo -e "${CD}${ind}${CR0}no configuration file found in ${CR1}${1}${CD}\n\n"
   fi
 }
 
@@ -1655,10 +1702,17 @@ loadToolchain(){
         ;;
     esac
   else
-    CROSS_PREFIX=
     TOOLCHAIN=/usr/bin
     SYSROOT=/usr
-    CC=cc CXX=cpp AS=as LD=ld
+    if $use_clang; then
+      CROSS_PREFIX=llvm-
+      CC=clang CXX=clang++ AS=llvm-as LD=ld.lld
+      $host_native && CPPFLAGS='-mtune=native'
+    else
+      CROSS_PREFIX=
+      CC=gcc CXX=g++ AS=as LD=ld
+      $host_native && CPPFLAGS='-march=native'
+    fi
   fi
 
   AR=${CROSS_PREFIX}ar
@@ -1693,9 +1747,9 @@ getMinGwVersion(){
 
 errUnknownTarget(){
   if [ $arch ];then
-    echo -e "\n${ind}${CR1}unknown target ${arch}${C0}\n" && exit 1
+    echo -e "\n${CD}${ind}${CR1}unknown target ${arch}${C0}\n" && exit 1
   else
-    echo -e "\n${ind}${CR1}must specify a target${C0}\n" && usage && exit 1
+    echo -e "\n${CD}${ind}${CR1}must specify a target${C0}\n" && usage && exit 1
   fi
 }
 
@@ -1741,49 +1795,7 @@ create_patch(){
 }
 
 usage(){
-  echo -e "$(
-  cat <<-EOF
-    \n
-    ${CW}usage: $0 ${CC1}<target> ${CB1}<build-options> ${CM1}<builder-options> ${CM0}<other-options>${C0}\n
-    ${CC1}<target>
-    ${CC1}<android> ${C0}\taarch64-linux-android | arm-linux-androideabi | i686-linux-android | x86_64-linux-android
-    ${CC1}<linux>   ${C0}\taarch64-linux-gnu     | arm-linux-gnueabihf   | i686-linux-gnu     | x86_64-linux-gnu
-    ${CC1}<windows> ${C0}\ti686-w64-mingw32      | x86_64-w64-ming32\n
-    ${CB1}<build-options>
-    ${CB1}--shared  ${C0}\tbuild shared/dynamic libs
-    ${CB1}--static  ${C0}\tbuild static libs
-    ${CB1}--bin     ${C0}\tbuild executables
-    ${CB1}--nobin   ${C0}\tdon't build executables
-    ${CB1}--prefix d${C0}\tset build directory <d>
-    ${CB1}--api n   ${C0}\tset api level <n>
-    ${CB1}--stable  ${C0}\tuse git stable branch\n
-    ${CM1}<builder-options>
-    ${CM1}--cmake   ${C0}\tforce cmake build when available
-    ${CM1}--ndkcmake${C0}\tuse android ndk cmake 3.10.2 instead
-    ${CM1}--ccmake  ${C0}\tforce cmake + gui ccmake when available
-    ${CM1}--vrep    ${C0}\tget repository version
-    ${CM1}--checkPkg${C0}\tget pkgconfig file's path\n
-    ${CM0}<other-options>
-    ${CM0}--get <o> ${C0}\tdelete all (builds + sources)
-    ${CM0}   cflags ${C0}\tpkgconfig cflags
-    ${CM0}   libs   ${C0}\tpkgconfig link flags
-    ${CM0}   ldstatic${C0}\tpkgconfigstatic link flags
-    ${CM0}   pc-ver ${C0}\tpkgconfig lib version
-    ${CM0}   pc-path${C0}\tpkgconfig.pc file path
-    ${CM0}   pc-name${C0}\tfilename (without .pc)
-    ${CM0}   prefix ${C0}\tinstall prefix path
-    ${CM0}   libname${C0}\tlib name
-    ${CM0}   aptname${C0}\tdebian package name for lib
-    ${CM0}--wipeall ${C0}\tdelete all (builds + sources)
-    ${CM0}--update  ${C0}\tforce source update/download (git/svn/etc)
-    ${CM0}--rebuild ${C0}\tforce remake project
-    ${CM0}--retry   ${C0}\tretry build without clear cache
-    ${CM0}--clean   ${C0}\tclean up last build
-    ${CM0}--clearsrc${C0}\tdelete source
-    ${CM0}--opts    ${C0}\tshow available configuration options/flags
-    ${CM0}--nobanner${C0}\tdon't show banner/packageinfo\n\n
-EOF
-)" 
+  printf "\n\n${CW}Usage: ${0} ${CC1}<target> ${CC0}<build-options> ${CB1}<builder-options> ${CB0}<other-options>${C0}" 
 }
 
 hwinfoCountCores(){
@@ -1820,7 +1832,7 @@ prompt_remove(){
 
 showBanner(){
   if $banner; then
-    echo -ne "\n\n${ind}${CW}Cross Builder Scripts ${vsh} for Linux${C0}\n${ind}"
+    echo -ne "\n\n${CW}Cross Builder Scripts ${vsh} for Linux${C0}\n"
     [ -n $(command -v lsb_release) ] && echo -ne "$(lsb_release -sd) "
     if [ -n "$(uname -r | grep 'microsoft')" ];then
       echo -ne "WSL2 "
@@ -1828,7 +1840,7 @@ showBanner(){
       echo -ne "WSL "
     fi
     echo -e "$(uname -o) $(uname -m) ${C0} $(uname -r)"
-    echo -e "${CW}${ind}$(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
+    echo -e "${CW}$(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
   fi
 }
 
@@ -1882,9 +1894,28 @@ menu_clear(){
   return 0
 }
 
+prt_hmenu(){
+  echo -e "\n${1}\n"
+  shift
+  local a
+  local b
+  while [ -n "$1" ]; do
+    a="$1"; shift
+    b="$1"; shift
+    printf "  ${CC0}%-20s: ${C0}%s\n" "$a" "$b"
+  done
+  echo
+}
 menu_get(){
   local pkgfile="${dir_install_pc}/${pkg}.pc"
   case $1 in
+    help)          prt_hmenu "${CW}usage: $0 --get ${CC0}<opt>" \
+                   'cflags' 'get pkg-config --cflags' 'ldflags' 'get pkg-config --libs' 'ldstatic' 'get pkg-config --libs --static' \
+                   'pc-ver' 'get package version' 'pc-path|pc' 'get pkg-config file path' 'pc-name' 'get pkg-config file name without .pc' \
+                   'prefix' 'get prefix / install dir' 'libname' 'get the libname' 'aptname' 'get the debian package name' 'var <variable>' \
+                   'get <variable> value' 'vrs_remote' 'get git remote latest version' 'vrs_tag' 'get git remote latest tag' 'vrs_tags' \
+                   'get git remote tag list' 'vrs_local' 'get git local version' 'options|opts' 'show build options' 'log' 'edit (nano) log file'
+                   ;;
     cflags)        [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --cflags)";;
     ldflags)       [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs)";;
     ldstatic)      [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs --static)";;
@@ -1896,10 +1927,9 @@ menu_get(){
     aptname)       echo "${apt}";;
     var)           shift; echo "${!1}";;
     vrs_remote)    fn_defined 'vremote' && version_parse "$(vremote)" || git_version_remote $src;;
-    vrs_tag)       git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
+    vrs_taglist)   git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
+    vrs_tags)      git ls-remote --tags --sort="v:refname" $src | grep -oP 'tags/.*\d+\.\d+\.\d+.*';;
     vrs_local)     git_version_local $dir_src;;
-    vrs_latest)    echo "$(get_latest_release ${src})"; exit 0;;
-    cmake_include) [ -z "$cmake_path" ] || echo "${dir_install}/${cmake_path}";exit 0;;
     options|opts)  showOpts "$(pwd)/sources/$lib"; exit 0;;
     log)           [ -f "${dir_install}/${lib}.log" ] && nano ${dir_install}/${lib}.log;;
   esac
@@ -1910,14 +1940,33 @@ menu_list(){
   local b=false
   [ -n "${arch}" ] && [ -n "${lib}" ] && b=true
   case $1 in
-    help)       printf "${CC0}%-20s: ${C0}%s\n" '  --list tar' 'list contents of tarball, if available'
-                printf "${CC0}%-20s: ${C0}%s\n" '  --list env' 'list environment variables';;
+    help)       prt_hmenu "${CW}usage: $0 --list ${CC0}<opt>" \
+                'tar*' 'list current tarball contents' 'branches' 'list all local git available branches' \
+                'tags' 'list all local git available branches' \
+                'env' 'list toolchain environment variables' 'deps' 'list packages that depend on '${lib}''
+                ;;
     tar*)       $b && list_tarball;;
     branches)   [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" branch -a;;
     tags)       [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" tag --list;;
     env)        $b && loadToolchain && print_vars CC CXX LD AS AR NM RANLIB STRIP ADDR2LINE OBJCOPY OBJDUMP READELF SIZE STRINGS WINDRES GCOV;;
+    deps)       for f in ${dir_root}/*.sh; do
+                  [ -n "$(cat $f | grep -oP 'dep=.*'${lib}'.*')" ] && echo $(basename $f) | sed 's|\.sh||'
+                done
+                ;;
   esac
   return 0
+}
+
+menu_goto(){
+  case $1 in
+    src|source) pushd ${dir_src};;
+    bin)        pushd ${dir_install_bin};;
+    lib)        pushd ${dir_install_lib};;
+    include)    pushd ${dir_install_include};;
+    pkgconfig)  pushd ${dir_install_pc};;
+    *)          exit 0;;
+  esac
+  #bash
 }
 
 skip_options(){
@@ -1973,10 +2022,10 @@ set_env(){
       dir_install="/usr/${arch}/local"
       ;;
     gnu)     host_sys=linux;   host_mingw=false; host_os=gnu;     host_ndk=false; host_clang=false; PLATFORM="Linux"
-      dir_install="${ROOTDIR}/builds/${PLATFORM,,}/${target_trip[5]}"
+      dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
       ;;
     mingw32) host_sys=windows; host_mingw=true;  host_os=mingw32; host_ndk=false; host_clang=true;  PLATFORM="Windows"
-      dir_install="${ROOTDIR}/builds/${PLATFORM,,}/${target_trip[5]}"
+      dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
       ;;
   esac
   #LIBSDIR="$(pwd)/builds/${PLATFORM,,}/${target_trip[5]}"
@@ -1991,8 +2040,8 @@ set_env(){
 
 while [ $1 ];do
   case $1 in
-    native) set_target_build
-      $host_clang && CPPFLAGS='-mtune=native' || CPPFLAGS='-march=native';;
+    native) set_target_build; host_native=true
+      ;;
     aa64|aa8|a*64-*android|android )
       set_target '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6;;
     aa7|arm-*android*eabi|arm-android)
@@ -2003,9 +2052,9 @@ while [ $1 ];do
       set_target '3' 'x86_64' '' 'linux' 'android' '' 'x86_64' '64' $CG0 $CG1
       ;;
     la8|la64|a*64-linux|a*64-*gnu|a*64-linux-gnu)
-      set_target '4' 'aarch64' '' 'linux' 'gnu' '' 'aarch64' '64' $CY0 $CY1;;
+      set_target '4' 'aarch64' '' 'linux' 'gnu' '' 'aarch64' '64' $CM4 $CM6;;
     la7|lahf|arm*hf|arm-linux*|rpi*32|rpi2*)
-      set_target '5' 'arm' '' 'linux' 'gnu' 'eabihf' 'armv7' '32' $CY0 $CY1;;
+      set_target '5' 'arm' '' 'linux' 'gnu' 'eabihf' 'armv7' '32' $CM4 $CM6;;
     l86|lx86|*86-linux*|linux*32 )
       set_target '6' 'i686' '' 'linux' 'gnu' '' 'x86' '32' $CM0 $CM1;;
     l64|lx64|*64-linux*|linux*64|linux )
@@ -2030,8 +2079,8 @@ while [ $1 ];do
                 build_dist=true
                 dep_build="--full"
                 ;;
-    --bra|--branch)
-                shift; export bra=$1;;
+    --bra| \
+    --branch)   shift; export bra=$1;;
     --shared)   build_shared=true; build_static=false;;
     --static)   build_static=true; build_shared=false;;
     --both)     build_static=true; build_shared=true;;
@@ -2072,6 +2121,8 @@ while [ $1 ];do
 
     --skip)     shift; skip_options $@;;
 
+    --goto)     shift; menu_goto $@; exit 0;;
+
     --dirbuild) shift; dir_build=$1;;
     --inline)   inline=true;;
     --clone)    only_repo=true;;   
@@ -2091,6 +2142,7 @@ while [ $1 ];do
   shift
 done
 
+fn_undef 'extraOpts'
 
 [ -z ${mingw_posix} ] && mingw_posix=false
 
@@ -2114,7 +2166,7 @@ if [ -z "$ISRUNNING" ]; then
   export ISRUNNING=1
 fi
 if [ -n "${sudo}" ] && ! ${sudo} -n true 2>/dev/null; then
-  echo -ne "${ind}${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
+  echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
 fi
 
 # usage: set_buildtype_key <input> <prefix> <on-val> <off-val>

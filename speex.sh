@@ -16,7 +16,7 @@ lst_bin='speexdec speexenc'
 lst_lic='COPYING AUTHORS'
 lst_pc='speex.pc'
 
-. xbuilder.sh
+. xbuild
 
 start
 
