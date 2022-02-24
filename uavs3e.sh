@@ -15,9 +15,11 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
-. xbuild
+on_config_arm(){
+    doErr "Arm not supported."
+}
 
-$host_x64 || doErr "Only for x86_64 cpus. $arch not supported."
+. xbuild
 
 start
 

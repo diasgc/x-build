@@ -173,9 +173,11 @@ show_packageinfo(){
   [ -z "$(echo $longdesc | xargs 2>/dev/null)" ] && unset longdesc
 
   # Main Description
-  [ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}${lib^^} - ${C0}${dsc}"
-  [ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
+  [ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}\e[1m${lib^^} - ${C0}${dsc}\e[0m"
+  [ -n "${longdesc}" ] && echo -ne "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
 
+  # log file link
+  echo -e "${CD}${ind}${CD}see log at \e[4m${log_file}\e[24m${C0}"
   # Licence
   echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "
   
@@ -211,7 +213,8 @@ show_packageinfo(){
       vs="${CT0}vrs: ${C0}${vgit}"
     fi
   fi
-  echo -e " ${vs} ${CD} see log at \e[4m${log_file}\e[24m${C0}"
+  echo -e " ${vs} ${C0}"
+  
 }
 
 package_long_desc(){
@@ -268,9 +271,9 @@ start(){
   esac
 
   if $host_arm; then 
-    fn_defined 'on_config_arm' && fn_log 'cfg-arm' on_config_arm
+    fn_defined 'on_config_arm' && fn_log '' on_config_arm
   else
-    fn_defined 'on_config_x86x' && fn_log 'cfg-x86x' on_config_x86x
+    fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
   fi
 
   # check whether to update source of main lib and dependencies

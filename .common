@@ -103,7 +103,11 @@ fn_undef(){
 }
 
 fn_log(){
-  do_log "$1" $2
+  if [ -z "$1" ]; then
+    $2
+  else
+    do_log "$1" $2
+  fi
   unset -f $2
 }
 
@@ -665,8 +669,8 @@ git_vremote(){
   [ -z "${v}" ] && v=$(echo "${lgit}" | grep -oP '\d+\.\d+.*' | grep -vP $vrs_exclude | tail -n1)
   if [ -n "${v}" ]; then
     echo "${v}"
-    return 0
   fi
+  return 0
   awk -v vv="${lgit}" ss="${src}" -f - << 'EOF'
 BEGIN {
   FS = "[ /^]+"
