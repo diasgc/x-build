@@ -44,6 +44,22 @@ update(){
     done
 }
 
+log_this
+
+function cmake_latest {
+    logsc 'Cleaning old cmake...' sudo apt purge --auto-remove cmake
+    logsc 'Checking for updates...' sudo apt update
+    logsc 'Installing tools...' sudo apt install -y software-properties-common lsb-release
+    logsc 'Cleaning...' sudo apt clean all
+    logsc 'Add gpg kitware...' wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+    logsc 'Add kitware repository' sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+    logsc 'Updating...' sudo apt update
+    logsc 'Installing keyring...' sudo apt install kitware-archive-keyring
+    logsc 'Remove gpg kitware...'sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
+    logsc 'Updating...' sudo apt update
+    logsc 'Installing latest cmake...' sudo apt install cmake
+}
+
 function libcheck {
     local v
     local g
@@ -105,6 +121,7 @@ function llvm_mingw_install {
 [ -z ${vsh+x} ] && . .common
 # set cyan theme color
 CH=${CC0}
+force=false
 # load config
 [ -f ".config" ] && . .config
 
@@ -112,6 +129,7 @@ force=false
 export cmd_apt_install="sudo apt install"
 
 case $1 in
+    -f|--force) force=true;;
     --git-cleanup)
         echo -e "size before cleanup: $(du -s .git)\n"
         git filter-branch --index-filter 'git rm --cached --ignore-unmatch *.tar.gz' -- --all
@@ -124,6 +142,7 @@ case $1 in
         ;;
     --force) force=true;;
     --install) shift; check_install $@; exit 0;;
+    --latest-cmake) cmake_latest && exit 0;;
     --update)  shift
         while [ -n "${1}" ]; do
             case $1 in
@@ -239,8 +258,12 @@ if [ "${OSTYPE}" != "linux-android" ];then
             dir_toolchain="/usr/${c_lib[${i}]}"
             #
             [ -d "${dir_toolchain}/bin" ] || sudo mkdir -p "${dir_toolchain}/bin"
-            [ -f "${dir_toolchain}/bin/clang" ] || bash_clang "${ndk_toolchain}/bin/clang" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang"
-            [ -f "${dir_toolchain}/bin/clang++" ] || bash_clang "${ndk_toolchain}/bin/clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
+            if $force || [ ! -f "${dir_toolchain}/bin/clang" ]; then 
+                bash_clang "${ndk_toolchain}/bin/clang" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang"
+            fi
+            if $force || [ ! -f "${dir_toolchain}/bin/clang++" ]; then 
+                bash_clang "${ndk_toolchain}/bin/clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
+            fi
             #[ -f "${dir_toolchain}/bin/as" ] || sudo ln -s "${ndk_toolchain}/bin/${c_lib[${i}]}-as" "${dir_toolchain}/bin/as"
             [ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s "${ndk_toolchain}/bin/lld" "${dir_toolchain}/bin/ld"
             
