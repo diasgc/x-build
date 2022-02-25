@@ -47,7 +47,7 @@ update(){
 log_this
 
 function cmake_latest {
-    logsc 'Cleaning old cmake...' sudo apt purge --auto-remove cmake
+    logsc 'Cleaning old cmake...' sudo apt purge --auto-remove cmake -y
     logsc 'Checking for updates...' sudo apt update
     logsc 'Installing tools...' sudo apt install -y software-properties-common lsb-release
     logsc 'Cleaning...' sudo apt clean all

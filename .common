@@ -336,7 +336,7 @@ log_init(){
 logsc(){
   echo -ne "  ${CC0} $1"
   shift
-  "$@" 2>&1 >/dev/null
+  "$@"
   echo -e " ${CC1}done${C0}"
 }
 
