@@ -48,6 +48,7 @@ sudo=$(command -v sudo)
 : "${config_timeout:=86400}"
 : "${indent:=0}"
 : "${ind:=}"
+: "${vnd:=}"
 
 ndk_testtc=true
 
@@ -64,6 +65,7 @@ use_clang=true
 
 skip_pc=false
 skip_dl=false
+skip_cpack=false
 
 # default build static, no shared, no executables
 build_shared=false
@@ -479,7 +481,7 @@ start(){
       fi
       
       [ -n "${cmake_config}" ] && CFG="${cmake_config} ${CFG}"
-      do_log 'cmake' ${exec_config} ${dir_config} -DCMAKE_INSTALL_PREFIX=${dir_install} -DCMAKE_BUILD_TYPE=${cmake_build_type} ${CTC} ${CFG} ${CSH} ${CBN}
+      do_log 'cmake' ${exec_config} ${dir_config} -DCMAKE_INSTALL_PREFIX=${dir_install} -DCMAKE_BUILD_TYPE=${cmake_build_type} ${CTC} ${CFG} ${CSH} ${CBN} ${CPACK}
       case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
       MAKE_EXECUTABLE=make
       #MAKE_EXECUTABLE=cmake
@@ -584,14 +586,19 @@ start(){
     fi
   fi
 
-  if fn_defined 'on_pack'; then
-    fn_log 'pack' on_pack
-  elif $build_package; then
-    if [ -f "${dir_build}/install_manifest.txt" ]; then
-      do_log 'cpack' build_package_cmake
-    else
-      do_log 'pack' build_packages_bin
+  if [ -z "${CPACK}" ]; then
+    if fn_defined 'on_pack'; then
+      fn_log 'pack' on_pack
+    elif $build_package; then
+      if [ -f "${dir_build}/install_manifest.txt" ]; then
+        do_log 'cpack' build_package_cmake
+      else
+        do_log 'pack' build_packages_bin
+      fi
     fi
+  else
+    cd ${dir_build}
+    do_log 'cpack' cpack -G DEB
   fi
 
   cd ${dir_src}
@@ -632,10 +639,11 @@ end_script(){
   [ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done${C0}\n"
   $debug && set +x
   unset dir_config dir_build dir_src \
-        CSH CBN exec_config vrs \
+        CSH CBN exec_config vrs vnd \
         ac_nohost ac_nopic ac_nosysroot \
         req_pcforlibs mkc mki mingw_posix \
-        cfg_args
+        cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
+        
   dec_tab
   echo
   exit 0
@@ -723,6 +731,7 @@ create_pkgconfig_file(){
     [ -z "${1}" ] && pc_file=${lib} || pc_file=${1}
     [ -z "${2}" ] && pc_llib="-l${pc_file}" || pc_llib=${2}
     [ -z "${3}" ] && pc_prefix=${dir_install} || pc_prefix=${3}
+    [ "${pc_llib}" == "null" ] && pc_llib=''
     [ -z "$pc_libdir" ] && pc_libdir="/lib"
     [ -z "$pc_incdir" ] && pc_incdir="/include"
     [ -z "$pc_cflags" ] && pc_cflags="-I\${includedir}"
@@ -799,7 +808,10 @@ build_package_cmake(){
   
   local v=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
   v=$(version_parse $v)
-  local fn="${lib}_${v}_${arch}"
+  local sfx=
+  $build_shared || sfx='-static'
+  $build_static || sfx='-shared'
+  local fn="${lib}${sfx}_${v}_${arch}"
   
   case ${pkg_fmt} in
     tbz)
@@ -969,6 +981,39 @@ cmake_create_toolchain(){
   cmake_create_toolchainfile
 }
 
+cmake_addcpack(){
+    [ -z "${vnd}" ] && str_contains $src 'git' && vnd=$(git_vendor $src) || vnd=$lib
+    local u_email=$(git config --list | grep -oP '(?<=^user.email=).*$')
+    local u_name=$(git config --list | grep -oP '(?<=^user.name=).*$')
+    local f_lic=$(echo "$lst_lic" | awk '{print $1}')
+    [ -z "${vrs}" ] && vrs=$(git describe --git-dir=${dir_src}/.git --abbrev=0 --tags 2>/dev/null)
+    [ -z "${vrs}" ] && vrs='0.0.0'
+    export CPACK="-DCPACK_RESOURCE_FILE_LICENSE=${dir_src}/${f_lic} -DCPACK_PACKAGE_VERSION=\${CMAKE_PROJECT_VERSION} -DCPACK_PACKAGE_FILE_NAME=\${CMAKE_PROJECT_NAME}_\${CMAKE_PROJECT_VERSION}_${arch}"
+    cat <<-EOF >>${cmake_toolchain_file}
+		set(CPACK_PACKAGE_NAME "${lib}")
+		set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${dsc}")
+		set(CPACK_PACKAGE_VENDOR "${vnd}")
+		set(CPACK_VERBATIM_VARIABLES YES)
+		set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CPACK_PACKAGE_NAME})
+		set(CPACK_OUTPUT_FILE_PREFIX "${dir_pkgdist}")
+		set(CPACK_PACKAGING_INSTALL_PREFIX "${dir_install}")
+		set(CPACK_PACKAGE_CONTACT "${u_email}")
+		set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${u_name}")
+		#set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+		# package name for deb
+		# if set, then instead of some-application-0.9.2-Linux.deb
+		# you'll get some-application_0.9.2_amd64.deb (note the underscores too)
+		set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+		# if you want every group to have its own package,
+		# although the same happens if this is not sent (so it defaults to ONE_PER_GROUP)
+		# and CPACK_DEB_COMPONENT_INSTALL is set to YES
+		set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)#ONE_PER_GROUP)
+		# without this you won't be able to pack only specified component
+		set(CPACK_DEB_COMPONENT_INSTALL YES)
+		include(CPack)
+		EOF
+}
+
 cmake_create_toolchainfile(){
   export cmake_toolchain_file="${dir_build}/${arch}.cmake"
   cat <<-EOF >${cmake_toolchain_file}
@@ -986,6 +1031,7 @@ cmake_create_toolchainfile(){
 		set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
 		set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 		set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
+    include(CPack)
 		EOF
   [ -n "${WFLAGS}" ] && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
   $host_x86 && cat <<-EOF >>${cmake_toolchain_file}
@@ -993,13 +1039,13 @@ cmake_create_toolchainfile(){
     set(CMAKE_CXX_COMPILER_ARG1 "-m32")
 		EOF
   $host_ndk && cat <<-EOF >>${cmake_toolchain_file}
-    set(ANDROID_ABI ${ABI})
-    set(ANDROID_PLATFORM ${API})
-    set(ANDROID_NDK ${ANDROID_NDK_HOME})
-    set(ZLIB_INCLUDE_DIRS ${SYSROOT}/usr/include)
-    set(ZLIB_LIBRARIES ${SYSROOT}/usr/lib/${arch})
-    set(ZLIB_VERSION_STRING 1.2.11)
-    include(${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake)
+		set(ANDROID_ABI ${ABI})
+		set(ANDROID_PLATFORM ${API})
+		set(ANDROID_NDK ${ANDROID_NDK_HOME})
+		set(ZLIB_INCLUDE_DIRS ${SYSROOT}/usr/include)
+		set(ZLIB_LIBRARIES ${SYSROOT}/usr/lib/${arch})
+		set(ZLIB_VERSION_STRING 1.2.11)
+		include(${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake)
 		EOF
   #mingw_stdlibs='-lwsock32 -lws2_32 -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32'
   mingw_stdlibs='-static-libgcc -static-libstdc++ -lwsock32 -lws2_32'
@@ -1015,6 +1061,7 @@ cmake_create_toolchainfile(){
 		set(CMAKE_FIND_LIBRARY_PREFIXES "lib" "")
 		set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" ".dll.a" ".lib" ".a")
 		EOF
+  #cmake_addcpack
 }
 
 cargo_create_toolchain(){
@@ -1600,7 +1647,7 @@ loadToolchain(){
   PKG_CONFIG=pkg-config
 
   #reset flags
-  unset LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
+  
   CPPFLAGS+=" -I${dir_install_include}"
   LDFLAGS="-L${dir_install_lib}"
   cmake_system_processor="${target_trip[0]}${target_trip[1]}"

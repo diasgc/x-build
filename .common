@@ -382,6 +382,14 @@ time_elapsed(){
   fi
 }
 
+url_dom(){
+  echo "$1" | awk -F/ '{print $3}'
+}
+
+git_vendor(){
+  echo "$1" | awk -F/ '{print $4}'
+}
+
 # usage: git_get_version srcdir
 git_local_version(){
   local out;

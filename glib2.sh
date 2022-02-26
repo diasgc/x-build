@@ -24,10 +24,6 @@ before_make(){
     mki="${mkf} install"
 }
 
-build_make_package(){
-    DESTDIR=${1} ninja -C ${dir_build} install
-}
-
 $host_mingw && meson_cfg+=' -Dlibelf=disabled -Dforce_posix_threads=true'
 WFLAGS='-Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-array-bounds'
 LDFLAGS+=" -L${dir_install_lib} -liconv -lffi"

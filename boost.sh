@@ -1,70 +1,67 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  F   .   .   .   V   F   F   .   .   .   .  static
-#  .   .   .   .   .   .   .   .   .   .   .  shared
-#  .   .   .   .   .   .   .   .   .   .   .  bin
-
-# WARNING: repo size 1.5GB 45min @3mbps
 
 lib='boost'
 dsc='Super-project for modularized Boost'
 lic='BSD-1c'
-vrs='1.78.0'
-src="https://boostorg.jfrog.io/artifactory/main/release/$BOOST_VER1.$BOOST_VER2.$BOOST_VER3/source/boost_${BOOST_VER1}_${BOOST_VER2}_${BOOST_VER3}.tar.bz2"
-src="https://boostorg.jfrog.io/artifactory/main/release/${vrs}/source/boost_1_78_0.tar.bz2"
-#src="https://github.com/boostorg/boost/archive/refs/tags/boost-${vrs}.tar.gz"
-#src='https://github.com/boostorg/boost.git'
-#src_opt='--recursive'
-#vrs='boost-1.78.0'
-cfg='other'
+src='https://github.com/boostorg/boost.git'
+src_opt='--recursive'
+cfg='cmake'
 eta='1095'
+WFLAGS='-Wno-deprecated-declarations -Wno-format'
 
 dev_bra='master'
-dev_vrs=''
+dev_vrs='1.78.0'
 stb_bra=''
 stb_vrs=''
 
-lst_inc=''
-lst_lib=''
+lst_inc='boost/*'
+lst_lib='libboost_*'
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
-dir_build='build'
 
-# see https://github.com/moritz-wundke/Boost-for-Android for android
+pc_llib=null
+pc_vrs="$dev_vrs"
+
 . xbuild
 
-source_config(){
-	# git checkout master # or whatever branch you want to use
-    ./bootstrap.sh
-    ./b2 headers
-}
-
-build_config(){
-	echo "using clang : $arch : $CXX : <linkflags>-L${dir_install_lib} ; " >>${dir_src}/project-config.jam
-    CXXFLAGS+=" -std=c++14 -stdlib=libc++"
-    local toolset="$(os_fromid clang gnu clang)-$(arch_fromid aarch64 arm i686 x86_64)"
-    local b_arch=$(arch_fromid arm arm x86 x86)
-    local b_abi=$(arch_fromid aapcs aapcs sysv sysv)
-    local b_bits=$(arch_fromid 64 32 32 64)
-    cd $dir_src
-    ./b2 target-os=android -j${HOST_NPROC} \
-		include=${dir_install_include} \
-		toolset="clang-$arch" \
-		--prefix="${dir_install_lib}"  \
-		-q \
-		--without-stacktrace \
-		--disable-icu \
-		-sNO_ZSTD=1 \
-		cxxflags="$CXXFLAGS" \
-		linkflags="$LDFLAGS" \
-		architecture="$b_arch" \
-		abi="$b_abi" \
-		address-model="$b_bits" \
-		boost.locale.icu=off \
-		binary-format=elf \
-		threading=multi \
-		install
-}
+export  CXXFLAGS="${CPPFLAGS}"
 
 start
+
+# Filelist
+# --------
+# lib/libboost_atomic.so
+# lib/libboost_chrono.so
+# lib/libboost_container.so
+# lib/libboost_context.so
+# lib/libboost_contract.so
+# lib/libboost_coroutine.so
+# lib/libboost_date_time.so
+# lib/libboost_exception.a
+# lib/libboost_fiber.so
+# lib/libboost_fiber_numa.so
+# lib/libboost_filesystem.so
+# lib/libboost_graph.so
+# lib/libboost_iostreams.so
+# lib/libboost_json.so
+# lib/libboost_locale.so
+# lib/libboost_log.so
+# lib/libboost_log_setup.so
+# lib/libboost_nowide.so
+# lib/libboost_prg_exec_monitor.so
+# lib/libboost_program_options.so
+# lib/libboost_random.so
+# lib/libboost_serialization.so
+# lib/libboost_stacktrace_addr2line.so
+# lib/libboost_stacktrace_basic.so
+# lib/libboost_stacktrace_noop.so
+# lib/libboost_test_exec_monitor.a
+# lib/libboost_thread.so
+# lib/libboost_timer.so
+# lib/libboost_type_erasure.so
+# lib/libboost_unit_test_framework.so
+# lib/libboost_wave.so
+# lib/libboost_wserialization.so
+# share/doc/boost/AUTHORS
+# share/doc/boost/LICENSE

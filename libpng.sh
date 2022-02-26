@@ -1,20 +1,19 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK +++  .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
 
 lib='libpng'
 dsc='Portable Network Graphics support'
-lic='As Is'
-src='https://git.code.sf.net/p/libpng/code' sty='git'
+lic='Other'
+src='https://git.code.sf.net/p/libpng/code.git'
+vnd='libpng'
 cfg='cmake'
 dep='zlib'
 
 mki='install/strip'
+
 cmake_static="PNG_STATIC"
 cmake_shared="PNG_SHARED"
 cmake_bin="PNG_EXECUTABLES"
+cmake_config="-DPNG_TESTS=OFF -DHAVE_LD_VERSION_SCRIPT=OFF"  # -DPNG_HARDWARE_OPTIMIZATIONS=OFF 
 
 lst_inc='pnglibconf.h png.h pngconf.h libpng16/*.h'
 lst_lib='libpng libpng16'
@@ -26,9 +25,22 @@ eta='20'
 
 . xbuild
 
-cmake_config="-DPNG_TESTS=OFF -DPNG_HARDWARE_OPTIMIZATIONS=OFF -DHAVE_LD_VERSION_SCRIPT=OFF"
-
 start
+
+# patch 01 on arm/filter_neon.S to fix llvm,_asm issue and allowing hw optimizations
+<<'XB64_PATCH'
+LS0tIGFybS9maWx0ZXJfbmVvbi5TCTIwMjItMDItMjYgMTk6MjI6MzcuNzU2MTUwNjAwICswMDAwCisrKyBhcm0vZm
+lsdGVyX25lb24uUwkyMDIyLTAyLTI2IDE5OjIzOjI4LjkzNjE1MDYwMCArMDAwMApAQCAtMjAsMTAgKzIwLDYgQEAK
+IC5zZWN0aW9uIC5ub3RlLkdOVS1zdGFjaywiIiwlcHJvZ2JpdHMgLyogbWFyayBzdGFjayBhcyBub24tZXhlY3V0YW
+JsZSAqLwogI2VuZGlmCiAKLSNpZmRlZiBfX2NsYW5nX18KLS5zZWN0aW9uIF9fTExWTSxfX2FzbQotI2VuZGlmCi0K
+ICNpZmRlZiBQTkdfUkVBRF9TVVBQT1JURUQKIAogLyogQXNzZW1ibGVyIE5FT04gc3VwcG9ydCAtIG9ubHkgd29ya3
+MgZm9yIDMyLWJpdCBBUk0gKGkuZS4gaXQgZG9lcyBub3Qgd29yayBmb3IK
+XB64_PATCH
+
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 # Filelist
 # --------

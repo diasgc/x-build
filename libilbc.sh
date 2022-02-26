@@ -6,9 +6,9 @@ lic='BSD-3c'
 src='https://github.com/TimothyGu/libilbc.git'
 cfg='cmake'
 eta='64'
-cbk="examples"
+cmake_bin="examples"
 
-cfg_static='BUILD_STATIC_LIBS'
+cmake_static='BUILD_STATIC_LIBS'
 #cfg_bin=''
 
 dev_bra='main'

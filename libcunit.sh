@@ -1,7 +1,4 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  +   .   .   .   .   .   .   .   .   .   .  static
-#  +   .   .   .   .   .   .   .   .   .   .  shared
 
 lib='libcunit'
 apt='libcunit1-dev'
@@ -13,7 +10,16 @@ cfg='ac'
 pkg='cunit'
 eta='27'
 
-. xbuild
+dev_bra='main'
+dev_vrs='2.1-3'
+stb_bra=''
+stb_vrs=''
+
+lst_inc='CUnit/*.h'
+lst_lib=''
+lst_bin=''
+lst_lic='AUTHORS COPYING'
+lst_pc='cunit.pc'
 
 source_config(){
     libtoolize --force --copy
@@ -23,11 +29,21 @@ source_config(){
     autoconf
 }
 
-start
+on_editpack(){
+    # remove documents from tarball
+    rm -rf share/doc/cunit share/CUnit
+}
+
+. xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK +++  F   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
 
 # Filelist
 # --------
-
 # include/CUnit/Console.h
 # include/CUnit/CUnit_intl.h
 # include/CUnit/TestDB.h
@@ -43,30 +59,5 @@ start
 # lib/libcunit.so
 # lib/libcunit.a
 # share/man/man3/CUnit.3
-# share/doc/cunit/headers/Win.h
-# share/doc/cunit/headers/Console.h
-# share/doc/cunit/headers/CUnit_intl.h
-# share/doc/cunit/headers/TestDB.h
-# share/doc/cunit/headers/CUError.h
-# share/doc/cunit/headers/MyMem.h
-# share/doc/cunit/headers/Util.h
-# share/doc/cunit/headers/CUCurses.h
-# share/doc/cunit/headers/CUnit.h
-# share/doc/cunit/headers/TestRun.h
-# share/doc/cunit/headers/Automated.h
-# share/doc/cunit/headers/Basic.h
-# share/doc/cunit/managing_tests.html
-# share/doc/cunit/CUnit_doc.css
-# share/doc/cunit/writing_tests.html
-# share/doc/cunit/test_registry.html
-# share/doc/cunit/running_tests.html
-# share/doc/cunit/index.html
-# share/doc/cunit/error_handling.html
-# share/doc/cunit/introduction.html
-# share/doc/cunit/fdl.html
-# share/CUnit/Memory-Dump.dtd
-# share/CUnit/Memory-Dump.xsl
-# share/CUnit/CUnit-List.xsl
-# share/CUnit/CUnit-Run.xsl
-# share/CUnit/CUnit-List.dtd
-# share/CUnit/CUnit-Run.dtd
+# share/doc/libcunit/AUTHORS
+# share/doc/libcunit/COPYING
