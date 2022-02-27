@@ -12,7 +12,8 @@ src='https://github.com/uclouvain/openjpeg.git'
 cfg='cmake'
 dep='lcms2 libtiff libpng'
 eta='123'
-cbk='BUILD_CODEC'
+cmake_bin='BUILD_CODEC'
+WFLAGS='-Wno-implicit-const-int-float-conversion'
 
 lst_inc='openjpeg-2.5/*.h'
 lst_lib='libopenjp2'
@@ -21,8 +22,6 @@ lst_lic='LICENSE AUTHORS'
 lst_pc='libopenjp2.pc'
 
 . xbuild
-
-WFLAGS='-Wno-implicit-const-int-float-conversion'
 
 start
 

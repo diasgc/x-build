@@ -1,25 +1,155 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  .   .   .   .   .   .   .   .   .   .   .  static
-#  .   .   .   .   .   .   .   .   .   .   .  shared
-#  .   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='poppler'
 apt='libpoppler-dev'
 dsc='PDF rendering library'
 lic='GPL-2.0'
 src='https://github.com/freedesktop/poppler.git'
-sty='git'
-cfg='cm'
+cfg='cmake'
 eta='240'
-dep='fontconfig libtiff libjpeg openjpeg'
-cb0="-DENABLE_UTILS=OFF"
-cb1="-DENABLE_UTILS=ON"
+dep='boost fontconfig libtiff libjpeg openjpeg lcms2'
+cmake_bin="ENABLE_UTILS"
+cmake_static='BUILD_STATIC_LIBS'
+
+dev_bra=''
+dev_vrs='22.02.0'
+stb_bra=''
+stb_vrs=''
+
+lst_inc='poppler/cpp/poppler*.h'
+lst_lib='libpoppler-cpp libpoppler'
+lst_bin=''
+lst_lic='COPYING COPYING3'
+lst_pc='poppler-cpp.pc poppler.pc'
 
 . xbuild
 
-CFG="-DENABLE_BOOST=OFF -DBUILD_GTK_TESTS=OFF -DBUILD_QT5_TESTS=OFF \
+cmake_config="-DBUILD_GTK_TESTS=OFF -DBUILD_CPP_TESTS=OFF -DBUILD_MANUAL_TESTS=OFF -DBUILD_QT5_TESTS=OFF \
      -DBUILD_QT6_TESTS=OFF -DENABLE_QT5=OFF -DENABLE_QT6=OFF \
-     -DENABLE_CMS=none -DENABLE_LIBCURL=OFF"
-
+     -DENABLE_LIBCURL=OFF"
 start
+
+# PATCH 01 on CMakeLists.txt to support dual static-shared build
+# PATCH 02 on cpp/CMakeLists.txt to support dual static-shared build
+# PATCH 03 on utils/CMakeLists.txt to include directories of missing headers png,iconv,...
+<<'XB64_PATCH'
+LS0tIENNYWtlTGlzdHMudHh0CTIwMjItMDItMjYgMjE6Mjc6MTkuOTE2MTUwNjAwICswMDAwCisr
+KyBDTWFrZUxpc3RzLnR4dAkyMDIyLTAyLTI2IDIyOjI5OjUzLjI3NjE1MDYwMCArMDAwMApAQCAt
+NTg2LDcgKzU4NiwxMyBAQAogZW5kaWYoKQogdGFyZ2V0X2xpbmtfbGlicmFyaWVzKHBvcHBsZXIg
+TElOS19QUklWQVRFICR7cG9wcGxlcl9MSUJTfSkKIGluc3RhbGwoVEFSR0VUUyBwb3BwbGVyIFJV
+TlRJTUUgREVTVElOQVRJT04gYmluIExJQlJBUlkgREVTVElOQVRJT04gJHtDTUFLRV9JTlNUQUxM
+X0xJQkRJUn0gQVJDSElWRSBERVNUSU5BVElPTiAke0NNQUtFX0lOU1RBTExfTElCRElSfSkKLQor
+aWYoQlVJTERfU1RBVElDX0xJQlMgQU5EIEJVSUxEX1NIQVJFRF9MSUJTKQorICBhZGRfbGlicmFy
+eShwb3BwbGVyLXN0YXRpYyBTVEFUSUMgJHtwb3BwbGVyX1NSQ1N9KQorICAjZ2VuZXJhdGVfZXhw
+b3J0X2hlYWRlcihwb3BwbGVyLXN0YXRpYyBCQVNFX05BTUUgcG9wcGxlci1wcml2YXRlIEVYUE9S
+VF9GSUxFX05BTUUgIiR7Q01BS0VfQ1VSUkVOVF9CSU5BUllfRElSfS9wb3BwbGVyX3ByaXZhdGVf
+ZXhwb3J0LmgiKQorICBzZXRfdGFyZ2V0X3Byb3BlcnRpZXMocG9wcGxlci1zdGF0aWMgUFJPUEVS
+VElFUyBWRVJTSU9OIDExOC4wLjAgU09WRVJTSU9OIDExOCBPVVRQVVRfTkFNRSBwb3BwbGVyKQor
+ICB0YXJnZXRfbGlua19saWJyYXJpZXMocG9wcGxlci1zdGF0aWMgTElOS19QUklWQVRFICR7cG9w
+cGxlcl9MSUJTfSkKKyAgaW5zdGFsbChUQVJHRVRTIHBvcHBsZXItc3RhdGljIFJVTlRJTUUgREVT
+VElOQVRJT04gYmluIExJQlJBUlkgREVTVElOQVRJT04gJHtDTUFLRV9JTlNUQUxMX0xJQkRJUn0g
+QVJDSElWRSBERVNUSU5BVElPTiAke0NNQUtFX0lOU1RBTExfTElCRElSfSkKK2VuZGlmKCkKIGlm
+KEVOQUJMRV9VTlNUQUJMRV9BUElfQUJJX0hFQURFUlMpCiAgIGluc3RhbGwoRklMRVMKICAgICBw
+b3BwbGVyL0Fubm90LmgKCi0tLSBjcHAvQ01ha2VMaXN0cy50eHQJMjAyMi0wMi0yNiAyMzoxMTow
+MS4xNTYxNTA2MDAgKzAwMDAKKysrIGNwcC9DTWFrZUxpc3RzLnR4dAkyMDIyLTAyLTI2IDIzOjEw
+OjU4LjYzNjE1MDYwMCArMDAwMApAQCAtMzMsNyArMzMsMTIgQEAKIGVuZGlmKCkKIHRhcmdldF9s
+aW5rX2xpYnJhcmllcyhwb3BwbGVyLWNwcCBwb3BwbGVyICR7SUNPTlZfTElCUkFSSUVTfSkKIGlu
+c3RhbGwoVEFSR0VUUyBwb3BwbGVyLWNwcCBSVU5USU1FIERFU1RJTkFUSU9OIGJpbiBMSUJSQVJZ
+IERFU1RJTkFUSU9OICR7Q01BS0VfSU5TVEFMTF9MSUJESVJ9IEFSQ0hJVkUgREVTVElOQVRJT04g
+JHtDTUFLRV9JTlNUQUxMX0xJQkRJUn0pCi0KK2lmKEJVSUxEX1NUQVRJQ19MSUJTIEFORCBCVUlM
+RF9TSEFSRURfTElCUykKKyAgYWRkX2xpYnJhcnkocG9wcGxlci1jcHAtc3RhdGljICR7cG9wcGxl
+cl9jcHBfU1JDU30pCisgIHNldF90YXJnZXRfcHJvcGVydGllcyhwb3BwbGVyLWNwcC1zdGF0aWMg
+UFJPUEVSVElFUyBWRVJTSU9OIDAuOS4wIFNPVkVSU0lPTiAwIE9VVFBVVF9OQU1FIHBvcHBsZXIt
+Y3BwKQorICB0YXJnZXRfbGlua19saWJyYXJpZXMocG9wcGxlci1jcHAtc3RhdGljIHBvcHBsZXIg
+JHtJQ09OVl9MSUJSQVJJRVN9KQorICBpbnN0YWxsKFRBUkdFVFMgcG9wcGxlci1jcHAtc3RhdGlj
+IFJVTlRJTUUgREVTVElOQVRJT04gYmluIExJQlJBUlkgREVTVElOQVRJT04gJHtDTUFLRV9JTlNU
+QUxMX0xJQkRJUn0gQVJDSElWRSBERVNUSU5BVElPTiAke0NNQUtFX0lOU1RBTExfTElCRElSfSkK
+K2VuZGlmKCkKIGluc3RhbGwoRklMRVMKICAgcG9wcGxlci1kZXN0aW5hdGlvbi5oCiAgIHBvcHBs
+ZXItZG9jdW1lbnQuaAoKLS0tIHV0aWxzL0NNYWtlTGlzdHMudHh0CTIwMjItMDItMjYgMjI6MDU6
+MTkuMjU2MTUwNjAwICswMDAwCisrKyB1dGlscy9DTWFrZUxpc3RzLnR4dAkyMDIyLTAyLTI2IDIy
+OjA1OjA2LjY1NjE1MDYwMCArMDAwMApAQCAtMTIsNiArMTIsOCBAQAogICBwZGZ0b3BwbS5jYwog
+ICBzYW5pdHljaGVja3MuY2MKICkKKworaW5jbHVkZV9kaXJlY3Rvcmllcygke0NNQUtFX0lOU1RB
+TExfUFJFRklYfS9pbmNsdWRlKQogYWRkX2V4ZWN1dGFibGUocGRmdG9wcG0gJHtwZGZ0b3BwbV9T
+T1VSQ0VTfSkKIHRhcmdldF9saW5rX2xpYnJhcmllcyhwZGZ0b3BwbSAke2NvbW1vbl9saWJzfSkK
+IGlmKExDTVMyX0ZPVU5EKQo=
+XB64_PATCH
+
+# experimental LZ-String + Base64 Patch
+<<'LZ64_PATCH'
+CC0YBGRBwRAUrDLAsASAM1BddDrdA0ACwAQRAwZHRHDKBgIRBTBAxEzsJzCcFkMzWAHRSFQiagCiU
+UMBkYsCBhkU5LFcKgql6bVpEYDJzIDbWBLyZCzSqQoADN1AABoOaQBJWOF+0JGl9+BB7ABNAACQAM
+wBKAMpoNGcAM0B0OH0AW0Ag5GzYACQEo2Rk1DhAKIBHCrsMysT4RBBJAHkAKUBANIAFJqV1AAEAVQ
+ARQEAQAFIq73ra9ITAFoBhAGU43xyQKExMjOHo3oGxQGGR0FX6mZAGwF6W1Wbh8YhRQBWRlqfmkfl
+AUBbHAVZk7GkHOmaAHegzaf3o0z6UKa7QW5UapMGfUSI1CL2GvRooNa4IwEAMyB8ePC+dIAa2UaPM
+bXc2N9SSxgBi5FkkijszkLU0r2nmBW4dJG1GqBeQD5SqCW1Rh3lQs6KJS6BAqGgvlCkSAKQVHrXar
+BEbgdAho0BIkC45hURm3d6CnXgs7oGUEslGgR00B08BS9VwxkSBQAbvNZQzDXmGqWE1KYYtNGsF9/
+EpTbfVQDIEhsAvr8FCgAYujQev92wAyAXEAangJkdEQIyR4vugB490aiS7sJZEHq79GAtogc1dHnS
+8cIyaKkasIbm4bTHgwqkSykS3i2gZrXUY5WEprr/Bdr86qO682rqQ+oHVt4AfwFD4oyQwLa/k9+i5
+yL4s+8Cinf8xTCB0wbpMW6JTuM6pLo2GZFLxepsPsF5kmcIYt10RB+MMbaOOm0bqoksbKseCXHApx
+zFOcaZhWZ7oY/cyTPCShPficDBAiYIQgqV0AgntPEukjLYoRjLwmMsKrGS67BPxJWI0ia9SYuOWCQ
+n5BKCeIQTJtHJw4P2yBKigSYPZSGDokwXpNNj5kqag4zAO2wGcJSwQ/XRkqUEsqaaB6eDjkwwVBEK
+6CPtIEgKMFoBOLUB5UjACRrggDH4QAZUUIQOGEEzHEACWDCOIAhjBKIghbKQhDxUlGIplI5ZqIt6a
+JUd1FQIJHCJIdD4JUZgWTbViD0Y4QdGIYFuTQQD+EMgtmRIm/IVIqG4NnmoT+VhGBYx1qKmay/9/C
+4r9Ak5H7AV1PnIfpxwBWd2wLfUxANm8rUwJibAAsmyQnVo3/uakqmUZsnIXjqkJ2QpIoX9pNug2mH
+MMja06cm3nBItgsqosIpyseIoJfzKML4qqagqqCZaUaaOGoaOJ9doF2HHtKQHS43rpprp4aZtkD4Z
+UuGlHtI+mkXLrGkTN17gnf77QID7LWJwxwo++9igBIZQQRRMs3QCtZEU+SETKqG38+IbP4lL54WdB
+BngddH3HKe7UU0Du0fXhj277bNRmzb2GUhxH++C9uKADDIoIpnUaQ+8rEmSYSl+7Gkk1GidPLJj3C
+oEZt9e2pDBBRpWlBGwlnlOwVReDEteKMBRRQBagCtiC0UTrOEWX22AqeWgklrNolxqZVkO5aNePUC
+CHAgENwhAdSNgXXLIqAYgP+jDoPSqZVE25aEs2sP0588FzdCA4CtVhbVYgF0A41sLQ4eviBDIlxME
+oYBOHZoByytaFEQ0NwgGHcgaAEkrrRgGLMDAIzBuqhBMJq1uQ92VhCOPRK0A8z9R2jgedEOFbz1GL
+GOHE6AhH4w2AaU2wdQGl2gPUQAl6v5F1v93oEFHAMKjcK4C65pTrbRpNnIo1NNW8AoYrq2IQBUd7r
+nnOVOp0AyJ5gAIIK9aBJTDiKAAQ
+LZ64_PATCH
+
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+
+# Filelist
+# --------
+# include/poppler/cpp/poppler-version.h
+# include/poppler/cpp/poppler_cpp_export.h
+# include/poppler/cpp/poppler-toc.h
+# include/poppler/cpp/poppler-rectangle.h
+# include/poppler/cpp/poppler-page-transition.h
+# include/poppler/cpp/poppler-page-renderer.h
+# include/poppler/cpp/poppler-page.h
+# include/poppler/cpp/poppler-image.h
+# include/poppler/cpp/poppler-global.h
+# include/poppler/cpp/poppler-font-private.h
+# include/poppler/cpp/poppler-font.h
+# include/poppler/cpp/poppler-embedded-file.h
+# include/poppler/cpp/poppler-document.h
+# include/poppler/cpp/poppler-destination.h
+# lib/libpoppler-cpp.a
+# lib/libpoppler-cpp.so
+# lib/libpoppler.a
+# lib/libpoppler.so
+# lib/pkgconfig/poppler-cpp.pc
+# lib/pkgconfig/poppler.pc
+# bin/pdfunite
+# bin/pdfseparate
+# bin/pdftohtml
+# bin/pdftotext
+# bin/pdftops
+# bin/pdfinfo
+# bin/pdfimages
+# bin/pdffonts
+# bin/pdfdetach
+# bin/pdftoppm
+# bin/pdfattach
+# share/man/man1/pdftoppm.1
+# share/man/man1/pdfunite.1
+# share/man/man1/pdfseparate.1
+# share/man/man1/pdftohtml.1
+# share/man/man1/pdftotext.1
+# share/man/man1/pdftops.1
+# share/man/man1/pdfinfo.1
+# share/man/man1/pdfimages.1
+# share/man/man1/pdffonts.1
+# share/man/man1/pdfattach.1
+# share/man/man1/pdfdetach.1
+# share/doc/poppler/COPYING3
+# share/doc/poppler/COPYING
