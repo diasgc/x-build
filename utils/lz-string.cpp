@@ -84,6 +84,19 @@ int main(int argc, char *argv[]){
     } else if(arg == "-k" || arg == "--key"){
       i++;
       key=argv[i];
+    } else if(arg == "-b" || arg == "--base"){
+      i++;
+      const std::string bname=argv[i];
+      if (bname == "BASE91_HENKE" || bname == "B91H"){
+        key = lzstring::BASE91_HENKE;
+      } else if (bname == "BASE91_RLYEH" || bname == "B91R"){
+        key = lzstring::BASE91_RLYEH;
+      } else if (bname == "BASE85" || bname == "B85" || bname == "Z85"){
+        key = lzstring::BASE85_Z85;
+      } else {
+        // default
+        key = lzstring::BASE64_STD;
+      }
     }
   }
   if (input == 0 && idx > 0 && idx < argc){
