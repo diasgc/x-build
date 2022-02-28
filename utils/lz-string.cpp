@@ -13,7 +13,9 @@
 
 namespace lzstring { 
   std::string compressToBase64(const std::string& uncompressed);
-  std::string decompressFromBase64(const std::string& compressed); 
+  std::string decompressFromBase64(const std::string& compressed);
+  std::string toBaseN(const std::string& src, const std::string& key);
+  std::string fromBaseN(const std::string& src, const std::string& key);
 } // fwd
 
 int usage(std::string cmd){
@@ -132,7 +134,7 @@ namespace lzstring
 
 namespace __inner
 {
-  const string keyStrBase64{"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="};
+  const string BASE64_STD{"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="};
   const string::value_type equal{'='};
 
   int charCodeAt(const string& str, int pos)
@@ -634,35 +636,38 @@ namespace __inner
 } // namespace __inner
 
 // clang-format off
-string compressToBase64(const string& input)
-{
-  if (input.empty()) return {};
-  using namespace __inner;
-  auto res = _compress(input, 6, [](int a) { return keyStrBase64.at(a); });
-  switch (res.length() % 4) { // To produce valid Base64
-  default: // When could this happen ?
-  case 0 : return res;
-  case 1 : return res+string(3,equal);
-  case 2 : return res+string(2,equal);
-  case 3 : return res+string(1,equal);
-  }
+string compressToBase64(const string& input){
+  return toBaseN(input,BASE64_STD);
 }
 
-string decompressFromBase64(const string& input)
-{
-  if (input.empty()) return {};
-  using namespace __inner;
-  std::unordered_map<string::value_type, int> baseReverseDic;
-  for (int i = 0; i < keyStrBase64.length(); ++i) baseReverseDic[keyStrBase64.at(i)] = i;
-  return _decompress(input.length(), 32, [&](int index) { return baseReverseDic[input.at(index)]; });
+string decompressFromBase64(const string& input){
+  return fromBaseN(input,BASE64_STD);
 }
 
-string toBaseN(const string& in, const string& key)
-{
+string toBaseN(const string& input, const string& key){
   if (input.empty()) return {};
   using namespace __inner;
   int keyLen = key.length();
-  auto res = _compress(input,)
+  int nb0 = floor(log2(keyLen - 1)) + 1;
+  int nb1 = 4;
+  auto res = _compress(input, nb0, [](int a) { return key.at(a); });
+  int nb2 = res.length() % nb1;
+  if (nb2 == 0){
+    return res;
+  } else {
+    return res + string(nb1-nb2,equal);
+  }
+}
+
+string fromBaseN(const string& input, const string& key){
+  if (input.empty()) return {};
+  using namespace __inner;
+  int keyLen = key.length();
+  std::unordered_map<string::value_type,int> reverseKey;
+  for (int i = 0; i < keyLen; ++i){
+    reverseKey[key.at(i)] = i;
+  }
+  return _decompress(input.length(), 32, [&](int index) { return reverseKey[input.at(index)]; });
 }
 // clang-format on
 
