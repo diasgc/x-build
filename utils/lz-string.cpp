@@ -52,11 +52,13 @@ void split2(std::string& str, const size_t w){
 int main(int argc, char *argv[]){
   
   std::string arg, str, out;
+  std::string key = lzstring::BASE64_STD;
 
   int mode=-1;
   int input=-1;
   int idx=-1;
   int w=0;
+  
 
   for(int i=0; i < argc; i++){
     arg=std::string(argv[i]);
@@ -72,13 +74,16 @@ int main(int argc, char *argv[]){
       input=0;
       i++;
       idx=i;
-    } else if(arg == "-" || arg == "--stdin"){
+    } else if(arg == "-"  || arg == "--stdin"){
       input=2;
     } else if(arg == "-h" || arg == "--help"){
       return usage(argv[0]);
     } else if(arg == "-w" || arg == "--width"){
       i++;
       w=atoi(argv[i]);
+    } else if(arg == "-k" || arg == "--key"){
+      i++;
+      key=argv[i];
     }
   }
   if (input == 0 && idx > 0 && idx < argc){
@@ -95,13 +100,13 @@ int main(int argc, char *argv[]){
       std::istreambuf_iterator<char>());
   }
   if (mode == 0){
-    out=lzstring::compressToBase64(str);
+    out=lzstring::toBaseN(str,key);
     if (w > 0){
       out=split(out,w);
     }
   } else if (mode == 1){
     str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
-    out = lzstring::decompressFromBase64(str);
+    out = lzstring::fromBaseN(str,key);
   } else {
     return usage(argv[0]);
   }
