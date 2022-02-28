@@ -5,6 +5,12 @@
 #include <streambuf>
 #include <algorithm>
 
+#ifdef __unix__
+# define LF "\n"
+#else
+# define LF "\r\n"
+#endif
+
 namespace lzstring { 
   std::string compressToBase64(const std::string& uncompressed);
   std::string decompressFromBase64(const std::string& compressed); 
@@ -24,12 +30,21 @@ std::string split(const std::string& str, const size_t linelength){
     for (size_t i = 0; i < count; i++){
         size_t startoffset = i * linelength;
         size_t endoffset = startoffset + linelength;
-        sub = sub.append(std::string(start + startoffset, start + endoffset)).append("\n");
+        sub = sub.append(std::string(start + startoffset, start + endoffset)).append(LF);
     }
     if (str.length() % linelength){
         sub.append(std::string(start + count * linelength, str.end()));
     }
     return sub;
+}
+
+void split2(std::string& str, const size_t w){
+  size_t s = str.length();
+  int p = w;
+  while(p < s){
+    str.insert(p,LF);
+    p += w + 1;
+  }
 }
 
 int main(int argc, char *argv[]){
