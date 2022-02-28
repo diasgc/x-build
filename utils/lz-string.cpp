@@ -649,6 +649,14 @@ string decompressFromBase64(const string& input)
   for (int i = 0; i < keyStrBase64.length(); ++i) baseReverseDic[keyStrBase64.at(i)] = i;
   return _decompress(input.length(), 32, [&](int index) { return baseReverseDic[input.at(index)]; });
 }
+
+string toBaseN(const string& in, const string& key)
+{
+  if (input.empty()) return {};
+  using namespace __inner;
+  int keyLen = key.length();
+  auto res = _compress(input,)
+}
 // clang-format on
 
 } // namespace lzstring
