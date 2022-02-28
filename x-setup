@@ -44,8 +44,6 @@ update(){
     done
 }
 
-log_this
-
 function cmake_latest {
     logsc 'Cleaning old cmake...' sudo apt purge --auto-remove cmake -y
     logsc 'Checking for updates...' sudo apt update
@@ -338,6 +336,15 @@ check_install git subversion lzip unzip
 
 echo -e "\n${CC1}${b} Other tools${C0}"
 check_install curl gperf bison texinfo patch jq
+
+echo -e "\n${CC1}${b} Utilities${C0}"
+if [ ! -f "/utils/lz-string" ]; then
+    cd utils
+    [ -n "$(command -v clang++)" ] && cc=clang++ || cc=g++
+    printf "${CH}%-20s: ${C0}%s" "  lz-string" "compiling..."
+    $cc -mtune=native -std=c++14 -O3 -Wall -stdlib=libstdc++ -c lz-string.cpp && clang++ -o lz-string lz-string.o && rm *.o && echo " done" || echo " fail"
+    cd ..
+fi
 
 echo -ne "\n${CC1}${b} Writing config${C0}"
 

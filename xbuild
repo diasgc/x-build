@@ -715,11 +715,18 @@ check_xbautopatch(){
       XB_PATCH) pushdir ${dir_src}
         patch -p0 <<<$(echo "${block}") 2>&1 >${log_file}
         echo -e "\npatch found: \n$block" >>${log_file}
-        popdir;;
+        popdir
+        ;;
       XB64_PATCH) pushdir ${dir_src}
         patch -p0 <<<$(echo "${block}" | base64 -d) 2>&1 >${log_file}
-        popdir;;
+        popdir
+        ;;
+      LZS_PATCH) pushdir ${dir_src}
+        patch -p0 <<<$(echo "${block}" | ${dir_root}/utils/lz-string -d -) 2>&1 >${log_file}
+        popdir
+        ;;
       *) echo -e "\nUnknown block name ${match} with this contents (ignoring):\n$block" >>${log_file}
+        ;;
     esac
   fi
   popdir
@@ -1891,10 +1898,57 @@ showBanner(){
   fi
 }
 
+patch_append(){
+  local newfile=${1}
+  local oldfile
+  str_starts "${newfile}" "sources/${lib}/" && newfile="${newfile//sources\/${lib}\//}"
+  [ -f "sources/${lib}/${newfile}" ] || doErr "unable to find file sources/${lib}/${newfile}"
+  shift
+  cd sources/${lib}
+  if [ -z "${1}" ]; then
+    oldfile="${newfile::-3}old"
+    touch sources/${lib}/${oldfile}
+  else
+    oldfile=${1}
+    str_starts "${oldfile}" "sources/${lib}/" && newfile="${oldfile//sources\/${lib}\//}"
+    [ -f "${oldfile}" ] || doErr "unable to find file sources/${lib}/${oldfile}"
+  fi
+  diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" >>"sources/${lib}/xbuild.patch"
+  cd ../..
+  echo -e "\n  ${CC1}Patch file updated at:${C0} $(pwd)/sources/${lib}/xbuild.patch\n\n"
+}
+
+patch_embed(){
+  if [ ! -f "sources/${lib}/xbuild.patch" ]; then
+    doErr "No sources/${lib}/xbuild.patch file to embed"
+  fi
+  hdr="STR_PATCH"
+  case $1 in
+    xb64|XB64) echo -e "\n<<'XB64_PATCH'" >>${0}
+               cat "sources/${lib}/xbuild.patch" | base64 -w 90 >>${0}
+               echo -e "XB64_PATCH" >>${0}
+               ;;
+    lzs|LZS)   echo -e "\n<<'LZS_PATCH'" >>${0}
+               cat "sources/${lib}/xbuild.patch" | utils/lz-string -c -w 90 - >>${0}
+               echo -e "LZS_PATCH" >>${0}
+               ;;
+  esac
+}
+
+patch_get(){
+  match=$(grep -oP "(?<=^<<').*?(?=')" $0)
+  if [ -n "${match}" ]; then
+    block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $0)
+    case $match in
+      XB64_PATCH) echo "${block}" | base64 -d;;
+      LZS_PATCH)  echo "${block}" | utils/lz-string -d -;;
+    esac
+  fi
+  return 0;
+}
+
 create_diff(){
   local b64=false
-  [ -z "${1}" ] && doErr "usage: ${0} --diff [b64] newfile [oldfile]"
-  [ "${1}" == "b64" ] && b64=true && shift
   local newfile=${1}
   local oldfile
   [ -f "sources/${lib}/${newfile}" ] || doErr "unable to find file sources/${lib}/${newfile}"
@@ -1908,7 +1962,7 @@ create_diff(){
     [ -f "${oldfile}" ] || doErr "unable to find file sources/${lib}/${oldfile}"
   fi
   if $b64; then
-    diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" | base64 -w 90 >"${newfile}.patch"
+    diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" | base64 -w 90 >>"${newfile}.patch"
   else
     diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" >"${newfile}.patch"
   fi
@@ -1956,31 +2010,31 @@ prt_hmenu(){
 menu_get(){
   local pkgfile="${dir_install_pc}/${pkg}.pc"
   case $1 in
-    help)          prt_hmenu "${CW}usage: $0 --get ${CC0}<opt>" \
-                   'cflags' 'get pkg-config --cflags' 'ldflags' 'get pkg-config --libs' 'ldstatic' 'get pkg-config --libs --static' \
-                   'pc-ver' 'get package version' 'pc-path|pc' 'get pkg-config file path' 'pc-name' 'get pkg-config file name without .pc' \
-                   'prefix' 'get prefix / install dir' 'libname' 'get the libname' 'aptname' 'get the debian package name' 'var <variable>' \
-                   'get <variable> value' 'vrs_remote' 'get git remote latest version' 'vrs_tag' 'get git remote latest tag' 'vrs_tags' \
-                   'get git remote tag list' 'vrs_local' 'get git local version' 'options|opts' 'show build options' 'log' 'edit (nano) log file'
-                   ;;
-    cflags)        [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --cflags)";;
-    ldflags)       [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs)";;
-    ldstatic)      [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs --static)";;
-    pc-ver)        [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --modversion)";;
-    pc-path|pc)    echo "${pkgfile}";;
-    pc-name)       echo "${pkg}";;
-    prefix)        echo "${dir_install}";;
-    libname)       echo "${lib}";;
-    aptname)       echo "${apt}";;
-    var)           shift; echo "${!1}";;
-    vrs_remote)    fn_defined 'vremote' && version_parse "$(vremote)" || git_version_remote $src;;
-    vrs_taglist)   git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
-    vrs_tags)      git ls-remote --tags --sort="v:refname" $src | grep -oP 'tags/.*\d+\.\d+\.\d+.*';;
-    vrs_local)     git_version_local $dir_src;;
-    options|opts)  showOpts "$(pwd)/sources/$lib"; exit 0;;
-    log)           [ -f "${dir_install}/${lib}.log" ] && nano ${dir_install}/${lib}.log;;
+    help)         prt_hmenu "${CW}usage: $0 --get ${CC0}<opt>" \
+                  'cflags' 'get pkg-config --cflags' 'ldflags' 'get pkg-config --libs' 'ldstatic' 'get pkg-config --libs --static' \
+                  'pc-ver' 'get package version' 'pc-path|pc' 'get pkg-config file path' 'pc-name' 'get pkg-config file name without .pc' \
+                  'prefix' 'get prefix / install dir' 'libname' 'get the libname' 'aptname' 'get the debian package name' 'var <variable>' \
+                  'get <variable> value' 'vrs_remote' 'get git remote latest version' 'vrs_tag' 'get git remote latest tag' 'vrs_tags' \
+                  'get git remote tag list' 'vrs_local' 'get git local version' 'options|opts' 'show build options' 'log' 'edit (nano) log file'
+                  ;;
+    cflags)       [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --cflags)";;
+    ldflags)      [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs)";;
+    ldstatic)     [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs --static)";;
+    pc-ver)       [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --modversion)";;
+    pc-path|pc)   echo "${pkgfile}";;
+    pc-name)      echo "${pkg}";;
+    prefix)       echo "${dir_install}";;
+    libname)      echo "${lib}";;
+    aptname)      echo "${apt}";;
+    var)          shift; echo "${!1}";;
+    vrs_remote)   fn_defined 'vremote' && version_parse "$(vremote)" || git_version_remote $src;;
+    vrs_taglist)  git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
+    vrs_tags)     git ls-remote --tags --sort="v:refname" $src | grep -oP 'tags/.*\d+\.\d+\.\d+.*';;
+    vrs_local)    git_version_local $dir_src;;
+    opt*)         showOpts "$(pwd)/sources/$lib"; exit 0;;
+    log)          [ -f "${dir_install}/${lib}.log" ] && nano ${dir_install}/${lib}.log;;
+    patch)        patch_get; exit 0;;
   esac
-  return 0
 }
 
 menu_list(){
@@ -1994,6 +2048,7 @@ menu_list(){
                 ;;
     tar*)       $b && list_tarball;;
     branches)   [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" branch -a;;
+    opt*)       showOpts "$(pwd)/sources/$lib"; exit 0;;
     tags)       [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" tag --list;;
     env)        $b && loadToolchain && print_vars CC CXX LD AS AR NM RANLIB STRIP ADDR2LINE OBJCOPY OBJDUMP READELF SIZE STRINGS WINDRES GCOV;;
     deps)       for f in ${dir_root}/*.sh; do
@@ -2164,7 +2219,13 @@ while [ $1 ];do
 
     --list)     shift; menu_list $@; exit 0;;
 
-    --patch)    shift; create_patch $@; exit 0;;
+    --patch)    shift;
+                case $1 in
+                  a|add|append)       shift; patch_append $@; exit 0;;
+                  m|make|e|embed)     shift; patch_embed $1; exit 0;;
+                  g|get|show)         patch_get; exit 9;;
+                esac
+                ;;
 
     --skip)     shift; skip_options $@;;
 

@@ -1,6 +1,7 @@
 builds/*
 sources/*
 packages/*
+utils/lz-string
 .config
 .vscode
 _test.sh

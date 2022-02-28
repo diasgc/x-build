@@ -10,43 +10,86 @@ namespace lzstring {
   std::string decompressFromBase64(const std::string& compressed); 
 } // fwd
 
-int main(int argc, char *argv[])
-{
-    std::string out;
-    if (argc < 4) {
-        std::cerr << "Usage: " << argv[0] << " [-c=compress|-d=decompress][-f=file|-s=string] input" << std::endl;
-        return 1;
+int usage(std::string cmd){
+  std::cerr << "Usage: " << cmd << " [-h|--help][-c|--compress|-d|--decompress][-f,--file][-s|--string][-|--stdin] input" << std::endl;
+  return 1;
+}
+
+std::string split(const std::string& str, const size_t linelength){
+
+    size_t count = str.length() / linelength;
+    auto start = str.begin();
+    std::string sub;
+
+    for (size_t i = 0; i < count; i++){
+        size_t startoffset = i * linelength;
+        size_t endoffset = startoffset + linelength;
+        sub = sub.append(std::string(start + startoffset, start + endoffset)).append("\n");
     }
-    std::string cmd=std::string(argv[1]);
-    std::string src=std::string(argv[2]);
-    std::string str;
-    if (src == "-f"){
-        std::ifstream t(argv[3]);
-        t.seekg(0, std::ios::end);   
-        str.reserve(t.tellg());
-        t.seekg(0, std::ios::beg);
-        str.assign((std::istreambuf_iterator<char>(t)),
-            std::istreambuf_iterator<char>());
-    } else if (src == "-s"){
-        str=std::string(argv[3]);
-    } else {
-        std::cerr << "Unknown option " << str << std::endl;
-        return 1;
+    if (str.length() % linelength){
+        sub.append(std::string(start + count * linelength, str.end()));
     }
-    if (str.length() < 1){
-        std::cerr << "Invalid string " << str << std::endl;
-        return 1;
+    return sub;
+}
+
+int main(int argc, char *argv[]){
+  
+  std::string arg, str, out;
+
+  int mode=-1;
+  int input=-1;
+  int idx=-1;
+  int w=0;
+
+  for(int i=0; i < argc; i++){
+    arg=std::string(argv[i]);
+    if(arg == "-c" || arg == "--compress"){
+      mode=0;
+    } else if(arg == "-d" || arg == "--decompress"){
+      mode=1;
+    } else if(arg == "-f" || arg == "--file"){
+      input=1;
+      i++;
+      idx=i;
+    } else if(arg == "-s" || arg == "--string"){
+      input=0;
+      i++;
+      idx=i;
+    } else if(arg == "-" || arg == "--stdin"){
+      input=2;
+    } else if(arg == "-h" || arg == "--help"){
+      return usage(argv[0]);
+    } else if(arg == "-w" || arg == "--width"){
+      i++;
+      w=atoi(argv[i]);
     }
-    if (cmd == "-c"){
-        out = lzstring::compressToBase64(str);
-    } else if (cmd == "-d"){
-        str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
-        out = lzstring::decompressFromBase64(str);
-    } else {
-        std::cerr << "Unknown option " << argv[1] << std::endl;
-        return 1;
+  }
+  if (input == 0 && idx > 0 && idx < argc){
+    str=std::string(argv[idx]);
+  } else if (input == 1 && idx > 0 && idx < argc){
+    std::ifstream t(argv[idx]);
+    t.seekg(0, std::ios::end);   
+    str.reserve(t.tellg());
+    t.seekg(0, std::ios::beg);
+    str.assign((std::istreambuf_iterator<char>(t)),
+      std::istreambuf_iterator<char>());
+  } else if (input == 2){
+    str.assign((std::istreambuf_iterator<char>(std::cin)),
+      std::istreambuf_iterator<char>());
+  }
+  if (mode == 0){
+    out=lzstring::compressToBase64(str);
+    if (w > 0){
+      out=split(out,w);
     }
-    std::cout << out << std::flush;
+  } else if (mode == 1){
+    str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+    out = lzstring::decompressFromBase64(str);
+  } else {
+    return usage(argv[0]);
+  }
+  std::cout << out << std::endl << std::flush;
+  return 0;
 }
 
 

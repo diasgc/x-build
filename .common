@@ -47,6 +47,16 @@ logtime_start=
 export dir_root=$(pwd)
 export PS1='\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;95m\]\u@\e[0;95m\h\[\033[00m\]:\[\033[01;96m\]\w\[\033[00m\]\$'
 
+splash(){
+  cat << "EOF"
+
+THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄ █▀▀ █▀▀▄ 
+     ▄▀▄ ▀▀ █▀▀▄ █  █  █  █   █  █ █▀▀ █▀▀▄ 
+    ▀   ▀   ▀▀▀  ▀▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀  ▀▀▀ ▀  ▀
+    A cross-compile builder scripting helper
+    
+EOF
+}
 color_table(){
   local i=16
   while [ $i -lt 52 ]; do
@@ -703,7 +713,16 @@ BEGIN {
 EOF
 }
 
-
+get_patch(){
+  local match=$(grep -oP "(?<=^<<').*?(?=')" $1)
+  local out
+  if [ -n "${match}" ]; then
+    out=${match}
+    local block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $1)
+    out+="\n${block}"
+  fi
+  echo ${out}
+}
 
 # .language
 # .homepage
