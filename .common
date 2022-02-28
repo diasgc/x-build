@@ -605,64 +605,6 @@ get_link_pkg(){
   return 0
 }
 
-ac_configure() {
-
-  #[ -z "${mki+x}" ] && mki=$(make_findtarget "install-strip" "install")
-  [ -z "$exec_config" ] && exec_config='configure' # default config executable
-  [ -n "${ac_config}" ] && CFG=${ac_config}
-
-  # find static build option
-  if $build_static && [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-enable-static')" ]; then
-    build_type="--enable-static"
-  fi
-  # find shared build option
-  if $build_shared && [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-enable-shared')" ]; then
-    build_type+=" --enable-shared"
-  fi
-
-  if [ -n "${ac_bin}" ]; then
-    arr=(${ac_bin//|/ })
-    case ${#arr[@]} in
-      1) $build_bin && CBN="${arr[0]}=1" || CBN="${arr[0]}=0";;
-      2) $build_bin && CBN="${arr[1]}" || CBN="${arr[0]}";;
-    esac
-  fi
-
-  if [ -n "${ac_opts}" ]; then
-    for opt in $(echo ${ac_opts}); do
-      case $opt in
-        --update-config_sub)
-          local fpath=$(find ${dir_src} -name 'config.sub')
-          [ -f "${fpath}" ] && cp -f /usr/share/automake*/config.sub ${fpath}
-          ;;
-        --update-config_guess)
-          local fpath=$(find ${dir_src} -name 'config.guess')
-          [ -f "${fpath}" ] && cp -f /usr/share/automake*/config.guess ${fpath}
-          ;;
-        --no-sysroot)          ac_nosysroot=true;;
-        --no-pic)              ac_nopic=true;;
-        --no-host)             ac_nohost=true;;
-      esac
-    done
-  fi
-
-  if ! $ac_nohost && $host_cross && [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-host')" ]; then
-    $host_cross && CFG+=" --host=${arch}"
-  fi
-  
-  if ! $ac_nosysroot; then
-    if [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-with-sysroot')" ]; then
-      CFG+=" --with-sysroot=${SYSROOT}"
-    elif [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-sysroot')" ]; then
-      CFG+=" --sysroot=${SYSROOT}"
-    fi
-  fi
-
-  if ! $ac_nopic && ! $host_mingw && [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-with-pic')" ]; then
-    CFG+=" --with-pic"
-  fi
-}
-
 version_parse(){
   local IFS='.|-|_'
   export arrv=()
