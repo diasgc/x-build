@@ -17,7 +17,7 @@ lst_pc=''
 pc_llib='-lbthread'
 
 dev_bra='master'
-dev_vrs='v0.2'
+dev_vrs='0.2'
 stb_bra=''
 stb_vrs=''
 

@@ -12,7 +12,7 @@ cmake_static='BUILD_STATIC_LIBS'
 cmake_config="-DBUILD_GMOCK=OFF -DBUILD_TESTING=OFF -DHWY_EXAMPLES_TESTS_INSTALL=ON"
 
 dev_bra='master'
-dev_vrs='0.14.2'
+dev_vrs='0.15.0'
 stb_bra=''
 stb_vrs=''
 

@@ -9,6 +9,8 @@ cfg='meson'
 eta='60'
 meson_cfg="-Db_lto=true -Ddocs=false"
 
+dev_vrs='1.0.11'
+
 lst_inc='fribidi/*.h'
 lst_lib='libfribidi'
 lst_bin='fribidi'

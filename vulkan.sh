@@ -11,10 +11,13 @@ src='https://github.com/KhronosGroup/Vulkan-Headers.git'
 cfg='cmake'
 eta='0'
 
+dev_vrs='1.3.204'
+
 pc_llib=' '
 lst_inc=''
 lst_lib=''
 lst_bin=''
+
 
 . xbuild
 

@@ -19,7 +19,7 @@ lst_lic='COPYING READM.md'
 lst_pc='libbrotlidec.pc libbrotlicommon.pc libbrotlienc.pc'
 
 dev_bra='master'
-dev_vrs='1.1.0'
+dev_vrs='1.0.7'
 stb_bra=''
 stb_vrs=''
 

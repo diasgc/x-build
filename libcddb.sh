@@ -16,6 +16,11 @@ lst_bin='cddb_query'
 lst_lic='COPYING AUTHORS'
 lst_pc='libcddb.pc'
 
+dev_bra='master'
+dev_vrs='1.3.2'
+stb_bra=''
+stb_vrs=''
+
 CFG="--without-cdio"
 WFLAGS='-Wno-header-guard'
 

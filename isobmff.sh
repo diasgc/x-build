@@ -11,6 +11,11 @@ src='https://github.com/MPEGGroup/isobmff.git'
 cfg='cmake'
 eta='60'
 
+dev_bra='main'
+dev_vrs=''
+stb_bra=''
+stb_vrs=''
+
 . xbuild
 
 #case $host_sys in

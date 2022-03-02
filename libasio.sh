@@ -34,6 +34,10 @@ lst_bin=''
 lst_lic='asio/LICENSE_1_0.txt asio/COPYING'
 lst_pc=''
 
+dev_bra='master'
+dev_vrs=''
+stb_bra=''
+stb_vrs=''
 
 . xbuild
 

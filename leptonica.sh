@@ -16,23 +16,18 @@ mki='install'
 eta='180'
 ac_nosysroot=true
 
-lst_inc='leptonica/bmf.h leptonica/bilateral.h leptonica/allheaders.h \
-         leptonica/readbarcode.h leptonica/pix.h leptonica/environ.h \
-         leptonica/watershed.h leptonica/rbtree.h leptonica/arrayaccess.h \
-         leptonica/alltypes.h leptonica/bmfdata.h leptonica/list.h \
-         leptonica/stringcode.h leptonica/hashmap.h leptonica/jbclass.h \
-         leptonica/colorfill.h leptonica/sudoku.h leptonica/gplot.h \
-         leptonica/heap.h leptonica/ccbord.h leptonica/leptwin.h \
-         leptonica/array.h leptonica/bbuffer.h leptonica/ptra.h \
-         leptonica/endianness.h leptonica/queue.h leptonica/imageio.h \
-         leptonica/morph.h leptonica/dewarp.h leptonica/recog.h \
-         leptonica/stack.h leptonica/bmp.h leptonica/regutils.h'
+lst_inc='leptonica/*.h'
 lst_lib='liblept'
 lst_bin='converttops converttopdf convertsegfilestops convertfilestops \
          convertsegfilestopdf imagetops xtractprotos fileinfo \
          convertformat convertfilestopdf'
 lst_oth='lib/cmake/LeptonicaConfig-version.cmake \
          lib/cmake/LeptonicaConfig.cmake'
+
+dev_bra='master'
+dev_vrs='1.83.0'
+stb_bra=''
+stb_vrs=''
 
 case $cfg in
     cm|ccm|cmake|ccmake)  cbk="BUILD_PROG";;

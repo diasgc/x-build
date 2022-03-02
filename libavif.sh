@@ -17,6 +17,11 @@ lst_inc='avif/avif.h'
 lst_lib='libavif'
 lst_bin='avifenc avifdec'
 
+dev_bra='master'
+dev_vrs='0.9.3'
+stb_bra=''
+stb_vrs=''
+
 . xbuild
 
 CFG="-DAVIF_BUILD_EXAMPLES=OFF -DAVIF_BUILD_TESTS=OFF -DAVIF_CODEC_AOM=ON"

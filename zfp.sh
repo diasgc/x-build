@@ -19,6 +19,11 @@ lst_bin='zfp'
 lst_lic='LICENSE'
 lst_pc='zfp.pc'
 
+dev_bra='master'
+dev_vrs='0.5.0'
+stb_bra=''
+stb_vrs=''
+
 dualbuild_support=false
 
 . xbuild

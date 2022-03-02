@@ -19,7 +19,7 @@ lst_lic='COPYING'
 lst_pc='zopfli.pc'
 
 dev_bra='main'
-dev_vrs='zopfli-1.0.3'
+dev_vrs='1.0.3'
 stb_bra=''
 stb_vrs=''
 

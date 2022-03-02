@@ -12,10 +12,16 @@ cfg='make'
 dep='libjpeg libpng sdl2'
 tls='yasm'
 eta='60'
+
 pc_llib='-lbpg'
 lst_inc=''
 lst_lib=''
 lst_bin=''
+
+dev_bra='master'
+dev_vrs=''
+stb_bra=''
+stb_vrs=''
 
 . xbuild
 

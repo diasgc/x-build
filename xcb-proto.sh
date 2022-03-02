@@ -15,7 +15,7 @@ lst_lic='COPYING'
 lst_pc=''
 
 dev_bra='master'
-dev_vrs=''
+dev_vrs='1.12'
 stb_bra=''
 stb_vrs=''
 

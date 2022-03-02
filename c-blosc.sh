@@ -21,6 +21,8 @@ lst_bin=''
 lst_lic='LICENSES/*'
 lst_pc='blosc.pc'
 
+dev_vrs='1.21.2'
+
 on_config_arm(){
     cmake_config+=" -DDEACTIVATE_SSE2=ON -DDEACTIVATE_AVX2=ON"
 }

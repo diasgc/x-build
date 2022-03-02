@@ -11,7 +11,7 @@ pc_llib='-ldensity'
 pc_url='https://github.com/k0dai/density'
 
 dev_bra='main'
-dev_vrs='density-0.14.2'
+dev_vrs='0.14.2'
 stb_bra=''
 stb_vrs=''
 

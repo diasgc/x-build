@@ -15,6 +15,8 @@ lst_bin='sqlite3'
 lst_lic='LICENSE.md'
 lst_pc='sqlite3.pc'
 
+dev_vrs='3.38.0'
+
 . xbuild
 
 start

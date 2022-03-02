@@ -17,7 +17,7 @@ lst_lic='COPYING AUTHORS'
 lst_pc='fontconfig.pc'
 
 dev_bra='master'
-dev_vrs='2.13.96'
+dev_vrs='2.13.94'
 stb_bra=''
 stb_vrs=''
 

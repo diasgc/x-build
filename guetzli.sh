@@ -13,6 +13,8 @@ dep='libpng libjpeg'
 eta='30'
 pc_llib='-lguetzli'
 
+dev_vrs='1.0.1'
+
 lst_inc=''
 lst_lib='libguetzli'
 lst_bin='butteraugli'

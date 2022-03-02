@@ -22,6 +22,11 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='libiso9660.pc libiso9660++.pc libcdio.pc libcdio++.pc libudf.pc'
 
+dev_bra='master'
+dev_vrs='1.3.2'
+stb_bra=''
+stb_vrs=''
+
 . xbuild
 
 WFLAGS="-Wno-header-guard"

@@ -13,7 +13,7 @@ eta='0'
 pkg='xproto'
 
 dev_bra='master'
-dev_vrs='7.0.33'
+dev_vrs='2021.5'
 stb_bra=''
 stb_vrs=''
 

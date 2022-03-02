@@ -17,7 +17,7 @@ lst_lic='License.txt'
 lst_pc='cryptopp.pc'
 
 dev_bra='master'
-dev_vrs=''
+dev_vrs='8.6.0'
 stb_bra=''
 stb_vrs=''
 

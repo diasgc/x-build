@@ -19,6 +19,11 @@ lst_bin='linkicc psicc tificc jpgicc transicc'
 lst_lic='COPYING AUTHORS'
 lst_pc='lcms2.pc'
 
+dev_bra='master'
+dev_vrs='2.13'
+stb_bra=''
+stb_vrs=''
+
 . xbuild
 
 start

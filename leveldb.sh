@@ -24,7 +24,7 @@ lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
 dev_bra='master'
-dev_vrs=''
+dev_vrs='1.23'
 stb_bra=''
 stb_vrs=''
 

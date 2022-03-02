@@ -9,6 +9,8 @@ eta='147'
 pc_llibs='-lglslang -lOSDependent -lHLSL -lOGLCompiler -lSPVRemapper'
 # see https://src.fedoraproject.org/rpms/glslang/blob/rawhide/f/0001-pkg-config-compatibility.patch
 
+dev_vrs='master-tot'
+
 lst_inc='glslang/*.h glslang/Public/*.h glslang/Include/*.h glslang/MachineIndependent/*.h glslang/SPIRV/*.h glslang/HLSL/*.h'
 lst_lib='libSPIRV libOSDependent libSPVRemapper libOGLCompiler libHLSL libglslang libglslang-default-resource-limits'
 lst_bin='spirv-remap glslangValidator'

@@ -19,6 +19,10 @@ lst_bin='JxrEncApp JxrDecApp'
 lst_lic='LICENSE AUTHORS'
 lst_pc='jpegxr.pc xrglue.pc'
 
+dev_bra='main'
+dev_vrs='2019.10.9'
+stb_vrs=''
+
 . xbuild
 
 WFLAGS='-Wno-implicit-int

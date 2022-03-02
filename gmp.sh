@@ -13,6 +13,8 @@ mkc='distclean'
 
 ac_config="CC_FOR_BUILD=cc"
 
+dev_vrs='6.2.99'
+
 lst_inc='gmp.h'
 lst_lib='libgmp'
 lst_bin=''

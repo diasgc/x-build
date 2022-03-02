@@ -21,7 +21,7 @@ ac_config="--disable-doc \
      --disable-encoder-check"
 
 dev_bra='main'
-dev_vrs='0.0-1731*'
+dev_vrs='0.0-1731'
 stb_bra=''
 stb_vrs=''
 

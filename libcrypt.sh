@@ -13,9 +13,14 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
+dev_bra='master'
+dev_vrs=''
+stb_bra=''
+stb_vrs=''
+
 . xbuild
 
-CFG="--with-libgpg-error-prefix=${dir_install} --with-capabilities --disable-doc"
+ac_config="--with-libgpg-error-prefix=${dir_install} --with-capabilities --disable-doc"
 
 start
 

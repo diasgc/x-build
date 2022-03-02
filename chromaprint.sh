@@ -20,7 +20,7 @@ lst_lic='LICENSE.md'
 lst_pc='libchromaprint.pc'
 
 dev_bra='master'
-dev_vrs=''
+dev_vrs='1.5.1'
 stb_bra=''
 stb_vrs=''
 

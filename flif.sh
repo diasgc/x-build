@@ -13,6 +13,8 @@ cfg='cmake'
 dep='libpng'
 eta='60'
 
+dev_vrs='0.4'
+
 lst_inc='flif_dec.h flif_enc.h flif.h flif_common.h'
 lst_lib='libflif libflif_dec'
 lst_bin='flif apng2flif gif2flif dflif'

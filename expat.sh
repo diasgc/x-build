@@ -22,7 +22,7 @@ lst_lic='expat/COPYING expat/AUTHORS'
 lst_pc='expat.pc'
 
 dev_bra='master'
-dev_vrs='2.4.4'
+dev_vrs='2.4.3'
 stb_bra=''
 stb_vrs=''
 

@@ -16,6 +16,11 @@ lst_bin='aec'
 lst_lic='LICENSE.txt AUTHORS'
 lst_pc='aec.pc sz.pc'
 
+dev_bra='master'
+dev_vrs='1.0.6'
+stb_bra=''
+stb_vrs=''
+
 . xbuild
 
 CFG="-DBUILD_TESTING=OFF"

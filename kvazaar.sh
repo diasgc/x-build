@@ -14,7 +14,7 @@ lst_lic='COPYING CREDITS README.md'
 lst_pc='kvazaar.pc'
 
 dev_bra='master'
-dev_vrs=''
+dev_vrs='2.1.0'
 stb_bra=''
 stb_vrs=''
 

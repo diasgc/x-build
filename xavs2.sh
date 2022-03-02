@@ -23,7 +23,7 @@ lst_pc='xavs2.pc'
 
 . xbuild
 
-ac_config="--sysroot=${SYSROOT} --enable-lto --enable-strip --enable-pic"
+ac_config="-enable-lto --enable-strip"
 $host_x86 && AS=nasm || ac_config+=' --disable-asm'
 
 start

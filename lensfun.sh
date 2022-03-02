@@ -15,6 +15,11 @@ eta='60'
 cmake_bin='BUILD_LENSTOOL'
 cmake_config="-DBUILD_TESTS=OFF -DBUILD_DOC=OFF -DINSTALL_HELPER_SCRIPTS=OFF -DINSTALL_PYTHON_MODULE=OFF -DBUILD_AUXFUN=ON" # -DGLIB2_BASE_DIR=$SOURCES/glib2"
 
+dev_bra='master'
+dev_vrs=''
+stb_bra=''
+stb_vrs=''
+
 . xbuild
 
 

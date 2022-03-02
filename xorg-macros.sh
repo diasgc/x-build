@@ -15,6 +15,11 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
+dev_bra='master'
+dev_vrs='1.19.3'
+stb_bra=''
+stb_vrs=''
+
 . xbuild
 
 start

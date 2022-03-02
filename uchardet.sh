@@ -14,7 +14,7 @@ cbk="BUILD_BINARY"
 lst_inc='uchardet/uchardet.h'
 lst_lib='libuchardet'
 lst_bin='uchardet'
-
+dev_vrs=''
 . xbuild
 
 cmake_config="-DUSE_OMP=OFF"

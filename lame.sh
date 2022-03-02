@@ -17,7 +17,7 @@ API=26 # required for frontends build
 ac_bin='--disable-frontend|--enable-frontend'
 
 dev_bra='main'
-dev_vrs=''
+dev_vrs='3.100'
 stb_bra=''
 stb_vrs=''
 

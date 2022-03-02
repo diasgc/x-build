@@ -11,7 +11,7 @@ dep='ogg vorbis'
 eta='391'
 
 dev_bra='master'
-dev_vrs='1.2.0alpha1'
+dev_vrs='1.1.1'
 stb_bra=''
 stb_vrs=''
 

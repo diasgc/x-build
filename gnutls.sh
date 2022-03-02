@@ -11,6 +11,8 @@ eta='690'
 ac_bin='--disable-tools|--enable-tools'
 mki='install'
 
+dev_vrs='3.6.16'
+
 lst_inc='gnutls/*.h'
 lst_lib='libgnutls libgnutlsxx'
 lst_bin='gnutls-serv srptool psktool gnutls-cli ocsptool certtool gnutls-cli-debug'

@@ -12,7 +12,7 @@ cmake_static="BUILD_STATIC_LIBS"
 cmake_config="-DUNITTEST=FALSE"
 
 dev_bra='master'
-dev_vrs=''
+dev_vrs='1.0.3'
 stb_bra=''
 stb_vrs=''
 

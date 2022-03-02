@@ -9,6 +9,8 @@ src='https://github.com/Blosc/c-blosc2.git'
 cfg='cmake'
 eta='399'
 
+dev_vrs='2.0.5'
+
 lst_inc='blosc2.h blosc2/*.h'
 lst_lib='libblosc2'
 lst_bin=''

@@ -11,6 +11,8 @@ cfg='meson'
 eta='280'
 meson_cfg='-Dgtk_doc=false -Dman=false'
 
+dev_vrs='2.71.1'
+
 lst_inc='libintl.h glib-2.0/*.h glib-2.0/glib/*.h glib-2.0/gobject/*.h glib-2.0/gio/*.h'
 lst_lib='libintl libgio-2.0 libglib-2.0 libgthread-2.0 libgobject-2.0 libgmodule-2.0'
 lst_bin='glib-gettextize gdbus glib-genmarshal gdbus-codegen gio-querymodules gobject-query glib-compile-schemas gresource gsettings gio glib-mkenums gtester-report'

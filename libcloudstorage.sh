@@ -21,6 +21,11 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
+dev_bra='master'
+dev_vrs=''
+stb_bra=''
+stb_vrs=''
+
 . xbuild
 
 start

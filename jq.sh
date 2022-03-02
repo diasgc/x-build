@@ -16,6 +16,11 @@ lst_bin='jq'
 lst_lic='COPYING AUTHORS'
 lst_pc='jq.pc'
 
+dev_bra='main'
+dev_vrs='1.6'
+stb_bra=''
+stb_vrs=''
+
 . xbuild
 
 ac_config="--disable-maintainer-mode --disable-docs --with-oniguruma=${dir_install}"

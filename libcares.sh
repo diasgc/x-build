@@ -13,7 +13,7 @@ mkc='distclean'
 make_clean='distclean'
 make_install='install-strip'
 
-cmake_args='-DCARES_STATIC_PIC=ON'
+cmake_config='-DCARES_STATIC_PIC=ON'
 cmake_static='CARES_STATIC'
 cmake_shared='CARES_SHARED'
 cmake_bin='CARES_BUILD_TOOLS'

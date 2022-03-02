@@ -1,6 +1,5 @@
 #!/bin/bash
 
-#vrs='1.2.2'
 lib='libao'
 dsc='Audio output portability library.'
 lic='GPL-2'
@@ -14,6 +13,11 @@ lst_lib='libao'
 lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='ao.pc'
+
+dev_bra='master'
+dev_vrs='1.2.2'
+stb_bra=''
+stb_vrs=''
 
 . xbuild
 

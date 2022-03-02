@@ -11,7 +11,7 @@ dep=''
 eta='400'
 
 dev_bra='main'
-dev_vrs=''
+dev_vrs='3.2.0'
 stb_bra=''
 stb_vrs=''
 
