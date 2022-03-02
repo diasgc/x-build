@@ -25,6 +25,7 @@ config_dir='icu4c/source'
 mki='install'
 eta='580'
 
+dev_vrs='70.1'
 lst_inc='unicode/*.h'
 lst_lib='libicutu libicuuc libicuio libicutest libicui18n libicudata'
 lst_bin='genrb makeconv icuexportdata pkgdata gencnval gencfu gendict uconv icu-config derb genbrk icuinfo'
@@ -40,7 +41,7 @@ if $host_cross; then
     dir_cross="${dir_src}/${config_dir}/build_${build_arch}"
     a=${arch}
     if [ ! -d "${dir_cross}" ];then
-        ./libicu.sh lx64 --both --bin
+        ./libicu.sh lx64 --full
     fi
     arch=$a
     ac_config+=" --with-cross-build=${dir_cross}"

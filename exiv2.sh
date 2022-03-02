@@ -28,6 +28,8 @@ extraOpts(){
 	fi
 }
 
+dev_vrs='1.0.0.9'
+
 lst_inc=''
 lst_lib=''
 lst_bin=''

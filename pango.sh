@@ -14,7 +14,7 @@ eta='0'
 CFG='-Dintrospection=disabled'
 
 dev_bra='master'
-dev_vrs=''
+dev_vrs='1.50.3'
 stb_bra=''
 stb_vrs=''
 
