@@ -84,9 +84,9 @@ function install_ndk {
     wget $url -qO tmp 2>&1
     local fname=$(basename $url)
     unzip tmp
-    rm -f $fname
-    mv ${fname%.*} android-ndk
-    export ANDROID_NDK_HOME="$(pwd)/android-ndk"
+    rm -f $fname tmp
+    mv android-ndk-r* android-ndk
+    export ANDROID_NDK_HOME="${HOME}/android-ndk"
     cd $od
 }
 
@@ -263,10 +263,10 @@ if [ "${OSTYPE}" != "linux-android" ];then
             #
             [ -d "${dir_toolchain}/bin" ] || sudo mkdir -p "${dir_toolchain}/bin"
             if $force || [ ! -f "${dir_toolchain}/bin/clang" ]; then 
-                bash_clang "${ndk_toolchain}/bin/clang" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang"
+                bash_clang "clang" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang"
             fi
             if $force || [ ! -f "${dir_toolchain}/bin/clang++" ]; then 
-                bash_clang "${ndk_toolchain}/bin/clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
+                bash_clang "clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
             fi
             #[ -f "${dir_toolchain}/bin/as" ] || sudo ln -s "${ndk_toolchain}/bin/${c_lib[${i}]}-as" "${dir_toolchain}/bin/as"
             [ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s "${ndk_toolchain}/bin/lld" "${dir_toolchain}/bin/ld"
@@ -287,7 +287,7 @@ if [ "${OSTYPE}" != "linux-android" ];then
             sudo ln -s "${dir_root}/builds/android/${c_abi[${i}]}" "${dir_toolchain}/local"
         done
         printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
-        [ -f "${dir_toolchain}/include/sys/soundcard.h" ] || printf "#include <linux/soundcard.h>" >""
+        [ -f "${dir_toolchain}/include/sys/soundcard.h" ] || printf "#include <linux/soundcard.h>" >"${dir_toolchain}/include/sys/soundcard.h"
     else
         echo -e "  not installed"
     fi
@@ -344,7 +344,7 @@ echo -e "\n${CC1}${b} Other tools${C0}"
 check_install curl gperf bison texinfo patch jq
 
 echo -e "\n${CC1}${b} Utilities${C0}"
-if [ ! -f "/utils/lz-string" ]; then
+if [ ! -f "${dir_root}/utils/lz-string" ]; then
     build_utils
 fi
 

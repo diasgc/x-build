@@ -11,11 +11,7 @@ dsc='Open Source library to support popular graphics image formats like PNG, BMP
 lic='Other'
 src='https://svn.code.sf.net/p/freeimage/svn/FreeImage/trunk'
 cfg='cmake'
-<<<<<<< HEAD
 eta='1600'
-=======
-eta='440'
->>>>>>> 4fccb347cf2eb37d6ea1d35e7eb3c9b3c8b73695
 
 pc_llib="-lfreeimage"
 
@@ -27,11 +23,6 @@ lst_bin=''
 lst_lic='license-fi.txt license-gplv2.txt license-gplv3.txt'
 lst_pc='freeimage.pc'
 
-<<<<<<< HEAD
-=======
-WFLAGS='-Wno-switch -Wno-deprecated-register -Wno-unused-value -Wno-format -Wno-format-extra-args'
-
->>>>>>> 4fccb347cf2eb37d6ea1d35e7eb3c9b3c8b73695
 . xbuild
 
 source_patch(){
