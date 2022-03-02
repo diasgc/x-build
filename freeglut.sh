@@ -17,7 +17,7 @@ cmake_shared='FREEGLUT_BUILD_SHARED_LIBS'
 cmake_config='-DFREEGLUT_BUILD_DEMOS=OFF'
 
 dev_bra='main'
-dev_vrs=''
+dev_vrs='3.2.2'
 stb_bra=''
 stb_vrs=''
 
@@ -33,6 +33,8 @@ eta='20'
 
 on_config_ndk(){
     cmake_config+=' -DFREEGLUT_GLES=ON'
+    pkg='freeglut-gles'
+    return 0
 }
 
 start
@@ -41,7 +43,6 @@ start
 
 # Filelist
 # --------
-#
 # share/doc/freeglut/AUTHORS
 # share/doc/freeglut/COPYING
 # lib/cmake/FreeGLUT/FreeGLUTConfigVersion.cmake

@@ -28,10 +28,7 @@ lst_bin='vpxenc vpxdec'
 lst_lic='LICENSE PATENTS AUTHORS'
 lst_pc='vpx.pc'
 
-dev_bra='main'
-dev_vrs=''
-stb_bra=''
-stb_vrs='1.11.0'
+dev_vrs='1.11.0'
 
 . xbuild
 
@@ -47,19 +44,23 @@ AS=${YASM}
 
 start
 
+
 # Filelist
 # --------
+# share/doc/vpx/LICENSE
+# share/doc/vpx/PATENTS
+# share/doc/vpx/AUTHORS
 # include/vpx/vpx_ext_ratectrl.h
-# include/vpx/vpx_frame_buffer.h
-# include/vpx/vpx_integer.h
-# include/vpx/vpx_decoder.h
-# include/vpx/vpx_image.h
-# include/vpx/vp8cx.h
 # include/vpx/vpx_codec.h
-# include/vpx/vpx_encoder.h
-# include/vpx/vp8.h
 # include/vpx/vp8dx.h
+# include/vpx/vpx_encoder.h
+# include/vpx/vpx_decoder.h
+# include/vpx/vp8.h
+# include/vpx/vpx_integer.h
+# include/vpx/vp8cx.h
+# include/vpx/vpx_frame_buffer.h
+# include/vpx/vpx_image.h
+# bin/vpxdec
+# bin/vpxenc
 # lib/pkgconfig/vpx.pc
 # lib/libvpx.a
-# bin/vpxenc
-# bin/vpxdec

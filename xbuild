@@ -283,7 +283,7 @@ start(){
     [ -d "${dir_src}" ] && rm -rf "${dir_src}" 2>/dev/null
     ! $req_update_deps && update=false
   else
-    [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
+    ! $retry && [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
   fi
 
   # Reset LOGFILE

@@ -5,7 +5,7 @@ apt='flite'
 dsc='A small fast portable speech synthesis system'
 lic='GPL-2+'
 src='https://github.com/festvox/flite.git'
-cfg='cmake'
+cfg='ar'
 eta='80'
 pc_llibs='-lflite -lflite_cmu_grapheme_lang \
 		 -lflite_cmu_grapheme_lex -lflite_cmu_indic_lang \
@@ -27,8 +27,8 @@ lst_pc=''
 . xbuild
 
 #unset CPPFLAGS CSH
-#ac_nosysroot=true
-#ac_nopic=true
+ac_nosysroot=true
+ac_nopic=true
 
 source_patch(){
 	sed -i 's/MINGWPREF=\"i386-mingw32-\"/MINGWPREF=\"x86_64-w64-mingw32-\"/g' configure

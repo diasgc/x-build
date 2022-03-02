@@ -14,10 +14,12 @@ ac_config="--enable-lto --enable-pic --enable-strip"
 mkc='clean'
 mki='install'
 
-
+dev_vrs='0.164.3094M'
 lst_inc='x264.h x264_config.h'
 lst_lib='libx264'
 lst_bin='x264'
+lst_lic='COPYING AUTHORS'
+lst_pc='x264.pc'
 
 eta='60'
 
