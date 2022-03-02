@@ -105,8 +105,13 @@ function llvm_mingw_install {
     cd $od
 }
 
-
-
+function build_utils {
+    cd utils
+    [ -n "$(command -v clang++)" ] && cc=clang++ || cc=g++
+    printf "${CH}%-20s: ${C0}%s" "  lz-string" "compiling..."
+    $cc -mtune=native -std=c++14 -O3 -Wall -stdlib=libstdc++ -c lz-string.cpp && clang++ -o lz-string lz-string.o && rm *.o && echo " done" || echo " fail"
+    cd ..
+}
 
 
 
@@ -153,6 +158,7 @@ case $1 in
         exit 0
         ;;
     --libcheck) libcheck; exit 0;;
+    --build_utils) build_utils; exit 0;;
 esac
 
 echo -e "\n${CC1}This Machine:"
@@ -339,11 +345,7 @@ check_install curl gperf bison texinfo patch jq
 
 echo -e "\n${CC1}${b} Utilities${C0}"
 if [ ! -f "/utils/lz-string" ]; then
-    cd utils
-    [ -n "$(command -v clang++)" ] && cc=clang++ || cc=g++
-    printf "${CH}%-20s: ${C0}%s" "  lz-string" "compiling..."
-    $cc -mtune=native -std=c++14 -O3 -Wall -stdlib=libstdc++ -c lz-string.cpp && clang++ -o lz-string lz-string.o && rm *.o && echo " done" || echo " fail"
-    cd ..
+    build_utils
 fi
 
 echo -ne "\n${CC1}${b} Writing config${C0}"

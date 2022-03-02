@@ -326,6 +326,7 @@ start(){
 
   if $build_pkgdl; then
     local lnk=$(get_link_pkg ${arch} ${lib})
+    #echo "link=$lnk"
     if [ -n "${lnk}" ]; then
       wget_pkg_tgz ${lnk} ${dir_install}
       $skip_pc || logver "${dir_install_pc}/${pkg}.pc"

@@ -10,6 +10,7 @@ dep='zlib'
 
 mki='install/strip'
 
+dev_vrs='1.6.38'
 cmake_static="PNG_STATIC"
 cmake_shared="PNG_SHARED"
 cmake_bin="PNG_EXECUTABLES"

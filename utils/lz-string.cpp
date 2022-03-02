@@ -4,6 +4,7 @@
 #include <fstream>
 #include <streambuf>
 #include <algorithm>
+#include <cmath>
 
 #ifdef __unix__
 # define LF "\n"
@@ -16,6 +17,11 @@ namespace lzstring {
   std::string decompressFromBase64(const std::string& compressed);
   std::string toBaseN(const std::string& src, const std::string& key);
   std::string fromBaseN(const std::string& src, const std::string& key);
+  std::string strPad(const std::string& src, const int pad, const char c);
+  const std::string BASE91_HENKE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"";
+  const std::string BASE91_RLYEH = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;-=\\?@[]^_`{|}~\'";
+  const std::string BASE85_Z85   = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#";
+  const std::string BASE64_STD   = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 } // fwd
 
 int usage(std::string cmd){
@@ -143,12 +149,6 @@ int main(int argc, char *argv[]){
 namespace lzstring
 {
   using string = std::string;
-  
-  const string BASE91_HENKE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"";
-  const string BASE91_RLYEH = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;-=\\?@[]^_`{|}~\'";
-  const string BASE85_Z85   = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#";
-  const string BASE64_STD   = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
 
 namespace __inner
 {
@@ -655,11 +655,11 @@ namespace __inner
 
 // clang-format off
 string compressToBase64(const string& input){
-  return toBaseN(input,BASE64_STD);
+  return toBaseN(input, BASE64_STD);
 }
 
 string decompressFromBase64(const string& input){
-  return fromBaseN(input,BASE64_STD);
+  return fromBaseN(input, BASE64_STD);
 }
 
 string toBaseN(const string& input, const string& key){
@@ -668,7 +668,7 @@ string toBaseN(const string& input, const string& key){
   int keyLen = key.length();
   int nb0 = floor(log2(keyLen - 1)) + 1;
   int nb1 = 4;
-  auto res = _compress(input, nb0, [](int a) { return key.at(a); });
+  auto res = _compress(input, nb0, [&](int a) { return key.at(a); });
   int nb2 = res.length() % nb1;
   if (nb2 == 0){
     return res;
@@ -686,6 +686,11 @@ string fromBaseN(const string& input, const string& key){
     reverseKey[key.at(i)] = i;
   }
   return _decompress(input.length(), 32, [&](int index) { return reverseKey[input.at(index)]; });
+}
+
+string strPad(const string& str, const int pad, const char c){
+  int r = str.length() % pad;
+  return r == 0 ? str : str + string(pad - r,c);
 }
 // clang-format on
 
