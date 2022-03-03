@@ -163,15 +163,18 @@ main(){
 
   # show package info
   export log_file="${dir_install}/${lib}.log"
-  if $update || [ ! -f "${dir_install_pc}/${pkg}.pc" ]; then
-    show_packageinfo
+
+  if $update || $retry || [ -z "$(check_install pc)" ]; then
+    package_showinfo
+  else
+    end_script    
   fi
 }
 
-show_packageinfo(){
+package_showinfo(){
   local dp=
   local vs=
-  local longdesc=$(package_long_desc)
+  local longdesc=$(package_longdesc)
   [ -z "$(echo $longdesc | xargs 2>/dev/null)" ] && unset longdesc
 
   # Main Description
@@ -219,7 +222,7 @@ show_packageinfo(){
   
 }
 
-package_long_desc(){
+package_longdesc(){
   if [ -n "${apt}" ]; then
     echo -e $(apt-cache show ${apt} 2>/dev/null | \
     grep -E "Description-..^|^ " | \
@@ -266,16 +269,15 @@ gitjson=
 
 start(){
 
-  case ${target_trip[3]} in
-    android) fn_defined 'on_config_ndk' && fn_log 'cfg-ndk' on_config_ndk;;
-    gnu)     fn_defined 'on_config_gnu' && fn_log 'cfg-gnu' on_config_gnu;;
-    mingw32) fn_defined 'on_config_mingw' && fn_log 'cfg-mingw' on_config_mingw;;
-  esac
-
-  if $host_arm; then 
-    fn_defined 'on_config_arm' && fn_log '' on_config_arm
-  else
-    fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
+  if $build_pkgdl; then
+    local lnk=$(get_link_pkg ${arch} ${lib})
+    #echo "link=$lnk"
+    if [ -n "${lnk}" ]; then
+      wget_pkg_tgz ${lnk} ${dir_install}
+      $skip_pc || logver "${dir_install_pc}/${pkg}.pc"
+      end_script
+      exit 0
+    fi
   fi
 
   # check whether to update source of main lib and dependencies
@@ -324,18 +326,6 @@ start(){
   local req_src_config=false
   local req_src_patch=false
 
-  if $build_pkgdl; then
-    local lnk=$(get_link_pkg ${arch} ${lib})
-    #echo "link=$lnk"
-    if [ -n "${lnk}" ]; then
-      wget_pkg_tgz ${lnk} ${dir_install}
-      $skip_pc || logver "${dir_install_pc}/${pkg}.pc"
-      end_script
-      exit 0
-    fi
-  fi
-
-
   # get source
   if [ ! -d ${dir_src} ];then
     if ! $skip_dl; then
@@ -368,6 +358,18 @@ start(){
   if [ -n "${bra}" ]; then
     cd ${dir_src}
     do_log "${bra}" git checkout ${bra}
+  fi
+
+  case ${target_trip[3]} in
+    android) fn_defined 'on_config_ndk' && fn_log 'cfg-ndk' on_config_ndk;;
+    gnu)     fn_defined 'on_config_gnu' && fn_log 'cfg-gnu' on_config_gnu;;
+    mingw32) fn_defined 'on_config_mingw' && fn_log 'cfg-mingw' on_config_mingw;;
+  esac
+
+  if $host_arm; then 
+    fn_defined 'on_config_arm' && fn_log '' on_config_arm
+  else
+    fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
   fi
 
   cd ${dir_config}
@@ -452,7 +454,10 @@ start(){
   else case $build_tool in
     cmake)
       cmake_configure
-      do_log 'cmake' ${exec_config} ${dir_config} -DCMAKE_INSTALL_PREFIX=${dir_install} -DCMAKE_BUILD_TYPE=${cmake_build_type} ${CTC} ${CFG} ${CSH} ${CBN} ${CPACK}
+      do_log 'cmake' ${exec_config} ${dir_config} \
+        -DCMAKE_INSTALL_PREFIX=${dir_install} \
+        -DCMAKE_BUILD_TYPE=${cmake_build_type} \
+        ${CTC} ${CFG} ${CSH} ${CBN} ${CPACK}
       case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
       MAKE_EXECUTABLE=make
       #MAKE_EXECUTABLE=cmake
@@ -461,13 +466,18 @@ start(){
 
     automake) # use autotools and configure executable to create makefile
       ac_configure      
-      do_log 'configure' ${dir_config}/${exec_config} --prefix=${dir_install} ${CFG} ${CSH} ${CBN} ${cfg_args[@]}
+      do_log 'configure' ${dir_config}/${exec_config} \
+        --prefix=${dir_install} \
+        ${CFG} ${CSH} ${CBN} ${cfg_args[@]}
       MAKE_EXECUTABLE=make
       ;;
 
     meson)
       meson_configure
-      do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
+      do_log 'meson' meson setup \
+        --buildtype=release \
+        --cross-file=${cfg_file} \
+        --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
       ;;
 
     make)
@@ -875,7 +885,11 @@ build_package_cmake(){
     done
   fi
 
+  # no flist, return
   [ -z "${flist}" ] && return 0
+  
+  # sort flist
+  flist=$(echo ${flist} | xargs -n1 | sort | xargs)
 
   pushdir ${dir_install}
   
