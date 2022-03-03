@@ -10,10 +10,7 @@ eta='40'
 ac_bin='--disable-cli| '
 config_dir='build/linux'
 
-dev_bra='main'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='1.3.232'
 
 lst_inc='xavs2*.h'
 lst_lib='libxavs2'

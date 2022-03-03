@@ -5,17 +5,15 @@ dsc='High quality encoder and decoder of the Audio Video Standard of China (AVS)
 lic='GPL-2.0'
 src='https://svn.code.sf.net/p/xavs/code/trunk'
 eta='30'
+cfg="ac"
 
-dev_bra='master'
 dev_vrs='0.1.55'
-stb_bra=''
-stb_vrs=''
 
-lst_inc=''
-lst_lib=''
-lst_bin=''
-#lst_lic='LICENSE AUTHORS'
-lst_pc=''
+lst_inc='xavs.h'
+lst_lib='libxavs'
+lst_bin='xavs'
+lst_lic=''
+lst_pc='xavs.pc'
 
 . xbuild
 
@@ -25,7 +23,7 @@ ac_config="--disable-asm --enable-pic"
 start
 
 # cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
+# NDK +++  .   .   .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 

@@ -1,18 +1,18 @@
 #!/bin/bash
 
 lib='boost'
+apt='libboost1.71-dev'
 dsc='Super-project for modularized Boost'
 lic='BSD-1c'
 src='https://github.com/boostorg/boost.git'
 src_opt='--recursive'
 cfg='cmake'
+dep='zlib liblzma libzstd bzip2 libicu libiconv'
 eta='1095'
-WFLAGS='-Wno-deprecated-declarations -Wno-format'
+WFLAGS='-Wno-deprecated-declarations -Wno-format -Wno-implicit-const-int-float-conversion -Wno-#pragma-messages'
 
 dev_bra='master'
 dev_vrs='1.78.0'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='boost/*'
 lst_lib='libboost_*'
@@ -25,7 +25,7 @@ pc_vrs="$dev_vrs"
 
 . xbuild
 
-export  CXXFLAGS="${CPPFLAGS}"
+export CXXFLAGS="${CPPFLAGS}"
 
 start
 

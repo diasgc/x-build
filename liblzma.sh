@@ -11,6 +11,7 @@ eta='110'
 mki='install'
 cfg_cmd='./autogen.sh --no-po4a'
 
+dev_vrs='5.2.5'
 lst_inc='lzma.h lzma/*.h'
 lst_lib='liblzma'
 lst_bin='xzmore xzdec xzgrep xz lzmainfo xzless lzmadec xzdiff'

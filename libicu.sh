@@ -37,7 +37,7 @@ lst_pc='icu-i18n.pc icu-uc.pc icu-io.pc'
 dir_build="${dir_src}/${config_dir}/build_${arch}"
 ac_config="--with-data-packaging=archive"
 
-if $host_cross; then
+if ! $build_pkgdl && $host_cross; then
     dir_cross="${dir_src}/${config_dir}/build_${build_arch}"
     a=${arch}
     if [ ! -d "${dir_cross}" ];then

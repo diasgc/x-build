@@ -12,16 +12,16 @@ mki='install'
 pc_llib="-liconv"
 pc_url="https://www.gnu.org/software/libiconv"
 
+dev_vrs='1.16'
+
 lst_inc='iconv.h libcharset.h localcharset.h'
 lst_lib='libiconv libcharset'
 lst_bin='iconv'
 lst_lic='COPYING COPYING.LIB AUTHORS'
 lst_pc='libiconv.pc'
 
-dev_bra='master'
 dev_vrs='1.16'
-stb_bra=''
-stb_vrs=''
+
 
 . xbuild
 

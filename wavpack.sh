@@ -11,10 +11,7 @@ cbk="able-apps"
 
 cfg_bin='--disable-apps|--enable-apps'
 
-dev_bra='master'
 dev_vrs='5.4.0'
-stb_bra='tags/5.4.0'
-stb_vrs='5.4.0'
 
 lst_inc='wavpack/wavpack.h'
 lst_lib='libwavpack'

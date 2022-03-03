@@ -13,11 +13,9 @@ cfg='ac'
 eta='240'
 mki='install'
 
-ac_bin='--disable-examples|--enable-examples'
-ac_nohost=true
-ac_nosysroot=true
-ac_nopic=true
-ac_config="--disable-docs --disable-install-srcs --disable-install-docs --disable-tools --disable-unit-tests"
+#ac_bin='--disable-examples|--enable-examples'
+ac_opts='--no-host --no-pic --no-sysroot'
+ac_config='--disable-docs --disable-install-srcs --disable-install-docs --disable-tools --disable-unit-tests'
   #--enable-vp8 --enable-vp9 --enable-vp9-highbitdepth --enable-vp9-temporal-denoising --enable-vp9-postproc \
   #--enable-postproc --enable-onthefly-bitpacking --enable-multi-res-encoding --enable-better-hw-compatibility \
   #--enable-webm-io --enable-libyuv --enable-experimental --enable-pic "

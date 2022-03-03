@@ -25,6 +25,11 @@ stb_vrs=''
 
 $host_ndk && CPPFLAGS+=" -I./contrib/android/include"
 
+on_editpack(){
+    cp "${dir_src}/contrib/android/include/android_lf.h" include
+    cp include/android_lf.h ${dir_install_include}
+}
+
 start
 
 # cpu av8 av7 x86 x64
