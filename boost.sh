@@ -18,7 +18,7 @@ lst_inc='boost/*'
 lst_lib='libboost_*'
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
-lst_pc=''
+lst_pc='boost.pc'
 
 pc_llib=null
 pc_vrs="$dev_vrs"

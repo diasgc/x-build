@@ -12,7 +12,6 @@ eta='120'
 cmake_config="-DBUILD_TESTS=OFF -DENABLE_THREADS=ON -DWITH_COMBINED_THREADS=ON"
 
 dev_vrs='3.3.10'
-stb_vrs='3.3.9'
 
 lst_inc='fftw3.h fftw3.f fftw3.f03 fftw3q.f03 ftw3l.f03'
 lst_lib='libfftw3'

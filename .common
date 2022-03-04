@@ -600,8 +600,8 @@ list_pkgs(){
 
 get_link_pkg(){
   local pd="${dir_root}/builds"
-  [ -f "${pd}/${arch}_pkglist.txt" ] || list_pkgs ${arch}
-  local fn=$(cat "${pd}/${arch}_pkglist.txt" | grep "${lib}.*${arch}.tar.gz" | tail -n1)
+  #[ -f "${pd}/${arch}_pkglist.txt" ] || list_pkgs ${arch}
+  #local fn=$(cat "${pd}/${arch}_pkglist.txt" | grep "${lib}.*${arch}.tar.gz" | tail -n1)
   [ -z "${fn}" ] && [ -n "${dev_vrs}" ] && fn="${lib}_${dev_vrs}_${arch}.tar.gz"
   [ -n "${fn}" ] && echo "https://sourceforge.net/projects/packages-${arch}/files/${fn}"
   return 0

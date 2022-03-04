@@ -8,8 +8,8 @@ lib='postfish'
 dsc='A digital audio post-processing, restoration, filtering and mixdown tool.'
 lic='GPL-2'
 src='https://gitlab.xiph.org/xiph/postfish.git'
-cfg='mk'
-dep='libao fftw'
+cfg='cmake'
+dep='libao fftw glib gtk'
 pkg='postfish'
 eta='60'
 
@@ -38,8 +38,8 @@ find_package(PkgConfig)
 pkg_check_modules(_GKT QUIET gtk)
 
 find_library(GTK_LIB NAMES gtk)
-
-find_library(AO_LIB NAMES )
+find_library(FFTW_LIB NAMES libfftw)
+find_library(AO_LIB NAMES libao)
 add_definitions("-DUGLY_IEEE754_FLOAT32_HACK=1")
 set(src main.c mainpanel.c multibar.c readout.c input.c output.c clippanel.c
 	declip.c reconstruct.c multicompand.c windowbutton.c subpanel.c
@@ -48,7 +48,19 @@ set(src main.c mainpanel.c multibar.c readout.c input.c output.c clippanel.c
 	limit.c limitpanel.c mute.c mixpanel.c mix.c freeverb.c reverbpanel.c
 	outpanel.c config.c window.c follower.c linkage.c)
 
-add_executalbe(postfish ${src})
-install(TARGET postfish bin)
+add_executable(postfish ${src})
+
+if(GTK_LIB_FOUND)
+	target_link_executable(postfish PRIVATE GTK_LIB)
+endif()
+if(FFTW_LIB_FOUND)
+	target_link_executable(postfish PRIVATE FFTW_LIB)
+endif()
+if(AO_LIB_FOUND)
+	target_link_executable(postfish PRIVATE AO_LIB)
+endif()
+
+install(TARGETS postfish RUNTIME DESTINATION bin)
+
 XB_CREATE_CMAKELISTS
 start
