@@ -13,13 +13,13 @@ src='https://gitlab.gnome.org/GNOME/librsvg.git'
 #src="http://ftp.gnome.org/pub/gnome/sources/librsvg/2.48/librsvg-${vrs}.tar.xz"
 #sty='txz'
 cfg='ag'
-tls='gtk-doc-tools gobject-introspection cargo python3-docutils gi-docgen'
+tls='gi-docgen python3-docutils rustc cargo'
+dep='cairo freetype gdk-pixbuf glib2 libxml2 pango'
 eta='110'
-cb0="--disable-tools"
-cb1="--enable-tools"
 mki='install'
 
-CFG='--enable-introspection=no'
+ac_bin="--disable-tools|--enable-tools"
+ac_config='--enable-introspection=no'
 
 . xbuild
 

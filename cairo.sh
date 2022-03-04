@@ -13,8 +13,6 @@ meson_cfg='-Dxcb=disabled -Dxlib=disabled -Dxlib-xcb=disabled -Dtests=disabled -
 
 dev_bra='master'
 dev_vrs='1.17.5'
-stb_bra='1.16'
-stb_vrs='1.16'
 
 lst_inc='cairo/*.h'
 lst_lib='libcairo-gobject libcairo-script-interpreter libcairo libcairo-script-interpreter libcairo'
