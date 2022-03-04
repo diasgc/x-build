@@ -26,8 +26,10 @@ stb_vrs=''
 $host_ndk && CPPFLAGS+=" -I./contrib/android/include"
 
 on_editpack(){
-    cp "${dir_src}/contrib/android/include/android_lf.h" include
-    cp include/android_lf.h ${dir_install_include}
+    if $host_ndk; then
+        cp "${dir_src}/contrib/android/include/android_lf.h" include
+        cp include/android_lf.h ${dir_install_include}
+    fi
 }
 
 start

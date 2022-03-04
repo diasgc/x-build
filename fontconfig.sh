@@ -5,7 +5,7 @@ lib='fontconfig'
 dsc='Font customization and configuration library'
 lic='Other'
 src='https://gitlab.freedesktop.org/fontconfig/fontconfig.git'
-cfg='ac'
+cfg='ag'
 tls='gperf gettext autopoint'
 dep='libiconv freetype expat json-c libpng'
 eta='231'
@@ -24,7 +24,6 @@ stb_vrs=''
 . xbuild
 
 ac_config='--disable-docs'
-exec_config="autogen.sh"
 
 #not recomended
 meson_cfg='-Db_pie=true -Db_lto=true -Ddoc=disabled -Dtests=disabled'

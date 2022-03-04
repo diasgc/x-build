@@ -468,18 +468,13 @@ start(){
 
     automake) # use autotools and configure executable to create makefile
       ac_configure      
-      do_log 'configure' ${dir_config}/${exec_config} \
-        --prefix=${dir_install} \
-        ${CFG} ${CSH} ${CBN} ${cfg_args[@]}
+      do_log 'configure' ${dir_config}/${exec_config} --prefix=${dir_install} ${CFG} ${CSH} ${CBN} ${cfg_args[@]}
       MAKE_EXECUTABLE=make
       ;;
 
     meson)
       meson_configure
-      do_log 'meson' meson setup \
-        --buildtype=release \
-        --cross-file=${cfg_file} \
-        --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
+      do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
       ;;
 
     make)
@@ -582,7 +577,7 @@ start(){
 }
 
 meson_configure(){
-  local cfg_file="${dir_config}/${arch}.meson"
+  export cfg_file="${dir_config}/${arch}.meson"
   [ -f "${cfg_file}" ] && rm ${cfg_file}
   $host_clang || LD="bfd"
   if [ -n "${meson_bin}" ]; then
@@ -598,17 +593,19 @@ meson_configure(){
 }
 
 ac_configure() {
-
+  autoreconf -fi 2>/dev/null >>${log_file}
   #[ -z "${mki+x}" ] && mki=$(make_findtarget "install-strip" "install")
   [ -z "$exec_config" ] && exec_config='configure' # default config executable
   [ -n "${ac_config}" ] && CFG=${ac_config}
 
+  local opt_list="$(${dir_config}/${exec_config} --help | grep -P '^[[:space:]]+\-\-')"
+
   # find static build option
-  if $build_static && [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-enable-static')" ]; then
+  if $build_static && [ -n "$(echo "${opt_list}" | grep '\-\-enable-static')" ]; then
     build_type="--enable-static"
   fi
   # find shared build option
-  if $build_shared && [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-enable-shared')" ]; then
+  if $build_shared && [ -n "$(echo "${opt_list}" | grep '\-\-enable-shared')" ]; then
     build_type+=" --enable-shared"
   fi
 
@@ -638,19 +635,19 @@ ac_configure() {
     done
   fi
 
-  if ! $ac_nohost && $host_cross && [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-host')" ]; then
+  if ! $ac_nohost && $host_cross && [ -n "$(echo "${opt_list}" | grep '\-\-host')" ]; then
     $host_cross && CFG+=" --host=${arch}"
   fi
   
   if ! $ac_nosysroot; then
-    if [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-with-sysroot')" ]; then
+    if [ -n "$(echo "${opt_list}" | grep '\-\-with-sysroot')" ]; then
       CFG+=" --with-sysroot=${SYSROOT}"
-    elif [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-sysroot')" ]; then
+    elif [ -n "$(echo "${opt_list}" | grep '\-\-sysroot')" ]; then
       CFG+=" --sysroot=${SYSROOT}"
     fi
   fi
 
-  if ! $ac_nopic && ! $host_mingw && [ -n "$(cat ${dir_config}/${exec_config} | grep '\-\-with-pic')" ]; then
+  if ! $ac_nopic && ! $host_mingw && [ -n "$(echo "${opt_list}" | grep '\-\-with-pic')" ]; then
     CFG+=" --with-pic"
   fi
 }
@@ -718,9 +715,10 @@ end_script(){
   $debug && set +x
   unset dir_config dir_build dir_src \
         CSH CBN exec_config vrs vnd \
-        ac_nohost ac_nopic ac_nosysroot \
+        ac_nohost ac_nopic ac_nosysroot ac_opts \
         req_pcforlibs mkc mki mingw_posix \
-        cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
+        cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS \
+        
         
   dec_tab
   echo
@@ -1056,7 +1054,7 @@ meson_create_toolchain(){
   endian = 'little'
   cpu = '${cpu2}'
 	EOF
-  echo "\nMeson file:(${1})\n\n" >>${log_file} 2>&1
+  echo -e "\nMeson file:(${1})\n\n" >>${log_file} 2>&1
   cat ${1} >>${log_file} 2>&1
 }
 

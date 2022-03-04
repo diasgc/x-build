@@ -172,9 +172,12 @@ printf "${CH}%-20s: ${C0}%s\n" '  build cpu' ${build_cpu}
 if [ -z "${cmd_apt_install}" ];then
     [ -n "$(command -v sudo)" ] && cmd_apt_install="sudo "
     case $OSTYPE in
-        linux-gnu) cmd_apt_install+="apt install";;
-        linux-android) cmd_apt_install="pkg install";;
-        darwin) cmd_apt_install="brew install";;
+        linux-gnu)      cmd_apt_install+="apt install"
+            ;;
+        linux-android) cmd_apt_install="pkg install"
+            ;;
+        darwin)        cmd_apt_install="brew install"
+            ;;
     esac
     #[ -n "$(which apt)" ] && cmd_apt_install+="apt install " || cmd_apt_install="exit 1;"
     printf "\n${CH}%-20s: ${C0}%s\n" 'cmd install' "${cmd_apt_install}"
@@ -336,6 +339,11 @@ fi
 
 echo -e "\n${CC1}${b} Build tools${C0}"
 check_install make cmake cmake-curses-gui meson build-essential automake autoconf autogen autopoint libtool-bin m4 nasm yasm pkg-config
+case "$(meson --version)" in 0.5*) sudo add-apt-repository ppa:ubuntu-support-team/meson 2>&1 >/dev>null
+    sudo apt update 2>&1 >/dev/null
+    sudo apt install meson -y 2>&1 >/dev/null
+    ;;
+esac
 
 echo -e "\n${CC1}${b} Repository tools${C0}"
 check_install git subversion lzip unzip

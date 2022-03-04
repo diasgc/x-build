@@ -16,10 +16,7 @@ lst_bin=''
 lst_lic='docs/FTL.TXT docs/GPLv2.TXT docs/LICENSE.TXT'
 lst_pc='freetype2.pc'
 
-dev_bra='master'
 dev_vrs='24.1.18'
-stb_bra=''
-stb_vrs=''
 
 . xbuild
 
