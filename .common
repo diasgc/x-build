@@ -91,7 +91,7 @@ hwinfoProcessor(){
 }
 
 banner(){
-    echo -ne "\n\n  ${CW}${1} for X-Builder ${vsh}${C0}\n  "
+    echo -ne "\n\n  ${CW}${1} for X-Build ${vsh}${C0}\n  "
     echo -ne "Running on $(uname -m) $(uname -o) "
     [ -n $(command -v lsb_release) ] && echo -ne "$(lsb_release -sd) "
     if [ -n "$(uname -r | grep 'microsoft')" ];then

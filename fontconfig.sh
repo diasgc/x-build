@@ -1,6 +1,5 @@
 #!/bin/bash
 
-#vrs='2.13.94'
 lib='fontconfig'
 dsc='Font customization and configuration library'
 lic='Other'
@@ -18,12 +17,15 @@ lst_pc='fontconfig.pc'
 
 dev_bra='master'
 dev_vrs='2.13.94'
-stb_bra=''
-stb_vrs=''
 
 . xbuild
 
 ac_config='--disable-docs'
+
+_on_config_x86x(){
+    ac_nosysroot=true
+    ac_config+=' --enable-iconv=no --enable-libxml2'
+}
 
 #not recomended
 meson_cfg='-Db_pie=true -Db_lto=true -Ddoc=disabled -Dtests=disabled'
@@ -31,7 +33,7 @@ meson_cfg='-Db_pie=true -Db_lto=true -Ddoc=disabled -Dtests=disabled'
 start
 
 # cpu av8 av7 x86 x64
-# NDK +++  .   .   .  clang
+# NDK +++ +++  F  +++ clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 

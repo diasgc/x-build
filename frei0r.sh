@@ -6,7 +6,7 @@ dsc='A large collection of free and portable video plugins'
 lic='GPL-2.0'
 src='https://github.com/dyne/frei0r.git'
 cfg='ag'
-xdp='gavl opencv libcairo'
+xdp='gavl opencv cairo'
 eta='275'
 mki='install'
 
