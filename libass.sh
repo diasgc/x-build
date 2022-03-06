@@ -9,16 +9,14 @@ dep='freetype fontconfig fribidi libpng harfbuzz'
 pkg='libass'
 eta='60'
 
-lst_inc=''
-lst_lib=''
+lst_inc='ass/*.h'
+lst_lib='libass'
 lst_bin=''
 lst_lic='COPYING README.md'
-lst_pc=''
+lst_pc='libass.pc'
 
 dev_bra='master'
-dev_vrs='0.9.9'
-stb_bra=''
-stb_vrs=''
+dev_vrs='0.15.2'
 
 . xbuild
 ac_nosysroot=true

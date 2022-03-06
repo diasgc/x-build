@@ -1,0 +1,49 @@
+#!/bin/bash
+
+lib='hm'
+dsc='WebM Project VPx codec implementation'
+lic='BSD-3c'
+src='https://vcgit.hhi.fraunhofer.de/jvet/HM.git'
+cfg='cmake'
+eta='240'
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='COPYING README.md'
+lst_pc=''
+
+dev_vrs=''
+
+on_config_arm(){
+    doErr 'Unsupported arm arch'
+}
+
+. xbuild
+
+start
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+# Filelist
+# --------
+# share/doc/vpx/LICENSE
+# share/doc/vpx/PATENTS
+# share/doc/vpx/AUTHORS
+# include/vpx/vpx_ext_ratectrl.h
+# include/vpx/vpx_codec.h
+# include/vpx/vp8dx.h
+# include/vpx/vpx_encoder.h
+# include/vpx/vpx_decoder.h
+# include/vpx/vp8.h
+# include/vpx/vpx_integer.h
+# include/vpx/vp8cx.h
+# include/vpx/vpx_frame_buffer.h
+# include/vpx/vpx_image.h
+# bin/vpxdec
+# bin/vpxenc
+# lib/pkgconfig/vpx.pc
+# lib/libvpx.a

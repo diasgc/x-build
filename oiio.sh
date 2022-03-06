@@ -24,8 +24,8 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-cmake_config="-DBoost_ROOT=/home/gcdias/git/boost-ndk/build/out/arm64-v8a"
-
 . xbuild
 
+cmake_config='-DLINKSTATIC=ON -DBUILD_DOCS=OFF -DINSTALL_DOCS=OFF -DINSTALL_FONTS=OFF -DOIIO_BUILD_TESTS=OFF-DBUILD_MISSING_DEPS=ON -DBoost_USE_STATIC_LIBS=ON -DBoost_ADDITIONAL_VERSIONS=1.79.0'
+$host_arm32 || cmake_config+=' -DUSE_SIMD=ON'
 start
