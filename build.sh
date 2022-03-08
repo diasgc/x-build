@@ -13,6 +13,7 @@ while test ${#} -gt 0; do
         all) archs="aarch64-linux-android arm-linux-androideabi i686-linux-android x86_64-linux-android i686-linux-gnu x86_64-linux-gnu aarch64-w64-mingw32 armv7-w64-mingw32 i686-w64-mingw32 x86_64-w64-mingw32";;
         *-android*|*-linux-gnu*|*-mingw32) archs="$archs $1";;
         --*) args="$args $1";;
+        ?a8|?a7|?x86|?x64) archs+=" $1";;
     esac
     shift
 done
