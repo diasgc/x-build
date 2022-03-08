@@ -298,7 +298,7 @@ fi
 
 echo -e "\n${CC1}LLVM MINGW:"
 if [ -z "${LLVM_MINGW_HOME}" ]; then
-    llvm_mingw_bin_dir=$(find ~ -name "aarch64-w64-mingw32-clang")
+    llvm_mingw_bin_dir=$(find ~ -name "aarch64-w64-mingw32uwp-dlltool" | head -n1)
     if [ -z "${llvm_mingw_bin_dir}" ]; then
         echo -e "not found. Install?"; read -p "[Y|n]" pndk
         case $pndk in y|Y) llvm_mingw_install;; esac
@@ -308,9 +308,11 @@ if [ -z "${LLVM_MINGW_HOME}" ]; then
 fi
 if [ -n "${LLVM_MINGW_HOME}" ]; then
     printf "${CH}%-20s: ${C0}%s\n" "  found at" ${LLVM_MINGW_HOME}
+    
+    llvm_mingw_version_latest=$(git ls-remote --tags --refs --sort="v:refname" 'https://github.com/mstorsjo/llvm-mingw.git' 2>/dev/null | tail -n1 | sed 's/.*\///')
+    [ -f "${LLVM_MINGW_HOME}/version" ] || echo "$llvm_mingw_version_latest" >>"${LLVM_MINGW_HOME}/version"
     llvm_mingw_version=$(cat ${LLVM_MINGW_HOME}/version)
     printf "${CH}%-20s: ${C0}%s " '  version' $llvm_mingw_version
-    llvm_mingw_version_latest=$(git ls-remote --tags --refs --sort="v:refname" 'https://github.com/mstorsjo/llvm-mingw.git' 2>/dev/null | tail -n1 | sed 's/.*\///')
     if [ "${llvm_mingw_version}" == "${llvm_mingw_version_latest}" ]; then
         echo -e "(updated)"
     else
@@ -339,7 +341,7 @@ fi
 
 echo -e "\n${CC1}${b} Build tools${C0}"
 check_install make cmake cmake-curses-gui meson build-essential automake autoconf autogen autopoint libtool-bin m4 nasm yasm pkg-config
-case "$(meson --version)" in 0.5*) sudo add-apt-repository ppa:ubuntu-support-team/meson 2>&1 >/dev>null
+case "$(meson --version)" in 0.5*) sudo add-apt-repository ppa:ubuntu-support-team/meson -y 2>&1 >/dev/null
     sudo apt update 2>&1 >/dev/null
     sudo apt install meson -y 2>&1 >/dev/null
     ;;
