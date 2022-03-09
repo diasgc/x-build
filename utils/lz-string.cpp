@@ -55,6 +55,86 @@ void split2(std::string& str, const size_t w){
   }
 }
 
+int main2(int argc, char * argv[]){
+  
+  std::string arg, str, out;
+  std::string key = lzstring::BASE64_STD;
+
+  int mode  = -1;
+  int input = -1;
+  int w     = 0;
+
+  for(;;){
+    switch(getopt(argc, argv, "hcdf:s:-w:k:b:")){
+      case '?':
+      case 'h':
+      default :
+        return usage(argv[0]);
+      case 'd':
+        mode = 1;
+        continue;
+      case 'c':
+        mode = 0;
+        continue;
+      case '-':
+        str.assign((std::istreambuf_iterator<char>(std::cin)),
+        std::istreambuf_iterator<char>());
+        continue;
+      case 's':
+        str=std::string(optarg);
+        continue;
+      case 'f':
+        std::ifstream t(optarg);
+        t.seekg(0, std::ios::end);   
+        str.reserve(t.tellg());
+        t.seekg(0, std::ios::beg);
+        str.assign((std::istreambuf_iterator<char>(t)),
+        std::istreambuf_iterator<char>());
+        continue;
+      case 'w':
+        w = atoi(optarg);
+        continue;
+      case 'k':
+        key = optarg;
+        continue;
+      case 'b':
+        const std::string bname = optarg;
+        if (bname == "BASE91_HENKE" || bname == "B91H"){
+          key = lzstring::BASE91_HENKE;
+        } else if (bname == "BASE91_RLYEH" || bname == "B91R"){
+          key = lzstring::BASE91_RLYEH;
+        } else if (bname == "BASE85" || bname == "B85" || bname == "Z85"){
+          key = lzstring::BASE85_Z85;
+        } else {
+          // default
+          key = lzstring::BASE64_STD;
+        }
+        continue;
+      case -1:
+        break;
+    }
+    break;
+  }
+  
+  switch(mode){
+      case 0:
+        out=lzstring::toBaseN(str,key);
+        if (w > 0){
+          out=split(out,w);
+        }
+        break;
+      case 1:
+        str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+        out = lzstring::fromBaseN(str, key);
+        break;
+      default:
+        return usage(argv[0]);
+  }
+  std::cout << out << std::endl << std::flush;
+  return 0;
+
+}
+
 int main(int argc, char *argv[]){
   
   std::string arg, str, out;
