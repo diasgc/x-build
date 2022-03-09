@@ -1,8 +1,4 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  +   .   .   .   .   .   .   .   +   .   .  static
-#  +   .   .   .   .   .   .   .   .   .   .  shared
-#  +   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='leptonica'
 pkg='lept'
@@ -13,6 +9,7 @@ src='https://github.com/DanBloomberg/leptonica.git'
 cfg='am'
 dep='zlib libjpeg libpng libwebp libtiff giflib openjpeg'
 mki='install'
+make_install='install-strip'
 eta='180'
 ac_nosysroot=true
 
@@ -24,15 +21,12 @@ lst_bin='converttops converttopdf convertsegfilestops convertfilestops \
 lst_oth='lib/cmake/LeptonicaConfig-version.cmake \
          lib/cmake/LeptonicaConfig.cmake'
 
-dev_bra='master'
 dev_vrs='1.83.0'
-stb_bra=''
-stb_vrs=''
 
-case $cfg in
-    cm|ccm|cmake|ccmake)  cbk="BUILD_PROG";;
-    ac|ag|am|ar|automake) cbk="programs";;
-esac
+cmake_bin="BUILD_PROG";;
+cmake_config="-DSW_BUILD=OFF"
+ac_config="--disable-fast-install"
+ac_bin="--enable-programs|--disable-programs";;
 
 extraOpts(){
       case $1 in
@@ -44,13 +38,12 @@ WFLAGS="-Wno-address-of-packed-member"
 
 . xbuild
 
-
-case $build_tool in
-    automake) CFG="--disable-fast-install";;
-    cmake) CFG="-DSW_BUILD=OFF";;
-esac
-
 start
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 # Filelist
 # --------

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-#vrs='v2019.10.9'
 lib='jxrlib'
 pkg='jpegxr'
 dsc='JPEG XR Image Codec reference implementation library released by Microsoft'
@@ -19,11 +18,7 @@ lst_bin='JxrEncApp JxrDecApp'
 lst_lic='LICENSE AUTHORS'
 lst_pc='jpegxr.pc xrglue.pc'
 
-dev_bra='main'
 dev_vrs='2019.10.9'
-stb_vrs=''
-
-. xbuild
 
 WFLAGS='-Wno-implicit-int
   -Wno-endif-labels
@@ -32,6 +27,7 @@ WFLAGS='-Wno-implicit-int
   -Wno-shift-negative-value
   -Wno-unused-value'
 
+. xbuild
 start
 
 # patch 01: provides cmake build with dual static shared support

@@ -12,6 +12,7 @@ src='https://github.com/FFmpeg/FFmpeg.git'
 cfg='ac'
 eta='777'
 mki='install'
+make_install='install'
 cb0='--disable-programs'
 
 ac_nohost=true

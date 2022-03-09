@@ -6,6 +6,7 @@ lic='GPL-2.0'
 src='https://github.com/radare/acr.git"'
 cfg='ac'
 mki='install'
+make_install='install'
 mkf='all'
 
 lst_inc=''

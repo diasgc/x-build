@@ -23,10 +23,7 @@ lst_bin='a52dec extract_a52'
 lst_lic='COPYING AUTHORS'
 lst_pc='liba52.pc'
 
-dev_bra=''
 dev_vrs='0.7.4'
-stb_bra=''
-stb_vrs='0.7.4'
 
 . xbuild
 

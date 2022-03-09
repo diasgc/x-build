@@ -17,6 +17,8 @@ lst_bin=''
 
 . xbuild
 mki="PREFIX=${INSTALL_DIR} install"
+make_install="PREFIX=${INSTALL_DIR} install"
+
 start
 
 # Filelist

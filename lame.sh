@@ -9,17 +9,16 @@ cfg='ac'
 dep='libiconv'
 eta='180'
 mki='install-strip'
+make_install='install-strip'
 mkc='distclean'
-cbk="able-frontend"
+make_clean='distclean'
+ac_bin="--enable-frontend|--disable-frontend"
 pc_llib="-lmp3lame"
 API=26 # required for frontends build
 
 ac_bin='--disable-frontend|--enable-frontend'
 
-dev_bra='main'
 dev_vrs='3.100'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='lame/lame.h'
 lst_lib='libmp3lame'

@@ -5,6 +5,7 @@ dsc='x264, the best and fastest H.264 encoder'
 lic='GPL-2.0'
 src='https://code.videolan.org/videolan/x264.git'
 cfg='ac'
+cfg_opt='--nostrip --nopic --nosysroot'
 
 build_strip=false
 ac_nopic=true

@@ -7,7 +7,7 @@
 
 lib='libaacs'
 apt="${libaacs}-dev"
-dsc='Open implementation of the AACS specification.'
+dsc='Cross-platform open-source implementation of the AACS specification'
 lic='LGPL-2.1'
 src='https://code.videolan.org/videolan/libaacs.git'
 cfg='ar'
@@ -20,10 +20,12 @@ mkc='distclean'
 lst_inc=''
 lst_lib=''
 lst_bin=''
+lst_lic='COPYING README.md'
+lst_pc='libaacs.pc'
 
 . xbuild
 
-CFG="--with-libgcrypt-prefix=${LIBSDIR} --with-libgpg-error-prefix=${LIBSDIR}"
+ac_config="--with-libgcrypt-prefix=${dir_install} --with-libgpg-error-prefix=${dir_install}"
 export YACC='byacc' YFLAGS='--update'
 
 start

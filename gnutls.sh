@@ -10,6 +10,7 @@ dep='libiconv gmp nettle'
 eta='690'
 ac_bin='--disable-tools|--enable-tools'
 mki='install'
+make_install='install'
 
 dev_vrs='3.6.16'
 

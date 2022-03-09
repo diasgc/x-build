@@ -24,6 +24,7 @@ lst_pc='glib-2.0.pc gio-2.0.pc gio-windows-2.0.pc gmodule-2.0.pc gmodule-export-
 before_make(){
     mkf="-C ${dir_build}"
     mki="${mkf} install"
+    make_install="${mkf} install"
 }
 
 $host_mingw && meson_cfg+=' -Dlibelf=disabled -Dforce_posix_threads=true'

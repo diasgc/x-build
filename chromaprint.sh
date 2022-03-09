@@ -11,6 +11,7 @@ eta='12'
 
 mkc='clean'
 mki='install/strip'
+make_install='install/strip'
 cmake_static="BUILD_STATIC_LIBS"
 
 lst_inc='chromaprint.h'

@@ -7,13 +7,11 @@ lic='BSD-3c'
 src='https://github.com/team-charls/charls.git'
 cfg='cmake'
 eta='15'
-cbk="CHARLS_BUILD_SAMPLES"
+cmake_bin="CHARLS_BUILD_SAMPLES"
 mki='install/strip'
+make_install='install/strip'
 
-dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
 
 lst_inc='charls/*.h'
 lst_lib='libcharls'
