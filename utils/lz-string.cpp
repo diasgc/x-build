@@ -5,6 +5,7 @@
 #include <streambuf>
 #include <algorithm>
 #include <cmath>
+#include <unistd.h>
 
 #ifdef __unix__
 # define LF "\n"
@@ -55,13 +56,14 @@ void split2(std::string& str, const size_t w){
   }
 }
 
+#ifdef __TEST__
 int main2(int argc, char * argv[]){
   
   std::string arg, str, out;
   std::string key = lzstring::BASE64_STD;
+  std::string bname;
 
   int mode  = -1;
-  int input = -1;
   int w     = 0;
 
   for(;;){
@@ -98,7 +100,7 @@ int main2(int argc, char * argv[]){
         key = optarg;
         continue;
       case 'b':
-        const std::string bname = optarg;
+        bname = optarg;
         if (bname == "BASE91_HENKE" || bname == "B91H"){
           key = lzstring::BASE91_HENKE;
         } else if (bname == "BASE91_RLYEH" || bname == "B91R"){
@@ -134,6 +136,7 @@ int main2(int argc, char * argv[]){
   return 0;
 
 }
+#endif
 
 int main(int argc, char *argv[]){
   

@@ -5,9 +5,9 @@ apt='libarchive-dev'
 dsc='Multi-format archive and compression library'
 lic='Other'
 src='https://github.com/libarchive/libarchive.git'
+url='http://www.libarchive.org/'
 cfg='ar'
 dep='libiconv bzip2 libb2 liblzma libzstd lz4 lzo zlib'
-mki='install'
 eta='100'
 
 lst_inc='archive.h archive_entry.h'
@@ -16,10 +16,9 @@ lst_bin='bsdcat bsdtar bsdcpio'
 lst_lic='COPYING'
 lst_pc='libarchive.pc'
 
-dev_bra='master'
-dev_vrs='3.5.3'
-stb_bra=''
-stb_vrs=''
+dev_vrs='3.6.1'
+
+ac_nosysroot=true
 
 . xbuild
 

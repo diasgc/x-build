@@ -23,10 +23,10 @@ lst_oth='lib/cmake/LeptonicaConfig-version.cmake \
 
 dev_vrs='1.83.0'
 
-cmake_bin="BUILD_PROG";;
+cmake_bin="BUILD_PROG"
 cmake_config="-DSW_BUILD=OFF"
 ac_config="--disable-fast-install"
-ac_bin="--enable-programs|--disable-programs";;
+ac_bin="--enable-programs|--disable-programs"
 
 extraOpts(){
       case $1 in

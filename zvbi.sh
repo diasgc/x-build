@@ -18,10 +18,8 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+
 
 . xbuild
 
@@ -29,7 +27,7 @@ stb_vrs=''
 
 ac_config="--disable-dvb --disable-bktr --disable-nls --disable-proxy --without-doxygen --with-x=no"
 
-CPPFLAGS="-Wno-string-plus-int -Wno-invalid-source-encoding -Wno-deprecated-declarations -Wno-tautological-pointer-compare"
+CPPFLAGS="-Wno-string-plus-int -Wno-invalid-source-encoding -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-unused-command-line-argument"
 
 start
 

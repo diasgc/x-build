@@ -63,13 +63,13 @@ function libcheck {
     local g
     for fscript in *.sh; do
         case $fscript in _*|*build*|*setup*|*unpack*) continue;; esac
-        v=$(./${fscript} --get vrs_local | 2>/dev/null)
-        printf "${CC0}%-40s" ${fscript}
+        v="$(./${fscript} --get var dev_vrs)"
+        printf "${C0}%-20s:${CC0}%-10s" ${fscript} ${v}
         #if [ -n "${v}" ]; then
-            g=$(./${fscript} --get vrs_remote 2>/dev/null)
-            printf "${CH}%-10s${CY}%-10s" ${v} ${g}
+        g="$(./${fscript} --get vrs_remote 2>/dev/null)"
+        printf "${CY0}%-10s\n" ${g}
         #fi
-        printf "\n"
+        #printf "\n"
     done
 }
 

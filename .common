@@ -509,6 +509,15 @@ format_pathlist(){
   echo "${out}"
 }
 
+# usage: patch_fromremote <base_url> patch1,...,...
+patch_fromremote(){
+  local baseUrl=$1; shift
+  while [ -n "$1" ]; do
+    wget -qO- ${baseUrl}/$1 | patch
+    shift
+  done
+}
+
 # usage: wget_source <src-url> <dst-dir>
 wget_source(){
     local fn=$(basename $1) || doErr "Invalid source url '$1'"
