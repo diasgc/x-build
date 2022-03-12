@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# cpu av8 av7 x86 x64
-# NDK +X+  .   .   .  clang
-# GNU +..  .   .   .  gcc
-# WIN +..  .   .   .  clang/gcc
-
 lib='vpx'
 dsc='WebM Project VPx codec implementation'
 lic='BSD-3c'
@@ -42,6 +37,10 @@ AS=${YASM}
 
 start
 
+# cpu av8 av7 x86 x64
+# NDK +X+  .   .   .  clang
+# GNU +..  .   .   .  gcc
+# WIN +..  .   .   .  clang/gcc
 
 # Filelist
 # --------

@@ -5,7 +5,9 @@
 #include <streambuf>
 #include <algorithm>
 #include <cmath>
+
 #include <unistd.h>
+#include <getopt.h>
 
 #ifdef __unix__
 # define LF "\n"

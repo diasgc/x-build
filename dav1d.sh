@@ -13,10 +13,7 @@ build_strip=false
 meson_bin='enable_tools'
 meson_cfg="-Db_pie=true -Db_lto=true"
 
-dev_bra='main'
 dev_vrs='0.9.2'
-stb_bra='tags/0.9.2'
-stb_vrs='0.9.2'
 
 lst_inc='dav1d/*.h'
 lst_lib='libdav1d'

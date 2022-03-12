@@ -1,0 +1,74 @@
+#!/bin/bash
+
+lib='lzfse'
+dsc='LZFSE compression library and command line tool'
+lic='BSD-3c'
+src='https://github.com/lzfse/lzfse.git'
+cfg='cmake'
+eta='411'
+cmake_static='BUILD_STATIC_LIBS'
+
+lst_inc='lzfse.h'
+lst_lib='liblzfse'
+lst_bin='lzfse'
+lst_lic='LICENSE README.md'
+lst_pc='lzfse.pc'
+
+dev_vrs='0.1.1'
+
+. xbuild
+
+start
+
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+# Filelist
+# --------
+# bin/lzfse
+# include/lzfse.h
+# lib/liblzfse.a
+# lib/liblzfse.so
+# lib/pkgconfig/lzfse.pc
+# share/doc/lzfse/LICENSE
+# share/doc/lzfse/README.md
+
+# patch 01 on CMakeLists.txt to support dual static/shared build and pkgconfig pc file
+# patch 02 to create lzfse.pc.in
+<<'LZS_PATCH'
+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
+LZS_PATCH

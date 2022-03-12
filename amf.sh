@@ -12,6 +12,7 @@ lst_lib=''
 lst_bin=''
 lst_pc=''
 lst_lic='LICENSE.txt'
+dev_vrs='1.4.23'
 
 . xbuild
 
