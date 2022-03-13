@@ -3,22 +3,15 @@
 lib='lame'
 dsc='LAME is a high quality MPEG Audio Layer III (MP3) encoder'
 lic='LGPL'
-svn='https://svn.code.sf.net/p/lame/svn' #sty='svn'
-src="${svn}/trunk/lame" #src='https://github.com/despoa/LAME.git'
-cfg='ac'
+url='http://www.mp3dev.org'
+src="https://svn.code.sf.net/p/lame/svn/trunk/lame"
+cfg='cmake'
 dep='libiconv'
 eta='180'
-mki='install-strip'
-make_install='install-strip'
-mkc='distclean'
-make_clean='distclean'
-ac_bin="--enable-frontend|--disable-frontend"
-pc_llib="-lmp3lame"
-API=26 # required for frontends build
 
-ac_bin='--disable-frontend|--enable-frontend'
+cmake_static='BUILD_STATIC_LIBS'
 
-dev_vrs='3.100'
+dev_vrs='3.101'
 
 lst_inc='lame/lame.h'
 lst_lib='libmp3lame'
@@ -28,20 +21,6 @@ lst_pc='lame.pc'
 
 . xbuild
 
-# update latest version
-vrs=$(svn log ${svn}/tags --limit 1 | grep 'tag' | sed "s/tag \(\) release/\1/")
-
-ac_config="--disable-gtktest --disable-decoder --disable-debug"
-$host_mingw && ac_config+=" --enable-expopt=full"
-# make shared executable so
-! $build_static && $build_bin && CBN="--enable-dynamic-frontends"
-$host_ndk && [ ${API} -lt 26 ] && unset CBN
-
-before_make(){
-	#no docs
-	sed -i '/^SUBDIRS/ {s/ doc//}' Makefile
-}
-
 start
 
 # cpu av8 av7 x86 x64
@@ -49,14 +28,45 @@ start
 # GNU +++ +++  .   .  gcc
 # WIN +++ +++  .   .  clang/gcc
 
-
 # Filelist
 # --------
 # include/lame/lame.h
-# lib/pkgconfig/lame.pc
-# lib/libmp3lame.so
 # lib/libmp3lame.a
-# lib/libmp3lame.la
-# share/doc/lame/LICENSE
+# lib/libmp3lame.so
+# lib/pkgconfig/lame.pc
 # share/doc/lame/COPYING
-# bin/lame
+# share/doc/lame/LICENSE
+
+# patch 01 create CMakeLists.txt with dual static/shared build support and pc config file
+# patch 02 create lame.pc.in
+<<'LZS_PATCH'
+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
+Oq0A83ED8AwM8HAATF037gCFD+EC+DAggA==
+LZS_PATCH
