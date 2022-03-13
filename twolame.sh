@@ -1,8 +1,4 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK +++  .   .   .  clang
-# GNU ...  .   .   .  gcc
-# WIN ...  .   .   .  clang/gcc
 
 lib='twolame'
 dsc='MPEG Audio Layer 2 (MP2) encoder'
@@ -12,18 +8,24 @@ cfg='ac'
 dep='sndfile'
 eta='225'
 
+ac_config="--disable-maintainer-mode"
+
+dev_bra='master'
+dev_vrs=''
+lst_inc='twolame.h'
+lst_lib='libtwolame'
+lst_bin='twolame'
+lst_lic='COPYING README AUTHORS'
+lst_pc='twolame.pc'
+
 . xbuild
 
-CFG="--disable-maintainer-mode"
-
-source_patch(){
-	# Exclude 'doc' from SUBDIRS = .... list in Makefile.am , or build LibTwoLAME fails.
-	sed -i.bak "/^SUBDIRS/s/ doc//" Makefile.am
-	doAutoreconf ${dir_src}
-	popdir
-}
-
 start
+
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU ...  .   .   .  gcc
+# WIN ...  .   .   .  clang/gcc
 
 # Filelist
 # --------

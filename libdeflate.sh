@@ -12,6 +12,8 @@ eta='10'
 
 pc_llib='-ldeflate'
 
+dev_vrs='1.10'
+
 lst_inc='libdeflate.h'
 lst_lib='libdeflate'
 lst_bin='gzip'

@@ -9,6 +9,8 @@ dep='giflib libpng'
 cfg='ag' # cmake not supporting dual static+shared build
 eta='70'
 
+dev_vrs='1.2.2'
+
 lst_inc='webp/*.h'
 lst_lib='libwebp libwebpmux libwebpdemux libwebpdecoder'
 lst_bin='webpinfo cwebp webpmux img2webp dwebp'

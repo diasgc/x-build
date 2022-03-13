@@ -926,6 +926,7 @@ build_package_cmake(){
 }
 
 build_packages_bin(){
+  set -x
   local xb_distdir=$(build_packages_getdistdir)
   if fn_defined 'create_package'; then
     fn_log 'pack' create_package ${xb_distdir}
@@ -976,6 +977,7 @@ build_packages_bin(){
     rm -rf ${xb_distdir}
     popdir
   fi
+  set +x
 }
 
 build_dependencies(){
@@ -2088,6 +2090,7 @@ prt_hmenu(){
   done
   echo
 }
+
 menu_get(){
   local pkgfile="${dir_install_pc}/${pkg}.pc"
   case $1 in
@@ -2117,6 +2120,25 @@ menu_get(){
     patch)        patch_get; exit 0;;
   esac
 }
+
+menu_git(){
+  local b=false
+  [ -z "${lib}" ] && return 0
+  [ -z "${src}" ] && return 0
+  case $1 in
+    help)       prt_hmenu "${CW}usage: $0 --git ${CC0}<opt>" \
+                'tar*' 'list current tarball contents' 'branches' 'list all local git available branches' \
+                'tags' 'list all local git available branches' \
+                'env' 'list toolchain environment variables' 'deps' 'list packages that depend on '${lib}''
+                ;;
+    clone)      str_contains $src 'git' || return 0
+                [ -d "sources/${lib}" ] && rm -rf sources/${lib}
+                git clone $src sources/${lib}
+                ;;
+  esac
+  return 0
+}
+
 
 menu_list(){
   local b=false
@@ -2262,8 +2284,7 @@ while [ $1 ];do
                 build_dist=true
                 dep_build="--full"
                 ;;
-    --bra| \
-    --branch)   shift; export bra=$1;;
+    --bra*)     shift; export bra=$1;;
     --shared)   build_shared=true; build_static=false;;
     --static)   build_static=true; build_shared=false;;
     --both)     build_static=true; build_shared=true;;
@@ -2311,6 +2332,8 @@ while [ $1 ];do
     --skip)     shift; skip_options $@;;
 
     --goto)     shift; menu_goto $@; exit 0;;
+
+    --git)      shift; menu_git $@; exit 0;;
 
     --dirbuild) shift; dir_build=$1;;
     --inline)   inline=true;;

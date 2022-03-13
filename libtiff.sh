@@ -18,6 +18,8 @@ mki='install/strip'
 
 cmake_config="-Dlzma=ON -Djpeg=ON -Dzstd=ON -Dwebp=ON -Dlerc=ON -Dlibdeflate=ON"
 
+dev_vrs='4.3.0'
+
 lst_inc='tiffconf.h tiffvers.h tiff.h tiffio.hxx tiffio.h'
 lst_lib='libtiffxx libtiff'
 lst_bin='tiffmedian tiffset fax2ps tiff2bw tiffdither raw2tiff tiffsplit tiff2pdf fax2tiff tiff2rgba pal2rgb tiff2ps tiffcrop tiffcmp tiffinfo tiffcp tiffdump ppm2tiff'

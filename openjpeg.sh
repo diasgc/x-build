@@ -1,8 +1,6 @@
 #!/bin/bash
 
 lib='openjpeg'
-rel='2.4.0'
-dev='2.5.0'
 apt='libopenjp2-7-dev'
 pkg='libopenjp2'
 dsc='OpenJPEG is an open-source JPEG 2000 codec written in C language.'
@@ -20,6 +18,8 @@ lst_lib='libopenjp2'
 lst_bin='opj_dump opj_decompress opj_compress'
 lst_lic='LICENSE AUTHORS'
 lst_pc='libopenjp2.pc'
+
+dev_vrs='2.5.0'
 
 . xbuild
 

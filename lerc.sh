@@ -15,10 +15,7 @@ lst_bin=''
 lst_lic='LICENSE NOTICE'
 lst_pc='Lerc.pc'
 
-dev_bra='master'
 dev_vrs='3.0.0'
-stb_bra=''
-stb_vrs=''
 
 . xbuild
 

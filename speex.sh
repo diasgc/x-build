@@ -1,6 +1,5 @@
 #!/bin/bash
 
-lvr='1.2.0'
 lib='speex'
 dsc='Speex is an audio codec tuned for speech'
 lic='BSD'
@@ -8,13 +7,14 @@ src='https://github.com/xiph/speex.git'
 #cfg='ag'
 dep='ogg speexdsp'
 eta='90'
-cbk="able-binaries"
+ac_bin="--disable-binaries|--enable-binaries"
 
 lst_inc='speex/*.h'
 lst_lib='libspeex'
 lst_bin='speexdec speexenc'
 lst_lic='COPYING AUTHORS'
 lst_pc='speex.pc'
+dev_vrs='1.2.0'
 
 . xbuild
 

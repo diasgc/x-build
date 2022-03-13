@@ -15,9 +15,7 @@ cmake_bin="JAS_ENABLE_PROGRAMS"
 cmake_config="-DBUILD_TESTING=OFF -DJAS_ENABLE_DOC=OFF -DJAS_STDC_VERSION=20220220"
 
 dev_bra='master'
-dev_vrs='3.0.0'
-stb_bra=''
-stb_vrs=''
+dev_vrs='3.0.2'
 
 lst_inc='jasper/*.h'
 lst_lib='libjasper'
@@ -31,7 +29,13 @@ on_config_mingw(){
 
 . xbuild && start
 
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
 # patch 01 on src/libjasper/CMakeLists.txt to support dual static shared build
+
 <<'XB64_PATCH'
 LS0tIHNyYy9saWJqYXNwZXIvQ01ha2VMaXN0cy50eHQJMjAyMi0wMi0wMiAxNzoyMzo0Ny4zMzMwMDAwMDAgKzAwMD
 AKKysrIHNyYy9saWJqYXNwZXIvQ01ha2VMaXN0cy50eHQJMjAyMi0wMi0wMiAxNzozODozNC44ODA3MTAyNTMgKzAw
@@ -109,46 +113,41 @@ T04gJHtDTUFLRV9JTlNUQUxMX0xJQkRJUn0KICAgQVJDSElWRSBERVNUSU5BVElPTiAke0NNQUtFX0lO
 lCRElSfQo=
 XB64_PATCH
 
-# cpu av8 av7 x86 x64
-# NDK +++  .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
-
-
 # Filelist
 # --------
-# include/jasper/jas_config.h
-# include/jasper/jasper.h
-# include/jasper/jas_string.h
-# include/jasper/jas_math.h
-# include/jasper/jas_log.h
+#
+# bin/imgcmp
+# bin/imginfo
+# bin/jasper
+# include/jasper/jas_cm.h
 # include/jasper/jas_compiler.h
-# include/jasper/jas_thread.h
-# include/jasper/jas_types.h
+# include/jasper/jas_config.h
+# include/jasper/jas_debug.h
+# include/jasper/jas_dll.h
+# include/jasper/jas_export_cmake.h
 # include/jasper/jas_fix.h
 # include/jasper/jas_getopt.h
-# include/jasper/jas_tvp.h
-# include/jasper/jas_tmr.h
-# include/jasper/jas_dll.h
-# include/jasper/jas_cm.h
-# include/jasper/jas_malloc.h
-# include/jasper/jas_init.h
-# include/jasper/jas_export_cmake.h
-# include/jasper/jas_version.h
-# include/jasper/jas_debug.h
-# include/jasper/jas_seq.h
 # include/jasper/jas_icc.h
 # include/jasper/jas_image.h
+# include/jasper/jas_init.h
+# include/jasper/jas_log.h
+# include/jasper/jas_malloc.h
+# include/jasper/jas_math.h
+# include/jasper/jas_seq.h
 # include/jasper/jas_stream.h
+# include/jasper/jas_string.h
+# include/jasper/jas_thread.h
+# include/jasper/jas_tmr.h
+# include/jasper/jas_tvp.h
+# include/jasper/jas_types.h
+# include/jasper/jas_version.h
+# include/jasper/jasper.h
+# lib/libjasper.a
+# lib/libjasper.so
+# lib/pkgconfig/jasper.pc
+# share/doc/JasPer/README.md
+# share/doc/jasper/COPYRIGHT.txt
+# share/doc/jasper/LICENSE.txt
+# share/man/man1/imgcmp.1
 # share/man/man1/imginfo.1
 # share/man/man1/jasper.1
-# share/man/man1/imgcmp.1
-# share/doc/JasPer/README.md
-# share/doc/jasper/LICENSE.txt
-# share/doc/jasper/COPYRIGHT.txt
-# lib/libjasper.so
-# lib/libjasper.a
-# lib/pkgconfig/jasper.pc
-# bin/imginfo
-# bin/imgcmp
-# bin/jasper

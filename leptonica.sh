@@ -15,11 +15,11 @@ ac_nosysroot=true
 
 lst_inc='leptonica/*.h'
 lst_lib='liblept'
-lst_bin='converttops converttopdf convertsegfilestops convertfilestops \
-         convertsegfilestopdf imagetops xtractprotos fileinfo \
-         convertformat convertfilestopdf'
-lst_oth='lib/cmake/LeptonicaConfig-version.cmake \
-         lib/cmake/LeptonicaConfig.cmake'
+lst_bin='converttops converttopdf convertsegfilestops
+  convertfilestops convertsegfilestopdf imagetops
+  xtractprotos fileinfo convertformat convertfilestopdf'
+lst_lic='leptonica-license.txt'
+lst_pc='lept.pc'
 
 dev_vrs='1.83.0'
 
@@ -29,9 +29,7 @@ ac_config="--disable-fast-install"
 ac_bin="--enable-programs|--disable-programs"
 
 extraOpts(){
-      case $1 in
-            --min) unset dep;;
-      esac
+      case $1 in --min) unset dep;; esac
 }
 
 WFLAGS="-Wno-address-of-packed-member"
@@ -41,7 +39,7 @@ WFLAGS="-Wno-address-of-packed-member"
 start
 
 # cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
+# NDK +++  .   .   .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
