@@ -61,8 +61,9 @@ start
 cmake_minimum_required(VERSION 3.16)
 project(libiconv)
 
-option(ENABLE_EXTRA "Enable a few rarely used encodings" 1)
-option(ENABLE_RELOCATABLE "if the package shall run at any location in the filesystem" 1)
+option(ENABLE_EXTRA "Enable a few rarely used encodings" ON)
+option(ENABLE_RELOCATABLE "if the package shall run at any location in the filesystem" ON)
+option(INSTALL_MANPAGES "Install Man Pages" OFF)
 
 include(CheckCCompilerFlag)
 include(CheckIncludeFile)
@@ -187,12 +188,25 @@ if(TRUE)
 
     # INSTALLPREFIX : Define to the value of ${prefix}, as a string
     add_definitions(-DINSTALLPREFIX=${CMAKE_INSTALL_PREFIX})
- 
+    
     # Define to '__inline__' or '__inline' if that's what the C compiler calls it, or to nothing if 'inline' is not supported under any name.
     #ifndef __cplusplus
     #undef inline
     #endif
-
+    
+    foreach(test "inline" "__inline__" "__inline")
+        if(NOT DEFINED C_INLINE)
+            try_compile(C_HAS_${test} ${CMAKE_BINARY_DIR} COMPILE_DEFINITIONS "-Dinline=${test}")
+            if(C_HAS_${test})
+                set(C_INLINE TRUE)
+                add_definitions("-Dinline=${test}")
+            endif()
+        endif()
+    endforeach()
+    if(NOT DEFINED C_INLINE)
+        add_definitions("-Dinline=")
+    endif()
+    
     # mode_t : Define to 'int' if <sys/types.h> does not define
     check_symbol_exists(mode_t "sys/types.h" mode_t)
     if(NOT mode_t)
@@ -269,42 +283,69 @@ else()
     else()
         set(WORDS_LITTLEENDIAN TRUE)
     endif()
-
     configure_file(config.h.cmake ${CMAKE_SOURCE_DIR}/config.h)
-    configure_file(include/iconv.h.in ${CMAKE_SOURCE_DIR}/include/iconv.h)
-
     execute_process(
         COMMAND "sed -i 's/^#define.*0$/\/\*&\*\//;' ${CMAKE_SOURCE_DIR}/config.h"
         OUTPUT_VARIABLE FOO
     )
 endif()
 
-include_directories(${CMAKE_SOURCE_DIR})
-configure_file(libcharset/include/export.h ${CMAKE_SOURCE_DIR}/libcharset/include/export.h @ONLY)
-configure_file(libcharset/include/libcharset.h.in ${CMAKE_SOURCE_DIR}/libcharset/include/libcharset.h)
-configure_file(libcharset/include/localcharset.h.in ${CMAKE_SOURCE_DIR}/libcharset/include/localcharset.h)
-configure_file(include/export.h ${CMAKE_SOURCE_DIR}/include/export.h @ONLY)
-configure_file(include/iconv.h.in ${CMAKE_SOURCE_DIR}/include/iconv.h @ONLY)
+include_directories(
+    ${CMAKE_SOURCE_DIR} 
+    ${CMAKE_SOURCE_DIR}/libcharset/include 
+    ${CMAKE_SOURCE_DIR}/include 
+    ${CMAKE_SOURCE_DIR}/lib
+)
 
-include_directories(libcharset/include include lib)
+configure_file(
+    libcharset/include/export.h 
+    ${CMAKE_SOURCE_DIR}/libcharset/include/export.h 
+    @ONLY
+)
+configure_file(
+    libcharset/include/libcharset.h.in 
+    ${CMAKE_SOURCE_DIR}/libcharset/include/libcharset.h
+)
+configure_file(
+    libcharset/include/localcharset.h.in 
+    ${CMAKE_SOURCE_DIR}/libcharset/include/localcharset.h
+)
+configure_file(
+    include/export.h 
+    ${CMAKE_SOURCE_DIR}/include/export.h 
+    @ONLY
+)
+configure_file(include/iconv.h.in 
+    ${CMAKE_SOURCE_DIR}/include/iconv.h 
+    @ONLY
+)
 
-set(src_libcharset libcharset/include/export.h
+set(src_libcharset 
+    libcharset/include/export.h 
     libcharset/lib/localcharset.c
-    libcharset/lib/relocatable-stub.c)
-set(src_libiconv lib/genaliases.c
+    libcharset/lib/relocatable-stub.c
+)
+
+set(src_libiconv
+     lib/genaliases.c 
     lib/genaliaes2.c 
     lib/genflags.c 
     lib/gentranslit.c 
     lib/iconv.c 
-    lib/relocatable.c)
+    lib/relocatable.c
+)
 
 function(add_libcharset sfx lnk)
     add_library(charset${sfx} ${lnk} ${src_libcharset})
-    set_target_properties(charset${sfx} PROPERTIES OUTPUT_NAME charset)
+    set_target_properties(charset${sfx} 
+        PROPERTIES 
+        OUTPUT_NAME charset
+    )
     install(TARGETS charset${sfx}
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+        ARCHIVE DESTINATION lib
+    )
 endfunction()
 
 function(add_libiconv sfx lnk)
@@ -322,5 +363,17 @@ add_libiconv("" "")
 if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
     add_libcharset("-static" STATIC)
     add_libiconv("-static" STATIC)
+endif()
+
+if(INSTALL_MANPAGES)
+    install(
+        FILES man/iconv.1 
+        DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
+    )
+    install(
+        DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/man
+        DESTINATION ${CMAKE_INSTALL_MANDIR}/man3
+        FILES_MATCHING PATTERN "*.3"
+    )
 endif()
 CMakeLists.txt
