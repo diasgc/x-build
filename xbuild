@@ -49,6 +49,7 @@ sudo=$(command -v sudo)
 : "${indent:=0}"
 : "${ind:=}"
 : "${vnd:=}"
+: "${ac_reconf:=true}"
 
 ndk_testtc=true
 
@@ -593,7 +594,7 @@ meson_configure(){
 }
 
 ac_configure() {
-  autoreconf -fi 2>/dev/null >>${log_file}
+  $ac_reconf && autoreconf -fi 2>/dev/null >>${log_file}
   #[ -z "${mki+x}" ] && mki=$(make_findtarget "install-strip" "install")
   [ -z "$exec_config" ] && exec_config='configure' # default config executable
   [ -n "${ac_config}" ] && CFG=${ac_config}
@@ -715,7 +716,7 @@ end_script(){
   $debug && set +x
   unset dir_config dir_build dir_src \
         CSH CBN exec_config vrs vnd \
-        ac_nohost ac_nopic ac_nosysroot ac_opts \
+        ac_nohost ac_nopic ac_nosysroot ac_opts ac_reconf \
         req_pcforlibs mkc mki mingw_posix \
         cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS \
         
