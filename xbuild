@@ -2296,6 +2296,7 @@ while [ $1 ];do
     --no-strip) build_strip=false;;
     --api)      shift; export API=$1;;
     --clang)    use_clang=true;;
+    --gcc)      use_clang=false;;
     --tune)     shift; menu_tune $1
       ;;
 

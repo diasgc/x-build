@@ -9,18 +9,20 @@ src='https://github.com/PhilipHazel/pcre2.git'
 cfg='cmake'
 eta='0'
 
-cmake_config='-DPCRE2_BUILD_PCRE2_32=ON -DPCRE2_BUILD_PCRE2_16=ON -DPCRE2_BUILD_TESTS=OFF'
+cmake_config='-DPCRE2_BUILD_PCRE2_32=ON 
+    -DPCRE2_BUILD_PCRE2_16=ON 
+    -DPCRE2_BUILD_TESTS=OFF 
+    -DINSTALL_DOCS=OFF'
+cmake_static='BUILD_STATIC_LIBS'
 
-dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='10.40'
 
-lst_inc=''
-lst_lib=''
-lst_bin=''
+
+lst_inc='pcre2.h pcre2posix.h'
+lst_lib='libpcre2-posix libpcre2-8 libpcre2-16 libpcre2-32'
+lst_bin='pcre2-config pcre2grep'
 lst_lic='LICENSE COPYING AUTHORS'
-lst_pc=''
+lst_pc='libpcre2-posix.pc libpcre2-8.pc libpcre2-16.pc libpcre2-32.pc'
 
 . xbuild
 
@@ -28,6 +30,7 @@ $host_mingw || cmake_config+=' -DPCRE2_STATIC_PIC=ON'
 
 start
 
+# patch 01 on CMakeLists.txt to insert option INSTALL_DOCS
 <<'XB64_PATCH'
 LS0tIENNYWtlTGlzdHMub2xkCTIwMjEtMTEtMDIgMTA6MTE6MjguMTU2MDAwMDAwICswMDAwCisr
 KyBDTWFrZUxpc3RzLnR4dAkyMDIxLTExLTAyIDEwOjEyOjQxLjI2ODUxMzAwMCArMDAwMApAQCAt
