@@ -40,6 +40,7 @@ function trap_sigint {
   exit 1
 }
 
+shopt -s extglob
 trap trap_sigint SIGINT
 
 # Logger
@@ -50,13 +51,15 @@ export PS1='\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;95m\
 splash(){
   cat << "EOF"
 
-THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄ █▀▀ █▀▀▄ 
-     ▄▀▄ ▀▀ █▀▀▄ █  █  █  █   █  █ █▀▀ █▀▀▄ 
-    ▀   ▀   ▀▀▀  ▀▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀  ▀▀▀ ▀  ▀
-    A cross-compile builder scripting helper
+THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄
+     ▄▀▄ ▀▀ █▀▀▄ █  █  █  █   █  █ 
+    ▀   ▀   ▀▀▀  ▀▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀ 
+
+   A cross-build script collection
     
 EOF
 }
+
 color_table(){
   local i=16
   while [ $i -lt 52 ]; do
@@ -675,6 +678,49 @@ get_patch(){
     out+="\n${block}"
   fi
   echo ${out}
+}
+
+test_c0(){
+  #set -x
+  local wdir="${dir_src}/${1}"
+  if [ -d "${wdir}" ]; then
+    local od="$(pwd)"
+    cd $wdir
+    echo -e "${2}" > testfile.c
+    [ -n "$(command -v clang)" ] && cc=clang || cc=gcc
+    $cc -c testfile.c && $cc -o testfile testfile.o && rm *.o
+    ./testfile
+    cd $od
+  fi
+  #set +x
+  return 0
+}
+
+c_printf(){
+  #set -x
+  local wdir="${dir_src}/${1}"
+  if [ -d "${wdir}" ]; then
+    local od="$(pwd)"
+    cd $wdir
+    local hfile=$2
+    local printf_expr=$3
+    local cc
+    if [ ! -f "testfile" ]; then
+      cat <<-testfile >>testfile.c
+				#include <stdio.h>
+				#include "${hfile}"
+				int main(){
+				  printf(${printf_expr});
+				}
+				testfile
+      [ -n "$(command -v clang)" ] && cc=clang || cc=gcc
+      $cc -c testfile.c && $cc -o testfile testfile.o && rm *.o
+    fi
+    ./testfile
+    cd $od
+  fi
+  #set +x
+  return 0
 }
 
 # .language

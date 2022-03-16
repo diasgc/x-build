@@ -16,6 +16,9 @@ dev_vrs='1.4.23'
 
 . xbuild
 
+vrs="$(c_printf 'amf/public/include/core' 'Version.h' \
+    '"%d.%d.%d",AMF_VERSION_MAJOR,AMF_VERSION_MINOR,AMF_VERSION_RELEASE')"
+
 start
 
 # cpu av8 av7 x86 x64

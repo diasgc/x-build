@@ -21,7 +21,13 @@ dev_vrs='1.0.9'
 stb_bra=''
 stb_vrs=''
 
+get_version(){
+    c_printf 'c/common' 'version.h' '"%d.%d.%d",(BROTLI_VERSION>>24)&0xFF,(BROTLI_VERSION>>12)&0xFF,BROTLI_VERSION&0xFF'
+}
+
 . xbuild
+
+#echo $(get_version)
 
 start
 
