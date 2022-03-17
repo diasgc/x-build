@@ -1786,10 +1786,10 @@ loadToolchain(){
 			local cross
 			local ltsdir
 			case $arch in
-			aarch64-*) cross="-cross" ltsdir=$xv_aarch64_gnu;;
-			arm-*)     cross="-cross" ltsdir=$xv_armeabi_gnu;;
-			i686-*)    cross="-cross" ltsdir=$xv_x86_gnu;;
-			x86_64-*)  cross= ltsdir=$xv_x64_gnu;;
+				aarch64-*) cross="-cross" ltsdir=$xv_aarch64_gnu;;
+				arm-*)     cross="-cross" ltsdir=$xv_armeabi_gnu;;
+				i686-*)    cross="-cross" ltsdir=$xv_x86_gnu;;
+				x86_64-*)  cross= ltsdir=$xv_x64_gnu;;
 			esac
 			if [ -n "$cross" ]; then
 				SYSROOT="/usr/${arch}"
