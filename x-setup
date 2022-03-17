@@ -24,12 +24,12 @@ check_install(){
         v1=$(apt-cache madison $p | cut -d '|' -f 2 | xargs)
         if [ -z "${v0}" ];then
             printf "${CH}%-20s: ${C0}%s\n" "  $p" "installing..."
-            printf "$(${cmd_apt_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
+            printf "$(${cmd_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
         elif [ "${v1}" == "${v0}" ]; then
             printf "${CH}%-20s: ${C0}%s\n" "  $p" "${v0}"
         else
             printf "${CH}%-20s: ${C0}%s" "  $p" "${v0} upgrading to..."
-            printf "$(${cmd_apt_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
+            printf "$(${cmd_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
         fi  
     done
 }
@@ -38,7 +38,8 @@ update(){
     while [ -n "${1}" ]; do
         case $1 in
             ndk|NDK)    install_ndk;;
-            llvm-mingw) llvm_mingw_install;;
+            llvm-mingw) install_llvm_mingw;;
+            llvm-gnu)   install_llvm_gnu;;
         esac
         shift
     done
@@ -90,7 +91,13 @@ function install_ndk {
     cd $od
 }
 
-function llvm_mingw_install {
+function install_llvm_gnu {
+    $cmd_install llvm clang libc6-dev-arm64-cross libc6-dev-armhf-cross
+
+
+}
+
+function install_llvm_mingw {
     # install llvm-mingw
     local od=$(pwd)
     if [ -z "${LLVM_MINGW_HOME}" ]; then
@@ -113,8 +120,32 @@ function build_utils {
     cd ..
 }
 
+check_slink() {
+	if [ ! -f "${1}" ]; then
+		sudo ln -s "${2}" "${1}"
+	fi
+}
 
+check_wrapper_gnu() {
+	if [ ! -f "/usr/${1}/bin/${2}" ]; then
+		cat <<-eof | sudo tee /usr/${1}/bin/${2} >/dev/null
+		#!/bin/bash
+		${2} --target=${1} --sysroot=/usr/${1} ${3} "\$@"
+		eof
+		sudo chmod +x "/usr/${1}/bin/${2}"
+	fi
+}
 
+check_wrapper_ndk() {
+    if [ ! -f "${3}" ]; then
+		cat <<-eof | sudo tee ${3} >/dev/null
+		#!/bin/bash
+		\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${2}\${API}-${1} "\$@"
+		eof
+		sudo chmod +x ${3}
+	fi
+    
+}
 
 
 
@@ -125,100 +156,127 @@ function build_utils {
 # set cyan theme color
 CH=${CC0}
 force=false
+init=false
+
+p_install_ndk=false
+p_install_ndk_symlinks=false
+p_install_llvm_gnu=false
+p_install_llvm_sysroot=false
+
 # load config
 [ -f ".config" ] && . .config
 
-force=false
-export cmd_apt_install="sudo apt install"
+#export cmd_install="sudo apt install"
+
+if [ -z "${cmd_install}" ];then
+    [ -n "$(command -v sudo)" ] && cmd_install="sudo "
+    case $OSTYPE in
+        linux-gnu)     cmd_install+="apt install"
+            ;;
+        linux-android) cmd_install="pkg install"
+            ;;
+        darwin)        cmd_install="brew install"
+            ;;
+    esac
+    #[ -n "$(which apt)" ] && cmd_install+="apt install " || cmd_install="exit 1;"
+    printf "\n${CH}%-20s: ${C0}%s\n" 'cmd install' "${cmd_install}"
+fi
 
 case $1 in
-    -f|--force) force=true;;
+    -f|--force)		force=true;;
     --git-cleanup)
-        echo -e "size before cleanup: $(du -s .git)\n"
-        git filter-branch --index-filter 'git rm --cached --ignore-unmatch *.tar.gz' -- --all
-        rm -Rf .git/refs/original
-        rm -Rf .git/logs/
-        git gc --aggressive --prune=now
-        echo -e "\nDone\n\n"
-        echo -e "size after cleanup: $(du -s .git)\n"
-        exit 0
-        ;;
-    --force) force=true;;
-    --install) shift; check_install $@; exit 0;;
+					echo -e "size before cleanup: $(du -s .git)\n"
+					git filter-branch --index-filter 'git rm --cached --ignore-unmatch *.tar.gz' -- --all
+					rm -Rf .git/refs/original
+					rm -Rf .git/logs/
+					git gc --aggressive --prune=now
+					echo -e "\nDone\n\n"
+					echo -e "size after cleanup: $(du -s .git)\n"
+					exit 0
+					;;
+    --install)		shift; check_install $@; exit 0;;
     --latest-cmake) cmake_latest && exit 0;;
-    --update)  shift
-        while [ -n "${1}" ]; do
-            case $1 in
-                ndk|NDK)    install_ndk;;
-                llvm-mingw) llvm_mingw_install;;
-            esac
-            shift
-        done
-        exec x-setup
-        exit 0
-        ;;
-    --libcheck) libcheck; exit 0;;
-    --build_utils) build_utils; exit 0;;
+	--latest-llvm)  sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"; exit 0;;
+    --update)  		shift
+					while [ -n "${1}" ]; do
+						case $1 in
+							ndk|NDK)    install_ndk;;
+							llvm-mingw) install_llvm_mingw;;
+							llvm-gnu)   install_llvm_gnu;;
+						esac
+						shift
+					done
+					exec x-setup
+					exit 0
+					;;
+    --libcheck)		libcheck; exit 0;;
+    --build_utils)	build_utils; exit 0;;
+    --init)			init=true;;
 esac
 
+if $init; then
+	splash
+	if	[ -z "$ANDROID_NDK_HOME" ] || [ ! -d "${ANDROID_NDK_HOME}" ]; then
+		read -p "Android Support: Install NDK Toolchain? [Y|n]: " p_install_ndk
+		p_install_ndk_symlinks=$p_install_ndk
+	elif [ $(ls /usr/*-linux-android* | grep bin | wc -l) -lt 4 ]; then
+		p_install_ndk=false
+		p_install_ndk_symlinks=true
+	fi
+	
+	if	[ -z "$(command -v clang)" ]; then
+		read -p "Linux LLVM/Clang Support: Install LLVM/Clang Toolchain? [Y|n]: " p_install_llvm_gnu
+	fi
+fi
+
+check_install gcc g++
+
 echo -e "\n${CC1}This Machine:"
-[ -z "${build_arch}" ] && build_arch=$(gcc -dumpmachine)
+[ -z "${build_arch}" ] && build_arch="$(uname -m)-${OSTYPE,,}"
 [ -z "${build_os}" ] && build_os=$(uname -s)
 [ -z "${build_cpu}" ] && build_cpu=$(uname -m)
 printf "${CH}%-20s: ${C0}%s\n" '  build arch' ${build_arch}
 printf "${CH}%-20s: ${C0}%s\n" '  build os' ${build_os}
 printf "${CH}%-20s: ${C0}%s\n" '  build cpu' ${build_cpu}
 
-if [ -z "${cmd_apt_install}" ];then
-    [ -n "$(command -v sudo)" ] && cmd_apt_install="sudo "
-    case $OSTYPE in
-        linux-gnu)      cmd_apt_install+="apt install"
-            ;;
-        linux-android) cmd_apt_install="pkg install"
-            ;;
-        darwin)        cmd_apt_install="brew install"
-            ;;
-    esac
-    #[ -n "$(which apt)" ] && cmd_apt_install+="apt install " || cmd_apt_install="exit 1;"
-    printf "\n${CH}%-20s: ${C0}%s\n" 'cmd install' "${cmd_apt_install}"
-fi
+
 
 if [ ! -d "builds/toolchain" ]; then
     mkdir -p builds/toolchain
 fi
 export dir_toolchain="$(pwd)/builds/toolchain"
 
+echo -e "\n${CC1}GNU-GCC:"
+check_install 'gcc-aarch64-linux-gnu' 'g++-aarch64-linux-gnu' 'libstdc++-11-dev-arm64-cross'
+check_install 'gcc-arm-linux-gnueabihf' 'g++-arm-linux-gnueabihf' 'libstdc++6-armhf-cross'
+check_install 'gcc-i686-linux-gnu' 'g++-i686-linux-gnu'
+        
+
+
 echo -e "\n${CC1}LLVM-Clang:"
-if [ -z "$(command -v clang)" ]; then
-    echo -e "not found. Install?"; read -p "[Y|n]" pndk
-    case $pndk in y|Y) $cmd_apt_install llvm clang;; esac
-fi
+$p_install_llvm_gnu && $cmd_install llvm clang
 if [ -n "$(command -v clang)" ]; then
     printf "${CH}%-20s: ${C0}%s\n" "  found at" $(command -v clang)
     clang_version=$(clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
     printf "${CH}%-20s: ${C0}%s\n" '  clang' "$clang_version"
-    # install symlinks 
-    # todo
-    #for cl in aarch64 arm i686 x86_64; do
-    #    for e in ar nm addr2line objcopy objdump ranlib readelf size strings strip windres; do
-    #        v="${dir_toolchain}/${cl}-linux-gnu-${e}"
-    #        [ ! -f "${v}" ] && ln -s "${ndk_toolchain}/bin/llvm-${e}" "${v}" 2>/dev/null
-    #    done
-    #    [ ! -f "${dir_toolchain}/${cl}-linux-gnu-clang" ] && printf "#!/bin/bash\n[ \"\$1\" != \"-cc1\" ] && ${ndk_toolchain}/bin/clang --target=${cl}${cpuv}-linux-android${eabi}\${NDK_API} \"\$@\" || ${ndk_toolchain}/bin/clang \"\$@\"" >"${dir_toolchain}/${cl}-linux-android-clang"
-    #    [ ! -f "${dir_toolchain}/${cl}-linux-gnu-clang++" ] && printf "#!/bin/bash\n[ \"\$1\" != \"-cc1\" ] && ${ndk_toolchain}/bin/clang++ --target=${cl}${cpuv}-linux-android${eabi}\${NDK_API} \"\$@\" || ${ndk_toolchain}/bin/clang++ \"\$@\"" >"${dir_toolchain}/${cl}-linux-android-clang++"
-    #    [ ! -f "${dir_toolchain}/${cl}-linux-gnu-as" ] && ln -s "${ndk_toolchain}/bin/arm-linux-gnueabihf-as" "${dir_toolchain}/${cl}-linux-android-as" 2>/dev/null
-    #    [ ! -f "${dir_toolchain}/${cl}-linux-gnu-ld" ] && ln -s "${ndk_toolchain}/bin/lld" "${dir_toolchain}/${cl}-linux-android-ld"
-    #done
+    # install symlinks
+	cl=(aarch64 arm i686 x86_64)
+	ab=(arm64 armhf i386 x86_64)
+	abi=(gnu gnueabihf gnu gnu)
+	for a in 0 1 2 3; do
+		t="${cl[$a]}-linux-${abi[$a]}"
+		if [ "${t}" != "${build_arch}" ]; then
+			check_install libc6-dev-${ab[$a]}-cross
+			[ -d "/usr/${t}/bin" ] || sudo mkdir -p "/usr/${t}/bin"
+			for e in ar as nm addr2line objcopy objdump ranlib readelf size strings strip windres; do
+				check_slink "/usr/${t}/bin/llvm-${e}" "/usr/bin/llvm-${e}"
+			done
+			check_slink "/usr/${t}/bin/ld" "/usr/bin/ld.lld"
+			check_wrapper_gnu "${t}" 'clang' '-fuse-ld=lld'
+			check_wrapper_gnu "${t}" 'clang++' '-fuse-ld=lld -stdlib=libc++'
+		fi
+	done
 fi
-
-bash_clang(){
-    # echo "${2}"
-	cat <<-eof | sudo tee ${3} >/dev/null
-	#!/bin/bash
-	\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${2}\${API}-${1} "\$@"
-	eof
-    sudo chmod +x ${3}
-}
 
 
 
@@ -266,10 +324,10 @@ if [ "${OSTYPE}" != "linux-android" ];then
             #
             [ -d "${dir_toolchain}/bin" ] || sudo mkdir -p "${dir_toolchain}/bin"
             if $force || [ ! -f "${dir_toolchain}/bin/clang" ]; then 
-                bash_clang "clang" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang"
+                check_wrapper_ndk "clang" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang"
             fi
             if $force || [ ! -f "${dir_toolchain}/bin/clang++" ]; then 
-                bash_clang "clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
+                check_wrapper_ndk "clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
             fi
             #[ -f "${dir_toolchain}/bin/as" ] || sudo ln -s "${ndk_toolchain}/bin/${c_lib[${i}]}-as" "${dir_toolchain}/bin/as"
             [ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s "${ndk_toolchain}/bin/lld" "${dir_toolchain}/bin/ld"
@@ -301,7 +359,7 @@ if [ -z "${LLVM_MINGW_HOME}" ]; then
     llvm_mingw_bin_dir=$(find ~ -name "aarch64-w64-mingw32uwp-dlltool" | head -n1)
     if [ -z "${llvm_mingw_bin_dir}" ]; then
         echo -e "not found. Install?"; read -p "[Y|n]" pndk
-        case $pndk in y|Y) llvm_mingw_install;; esac
+        case $pndk in y|Y) install_llvm_mingw;; esac
     else
         export LLVM_MINGW_HOME=$(dirname $(dirname $llvm_mingw_bin_dir))
     fi
@@ -382,7 +440,7 @@ cat <<-EOF >${dir_root}/.config
 export config_lastupdate=$(date +%s) \\
     dir_root="$(pwd)" \\
     ROOTDIR="$(pwd)" \\
-    cmd_apt_install="${cmd_apt_install}" \\
+    cmd_install="${cmd_install}" \\
     build_arch="${build_arch}" \\
     ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
     API="${API}" \\

@@ -1791,25 +1791,32 @@ loadToolchain(){
 			i686-*)    cross="-cross" ltsdir=$xv_x86_gnu;;
 			x86_64-*)  cross= ltsdir=$xv_x64_gnu;;
 			esac
-			if [ -n "$cross" ];then
-			SYSROOT="/usr/${arch}"
-			TOOLCHAIN="/usr/${arch}/bin"
-			CROSS_PREFIX="${arch}-"
+			if [ -n "$cross" ]; then
+				SYSROOT="/usr/${arch}"
+				CROSS_PREFIX="${arch}-"
 			else
-			TOOLCHAIN="/usr"
-			unset CROSS_PREFIX
-			unset SYSROOT
+				SYSROOT="/usr"
+				CROSS_PREFIX=""
 			fi
-			CC=${CROSS_PREFIX}gcc
-			CXX=${CROSS_PREFIX}g++
-			AS=${CROSS_PREFIX}as
-			LD=${CROSS_PREFIX}ld
+			TOOLCHAIN="${SYSROOT}/bin"
+			if $use_clang; then
+				CROSS_PREFIX="${TOOLCHAIN}/llvm-"
+				CC=${TOOLCHAIN}/clang
+				CXX=${TOOLCHAIN}/clang++
+				AS=${CROSS_PREFIX}as
+				LD=${TOOLCHAIN}/ld
+			else
+				CC=${CROSS_PREFIX}gcc
+				CXX=${CROSS_PREFIX}g++
+				AS=${CROSS_PREFIX}as
+				LD=${CROSS_PREFIX}ld
+			fi
 			# local ltsdir=$(ls -t /usr/lib/gcc${cross}/${arch} 2>/dev/null | head -n1)
-			[ -n "$ltsdir" ] && LT_SYS_LIBRARY_PATH="/usr/lib/gcc${cross}/${arch}/${ltsdir}"
+			[ -n "$ltsdir" ] && LT_SYS_LIBRARY_PATH="${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir}"
 			LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-			CPPFLAGS+=" -I/usr/include -I/usr/local/include"
-			cmake_findrootpath="${SYSROOT}/usr/${arch}
-			${SYSROOT}/usr/lib/gcc${cross}/${arch}/${ltsdir}
+			CPPFLAGS+=" -I${SYSROOT}/include -I${SYSROOT}/local/include"
+			cmake_findrootpath="${SYSROOT}/${arch}
+			${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir}
 			${dir_install}"
 			;;
 		Windows)
