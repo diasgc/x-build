@@ -13,14 +13,14 @@ sty='git'
 cfg='cm'
 pkg='vvc'
 eta='480'
-cbk="BUILD_TOOLS"
+cmake_bin="BUILD_TOOLS"
 mkinstall='all'
 
 . xbuild
 
-case $arch in
-  aarch64*|arm*) doErr "VVC not available for arm archs";;
-esac
+on_config_arm(){
+  doErr "VVC is not available for arm archs"
+}
 
 source_patch(){
   sed -i "s|5.3|$xv_x86_mingw|g" cmake/CMakeBuild/cmake/toolchains/i686-w64-mingw32-gcc-posix-ubuntu1604.cmake

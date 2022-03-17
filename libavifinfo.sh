@@ -10,7 +10,7 @@ lic='GLP-2.0'
 src='https://aomedia.googlesource.com/libavifinfo.git'
 cfg='cmake'
 eta='0'
-cbk='AVIFINFO_BUILD_TOOLS'
+cmake_bin='AVIFINFO_BUILD_TOOLS'
 
 dev_bra='main'
 dev_vrs=''

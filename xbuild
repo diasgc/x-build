@@ -241,13 +241,13 @@ return 0
 
 guess_cfg(){
 if [ -f "${dir_config}/meson.build" ]; then
-	build_tool="meson"
+	build_system="meson"
 	cfg="meson"
 elif [ -f "${dir_config}/CMakeLists.txt" ]; then
-	build_tool="cmake"
+	build_system="cmake"
 	cfg="cmake"
 elif [ -n "$(ls ${dir_config}/configure.* 2>/dev/null)" ]; then
-	build_tool="automake"
+	build_system="automake"
 	cfg='ac'
 	if [ -f "${dir_config}/autogen.sh" ]; then
 	cfg_cmd="${dir_config}/autogen.sh"
@@ -424,8 +424,8 @@ fi
 $only_repo && end_script
 
 if [ -z "${dir_build}" ];then
-	case ${build_tool} in
-	cmake|meson) dir_build="${dir_config}/build_${arch}"
+	case ${build_system} in
+	cmake|meson|automake) dir_build="${dir_config}/build_${arch}"
 		[ -d "${dir_build}" ] && rm -rf ${dir_build} 2>/dev/null
 		;;
 	*) dir_build=${dir_config};;
@@ -458,40 +458,47 @@ local arr
 if fn_defined 'build_config'; then
 	build_config
 	unset -f build_config
-else case $build_tool in
+else case $build_system in
 	cmake)
-	cmake_configure
-	do_log 'cmake' ${exec_config} ${dir_config} \
-		-DCMAKE_INSTALL_PREFIX=${dir_install} \
-		-DCMAKE_BUILD_TYPE=${cmake_build_type} \
-		${CTC} ${CFG} ${CSH} ${CBN} ${CPACK}
-	case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
-	MAKE_EXECUTABLE=make
-	#MAKE_EXECUTABLE=cmake
-	#mkf='--build . --target install --config Release'
-	;;
+		cmake_configure
+		cfg_cmd='cmake'
+		cfg_args+=("${dir_config}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}")
+		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
+		#do_log 'cmake' ${exec_config} ${dir_config} -DCMAKE_INSTALL_PREFIX=${dir_install} -DCMAKE_BUILD_TYPE=${cmake_build_type} ${CTC} ${CFG} ${CSH} ${CBN} ${CPACK}
+		case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
+		
+		;;
 
 	automake) # use autotools and configure executable to create makefile
-	ac_configure      
-	do_log 'configure' ${dir_config}/${exec_config} --prefix=${dir_install} ${CFG} ${CSH} ${CBN} ${cfg_args[@]}
-	MAKE_EXECUTABLE=make
-	;;
+		ac_configure
+		cfg_cmd="${dir_config}/configure"
+		cfg_args+=("--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
+		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
+		#do_log 'configure' ${dir_config}/${exec_config} --prefix=${dir_install} ${CFG} ${CSH} ${CBN} ${cfg_args[@]}
+		;;
 
 	meson)
-	meson_configure
-	do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
-	;;
+		meson_configure
+		cfg_cmd='meson'
+		cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
+		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
+		#do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
+		;;
 
 	make)
-	: "${mkf:=$CFG}"
-	MAKE_EXECUTABLE=make
-	;;
-	other)
-	[ -n "${cfg_cmd}" ] && do_log 'config' ${cfg_cmd} || doErr "cfg_cmd not defined"
-	;;
-	*)
-	doErr "No cfg found or unknown for $cfg. Use build_config to custom configure makefile"
-	;;
+		: "${mkf:=$CFG}"
+		MAKE_EXECUTABLE=make
+		;;
+	bazel)
+		cfg_cmd='bazel'
+		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
+		;;
+	*)	if [ -n "${cfg_cmd}" ]; then
+			do_log 'config' ${cfg_cmd} ${cfg_args[@]}
+		else doErr ""
+			doErr "cfg ${cfg} unknown or cfg_cmd not defined. Use build_config to custom configure makefile"
+		fi
+		;;
 	esac
 fi
 
@@ -582,161 +589,165 @@ end_script
 }
 
 meson_configure(){
-export cfg_file="${dir_config}/${arch}.meson"
-[ -f "${cfg_file}" ] && rm ${cfg_file}
-$host_clang || LD="bfd"
-if [ -n "${meson_bin}" ]; then
-	arr=(${meson_bin//|/ })
-	case ${#arr[@]} in
-	1) $build_bin && CBN="-D${arr[0]}=true" || CBN="-D${arr[0]}=false";;
-	2) $build_bin && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
-	esac
-fi
-meson_create_toolchain ${cfg_file}
-MAKE_EXECUTABLE=ninja
-[ -n "${meson_cfg}" ] && CFG="${meson_cfg} ${CFG}"
+	export cfg_file="${dir_config}/${arch}.meson"
+	[ -f "${cfg_file}" ] && rm ${cfg_file}
+	$host_clang || LD="bfd"
+	if [ -n "${meson_bin}" ]; then
+		arr=(${meson_bin//|/ })
+		case ${#arr[@]} in
+		1) $build_bin && CBN="-D${arr[0]}=true" || CBN="-D${arr[0]}=false";;
+		2) $build_bin && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
+		esac
+	fi
+	meson_create_toolchain ${cfg_file}
+	MAKE_EXECUTABLE=ninja
+	[ -n "${meson_cfg}" ] && CFG="${meson_cfg} ${CFG}"
 }
 
 ac_configure() {
-$ac_reconf && autoreconf -fi 2>/dev/null >>${log_file}
-#[ -z "${mki+x}" ] && mki=$(make_findtarget "install-strip" "install")
-[ -z "$exec_config" ] && exec_config='configure' # default config executable
-[ -n "${ac_config}" ] && CFG=${ac_config}
+	$ac_reconf && autoreconf -fi 2>/dev/null >>${log_file}
+	#[ -z "${mki+x}" ] && mki=$(make_findtarget "install-strip" "install")
+	[ -z "$exec_config" ] && exec_config='configure' # default config executable
+	[ -n "${ac_config}" ] && CFG=${ac_config}
 
-local opt_list="$(${dir_config}/${exec_config} --help | grep -P '^[[:space:]]+\-\-')"
+	local opt_list="$(${dir_config}/${exec_config} --help | grep -P '^[[:space:]]+\-\-')"
 
-# find static build option
-if $build_static && [ -n "$(echo "${opt_list}" | grep '\-\-enable-static')" ]; then
-	build_type="--enable-static"
-fi
-# find shared build option
-if $build_shared && [ -n "$(echo "${opt_list}" | grep '\-\-enable-shared')" ]; then
-	build_type+=" --enable-shared"
-fi
-
-if [ -n "${ac_bin}" ]; then
-	arr=(${ac_bin//|/ })
-	case ${#arr[@]} in
-	1) $build_bin && CBN="${arr[0]}=1" || CBN="${arr[0]}=0";;
-	2) $build_bin && CBN="${arr[1]}" || CBN="${arr[0]}";;
-	esac
-fi
-
-if [ -n "${ac_opts}" ]; then
-	for opt in $(echo ${ac_opts}); do
-	case $opt in
-		--update-config_sub)
-		local fpath=$(find ${dir_src} -name 'config.sub')
-		[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.sub ${fpath}
-		;;
-		--update-config_guess)
-		local fpath=$(find ${dir_src} -name 'config.guess')
-		[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.guess ${fpath}
-		;;
-		--no-sysroot)          ac_nosysroot=true;;
-		--no-pic)              ac_nopic=true;;
-		--no-host)             ac_nohost=true;;
-	esac
-	done
-fi
-
-if ! $ac_nohost && $host_cross && [ -n "$(echo "${opt_list}" | grep '\-\-host')" ]; then
-	$host_cross && CFG+=" --host=${arch}"
-fi
-
-if ! $ac_nosysroot; then
-	if [ -n "$(echo "${opt_list}" | grep '\-\-with-sysroot')" ]; then
-	CFG+=" --with-sysroot=${SYSROOT}"
-	elif [ -n "$(echo "${opt_list}" | grep '\-\-sysroot')" ]; then
-	CFG+=" --sysroot=${SYSROOT}"
+	# find static build option
+	if $build_static && [ -n "$(echo "${opt_list}" | grep '\-\-enable-static')" ]; then
+		build_type="--enable-static"
 	fi
-fi
+	# find shared build option
+	if $build_shared && [ -n "$(echo "${opt_list}" | grep '\-\-enable-shared')" ]; then
+		build_type+=" --enable-shared"
+	fi
 
-if ! $ac_nopic && ! $host_mingw && [ -n "$(echo "${opt_list}" | grep '\-\-with-pic')" ]; then
-	CFG+=" --with-pic"
-fi
+	if [ -n "${ac_bin}" ]; then
+		arr=(${ac_bin//|/ })
+		case ${#arr[@]} in
+		1) $build_bin && CBN="${arr[0]}=1" || CBN="${arr[0]}=0";;
+		2) $build_bin && CBN="${arr[1]}" || CBN="${arr[0]}";;
+		esac
+	fi
+
+	if [ -n "${ac_opts}" ]; then
+		for opt in $(echo ${ac_opts}); do
+		case $opt in
+			--update-config_sub)
+			local fpath=$(find ${dir_src} -name 'config.sub')
+			[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.sub ${fpath}
+			;;
+			--update-config_guess)
+			local fpath=$(find ${dir_src} -name 'config.guess')
+			[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.guess ${fpath}
+			;;
+			--no-sysroot)          ac_nosysroot=true;;
+			--no-pic)              ac_nopic=true;;
+			--no-host)             ac_nohost=true;;
+		esac
+		done
+	fi
+
+	if ! $ac_nohost && $host_cross && [ -n "$(echo "${opt_list}" | grep '\-\-host')" ]; then
+		$host_cross && CFG+=" --host=${arch}"
+	fi
+
+	if ! $ac_nosysroot; then
+		if [ -n "$(echo "${opt_list}" | grep '\-\-with-sysroot')" ]; then
+		CFG+=" --with-sysroot=${SYSROOT}"
+		elif [ -n "$(echo "${opt_list}" | grep '\-\-sysroot')" ]; then
+		CFG+=" --sysroot=${SYSROOT}"
+		fi
+	fi
+
+	if ! $ac_nopic && ! $host_mingw && [ -n "$(echo "${opt_list}" | grep '\-\-with-pic')" ]; then
+		CFG+=" --with-pic"
+	fi
+	MAKE_EXECUTABLE=make
 }
 
 cmake_configure(){
-: "${exec_config:=${CMAKE_EXECUTABLE}}"
-[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}
-[ -f "${cmake_toolchain_file}" ] && CTC="-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}"
+	: "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
+	[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}
+	[ -f "${cmake_toolchain_file}" ] && CTC="-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}"
 
-if [ -n "${cmake_static}" ]; then
-	arr=(${cmake_static//|/ })
-	case ${#arr[@]} in
-		1) $build_static && CSH="-D${arr[0]}=ON" || CSH="-D${arr[0]}=OFF";;
-		2) $build_static && CSH="-D${arr[0]}" || CSH="-D${arr[1]}";;
-	esac
-fi
+	if [ -n "${cmake_static}" ]; then
+		arr=(${cmake_static//|/ })
+		case ${#arr[@]} in
+			1) $build_static && CSH="-D${arr[0]}=ON" || CSH="-D${arr[0]}=OFF";;
+			2) $build_static && CSH="-D${arr[0]}" || CSH="-D${arr[1]}";;
+		esac
+	fi
 
-if [ -z "${cmake_shared}" ]; then
-	$build_shared && CSH+=' -DBUILD_SHARED_LIBS=ON' || CSH+=' -DBUILD_SHARED_LIBS=OFF'
-else
-	arr=(${cmake_shared//|/ })
-	case ${#arr[@]} in
-	1) $build_shared && CSH+=" -D${arr[0]}=ON" || CSH+=" -D${arr[0]}=OFF";;
-	2) $build_shared && CSH+=" -D${arr[1]}" || CSH+=" -D${arr[0]}";;
-	esac
-fi
+	if [ -z "${cmake_shared}" ]; then
+		$build_shared && CSH+=' -DBUILD_SHARED_LIBS=ON' || CSH+=' -DBUILD_SHARED_LIBS=OFF'
+	else
+		arr=(${cmake_shared//|/ })
+		case ${#arr[@]} in
+			1) $build_shared && CSH+=" -D${arr[0]}=ON" || CSH+=" -D${arr[0]}=OFF";;
+			2) $build_shared && CSH+=" -D${arr[1]}" || CSH+=" -D${arr[0]}";;
+		esac
+	fi
 
-if [ -n "${cmake_bin}" ]; then
-	arr=(${cmake_bin//|/ })
-	case ${#arr[@]} in
-	1) $build_bin && CBN="-D${arr[0]}=ON" || CBN="-D${arr[0]}=OFF";;
-	2) $build_bin && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
-	esac
-fi
+	if [ -n "${cmake_bin}" ]; then
+		arr=(${cmake_bin//|/ })
+		case ${#arr[@]} in
+			1) $build_bin && CBN="-D${arr[0]}=ON" || CBN="-D${arr[0]}=OFF";;
+			2) $build_bin && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
+		esac
+	fi
 
-[ -n "${cmake_config}" ] && CFG="${cmake_config} ${CFG}"
+	[ -n "${cmake_config}" ] && CFG="${cmake_config} ${CFG}"
+	MAKE_EXECUTABLE=make
+	#MAKE_EXECUTABLE=cmake
+	#mkf='--build . --target install --config Release'
 }
 
 #1=cmake_key 2=$build_key_bool 
 cmake_readkey(){
-local arr
-locat ret=''
-if [ -n "${!1}" ]; then
-	arr=(${!cfg_static//|/ })
-	case ${#arr[@]} in
-		1) ${!2} && ret="-D${arr[0]}=ON" || ret="-D${arr[0]}=OFF";;
-		2) ${!2} && ret="-D${arr[0]}" || ret="-D${arr[1]}";;
-	esac
-fi
-echo "${ret}"
+	local arr
+	local ret
+	if [ -n "${!1}" ]; then
+		arr=(${!cfg_static//|/ })
+		case ${#arr[@]} in
+			1) ${!2} && ret="-D${arr[0]}=ON" || ret="-D${arr[0]}=OFF";;
+			2) ${!2} && ret="-D${arr[0]}" || ret="-D${arr[1]}";;
+		esac
+	fi
+	echo "${ret}"
 }
 
 doStrip(){
-local libdir
-for dd in $(find ${dir_build} \( -name "*.a" -o -name "*.so" \));do
-	${STRIP} --strip-unneeded $dd
-done
+	local libdir
+	for dd in $(find ${dir_build} \( -name "*.a" -o -name "*.so" \));do
+		${STRIP} --strip-unneeded $dd
+	done
 }
 
 end_script(){
-log_end
-# check if parent process is shell script
-local parent=$(ps -o comm= $PPID)
-[ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done${C0}\n"
-$debug && set +x
-unset dir_config dir_build dir_src \
-		CSH CBN exec_config vrs vnd \
-		ac_nohost ac_nopic ac_nosysroot ac_opts ac_reconf \
-		req_pcforlibs mkc mki mingw_posix \
-		cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS \
-		
-		
-dec_tab
-echo
-exit 0
+	log_end
+	# check if parent process is shell script
+	local parent=$(ps -o comm= $PPID)
+	[ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done${C0}\n"
+	$debug && set +x
+	unset dir_config dir_build dir_src \
+			CSH CBN exec_config vrs vnd \
+			ac_nohost ac_nopic ac_nosysroot ac_opts ac_reconf \
+			req_pcforlibs mkc mki mingw_posix \
+			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS \
+			
+			
+	dec_tab
+	echo
+	exit 0
 }
 
 make_findtarget(){
-${MAKE_EXECUTABLE} ${1} -n 2>>${log_file}
-test $? -eq 2 && {
-	echo "${2}"; echo "make: target ${1} not found, setting default ${2} target." >>${log_file}
-} || {
-	echo "${1}"; echo "make: target ${1} found." >>${log_file}
-}
+	${MAKE_EXECUTABLE} ${1} -n 2>>${log_file}
+	if test $? -eq 2 ; then
+		echo "${2}"; echo "make: target ${1} not found, setting default ${2} target." >>${log_file}
+	else
+		echo "${1}"; echo "make: target ${1} found." >>${log_file}
+	fi
 }
 
 check_install(){
@@ -1413,25 +1424,25 @@ prt_git_progress(){
 topct(){
 	local sln
 	local grp
-	case $build_tool in
+	case $build_system in
 		cmake)
-		printf "%-6s"
-		while read -r ln; do
-			str_contains $ln 'error: ' && printf $CR1
-			sln=$(grep -oP '\d+%' <<< $ln)
-			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
-		done
-		printf "\e[6D"
-		;;
+			printf "%-6s"
+			while read -r ln; do
+				str_contains $ln 'error: ' && printf $CR1
+				sln=$(grep -oP '\d+%' <<< $ln)
+				[ -n "$sln" ] && printf "\e[5D%-5s" $sln
+			done
+			printf "\e[6D"
+			;;
 		meson)
-		printf "%-12s"
-		while read -r ln; do
-			str_contains $ln 'error: ' && printf $CR1
-			sln=$(grep -oP '\[\d+/\d+\]' <<< $ln)
-			[ -n "$sln" ] && printf "\e[11D%-11s" $sln
-		done
-		printf "\e[12D"
-		;;
+			printf "%-12s"
+			while read -r ln; do
+				str_contains $ln 'error: ' && printf $CR1
+				sln=$(grep -oP '\[\d+/\d+\]' <<< $ln)
+				[ -n "$sln" ] && printf "\e[11D%-11s" $sln
+			done
+			printf "\e[12D"
+			;;
 		*)
 		printf "%-6s"
 		while read -r ln; do
@@ -2409,7 +2420,7 @@ set_buildtype_key(){
 
 # check build type and set defaults if no cst0 cst1 csh0 or csh1 value provided
 case $cfg in
-	cm|ccm|cmake|ccmake) build_tool=cmake
+	cm|ccm|cmake|ccmake) build_system=cmake
 
 		[ -n "$cstk" ] && cst0="-D${cstk}=OFF" cst1="-D${cstk}=ON"
 		[ -n "$cshk" ] && csh0="-D${cshk}=OFF" csh1="-D${cshk}=ON"
@@ -2424,7 +2435,7 @@ case $cfg in
 		[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
 
 		;;
-	ab|am|ac|ar|ag|auto*) build_tool=automake
+	ab|am|ac|ar|ag|auto*) build_system=automake
 		[ -z "$cst0" ] && cst0="--disable-static"
 		[ -z "$cst1" ] && cst1="--enable-static"
 		[ -z "$csh0" ] && csh0="--disable-shared"
@@ -2441,14 +2452,14 @@ case $cfg in
 		esac
 		}
 		;;
-	meson) build_tool=meson
+	meson) build_system=meson
 		$build_static && ! $build_shared && CSH="-Ddefault_library=static"
 		$build_shared && ! $build_static && CSH="-Ddefault_library=shared"
 		$build_static && $build_shared && CSH="-Ddefault_library=both"
 		;;
-	mk|make) build_tool=make;;
-	other) build_tool=other;;
-	*) unset build_tool;;
+	mk|make) build_system=make;;
+	other) build_system=other;;
+	*) unset build_system;;
 esac
 
 if [ -z "${CBN}" ];then
@@ -2459,7 +2470,7 @@ fi
 unset cst0 cst1 csh0 csh1 cb0 cb1 cstk cshk cbk
 
 export arch update retry \
-build_shared build_static build_bin build_tool \
+build_shared build_static build_bin build_system \
 dir_install \
 CSH CBN LIBSDIR PLATFORM CPU ABI EABI \
 host_arch host_64 host_eabi host_vnd host_arm host_os \

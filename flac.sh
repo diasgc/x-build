@@ -25,12 +25,6 @@ stb_vrs=''
 
 . xbuild
 
-#$host_arm && ac_config=" --disable-asm-optimizations --disable-vsx --disable-avx --disable-sse --disable-altivec"
-#if [ "$build_tool" == "cmake" ] && $host_mingw; then
-#  LD=$CC; AS=nasm
-#fi
-
-
 start
 
 # patch on src/libFLAC/CMakeLists.txt and src/libFLAC++/CMakeLists.txt

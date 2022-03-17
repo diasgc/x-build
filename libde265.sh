@@ -33,7 +33,7 @@ else
   cmake_config+=' -DDISABLE_SSE=OFF'
 fi
 
-if [ "$build_tool" == "automake" ] && $host_arm; then
+if [ "$build_system" == "automake" ] && $host_arm; then
   CSH=${CSH/"--disable-shared "} #see similar https://github.com/opencv/opencv/pull/9052
 fi
 

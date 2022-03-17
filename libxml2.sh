@@ -28,7 +28,7 @@ lst_pc='libxml-2.0.pc'
 . xbuild
 
 before_make(){
-  case $build_tool in
+  case $build_system in
     cmake)    sed -i 's/xdocumentationx/xx/g' cmake_install.cmake;;
     automake) sed -i -E '/SUBDIRS/ {s/(doc |examples )//}' Makefile
   esac

@@ -7,11 +7,14 @@
 lib='libjbig'
 dsc='JBIG1 data compression standard (ITU-T T.82) lossless image compression'
 lic='GPL'
-vrs='2.1'
+
 #src='https://www.cl.cam.ac.uk/~mgk25/git/cdjbigkit' sty='git'
-src="https://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-${vrs}.tar.gz" sty='tgz'
+vrs='2.1' src="https://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-${vrs}.tar.gz"
 cfg='cmake'
 eta='17'
+
+cmake_bin="BUILD_EXECUTABLES"
+cmake_static='BUILD_STATIC_LIBS'
 
 pc_llib='-ljbig -ljbig85'
 
@@ -19,94 +22,52 @@ lst_inc='jbig_ar.h jbig85.h jbig.h'
 lst_lib='libjbig85 libjbig'
 lst_bin='pbmtojbg85 pbmtojbg jbgtopbm85 jbgtopbm'
 
-cbk="BUILD_EXECUTABLES"
-
 . xbuild
 
 start
 
-<<'XB_CREATE_CMAKELISTS'
-cmake_minimum_required(VERSION 3.6)
-project(jbigkit)
+<<'LZS_PATCH'
+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
+lJBdBkNofgTbHUaEAA==
+LZS_PATCH
 
-option(BUILD_STATIC_LIBS "Also build static libs" ON)
-option(BUILD_EXECUTABLES "Build executables" ON)
-option(INSTALL_MAN "Install man pages" OFF)
-
-set(JBIG_SRC libjbig/jbig.c libjbig/jbig_ar.c)
-set(JBIG85_SRC libjbig/jbig85.c libjbig/jbig_ar.c libjbig/jbig_ar.h)
-
-set(JBIG_TARGETS "")
-
-if(BUILD_SHARED_LIBS)
-    add_library(libjbig SHARED ${JBIG_SRC})
-    set_target_properties(libjbig PROPERTIES PUBLIC_HEADER "libjbig/jbig_ar.h;libjbig/jbig.h")
-    add_library(libjbig85 SHARED ${JBIG85_SRC})
-    set_target_properties(libjbig85 PROPERTIES PUBLIC_HEADER "libjbig/jbig_ar.h;libjbig/jbig85.h")
-    list(APPEND JBIG_TARGETS libjbig libjbig85)
-endif()
-
-if(BUILD_STATIC_LIBS)
-    add_library(libjbig_static STATIC ${JBIG_SRC})
-    set_target_properties(libjbig_static PROPERTIES PUBLIC_HEADER "libjbig/jbig_ar.h;libjbig/jbig.h")
-    set_target_properties(libjbig_static PROPERTIES OUTPUT_NAME libjbig)
-    add_library(libjbig85_static STATIC ${JBIG85_SRC})
-    set_target_properties(libjbig85_static PROPERTIES PUBLIC_HEADER "libjbig/jbig_ar.h;libjbig/jbig85.h")
-    set_target_properties(libjbig85_static PROPERTIES OUTPUT_NAME libjbig85)
-    list(APPEND JBIG_TARGETS libjbig_static libjbig85_static)
-endif()
-
-if(BUILD_EXECUTABLES)
-    add_executable(pbmtojbg pbmtools/pbmtojbg.c)
-    add_executable(pbmtojbg85 pbmtools/pbmtojbg85.c)
-    add_executable(jbgtopbm pbmtools/pbmtojbg.c)
-    add_executable(jbgtopbm85 pbmtools/pbmtojbg85.c)
-
-    target_include_directories(pbmtojbg PRIVATE libjbig)
-    target_include_directories(pbmtojbg85 PRIVATE libjbig)
-    target_include_directories(jbgtopbm PRIVATE libjbig)
-    target_include_directories(jbgtopbm85 PRIVATE libjbig)
-
-    target_link_libraries(pbmtojbg libjbig_static)
-    target_link_libraries(pbmtojbg85 libjbig85_static)
-    target_link_libraries(jbgtopbm libjbig_static)
-    target_link_libraries(jbgtopbm85 libjbig85_static)
-    
-    list(APPEND JBIG_TARGETS pbmtojbg pbmtojbg85 jbgtopbm jbgtopbm85)
-endif()
-
-if(JBIG_TARGETS)
-    install(TARGETS ${JBIG_TARGETS}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        )
-endif()
-
-if(INSTALL_MAN)
-	install(FILES pbmtools/jbgtopbm.1 pbmtools/pbmtojbg.1 DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1)
-	install(FILES pbmtools/pbm.5 pbmtools/pgm.5 DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man5)
-endif()
-install(FILES COPYING INSTALL TODO DESTINATION ${CMAKE_INSTALL_PREFIX}/share/docs/libjbig)
-XB_CREATE_CMAKELISTS
 
 # Filelist
 # --------
-# include/jbig_ar.h
-# include/jbig85.h
+#
+# bin/jbgtopbm
+# bin/jbgtopbm85
+# bin/pbmtojbg
+# bin/pbmtojbg85
 # include/jbig.h
-# lib/libjbig85.so
+# include/jbig85.h
+# include/jbig_ar.h
 # lib/libjbig.a
 # lib/libjbig.so
 # lib/libjbig85.a
-# lib/libjbig85.la
-# lib/libjbig.la
-# share/man/man1/jbgtopbm.1
-# share/man/man1/pbmtojbg.1
-# share/man/man5/pgm.5
-# share/man/man5/pbm.5
-# bin/pbmtojbg85
-# bin/pbmtojbg
-# bin/jbgtopbm85
-# bin/jbgtopbm
+# lib/libjbig85.so
+# lib/pkgconfig/libjbig.pc
+# share/docs/libjbig/COPYING
+# share/docs/libjbig/INSTALL
+# share/docs/libjbig/TODO
