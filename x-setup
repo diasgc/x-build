@@ -266,14 +266,16 @@ if [ -n "$(command -v clang)" ]; then
 	for a in 0 1 2 3; do
 		t="${cl[$a]}-linux-${abi[$a]}"
 		if [ "${t}" != "${build_arch}" ]; then
-			check_install libc6-dev-${ab[$a]}-cross libc++-15-dev
+			check_install libc6-dev-${ab[$a]}-cross libstdc++6-${ab[$a]}-cross
 			[ -d "/usr/${t}/bin" ] || sudo mkdir -p "/usr/${t}/bin"
 			for e in ar as nm addr2line objcopy objdump ranlib readelf size strings strip windres; do
 				check_slink "/usr/${t}/bin/llvm-${e}" "/usr/bin/llvm-${e}"
 			done
+            check_slink "/usr//bin/llvm-addr2line" "/usr/lib/llvm-15/bin/llvm-addr2line"
+            check_slink "/usr//bin/llvm-windres" "/usr/lib/llvm-15/bin/llvm-windres"
 			check_slink "/usr/${t}/bin/ld" "/usr/bin/ld.lld"
 			check_wrapper_gnu "${t}" 'clang' '-fuse-ld=lld'
-			check_wrapper_gnu "${t}" 'clang++' '-fuse-ld=lld -stdlib=libc++'
+			check_wrapper_gnu "${t}" 'clang++' '-fuse-ld=lld'
 		fi
 	done
 fi

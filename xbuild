@@ -1814,11 +1814,11 @@ loadToolchain(){
 			TOOLCHAIN="${SYSROOT}/bin"
 			if $use_clang; then
 				CROSS_PREFIX="${TOOLCHAIN}/llvm-"
-				CC="${TOOLCHAIN}/clang -isysroot=${HOME}/llvm-gnu"
-				CXX="${TOOLCHAIN}/clang++ -isysroot=${HOME}/llvm-gnu"
+				CC="${TOOLCHAIN}/clang"
+				CXX="${TOOLCHAIN}/clang++"
 				AS=${CROSS_PREFIX}as
-				LD=$CC
-				LDFLAGS+=" -L${HOME}/llvm-gnu/lib"
+				LD="ld.lld"
+				LDFLAGS+=' -L/usr/lib/llvm-10/lib'
 
 			else
 				CC=${CROSS_PREFIX}gcc
