@@ -254,7 +254,7 @@ check_install 'gcc-i686-linux-gnu' 'g++-i686-linux-gnu'
 
 
 echo -e "\n${CC1}LLVM-Clang:"
-$p_install_llvm_gnu && $cmd_install llvm clang
+$p_install_llvm_gnu && $cmd_install llvm clang libc++-dev
 if [ -n "$(command -v clang)" ]; then
     printf "${CH}%-20s: ${C0}%s\n" "  found at" $(command -v clang)
     clang_version=$(clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
@@ -266,7 +266,7 @@ if [ -n "$(command -v clang)" ]; then
 	for a in 0 1 2 3; do
 		t="${cl[$a]}-linux-${abi[$a]}"
 		if [ "${t}" != "${build_arch}" ]; then
-			check_install libc6-dev-${ab[$a]}-cross
+			check_install libc6-dev-${ab[$a]}-cross libc++-15-dev
 			[ -d "/usr/${t}/bin" ] || sudo mkdir -p "/usr/${t}/bin"
 			for e in ar as nm addr2line objcopy objdump ranlib readelf size strings strip windres; do
 				check_slink "/usr/${t}/bin/llvm-${e}" "/usr/bin/llvm-${e}"

@@ -1,6 +1,7 @@
 builds/*
 sources/*
 packages/*
+llvm-gnu/*
 utils/lz-string
 .config
 .vscode

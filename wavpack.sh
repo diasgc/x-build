@@ -7,9 +7,9 @@ src='https://github.com/dbry/WavPack.git'
 cfg='ar'
 dep='libiconv'
 eta='30'
-cbk="able-apps"
 
-cfg_bin='--disable-apps|--enable-apps'
+ac_bin='--disable-apps|--enable-apps'
+ac_config="--enable-maintainer-mode"
 
 dev_vrs='5.4.0'
 
@@ -25,10 +25,7 @@ mki='install'
 
 # cli has glob header that requires api28 for ndk
 $build_bin && $host_ndk && [ $API -lt 28 ] && set_ndk_api 28
-
-CFG="--enable-maintainer-mode"
-
-$host_arm && CFG+=" --disable-asm"
+$host_arm && ac_config+=" --disable-asm"
 
 source_config(){
     test -f config.rpath || cp /usr/share/gettext/config.rpath . 2>/dev/null || touch config.rpath || exit 1

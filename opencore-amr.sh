@@ -9,11 +9,10 @@ pkg='opencore-amrnb'
 apt="${pkg}-dev"
 dsc='OpenCORE Adaptive Multi Rate (AMR) speech codec'
 lic='Apache-2'
-src='https://git.code.sf.net/p/opencore-amr/code'
-sty='git'
+src='https://git.code.sf.net/p/opencore-amr/code.git'
 cfg='ar'
 eta='100'
-cbk="able-examples"
+ac_bin="--disable-examples|--enable-examples"
 
 . xbuild
 

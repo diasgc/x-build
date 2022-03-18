@@ -179,64 +179,65 @@ fi
 }
 
 package_showinfo(){
-local dp=
-local vs=
-local longdesc=$(package_longdesc)
-[ -z "$(echo $longdesc | xargs 2>/dev/null)" ] && unset longdesc
+	$banner || return 0
+	local dp=
+	local vs=
+	local longdesc=$(package_longdesc)
+	[ -z "$(echo $longdesc | xargs 2>/dev/null)" ] && unset longdesc
 
-# Main Description
-[ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}\e[1m${lib^^} - ${C0}${dsc}\e[0m"
-[ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
+	# Main Description
+	[ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}\e[1m${lib^^} - ${C0}${dsc}\e[0m"
+	[ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
 
-# log file link
-echo -e "${CD}${ind}${CD}see log at \e[4m${log_file}\e[24m${C0}"
-# Licence
-echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "
+	# log file link
+	echo -e "${CD}${ind}${CD}see log at \e[4m${log_file}\e[24m${C0}"
+	# Licence
+	echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "
 
-# Build Tools
-if [ -n "${tls}" ]; then
-	echo -ne "${CT0}build deps: "
-	tput sc; echo -ne "${CD}$tls "; tput rc
-	for t in ${tls}; do
-	if [ -z $(command -v ${t}) ];then
-		aptInstall ${t} || {
-		echo -ne "${CR1}${t} ${C0}" && doErr "Unable to install ${t}, aborting..."
-		}
-		echo -ne "${CW}${t} "
+	# Build Tools
+	if [ -n "${tls}" ]; then
+		echo -ne "${CT0}build deps: "
+		tput sc; echo -ne "${CD}$tls "; tput rc
+		for t in ${tls}; do
+		if [ -z $(command -v ${t}) ];then
+			aptInstall ${t} || {
+			echo -ne "${CR1}${t} ${C0}" && doErr "Unable to install ${t}, aborting..."
+			}
+			echo -ne "${CW}${t} "
+		fi
+		shift
+		done
 	fi
-	shift
-	done
-fi
 
-# Build Deps
-[ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}$dep"
+	# Build Deps
+	[ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}$dep"
 
-if str_contains $src "git"; then
-	local vgit=$(git_version_remote $src | head -n1)
-	if [ -d ${dir_src} ];then
-	local vrep=$(git_version_local ${dir_src} | head -n1)
-	vs="${CT0}vrs: ${C0}$vrep "
-	if str_contains $vgit $vrs; then
-		vs+=" updated"
-	else
-		vs+=" ${CT0}latest: ${CT1}${vgit}${C0}"
+	if str_contains $src "git"; then
+		local vgit=$(git_version_remote $src | head -n1)
+		if [ -d ${dir_src} ];then
+		local vrep=$(git_version_local ${dir_src} | head -n1)
+		vs="${CT0}vrs: ${C0}$vrep "
+		if str_contains $vgit $vrs; then
+			vs+=" updated"
+		else
+			vs+=" ${CT0}latest: ${CT1}${vgit}${C0}"
+		fi
+		else
+		vs="${CT0}vrs: ${C0}${vgit}"
+		fi
 	fi
-	else
-	vs="${CT0}vrs: ${C0}${vgit}"
-	fi
-fi
-echo -e " ${vs} ${C0}"
-
+	echo -e " ${vs} ${C0}"
+	return 0
 }
 
 package_longdesc(){
-if [ -n "${apt}" ]; then
-	echo -e $(apt-cache show ${apt} 2>/dev/null | \
-	grep -E "Description-..^|^ " | \
-	sed $'s/\*/\u2605/g' | \
-	sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/'"${ind}"'/g'
-fi
-return 0
+	if [ -n "${apt}" ]; then
+		echo -e $(apt-cache show ${apt} 2>/dev/null | \
+		grep -E "Description-..^|^ " | \
+		sed $'s/\*/\u2605/g' | \
+		sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/'"${ind}"'/g'
+	fi
+	return 0
 }
 
 guess_cfg(){
@@ -576,7 +577,8 @@ if [ -z "${CPACK}" ]; then
 	fi
 else
 	cd ${dir_build}
-	do_log 'cpack' cpack -G DEB
+	vrs=$(pkg-config ${dir_install_pc}/${lib}.pc --modversion)
+	do_log 'cpack' cpack -G DEB -P "${lib}_${vrs}_${arch}"
 fi
 
 cd ${dir_src}
@@ -1812,10 +1814,12 @@ loadToolchain(){
 			TOOLCHAIN="${SYSROOT}/bin"
 			if $use_clang; then
 				CROSS_PREFIX="${TOOLCHAIN}/llvm-"
-				CC=${TOOLCHAIN}/clang
-				CXX=${TOOLCHAIN}/clang++
+				CC="${TOOLCHAIN}/clang -isysroot=${HOME}/llvm-gnu"
+				CXX="${TOOLCHAIN}/clang++ -isysroot=${HOME}/llvm-gnu"
 				AS=${CROSS_PREFIX}as
-				LD=${TOOLCHAIN}/ld
+				LD=$CC
+				LDFLAGS+=" -L${HOME}/llvm-gnu/lib"
+
 			else
 				CC=${CROSS_PREFIX}gcc
 				CXX=${CROSS_PREFIX}g++
