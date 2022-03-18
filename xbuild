@@ -91,7 +91,11 @@ logtime_end=0
 export CPPFLAGS=
 export target_trip=
 export dir_sources="${dir_root}/sources"
-export dir_src="${dir_sources}/${lib}"
+if [ -z "${src_dir}" ];then
+	export dir_src=${dir_sources}/${lib}
+else
+	export dir_src=${dir_sources}/${src_dir}
+fi
 export dir_pkgdist="${dir_root}/packages"
 
 # decaprated, backward compat only
@@ -329,7 +333,7 @@ cd ${dir_sources}
 # default dir_config is dir_src
 : "${dir_config:=${dir_src}}"
 # check if defined custom dir_config location (config_dir)
-[ -n "${config_dir+x}" ] && dir_config="${dir_sources}/${lib}/${config_dir}"
+[ -n "${config_dir+x}" ] && dir_config="${dir_src}/${config_dir}"
 
 local req_src_config=false
 local req_src_patch=false
@@ -462,8 +466,9 @@ if fn_defined 'build_config'; then
 else case $build_system in
 	cmake)
 		cmake_configure
-		cfg_cmd='cmake'
-		cfg_args+=("${dir_config}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}")
+		cfg_cmd=cmake
+		: "${cmake_bdir:=${dir_config}}"
+		cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}")
 		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
 		#do_log 'cmake' ${exec_config} ${dir_config} -DCMAKE_INSTALL_PREFIX=${dir_install} -DCMAKE_BUILD_TYPE=${cmake_build_type} ${CTC} ${CFG} ${CSH} ${CBN} ${CPACK}
 		case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
@@ -699,7 +704,6 @@ cmake_configure(){
 	fi
 
 	[ -n "${cmake_config}" ] && CFG="${cmake_config} ${CFG}"
-	MAKE_EXECUTABLE=make
 	#MAKE_EXECUTABLE=cmake
 	#mkf='--build . --target install --config Release'
 }
@@ -1426,26 +1430,23 @@ prt_git_progress(){
 topct(){
 	local sln
 	local grp
-	case $build_system in
-		cmake)
-			printf "%-6s"
-			while read -r ln; do
-				str_contains $ln 'error: ' && printf $CR1
-				sln=$(grep -oP '\d+%' <<< $ln)
-				[ -n "$sln" ] && printf "\e[5D%-5s" $sln
-			done
-			printf "\e[6D"
-			;;
-		meson)
-			printf "%-12s"
-			while read -r ln; do
-				str_contains $ln 'error: ' && printf $CR1
-				sln=$(grep -oP '\[\d+/\d+\]' <<< $ln)
-				[ -n "$sln" ] && printf "\e[11D%-11s" $sln
-			done
-			printf "\e[12D"
-			;;
-		*)
+	if [ "${build_system}" == "cmake" ] && [ "${MAKE_EXECUTABLE}" == "make" ]; then
+		printf "%-6s"
+		while read -r ln; do
+			str_contains $ln 'error: ' && printf $CR1
+			sln=$(grep -oP '\d+%' <<< $ln)
+			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
+		done
+		printf "\e[6D"
+	elif [ "${MAKE_EXECUTABLE}" == "ninja" ]; then
+		printf "%-12s"
+		while read -r ln; do
+			str_contains $ln 'error: ' && printf $CR1
+			sln=$(grep -oP '\[\d+/\d+\]' <<< $ln)
+			[ -n "$sln" ] && printf "\e[11D%-11s" $sln
+		done
+		printf "\e[12D"
+	else
 		printf "%-6s"
 		while read -r ln; do
 			sln+="."
@@ -1453,8 +1454,7 @@ topct(){
 			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
 		done
 		printf "\e[6D"
-		;;
-	esac
+	fi
 }
 
 git_clone(){
@@ -1945,7 +1945,7 @@ list_tarball(){
 
 # USAGE: create_patch [b64] <rel_path_oldfile> [<rel_path_newfile>]
 create_patch(){  
-	local od=$(pwd); cd ${dir_sources}/${lib} || return 1
+	local od=$(pwd); cd ${dir_src} || return 1
 	local b64=false
 	[ "${1}" == "b64" ] && b64=true && shift
 	case $# in
@@ -2473,11 +2473,13 @@ fi
 # reset presets, we don't need them anymore
 unset cst0 cst1 csh0 csh1 cb0 cb1 cstk cshk cbk
 
+: "${MAKE_EXECUTABLE:=make}"
+
 export arch update retry \
 build_shared build_static build_bin build_system \
 dir_install \
 CSH CBN LIBSDIR PLATFORM CPU ABI EABI \
 host_arch host_64 host_eabi host_vnd host_arm host_os \
-mingw_posix MAKE_EXECUTABLE=make cmake_includes
+mingw_posix MAKE_EXECUTABLE cmake_includes
 
 main

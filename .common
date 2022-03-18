@@ -134,6 +134,11 @@ git_getversion(){
   [ -d "${1}" ] && git --git-dir=${1}/.git --work-tree=${1} describe --abbrev=0 --tags || git describe --abbrev=0 --tags
 }
 
+array_join(){
+  local IFS="${1}" && shift
+  echo "$@"
+}
+
 #usage: str_concat 'sep' [arg_list]
 str_concat(){
   local IFS="$1" && shift
