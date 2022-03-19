@@ -74,19 +74,72 @@ function libcheck {
     done
 }
 
+function select_ndk {
+	echo -e "${CH}Android NDK Support:${C0}"
+	PS3="Please select NDK version: "
+	links=($(get_ndk_links))
+	options=("None" $(echo "${links[@]}" | sed 's/https:\/\/dl\.google\.com\/android\/repository\/android-ndk-//g;s/-linux.zip//g'))
+	select opt in "${options[@]}"
+	do
+		idx=$(($REPLY-2))
+		if test $idx -ge 0; then
+			p_install_ndk=true
+			XB_HAS_NDK_CLANG=true
+			export XB_NDK_URL="${links[$idx]}"
+			echo -e "\e[1A${CH}Selected $(basename ${CC1}${XB_NDK_URL})\n${C0}"
+			break;
+		else
+			p_install_ndk=false
+			XB_HAS_NDK_CLANG=false
+			echo -e "\e[1A${CH}None selected: do not install NDK${C0}\n"
+			break;
+		fi
+	done
+}
+
+function pcount {
+	
+	printf "%-14s"
+	local ln=0
+	while read -r sln; do
+		if [ -n "$sln" ]; then 
+			((ln=ln+1))
+			printf "\e[13D%-13s" "[${ln}/${XB_COUNT_MAX}]"
+		fi
+	done
+	printf "\e[14D"
+	
+}
+
+function get_ndk_links {
+    echo "$(wget -qO- https://developer.android.com/ndk/downloads | grep -Po "https://dl.google.com/android/repository/android-ndk-r..*-linux.zip" | sed "/\"/d")"
+}
+
 function install_ndk {
+	# No url, return
+	test -z "${XB_NDK_URL}" && return 1
+
+	local od=$(pwd)
+	cd ${HOME}
+
     # install android-ndk
-    [ -z "$(command -v unzip)" ] && check_install unzip
-    local od=$(pwd)
-    cd ~
-    # get latest version
-    local url=$(wget -qO- https://developer.android.com/ndk/downloads | grep -Po "https://dl.google.com/android/repository/android-ndk-r..*-linux.zip" | tail -n1)
-    # download latest version
-    wget $url -qO tmp 2>&1
-    local fname=$(basename $url)
-    unzip tmp
+    test -z "$(command -v unzip)" && check_install unzip
+	
+    # Lets download
+	if [ ! -f "tmp.zip" ]; then
+		echo -ne "${CH}Downloading... ${C0} "
+		tput sc #&& echo -ne "\e[$(tput lines);0H${CY1}"
+		tput civis
+		wget --progress=dot ${XB_NDK_URL} -O tmp.zip 2>&1 | grep --line-buffered "%" | sed -u -e "s,\.,,g" | awk '{printf("\r%4s %s eta:%s  ",$2,$1,$4)}'
+		tput rc
+	fi
+	XB_COUNT_MAX=$(zipinfo -h tmp | tr '\n' ':' | awk -F':' '{print $5}' | xargs)
+    echo -ne "${CH} decompressing... ${C0}"
+    local fname=$(basename ${XB_NDK_URL})
+    unzip tmp 2>&1 | pcount
+	tput cnorm
     rm -f $fname tmp
-    mv android-ndk-r* android-ndk
+    mv android-ndk-r* android-ndk-25
     export ANDROID_NDK_HOME="${HOME}/android-ndk"
     cd $od
 }
@@ -149,7 +202,10 @@ check_wrapper_ndk() {
 
 
 
-
+XB_HAS_NDK_CLANG=true
+XB_HAS_GNU_CLANG=true
+XB_HAS_MINGW_CLANG=true
+XB_HAS_MINGW_GCC=false
 
 # first-time load common functions
 [ -z ${vsh+x} ] && . .common
@@ -164,7 +220,7 @@ p_install_llvm_gnu=false
 p_install_llvm_sysroot=false
 
 # load config
-[ -f ".config" ] && . .config
+[ -f ".config" ] && . .config || init=true
 
 #export cmd_install="sudo apt install"
 
@@ -212,12 +268,37 @@ case $1 in
     --libcheck)		libcheck; exit 0;;
     --build_utils)	build_utils; exit 0;;
     --init)			init=true;;
+    --test)         ts=true;;
 esac
+
+if $ts; then
+	select_ndk
+	if [ -n "${XB_NDK_URL}" ]; then
+		install_ndk
+	fi
+	exit 0
+fi
 
 if $init; then
 	splash
-	if	[ -z "$ANDROID_NDK_HOME" ] || [ ! -d "${ANDROID_NDK_HOME}" ]; then
+	if	[ -z "${ANDROID_NDK_HOME}" ] || [ ! -d "${ANDROID_NDK_HOME}" ]; then
+        PS3='Android NDK Support:'
+        options=($(wget -qO- https://developer.android.com/ndk/downloads | grep -oP '(?<=ndkVersion..)\d+\.\d+\.\d+.*(?=")'))
+        options=+("None")
+        select opt in "${options[@]}"
+        do
+            if test $REPLY -gt ${#options[@]}; then
+                p_install_ndk=false
+                XB_HAS_NDK_CLANG=false
+            elif test -z "$REPLY"; then
+                XB_VER_NDK=${options[(($REPLY-1]}
+                p_install_ndk=true
+                XB_HAS_NDK_CLANG=true
+            fi
+        done
 		read -p "Android Support: Install NDK Toolchain? [Y|n]: " p_install_ndk
+        test "${p_install_ndk,,}" == "y" && p_install_ndk=true || p_install_ndk=false
+        XB_HAS_NDK_CLANG=${p_install_ndk}
 		p_install_ndk_symlinks=$p_install_ndk
 	elif [ $(ls /usr/*-linux-android* | grep bin | wc -l) -lt 4 ]; then
 		p_install_ndk=false
@@ -226,6 +307,8 @@ if $init; then
 	
 	if	[ -z "$(command -v clang)" ]; then
 		read -p "Linux LLVM/Clang Support: Install LLVM/Clang Toolchain? [Y|n]: " p_install_llvm_gnu
+        test "${p_install_llvm_gnu,,}" == "y" && p_install_llvm_gnu=true || p_install_llvm_gnu=false
+        XB_HAS_GNU_CLANG=${p_install_llvm_gnu}
 	fi
 fi
 
@@ -254,9 +337,10 @@ check_install 'gcc-i686-linux-gnu' 'g++-i686-linux-gnu'
 
 
 echo -e "\n${CC1}LLVM-Clang:"
-$p_install_llvm_gnu && $cmd_install llvm clang libc++-dev
-if [ -n "$(command -v clang)" ]; then
-    printf "${CH}%-20s: ${C0}%s\n" "  found at" $(command -v clang)
+$XB_HAS_GNU_CLANG && check_install llvm clang libc++-dev
+cclang=$(command -v clang)
+if [ -n "${cclang}" ]; then
+    printf "${CH}%-20s: ${C0}%s\n" "  found at" ${cclang}
     clang_version=$(clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
     printf "${CH}%-20s: ${C0}%s\n" '  clang' "$clang_version"
     # install symlinks
@@ -271,8 +355,11 @@ if [ -n "$(command -v clang)" ]; then
 			for e in ar as nm addr2line objcopy objdump ranlib readelf size strings strip windres; do
 				check_slink "/usr/${t}/bin/llvm-${e}" "/usr/bin/llvm-${e}"
 			done
-            check_slink "/usr//bin/llvm-addr2line" "/usr/lib/llvm-15/bin/llvm-addr2line"
-            check_slink "/usr//bin/llvm-windres" "/usr/lib/llvm-15/bin/llvm-windres"
+            llvm_vrs=$(ls -lh ${cclang} | grep -oP 'llvm-\d+')
+            if [ -n "${llvm_vrs}" ]; then
+                check_slink "/usr/bin/llvm-addr2line" "/usr/lib/${llvm_vrs}/bin/llvm-addr2line"
+                check_slink "/usr/bin/llvm-windres" "/usr/lib/${llvm_vrs}/bin/llvm-windres"
+            fi
 			check_slink "/usr/${t}/bin/ld" "/usr/bin/ld.lld"
 			check_wrapper_gnu "${t}" 'clang' '-fuse-ld=lld'
 			check_wrapper_gnu "${t}" 'clang++' '-fuse-ld=lld'
@@ -282,13 +369,12 @@ fi
 
 
 
-if [ "${OSTYPE}" != "linux-android" ];then
+if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
     echo -e "\n${CC1}Android NDK:"
     if [ -z "${ANDROID_NDK_HOME}" ]; then
         ndk_clang_bin_dir=$(find ~ -name "aarch64-linux-android??-clang" | tail -n1)
         if [ -z "${ndk_clang_bin_dir}" ]; then
-            echo -e "not found. Install?"; read -p "[Y|n]" pndk
-            case $pndk in y|Y) install_ndk;; esac
+            install_ndk
         else
             export ANDROID_NDK_HOME=$(echo ${ndk_clang_bin_dir} | sed 's|/toolchains/llvm/prebuilt.*||')
         fi
@@ -300,8 +386,8 @@ if [ "${OSTYPE}" != "linux-android" ];then
         printf "${CH}%-20s: ${C0}%s\n" "  found at" ${ANDROID_NDK_HOME}
         ndk_version=$(cat ${ANDROID_NDK_HOME}/source.properties | grep "^Pkg.Revision = " | sed 's/Pkg.Revision = //')
         printf "${CH}%-20s: ${C0}%s " '  version' $ndk_version
-        
-        ndk_version_latest=$(wget -qO- https://developer.android.com/ndk/downloads | grep ndkVersion | tr ' ' '\n' | tail -n1 | sed 's/"//g')
+        ndk_versions=($(wget -qO- https://developer.android.com/ndk/downloads | grep -oP '(?<=ndkVersion..)\d+\.\d+\.\d+.*(?=")'))
+        ndk_version_latest=${ndk_versions[-1]}
         if [ "${ndk_version}" == "${ndk_version_latest}" ]; then
             echo -e "(updated)"
         else
@@ -442,6 +528,10 @@ cat <<-EOF >${dir_root}/.config
 export config_lastupdate=$(date +%s) \\
     dir_root="$(pwd)" \\
     ROOTDIR="$(pwd)" \\
+    XB_HAS_NDK_CLANG=${XB_HAS_NDK_CLANG} \\
+    XB_HAS_GNU_CLANG=${XB_HAS_GNU_CLANG} \\
+    XB_HAS_MINGW_CLANG=${XB_HAS_MINGW_CLANG} \\
+    XB_HAS_MINGW_GCC=${XB_HAS_MINGW_GCC} \\
     cmd_install="${cmd_install}" \\
     build_arch="${build_arch}" \\
     ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
