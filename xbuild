@@ -1433,7 +1433,7 @@ topct(){
 	if [ "${build_system}" == "cmake" ] && [ "${MAKE_EXECUTABLE}" == "make" ]; then
 		printf "%-6s"
 		while read -r ln; do
-			str_contains $ln 'error: ' && printf $CR1
+			str_contains "${ln}" 'error: ' && printf $CR1
 			sln=$(grep -oP '\d+%' <<< $ln)
 			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
 		done
@@ -2376,9 +2376,9 @@ while [ $1 ];do
 		--nodev)    nodev=true;;
 		
 		* ) if fn_defined 'extraOpts'; then
-			extraOpts $1
+				extraOpts $1
 			else
-			extra_args+=" ${1}"
+				cfg_args+=("${1}")
 			fi
 			;;
 	esac
@@ -2387,12 +2387,12 @@ done
 
 fn_undef 'extraOpts'
 
-[ -z ${mingw_posix} ] && mingw_posix=false
+[ -z "${mingw_posix}" ] && mingw_posix=false
 
 # Set default Host
 
 if [ -z "${target_trip}" ];then
-set_target_build
+	set_target_build
 fi
 
 # is cross-compile?
