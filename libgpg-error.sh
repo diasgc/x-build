@@ -16,8 +16,8 @@ eta='60'
 . xbuild
 
 CFG="--disable-languages --disable-doc --disable-tests"
-CPPFLAGS+=" -I${SRCDIR}/src"
-LDFLAGS+=" -L${SRCDIR}/src"
+CPPFLAGS+=" -I${dir_src}/src"
+LDFLAGS+=" -L${dir_src}/src"
 
 case $arch in *android*) CFG+=" --disable-threads";; esac
 
@@ -30,9 +30,9 @@ source_patch(){
 }
 
 before_make(){
-    cd ${dir_src}
+    cd ${dir_build}
     # let make fail but generate 'gpg-error.h' so we can patch it after that
-    make 2>&1 >/dev/null
+    make 2>&1 >>${log_file}
     [ -f "${dir_src}/src/gpg-error.h" ] && sed -i "/^}}}/d" ${dir_src}/src/gpg-error.h
 }
 
