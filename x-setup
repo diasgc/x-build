@@ -319,7 +319,11 @@ check_install 'gcc-i686-linux-gnu' 'g++-i686-linux-gnu'
 
 
 echo -e "\n${CC1}LLVM-Clang:"
-$XB_HAS_GNU_CLANG && check_install llvm clang libc++-dev
+$XB_HAS_GNU_CLANG && check_install clang-format clang-tidy clang-tools clang clangd \
+                        libc++-dev libc++1 libc++abi-dev libc++abi1 libclang-dev \
+                        libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 \
+                        lld lldb llvm-dev llvm-runtime llvm python3-clang
+echo
 cclang=$(command -v clang)
 if [ -n "${cclang}" ]; then
     printf "${CH}%-20s: ${C0}%s\n" "  found at" ${cclang}
@@ -509,13 +513,13 @@ cat <<-EOF >${dir_root}/.config
 #!/bin/bash
 export config_lastupdate=$(date +%s) \\
     dir_root="$(pwd)" \\
+    cmd_install="${cmd_install}" \\
     ROOTDIR="$(pwd)" \\
-    XB_HAS_NDK_CLANG=${XB_HAS_NDK_CLANG} \\
+    build_arch="${build_arch}" \\
     XB_HAS_GNU_CLANG=${XB_HAS_GNU_CLANG} \\
     XB_HAS_MINGW_CLANG=${XB_HAS_MINGW_CLANG} \\
     XB_HAS_MINGW_GCC=${XB_HAS_MINGW_GCC} \\
-    cmd_install="${cmd_install}" \\
-    build_arch="${build_arch}" \\
+    XB_HAS_NDK_CLANG=${XB_HAS_NDK_CLANG} \\
     ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
     API="${API}" \\
     ndk_cc=(clang clang++) \\
