@@ -200,8 +200,6 @@ check_wrapper_ndk() {
     
 }
 
-
-
 XB_HAS_NDK_CLANG=true
 XB_HAS_GNU_CLANG=true
 XB_HAS_MINGW_CLANG=true
@@ -222,7 +220,7 @@ p_install_llvm_sysroot=false
 
 # load config
 [ -f ".config" ] && . .config || init=true
-
+[ -n "$(command -v sudo)" ] && sudo echo -ne "Password: "
 #export cmd_install="sudo apt install"
 
 if [ -z "${cmd_install}" ];then
@@ -315,8 +313,6 @@ echo -e "\n${CC1}GNU-GCC:"
 check_install 'gcc-aarch64-linux-gnu' 'g++-aarch64-linux-gnu' 'libstdc++-11-dev-arm64-cross'
 check_install 'gcc-arm-linux-gnueabihf' 'g++-arm-linux-gnueabihf' 'libstdc++6-armhf-cross'
 check_install 'gcc-i686-linux-gnu' 'g++-i686-linux-gnu'
-        
-
 
 echo -e "\n${CC1}LLVM-Clang:"
 $XB_HAS_GNU_CLANG && check_install clang-format clang-tidy clang-tools clang clangd \
