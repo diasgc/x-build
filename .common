@@ -31,7 +31,7 @@ CL0="\e[38;5;34m" CL1="\e[38;5;72m" CL2="\e[38;5;114m" CL3="\e[38;5;120m"  CL4="
 CT0=$CM0 CT1=$CM1 CS0=$CR0 CS1=$CR1 SSB=$C0
 
 function trap_sigint {
-  tput cnorm -- normal
+  tput cnorm
   cd $(dirname $0)
   local l
   [ -f "${log_file}" ] && l="  Log available at ${log_file}\n"
@@ -47,7 +47,7 @@ trap trap_sigint SIGINT
 logtime_start=
 export dir_root=$(pwd)
 export PS1='\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;95m\]\u@\e[0;95m\h\[\033[00m\]:\[\033[01;96m\]\w\[\033[00m\]\$ '
-clear
+
 
 splash(){
   cat << "EOF"

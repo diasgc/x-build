@@ -239,9 +239,9 @@ fi
 
 
 case $1 in
-    -f|--force)		force=true;;
-    --git-cleanup)
-					echo -e "size before cleanup: $(du -s .git)\n"
+    -f|--force)		force=true
+                    ;;
+    --git-cleanup)  echo -e "size before cleanup: $(du -s .git)\n"
 					git filter-branch --index-filter 'git rm --cached --ignore-unmatch *.tar.gz' -- --all
 					rm -Rf .git/refs/original
 					rm -Rf .git/logs/
@@ -250,9 +250,12 @@ case $1 in
 					echo -e "size after cleanup: $(du -s .git)\n"
 					exit 0
 					;;
-    --install)		shift; check_install $@; exit 0;;
-    --latest-cmake) cmake_latest && exit 0;;
-	--latest-llvm)  sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"; exit 0;;
+    --install)		shift; check_install $@; exit 0
+                    ;;
+    --latest-cmake) cmake_latest; exit 0
+                    ;;
+	--latest-llvm)  sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"; exit 0
+                    ;;
     --update)  		shift
 					while [ -n "${1}" ]; do
 						case $1 in
@@ -265,10 +268,14 @@ case $1 in
 					exec x-setup
 					exit 0
 					;;
-    --libcheck)		libcheck; exit 0;;
-    --build_utils)	build_utils; exit 0;;
-    --init)			init=true;;
-    --test)         ts=true;;
+    --libcheck)		libcheck; exit 0
+                    ;;
+    --build_utils)	build_utils; exit 0
+                    ;;
+    --init)			init=true
+                    ;;
+    --test)         ts=true
+                    ;;
 esac
 
 if $ts; then

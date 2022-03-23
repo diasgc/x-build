@@ -1401,7 +1401,7 @@ do_git(){
 }
 
 prt_git_progress(){
-	tput civis -- invisible
+	tput civis
 	printf "%-8s"
 	local s0
 	local s1
@@ -1424,13 +1424,15 @@ prt_git_progress(){
 	done
 	[ $n1 -gt 0 ] && printf "\e[${n1}D"
 	printf "\e[7D"
-	tput cnorm -- normal
+	tput cnorm
 }
 
 topct(){
 	local sln
 	local grp
-	if [ "${build_system}" == "cmake" ] && [ "${MAKE_EXECUTABLE}" == "make" ]; then
+	tput civis
+	printf "build_system: %10s; make: %7s" ${build_system} ${MAKE_EXECUTABLE} >>${log_file}
+	if [ "${build_system}" == "cmake" ] && [ "$(basename ${MAKE_EXECUTABLE})" == "make" ]; then
 		printf "%-6s"
 		while read -r ln; do
 			str_contains "${ln}" 'error: ' && printf $CR1
@@ -1438,7 +1440,7 @@ topct(){
 			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
 		done
 		printf "\e[6D"
-	elif [ "${MAKE_EXECUTABLE}" == "ninja" ]; then
+	elif [ "$(basename ${MAKE_EXECUTABLE})" == "ninja" ]; then
 		printf "%-12s"
 		while read -r ln; do
 			str_contains $ln 'error: ' && printf $CR1
@@ -1449,12 +1451,13 @@ topct(){
 	else
 		printf "%-6s"
 		while read -r ln; do
-			sln+="."
+			sln+="." # ·
 			[ ${#sln} -eq 5 ] && sln=''
 			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
 		done
 		printf "\e[6D"
 	fi
+	tput cnorm
 }
 
 git_clone(){
