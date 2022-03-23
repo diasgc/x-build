@@ -60,7 +60,7 @@ start
 # share/doc/vapoursynth/COPYING.LESSER
 
 # patch 01 create CMakeLists.txt with dual static/shared build support
-# todo: [100%] Built target vapoursynth_avx2-static
+# todo: AVX2 ON X86 PLATFORMS: [100%] Built target vapoursynth_avx2-static ()
 # ld: error: undefined symbol: vs_generic_3x3_sobel_word_avx2
 # >>> referenced by ld-temp.o
 # >>>               lto.tmp:(VSFrame const* genericGetframe<(GenericOperations)1>(int, int, void*, void**, VSFrameContext*, VSCore*, VSAPI const*))
