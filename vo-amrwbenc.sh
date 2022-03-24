@@ -5,7 +5,9 @@ apt='libvo-amrwbenc-dev'
 dsc='VisualOn Adaptive Multi-Rate Wideband speech codec library'
 lic='Apache-2.0'
 src='https://github.com/mstorsjo/vo-amrwbenc.git'
-cfg='ar'
+cfg='cmake'
+cmake_static='BUILD_STATIC_LIBS'
+cmake_bin='EXAMPLE'
 
 ac_bin='--disable-example|--enable-example'
 ac_config='--disable-maintainer-mode'
@@ -42,27 +44,27 @@ start
 # share/doc/vo-amrwbenc/COPYING
 # bin/amrwb-enc
 
-<<'CMakeLists.txt'
-
-file(GLOB src_enc wrapper.c common/cmnMemory.c amrwbenc/src/*.c)
-set(hdr_public enc_if.h)
-include_directories(common/include amrwbenc/inc)
-
-if (ARMV7NEON)
-    add_definitions(-DARM -DARMV7 -DASM_OPT)
-    file(GLOB src_enc_armv7neon amrwbenc/src/asm/ARMV7/*.s)
-    list(APPEND src_enc ${src_enc_armv7neon})
-elseif(ARMV5E)
-    add_definitions(-DARM -DASM_OPT)
-    file(GLOB src_enc_armv5e amrwbenc/src/asm/ARMV5E/*.s)
-endif()
-
-set(ldflags -version-info @VO_AMRWBENC_VERSION@ -no-undefined -export-symbols $(top_srcdir)/vo-amrwbenc.sym)
-
-add_library(amrwb-enc OBJECT ${src_enc})
-
-if(EXAMPLE)
-    add_executable(amrwb-enc amrwb-enc.c wavreader.c wavreader.h)
-    target_link_libraries(amrwb-enc )
-endif()
-CMakeLists.txt
+<<'LZS_PATCH'
+LQgEGEFkEMGsFMAyBLAzgF1QOnQD3QJACMAnAOwAMwFR1RoNAXBRcxVi516ANQ0sAoHsIgwEKDNjyEATBRkzqAZmAy
+ALKCIAORmp1EyWAGxqKJI1qVXeXAQAE7oagBoKvIs6NuHQgMYBbOHgAfX9kADtkfwBXf2CAJ3gAR2jkRIATAAoANQB
+RACUAZQBJAHkAOVAlLABWAEohAAd4gHsAK3hfdEyANxbgaH94gHcAI3hw3waeVHhuvKKy8uDIAEEAKVL8hmnZ+YKSi
+pXi8q3NXbmcg6XggAVVgBVwAAkqi/3FitAAIgASAG8FodlmtNvkAL5YAFAm6QE5bSHQ65He5PZ7g77TIQtRroZAtcK
+ZABCAFViogACLBQoPR7FcDBRDFImFH5E1IAG3SoAw0DxvlAHOQo1Q31AFWmOLxBOJZMp1Oeq3yuSpTJZbM53NQAAto
+BlBcLReLypLcfjCbkABqrSC3RC5DXILmgeC4QaNDnwUDNFoAc3igzFEqEQgivg50XSIXSaU66Ba8WQ8FQmV8LX8/gJ
+AHowxGo6BBiNxpMc5NptB0ulglGAGYRZDS8Ip4AAdXC/Uaeom6G1yeTwGS0WgQvQAE8sTw657MgBxRClIk8+K+YITA
+XDAONRrweJYAVpjPZgLhSDwTPxUd7gtDMZrrOoZdZgBUe/emW16XiwUa0VGQoFa7BMgNZYNqE7AZkUCrAA0rk1IAJo
+0rkkB3PkpTgLkhSFGcaxophPwAHp6v4Qb5EIoCiDBcGFIhDzIah6GYdh2y4S8+HfEReq+NqJiYuRFEFpW1bwHWkSNs
+2FJKpATiSfkkDZGQMmrIUKGlLcDzTAJoBTvAs7zouD4roBxE9GQ4TwAS15FnehlZtAqD+FmUkKc+WCoJpAlChgmSrL
+cty5OUFJLkZkygAChmrpMwQmWZFnhOC0wTDGNaZOBKXOTUuQeRRFZVrW9biZkwCydJxXKap6nZdpTq6XOC7BZFK4mT
+UXqFreJa2fZjkZbkrnuUISUQROADEeyZFyNYctAvqoE4PQ7qg5rABENYtKAdjZKUwQ2vkLZEgFDIwhUjjAO2wDROE+
+XmdyA64I0CboMAqCjv4owtBys2/Jk8aNMEhkxvEdRZn0Aw3sWvhuS90yjegibhL6Pl+QFQVQbBCpKiqjInLB+TBAAY
+ogqwzqyYqthyzggGdF1XfA3J8TwuXBEKowBhemQtKMbTM+KRLrLk4APGF/wRWuCVCHswToHqvpzN+rTbvEeLJuznPc
+7caH+fkDzFPhtylCU2tHCcFK5P5gUBQ8wTgKUJvGhONYXV05qZIz3OoDWuCCuEsBVa7wqs6OmQAurpR8wLwTlDauTg
+uFHvgkLHLe/HvwADy0vkM65JbC5hw8hSMBzXPCgAfFVEtS/EMvoHLOI7krKbB2hucR1HMfC3HoAh5r2uYfxWkUUdlR
+Ip85Tgn3/fYYPQuDysGwIuPWmlCSDy3MvLeQA6jeh/zluRxvY88FpVXDRXVdMxEsDBFK5oN/8IfN3v0ex7g8fq8U2S
+PA63wtuTlP9NTIkIi0wprde6isnovTeh9IWqNqJL3yBhYIFJigQmBv0Nq4NIYkSqhEXkHIOSZHTpnPOQt7473Xk/du
+L8F4CTVPkJU8FQAmxpCcOkXxmY0IokqF478HTMO1pHQ2lQOGH37hRfIJJyjaw3kwzCAi2GVFGBEceiVLoO0mI2VKIY
+GZCWZpkb4YoDHTAgqSckVJCiKmVKqZkrJViBVAKY+UNI6QMjVIUX2ujhRFV5PyUAzjtbgFUclLRPBQwpStDaO0WVx6
+M1dJ0aIUs/y6QwQOUKKS1xXmGNAHoiQKw7lfOPU+sshTe3PizPUSYUzpNClvB+rcqpFOrrmSM0ZYxdATJUl2YNUkCj
+fh/OiMC1ho2wiSBBcFkEQhwU2KW+DCFKmIayapAoJFSOKDI/hrChGgCUeEIJQ0BBAA
+LZS_PATCH

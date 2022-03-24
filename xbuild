@@ -807,7 +807,7 @@ local match=$(grep -oP "(?<=^<<').*?(?=')" $0)
 if [ -n "${match}" ]; then
 	local block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $0)
 	case $match in
-	XB_CREATE_CMAKELISTS)
+	XB_CREATE_CMAKELISTS|CMakeLists.txt)
 		echo "${block}" >${dir_src}/CMakeLists.txt
 		echo -e "\ncreate CMakeLists.txt: \n$block" >>${log_file}
 		;;
