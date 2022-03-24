@@ -15,10 +15,7 @@ lst_bin='vmaf'
 lst_lic='LICENSE'
 lst_pc='libvmaf.pc'
 
-dev_bra='main'
 dev_vrs='2.3.0'
-stb_bra=''
-stb_vrs=''
 
 . xbuild
 

@@ -9,10 +9,7 @@ cfg='cmake'
 dep='ogg'
 eta='77'
 
-dev_bra='master'
 dev_vrs='1.3.7'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='vorbis/*.h'
 lst_lib='libvorbisfile libvorbisenc libvorbis'

@@ -16,10 +16,7 @@ lst_bin='amrwb-enc'
 lst_lic='COPYING NOTICE'
 lst_pc='vo-amrwbenc.pc'
 
-dev_bra='main'
 dev_vrs='0.1.3'
-stb_bra=''
-stb_vrs=''
 
 eta='17'
 
@@ -44,3 +41,28 @@ start
 # share/doc/vo-amrwbenc/NOTICE
 # share/doc/vo-amrwbenc/COPYING
 # bin/amrwb-enc
+
+<<'CMakeLists.txt'
+
+file(GLOB src_enc wrapper.c common/cmnMemory.c amrwbenc/src/*.c)
+set(hdr_public enc_if.h)
+include_directories(common/include amrwbenc/inc)
+
+if (ARMV7NEON)
+    add_definitions(-DARM -DARMV7 -DASM_OPT)
+    file(GLOB src_enc_armv7neon amrwbenc/src/asm/ARMV7/*.s)
+    list(APPEND src_enc ${src_enc_armv7neon})
+elseif(ARMV5E)
+    add_definitions(-DARM -DASM_OPT)
+    file(GLOB src_enc_armv5e amrwbenc/src/asm/ARMV5E/*.s)
+endif()
+
+set(ldflags -version-info @VO_AMRWBENC_VERSION@ -no-undefined -export-symbols $(top_srcdir)/vo-amrwbenc.sym)
+
+add_library(amrwb-enc OBJECT ${src_enc})
+
+if(EXAMPLE)
+    add_executable(amrwb-enc amrwb-enc.c wavreader.c wavreader.h)
+    target_link_libraries(amrwb-enc )
+endif()
+CMakeLists.txt
