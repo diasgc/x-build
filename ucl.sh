@@ -6,14 +6,14 @@ lic='GPL-2.0'
 src='https://github.com/korczis/ucl.git'
 url='http://www.oberhumer.com/opensource/ucl'
 
-cfg='cmake'
+#cfg='cmake'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='BUILD_PROGRAM'
 
 dev_vrs='1.03'
 
-#cfg='ac'
-#pc_llib='-lucl'
+cfg='ac'
+pc_llib='-lucl'
 
 lst_inc='ucl/*.h'
 lst_lib='libucl'
