@@ -3,7 +3,8 @@
 lib='arj'
 dsc='Open Source ARJ archiver'
 lic='GLP-2.0'
-src='http://deb.debian.org/debian/pool/main/a/arj/arj_3.10.22.orig.tar.gz'
+#src='http://deb.debian.org/debian/pool/main/a/arj/arj_3.10.22.orig.tar.gz'
+src='https://git.code.sf.net/p/arj/git'
 cfg='ac'
 eta='60'
 #ac_nohost=true
@@ -55,3 +56,53 @@ start
 # NDK  F   .   .   .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
+
+
+<<'CMakeLists.txt'
+cmake_minimum_required(VERSION 3.5)
+
+set(VERSION 3.10.22)
+project(arj VERSION ${VERSION} LANGUAGES C CXX)
+
+add_definitions(-DLOCALE=LANG_en -DLOCALE_DESC=en -DPKGLIBDIR=lib/arj)
+
+option(COMMERCIAL "Commercial use" OFF)
+option(LIBC "link dynamically to libc" OFF)
+option(NP_SFX "Force disable packing of SFX modules" OFF)
+
+if(UNIX)
+    add_definitions(-D_UNIX -DELF_EXECUTABLES=1 -DREGISTER=arj-register)
+    set(DYN_LIBS -ldl)
+endif()
+if(NP_SFX)
+    add_definitions(-DNP_SFX=1)
+endif()
+if(LIBC)
+    add_definitions(-DLIBC=1)
+endif()
+if(CMAKE_SYSTEM_PROCESSOR MATCHES ^arm OR CMAKE_SYSTEM_PROCESSOR MATCHES ^aarch)
+    add_definitions(-DALIGN_POINTERS)
+endif()
+
+function(test_c)
+    CMAKE_C_COMPILE 
+    #include <fnmatch.h>
+    int main()
+    {
+        return(fnmatch("@<:@", "@<:@", 0)); /* Must return 0 for a valid match */
+    }
+    OUT
+endfunction()
+#undef NP_SFX
+#undef HAVE_STDINT_H
+#undef HAVE_MKDTEMP
+#undef HAVE_FCLOSEALL
+#undef HAVE_SETPRIORITY
+#undef HAVE_STRCASECMP
+#undef HAVE_STRUPR
+#undef HAVE_STRLWR
+#undef USE_COLORS
+#undef WORDS_BIGENDIAN
+#undef TOLERANT_FNMATCH
+
+CMakeLists.txt
