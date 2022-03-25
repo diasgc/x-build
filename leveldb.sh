@@ -124,5 +124,5 @@ start
 467c477
 <   install(TARGETS leveldb
 ---
->   install(TARGETS leveldb_targets
+>   install(TARGETS ${leveldb_targets}
 DIFF::CMakeLists.txt
