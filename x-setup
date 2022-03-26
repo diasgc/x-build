@@ -270,6 +270,13 @@ case $1 in
 					;;
     --libcheck)		libcheck; exit 0
                     ;;
+    --list)         shift
+                    for f in *.sh; do
+                        v=$(cat $f | grep "$1='$2'")
+                        [ -n "${v}" ] && echo "${f}: ${v}"
+                    done
+                    exit 0
+                    ;;
     --build_utils)	build_utils; exit 0
                     ;;
     --init)			init=true

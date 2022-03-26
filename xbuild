@@ -468,7 +468,7 @@ else case $build_system in
 		cmake_configure
 		cfg_cmd=cmake
 		: "${cmake_bdir:=${dir_config}}"
-		cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}")
+		cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}" "-Wno-dev")
 		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
 		#do_log 'cmake' ${exec_config} ${dir_config} -DCMAKE_INSTALL_PREFIX=${dir_install} -DCMAKE_BUILD_TYPE=${cmake_build_type} ${CTC} ${CFG} ${CSH} ${CBN} ${CPACK}
 		case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
