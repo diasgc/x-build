@@ -1,6 +1,5 @@
 #!/bin/bash
 
-#vrs='0.5.0'
 lib='zfp'
 dsc='Compressed numerical arrays that support high-speed random access'
 lic='BSD-3c'
@@ -20,13 +19,17 @@ lst_lic='LICENSE'
 lst_pc='zfp.pc'
 
 dev_bra='master'
-dev_vrs='0.5.0'
+dev_vrs='0.5.5'
 stb_bra=''
 stb_vrs=''
 
 dualbuild_support=false
 
 . xbuild
+
+get_version(){
+    vrs="$(c_printf 'include/zfp' 'version.h' '"%s",ZFP_VERSION_STRING')"
+}
 
 start
 

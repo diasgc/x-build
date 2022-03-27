@@ -843,6 +843,7 @@ create_pkgconfig_file(){
 	[ -z "$pc_cflags" ] && pc_cflags="-I\${includedir}"
 	[ -z "$pc_libs" ] && pc_libs="-L\${libdir}"
 	[ -z "$pc_url" ] && pc_url=$(dirname $src)
+	fn_defined 'get_version' && get_version && pc_vrs=$vrs
 	[ -z "$pc_vrs" ] && {
 	[ -d "${dir_src}/.git" ] && pc_vrs=$(git_getversion ${dir_src}) || pc_vrs=$vrs
 	}

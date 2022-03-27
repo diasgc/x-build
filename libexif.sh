@@ -27,7 +27,6 @@ start
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
-
 # Filelist
 # --------
 # share/doc/libexif/SECURITY.md
