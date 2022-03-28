@@ -28,3 +28,25 @@ source_patch(){
 }
 
 start
+
+<<'CMakeLists.txt'
+cmake_minimum_required(VERSION 3.5)
+project(rtmp LANGUAGES C VERSION 2.4.0)
+
+option(BUILD_STATIC_LIBS "Build static libs" ON)
+option(BUILD_SHARED_LIBS "Build shared libs" ON)
+option(BUILD_EXECUTABLES "Build executables" ON)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_module(OPENSSL)
+find_package(OpenSSL REQUIRED)
+if(OpenSSL_FOUND)
+    list(APPEND tlinks ${OpenSSL_LIBRARIES})
+endif()
+find_package(GnuTLS REQUIRED)
+if(GnuTLS_FOUND)
+    list(APPEND tlinks ${GnuTLS_LIBRARIES})
+endif()
+list(APPEND tlinks z)
+message(STATUS "link libs: ${tlinks}")
+CMakeLists.txt
