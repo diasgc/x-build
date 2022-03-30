@@ -570,6 +570,11 @@ if ! $skip_pc; then
 	fi
 fi
 
+local pcfile=${dir_install_pc}/${lib}.pc
+if [ ! -f "$pcfile" ] && [ -f "${dir_install}/share/pkgconfig/${lib}.pc" ]; then
+	pcfile=${dir_install}/share/pkgconfig/${lib}.pc
+fi
+
 if [ -z "${CPACK}" ]; then
 	if fn_defined 'on_pack'; then
 	fn_log 'pack' on_pack
@@ -582,13 +587,13 @@ if [ -z "${CPACK}" ]; then
 	fi
 else
 	cd ${dir_build}
-	vrs=$(pkg-config ${dir_install_pc}/${lib}.pc --modversion)
+	vrs=$(pkg-config ${pcfile} --modversion)
 	do_log 'cpack' cpack -G DEB -P "${lib}_${vrs}_${arch}"
 fi
 
 cd ${dir_src}
 
-$skip_pc || logver "${dir_install_pc}/${pkg}.pc"
+$skip_pc || logver "${pcfile}"
 
 fn_defined 'on_end' && fn_log 'end' on_end
 
