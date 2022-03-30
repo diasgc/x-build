@@ -51,7 +51,7 @@ function cmake_latest {
     logsc 'Installing tools...' sudo apt install -y software-properties-common lsb-release
     logsc 'Cleaning...' sudo apt clean all
     logsc 'Add gpg kitware...' wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-    logsc 'Add kitware repository' sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+    logsc 'Add kitware repository' sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ focal main"
     logsc 'Updating...' sudo apt update
     logsc 'Installing keyring...' sudo apt install kitware-archive-keyring
     logsc 'Remove gpg kitware...'sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
