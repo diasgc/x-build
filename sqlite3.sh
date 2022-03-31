@@ -1,6 +1,5 @@
 #!/bin/bash
 
-lvr='3.38.0'
 lib='sqlite3'
 dsc='SQLite database engine'
 lic='Other'
