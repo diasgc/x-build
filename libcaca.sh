@@ -85,3 +85,7 @@ XB64_PATCH
 # bin/cacademo
 # bin/cacaview
 # bin/cacaplay
+
+<<'CMakeLists.txt'
+
+CMakeLists.txt
