@@ -5,7 +5,8 @@ apt='flite'
 dsc='A small fast portable speech synthesis system'
 lic='GPL-2+'
 # src='https://github.com/festvox/flite.git' cfg='ar'
-src='https://github.com/Barath-Kannan/flite.git' cfg='cmake'
+src='https://github.com/Barath-Kannan/flite.git'
+cfg='cmake'
 eta='80'
 #pc_llibs='-lflite -lflite_cmu_grapheme_lang \
 #		 -lflite_cmu_grapheme_lex -lflite_cmu_indic_lang \

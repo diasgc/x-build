@@ -4,12 +4,13 @@ lib='gmp'
 apt='libgmp-dev'
 dsc='GNU Multiple Precision Arithmetic Library'
 lic='LGPL-3.0 License'
+url='https://gmplib.org/'
 src='https://gmplib.org/repo/gmp/'
 sty='hg'
 tls='mercurial'
 cfg='ac'
 eta='272'
-mkc='distclean'
+#mkc='distclean'
 
 ac_config="CC_FOR_BUILD=cc"
 
@@ -20,11 +21,6 @@ lst_lib='libgmp'
 lst_bin=''
 lst_lic='COPYING.LESSERv3 COPYINGv2 COPYINGv3 AUTHORS'
 lst_pc='gmp.pc'
-
-on_start(){
-  unset ABI
-  $host_mingw && ac_config+=" --enable-fat"
-}
 
 source_config(){
   # from bootstrap:
@@ -38,7 +34,22 @@ source_config(){
 	EOF
 }
 
-. xbuild && start
+before_make(){
+  for f in $(find . -name "Makefile"); do sed -i 's/-O2 -pedantic/-O3 -flto/g' $f; done
+  build_strip=false
+}
+
+. xbuild
+
+if $host_arm64 || $host_x64; then
+  ABI=64
+else
+  ABI=32
+fi
+
+$host_mingw && ac_config+=" --enable-fat"
+
+start
 
 # cpu av8 av7 x86 x64
 # NDK ++  ++   .   .  clang
@@ -60,3 +71,20 @@ source_config(){
 # share/info/gmp.info-2
 # share/info/gmp.info-1
 # share/info/dir
+
+
+# Filelist
+# --------
+# lib/pkgconfig/gmp.pc
+# lib/libgmp.la
+# lib/libgmp.a
+# lib/libgmp.so
+# share/info/gmp.info
+# share/info/dir
+# share/info/gmp.info-1
+# share/info/gmp.info-2
+# share/doc/gmp/COPYINGv2
+# share/doc/gmp/AUTHORS
+# share/doc/gmp/COPYINGv3
+# share/doc/gmp/COPYING.LESSERv3
+# include/gmp.h

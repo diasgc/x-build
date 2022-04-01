@@ -1,139 +1,83 @@
 include(CheckIncludeFile)
 include(CheckSymbolExists)
+include(CheckFunctionExists)
+include(CheckTypeSize)
 
-macro(check_h var)
-    if(var STREQUAL HAVE_DLFCN_H)
-        check_include_file()
+macro(check_headers)
+    foreach(var ${ARGV})
+        if(var MATCHES ^HAVE.*_H$)
+            string(REGEX REPLACE "^HAVE_" "" hdr ${var})
+            string(REGEX REPLACE "_H$" "" hdr ${hdr})
+            string(REPLACE "_" "/" hdr ${hdr})
+            string(TOLOWER ${hdr} hdr)
+            check_include_file("${hdr}.h" ${var})
+        else()
+            message(STATUS "unknown header for ${var}, skipping")
+        endif()
+    endforeach()    
 endmacro()
 
-* config.h.in.  Generated from configure.ac by autoheader.  */
+macro(check_functions)
+    foreach(var ${ARGV})
+        if(var MATCHES ^HAVE_)
+            string(REGEX REPLACE "^HAVE_" "" fun ${var})
+            string(TOLOWER ${fun} fun)
+            check_function_exists(${fun} ${var})
+        else()
+            message(STATUS "Cannot guess function for ${var}")
+        endif()
+    endforeach()
+endmacro()
 
-/* Define to 1 if you have the <dlfcn.h> header file. */
-#undef HAVE_DLFCN_H
+macro(check_types)
+    foreach(var ${ARGV})
+        if(var MATCHES ^HAVE_.*T$)
+            string(REGEX REPLACE "^HAVE_" "" type ${var})
+            string(REPLACE "__" "::" type ${type})
+            string(TOLOWER ${type} type)
+            check_type_size(${type} out)
+            if(NOT out STREQUAL "")
+                set(${var} 1)
+            endif()
+        else()
+            message(STATUS "Cannot guess function for ${var}")
+        endif()
+    endforeach()
+endmacro()
 
-/* Define to 1 if you have the `fdatasync' function. */
-#undef HAVE_FDATASYNC
-
-/* Define to 1 if you have the `gmtime_r' function. */
-#undef HAVE_GMTIME_R
-
-/* Define to 1 if the system has the type `int16_t'. */
-#undef HAVE_INT16_T
-
-/* Define to 1 if the system has the type `int32_t'. */
-#undef HAVE_INT32_T
-
-/* Define to 1 if the system has the type `int64_t'. */
-#undef HAVE_INT64_T
-
-/* Define to 1 if the system has the type `int8_t'. */
-#undef HAVE_INT8_T
-
-/* Define to 1 if the system has the type `intptr_t'. */
-#undef HAVE_INTPTR_T
-
-/* Define to 1 if you have the <inttypes.h> header file. */
-#undef HAVE_INTTYPES_H
-
-/* Define to 1 if you have the `isnan' function. */
-#undef HAVE_ISNAN
-
-/* Define to 1 if you have the `localtime_r' function. */
-#undef HAVE_LOCALTIME_R
-
-/* Define to 1 if you have the `localtime_s' function. */
-#undef HAVE_LOCALTIME_S
-
-/* Define to 1 if you have the <malloc.h> header file. */
-#undef HAVE_MALLOC_H
-
-/* Define to 1 if you have the `malloc_usable_size' function. */
-#undef HAVE_MALLOC_USABLE_SIZE
-
-/* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
-
-/* Define to 1 if you have the pread() function. */
-#undef HAVE_PREAD
-
-/* Define to 1 if you have the pread64() function. */
-#undef HAVE_PREAD64
-
-/* Define to 1 if you have the pwrite() function. */
-#undef HAVE_PWRITE
-
-/* Define to 1 if you have the pwrite64() function. */
-#undef HAVE_PWRITE64
-
-/* Define to 1 if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
-
-/* Define to 1 if you have the <stdlib.h> header file. */
-#undef HAVE_STDLIB_H
-
-/* Define to 1 if you have the strchrnul() function */
-#undef HAVE_STRCHRNUL
-
-/* Define to 1 if you have the <strings.h> header file. */
-#undef HAVE_STRINGS_H
-
-/* Define to 1 if you have the <string.h> header file. */
-#undef HAVE_STRING_H
-
-/* Define to 1 if you have the <sys/stat.h> header file. */
-#undef HAVE_SYS_STAT_H
-
-/* Define to 1 if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H
-
-/* Define to 1 if the system has the type `uint16_t'. */
-#undef HAVE_UINT16_T
-
-/* Define to 1 if the system has the type `uint32_t'. */
-#undef HAVE_UINT32_T
-
-/* Define to 1 if the system has the type `uint64_t'. */
-#undef HAVE_UINT64_T
-
-/* Define to 1 if the system has the type `uint8_t'. */
-#undef HAVE_UINT8_T
-
-/* Define to 1 if the system has the type `uintptr_t'. */
-#undef HAVE_UINTPTR_T
-
-/* Define to 1 if you have the <unistd.h> header file. */
-#undef HAVE_UNISTD_H
-
-/* Define to 1 if you have the `usleep' function. */
-#undef HAVE_USLEEP
-
-/* Define to 1 if you have the utime() library function. */
-#undef HAVE_UTIME
-
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
-#undef LT_OBJDIR
-
-/* Define to the address where bug reports for this package should be sent. */
-#undef PACKAGE_BUGREPORT
-
-/* Define to the full name of this package. */
-#undef PACKAGE_NAME
-
-/* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
-
-/* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME
-
-/* Define to the version of this package. */
-#undef PACKAGE_VERSION
-
-/* Define to 1 if you have the ANSI C header files. */
-#undef STDC_HEADERS
-
-/* Number of bits in a file offset, on hosts where this is settable. */
-#undef _FILE_OFFSET_BITS
-
-/* Define for large files, on AIX-style hosts. */
-#undef _LARGE_FILES
+macro(add_config)
+    set(options DEFONLY DEF1 DEFVAL UNDEF)
+    set(oneValueArgs FILE)
+    set(multiValueArgs VARS)
+    cmake_parse_arguments(ADD_CONFIG
+        "${options}"
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+        ${ARGN}
+    )
+    set(entry "")
+    message(STATUS "Writing config to ${ADD_CONFIG_FILE}")
+    foreach(p ${ADD_CONFIG_VARS})
+        if(${${p}})
+            if(ADD_CONFIG_DEF1 OR ADD_CONFIG_DEFVAL)
+                string(APPEND entry "#define ${p} 1\n")
+            else()
+                string(APPEND entry "#define ${p}\n")
+            endif()
+        else()
+            if(ADD_CONFIG_DEFVAL)
+                string(APPEND entry "#define ${p} 0\n")
+            elseif(NOT ADD_CONFIG_UNDEF)        
+                string(APPEND entry "/* #undef ${p} */\n")
+            else()
+                string(APPEND entry "#undef ${p}\n")
+            endif()
+        endif()
+    endforeach()
+    if(EXISTS ${ADD_CONFIG_FILE})
+        file(READ ${ADD_CONFIG_FILE} out)
+    else()
+        file(TOUCH ${ADD_CONFIG_FILE})
+    endif()
+    file(CONFIGURE OUTPUT ${ADD_CONFIG_FILE} CONTENT "${out} \n${entry}")
+endmacro()
