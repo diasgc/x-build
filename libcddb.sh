@@ -66,19 +66,13 @@ set(chk_hdr1
     HAVE_SYS_SOCKET_H # > CDDB_NEED_SYS_SOCKET_H
     HAVE_UNISTD_H     # > CDDB_NEED_UNISTD_H
     HAVE_ARPA_INET_H
-    HAVE_DLFCN_H
     HAVE_ERRNO_H
     HAVE_FCNTL_H
     HAVE_ICONV_H
-    HAVE_INTTYPES_H
     HAVE_MEMORY_H
     HAVE_NETDB_H
     HAVE_NETINET_IN_H
     HAVE_REGEX_H
-    HAVE_STDINT_H
-    HAVE_STDLIB_H
-    HAVE_STRINGS_H
-    HAVE_STRING_H
     HAVE_SYS_SELECT_H
     HAVE_SYS_SOCKET_H
     HAVE_SYS_STAT_H
@@ -89,7 +83,23 @@ set(chk_hdr1
     HAVE_WINDOWS_H
     HAVE_WINSOCK2_H
 )
+
+check_stdcheaders()
+if(NOT STDC_HEADERS)
+    list(APPEND chk_hdr1
+        HAVE_DLFCN_H
+        HAVE_INTTYPES_H
+        HAVE_STDINT_H
+        HAVE_STDLIB_H
+        HAVE_STRINGS_H
+        HAVE_STRING_H
+    )
+endif()
 check_headers(${chk_hdr1})
+
+if(NOT HAVE_SYS_TYPES_H)
+    set(size_t "unsigned int") # Define to `unsigned int' if <sys/types.h> does not define.
+endif()
 
 set(CDDB_NEED_SYS_SOCKET_H ${HAVE_SYS_SOCKET_H})
 set(CDDB_NEED_UNISTD_H ${HAVE_UNISTD_H})
@@ -115,21 +125,29 @@ set(fn # Define if you have the function and it works.
 set(fm10 # Define to 1 if you have the function, and to 0 otherwise.
     HAVE_MALLOC     
 )
-
 check_functions(${fn} ${fn1} ${fn10})
-add_config(FILE config.h DEFONLY VARS ${fn})
-add_config(FILE config.h DEF1 VARS ${fn1} ${chk_hdr1})
+
+set(libs # Define this if you have the library installed
+    HAVE_LIBCDIO
+)
+set(libs1 # Define to 1 if you have the library
+    HAVE_LIBNETWORK
+    HAVE_LIBNSL
+    HAVE_LIBSOCKET
+)
+check_libraries(${libs} ${libs1})
+
+add_config(FILE config.h DEFONLY VARS ${fn} ${libs})
+add_config(FILE config.h DEF1 VARS ${fn1} ${chk_hdr1} ${libs1})
 add_config(FILE config.h DEF10 VARS ${fn10})
+
 
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 #undef BEOS                 /* Define if compiling on BeOS system. */
 #undef HAIKU                /* Define if compiling on Haiku system. */
 #undef HAVE_DOPRNT          /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
-#undef HAVE_LIBCDIO         /* Define this if you have libcdio installed */
-#undef HAVE_LIBNETWORK      /* Define to 1 if you have the `network' library (-lnetwork). */
-#undef HAVE_LIBNSL          /* Define to 1 if you have the `nsl' library (-lnsl). */
-#undef HAVE_LIBSOCKET       /* Define to 1 if you have the `socket' library (-lsocket). */
+
 #undef ICONV_CONST          /* Define as const if the declaration of iconv() needs const. */
 #undef LOGLEVEL             /* Set to default log level */
 #undef LT_OBJDIR            /* Define to the sub-directory in which libtool stores uninstalled libraries.*/
@@ -154,6 +172,5 @@ add_config(FILE config.h DEF10 VARS ${fn10})
 #undef const                /* Define to empty if `const' does not conform to ANSI C. */
 #undef malloc               /* Define to rpl_malloc if the replacement function should be used. */
 #undef realloc              /* Define to rpl_realloc if the replacement function should be used. */
-#undef size_t               /* Define to `unsigned int' if <sys/types.h> does not define. */
 
 CMakeLists.txt

@@ -608,6 +608,12 @@ wget_pkg_debian(){
   fi
 }
 
+libname_2_packagename(){
+  if [ -n $(command -v apt) ]; then
+    pkglist=$(apt-cache search --names-only ${lib})
+  fi
+}
+
 list_pkgs(){
   local pd="${dir_root}/builds"
   case $1 in
