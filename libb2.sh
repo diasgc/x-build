@@ -6,7 +6,7 @@ apt='libb2-dev'
 dsc='BLAKE2 family of hash functions'
 lic='CC0-1.0'
 src='https://github.com/BLAKE2/libb2.git'
-cfg='autom'
+cfg='ag'
 eta='100'
 
 dev_bra='main'
