@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='aom'
-apt='libaom0'
+apt='libaom-dev'
 dsc='Alliance for Open Media AV1 codec'
 lic='BSD-2c'
 src='https://aomedia.googlesource.com/aom.git'
