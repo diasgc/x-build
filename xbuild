@@ -393,26 +393,25 @@ fi
 if $req_src_config; then
 	# check whether to custom config source
 	if fn_defined 'source_config'; then
-	fn_log 'config' source_config
+		fn_log 'config' source_config
 	elif [ -n "${cfg_cmd}" ];then
-	do_log 'automake' ${cfg_cmd}
+		do_log 'config' ${cfg_cmd}
 	unset cfg_cmd
 	else case $cfg in
-	ab) [ -f "${dir_config}/boostrap" ] && do_log 'bootstrap' ${dir_config}/boostrap
-		[ -f "${dir_config}/boostrap.sh" ] && do_log 'bootstrap' ${dir_config}/boostrap.sh
-		;;
-	ag) doAutogen ${dir_config} --noconfigure;;
-	ar) doAutoreconf ${dir_config};;
-	am|autom*)
-		if [ ! -f "${dir_config}/configure" ];then
-		if [ -f "${dir_config}/autogen.sh" ];then
-			doAutogen ${dir_config} --noconfigure
-		else
-			doAutoreconf ${dir_config}
-		fi
-		fi
-		;;
-	esac
+		ab)		[ -f "${dir_config}/boostrap" ] && do_log 'bootstrap' ${dir_config}/boostrap
+				[ -f "${dir_config}/boostrap.sh" ] && do_log 'bootstrap' ${dir_config}/boostrap.sh
+				;;
+		ag) 	doAutogen ${dir_config} --noconfigure;;
+		ar) 	doAutoreconf ${dir_config};;
+		am)		if [ ! -f "${dir_config}/configure" ];then
+					if [ -f "${dir_config}/autogen.sh" ];then
+						doAutogen ${dir_config} --noconfigure
+					else
+						doAutoreconf ${dir_config}
+					fi
+				fi
+				;;
+		esac
 	fi
 	req_src_patch=true
 fi
@@ -429,8 +428,13 @@ fi
 $only_repo && end_script
 
 if [ -z "${dir_build}" ];then
+<<<<<<< HEAD
+	case ${build_tool} in
+	cmake|meson|automake) dir_build="${dir_config}/build_${arch}"
+=======
 	case ${build_system} in
 	cmake|meson|automake) dir_build="${dir_config}/build_${arch}"
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 		[ -d "${dir_build}" ] && rm -rf ${dir_build} 2>/dev/null
 		;;
 	*) dir_build=${dir_config};;
@@ -463,6 +467,20 @@ local arr
 if fn_defined 'build_config'; then
 	build_config
 	unset -f build_config
+<<<<<<< HEAD
+else case $build_tool in
+		cmake)
+			cmake_configure
+			cfg_cmd='cmake'
+			cfg_args+=("${dir_config}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}")
+			do_log 'cmake' ${cfg_cmd} ${cfg_args[@]}
+			#do_log 'cmake' ${exec_config} ${dir_config} -DCMAKE_INSTALL_PREFIX=${dir_install} -DCMAKE_BUILD_TYPE=${cmake_build_type} ${CTC} ${CFG} ${CSH} ${CBN} ${CPACK}
+			case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
+			MAKE_EXECUTABLE=make
+			#MAKE_EXECUTABLE=cmake
+			#mkf='--build . --target install --config Release'
+			;;
+=======
 else case $build_system in
 	cmake)
 		cmake_configure
@@ -474,7 +492,18 @@ else case $build_system in
 		case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 		
 		;;
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 
+<<<<<<< HEAD
+		automake) # use autotools and configure executable to create makefile
+			ac_configure
+			cfg_cmd="${dir_config}/configure"
+			cfg_args+=("--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
+			#do_log 'configure' ${dir_config}/${exec_config} --prefix=${dir_install} ${CFG} ${CSH} ${CBN} ${cfg_args[@]}
+			do_log 'configure' ${cfg_cmd} ${cfg_args[@]}
+			MAKE_EXECUTABLE=make
+			;;
+=======
 	automake) # use autotools and configure executable to create makefile
 		ac_configure
 		cfg_cmd="${dir_config}/configure"
@@ -482,7 +511,17 @@ else case $build_system in
 		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
 		#do_log 'configure' ${dir_config}/${exec_config} --prefix=${dir_install} ${CFG} ${CSH} ${CBN} ${cfg_args[@]}
 		;;
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 
+<<<<<<< HEAD
+		meson)
+			meson_configure
+			cfg_cmd='meson'
+			cfg_args+=("setup" "--buildtype=release" "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
+			do_log 'meson' ${cfg_cmd} ${cfg_args[@]}
+			#do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
+			;;
+=======
 	meson)
 		meson_configure
 		cfg_cmd='meson'
@@ -490,7 +529,20 @@ else case $build_system in
 		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
 		#do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
 		;;
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 
+<<<<<<< HEAD
+		make)
+			: "${mkf:=$CFG}"
+			MAKE_EXECUTABLE=make
+			;;
+
+		bazel)
+			;;
+		*)
+			[ -n "${cfg_cmd}" ] && do_log 'config' ${cfg_cmd} ${cfg_args[@]} || doErr "cfg_cmd not defined"
+			;;
+=======
 	make)
 		: "${mkf:=$CFG}"
 		MAKE_EXECUTABLE=make
@@ -505,6 +557,7 @@ else case $build_system in
 			doErr "cfg ${cfg} unknown or cfg_cmd not defined. Use build_config to custom configure makefile"
 		fi
 		;;
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 	esac
 fi
 
@@ -601,6 +654,21 @@ end_script
 }
 
 meson_configure(){
+<<<<<<< HEAD
+	export cfg_file="${dir_config}/${arch}.meson"
+	[ -f "${cfg_file}" ] && rm ${cfg_file}
+	$host_clang || LD="bfd"
+	if [ -n "${meson_bin}" ]; then
+		arr=(${meson_bin//|/ })
+		case ${#arr[@]} in
+			1) $build_bin && CBN="-D${arr[0]}=true" || CBN="-D${arr[0]}=false";;
+			2) $build_bin && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
+		esac
+	fi
+	meson_create_toolchain ${cfg_file}
+	MAKE_EXECUTABLE=ninja
+	[ -n "${meson_cfg}" ] && CFG="${meson_cfg} ${CFG}"
+=======
 	export cfg_file="${dir_config}/${arch}.meson"
 	[ -f "${cfg_file}" ] && rm ${cfg_file}
 	$host_clang || LD="bfd"
@@ -614,6 +682,7 @@ meson_configure(){
 	meson_create_toolchain ${cfg_file}
 	MAKE_EXECUTABLE=ninja
 	[ -n "${meson_cfg}" ] && CFG="${meson_cfg} ${CFG}"
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 }
 
 ac_configure() {
@@ -641,6 +710,25 @@ ac_configure() {
 		esac
 	fi
 
+<<<<<<< HEAD
+	if [ -n "${ac_opts}" ]; then
+		for opt in $(echo ${ac_opts}); do
+		case $opt in
+			--update-config_sub)
+				local fpath=$(find ${dir_src} -name 'config.sub')
+				[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.sub ${fpath}
+				;;
+			--update-config_guess)
+				local fpath=$(find ${dir_src} -name 'config.guess')
+				[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.guess ${fpath}
+				;;
+			--no-sysroot)          ac_nosysroot=true;;
+			--no-pic)              ac_nopic=true;;
+			--no-host)             ac_nohost=true;;
+		esac
+		done
+	fi
+=======
 	if [ -n "${ac_opts}" ]; then
 		for opt in $(echo ${ac_opts}); do
 		case $opt in
@@ -658,29 +746,51 @@ ac_configure() {
 		esac
 		done
 	fi
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 
 	if ! $ac_nohost && $host_cross && [ -n "$(echo "${opt_list}" | grep '\-\-host')" ]; then
 		$host_cross && CFG+=" --host=${arch}"
 	fi
 
+<<<<<<< HEAD
+	if ! $ac_nosysroot; then
+		if [ -n "$(echo "${opt_list}" | grep '\-\-with-sysroot')" ]; then
+			CFG+=" --with-sysroot=${SYSROOT}"
+		elif [ -n "$(echo "${opt_list}" | grep '\-\-sysroot')" ]; then
+			CFG+=" --sysroot=${SYSROOT}"
+		fi
+=======
 	if ! $ac_nosysroot; then
 		if [ -n "$(echo "${opt_list}" | grep '\-\-with-sysroot')" ]; then
 		CFG+=" --with-sysroot=${SYSROOT}"
 		elif [ -n "$(echo "${opt_list}" | grep '\-\-sysroot')" ]; then
 		CFG+=" --sysroot=${SYSROOT}"
 		fi
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 	fi
 
+<<<<<<< HEAD
+	if ! $ac_nopic && ! $host_mingw && [ -n "$(echo "${opt_list}" | grep '\-\-with-pic')" ]; then
+		CFG+=" --with-pic"
+	fi
+=======
 	if ! $ac_nopic && ! $host_mingw && [ -n "$(echo "${opt_list}" | grep '\-\-with-pic')" ]; then
 		CFG+=" --with-pic"
 	fi
 	MAKE_EXECUTABLE=make
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 }
 
 cmake_configure(){
+<<<<<<< HEAD
+	: "${exec_config:=${CMAKE_EXECUTABLE}}"
+	[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}
+	[ -f "${cmake_toolchain_file}" ] && CTC="-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}"
+=======
 	: "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
 	[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}
 	[ -f "${cmake_toolchain_file}" ] && CTC="-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}"
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 
 	if [ -n "${cmake_static}" ]; then
 		arr=(${cmake_static//|/ })
@@ -708,13 +818,29 @@ cmake_configure(){
 		esac
 	fi
 
+<<<<<<< HEAD
+	[ -n "${cmake_config}" ] && CFG="${cmake_config} ${CFG}"
+=======
 	[ -n "${cmake_config}" ] && CFG="${cmake_config} ${CFG}"
 	#MAKE_EXECUTABLE=cmake
 	#mkf='--build . --target install --config Release'
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 }
 
 #1=cmake_key 2=$build_key_bool 
 cmake_readkey(){
+<<<<<<< HEAD
+	local arr
+	locat ret=''
+	if [ -n "${!1}" ]; then
+		arr=(${!cfg_static//|/ })
+		case ${#arr[@]} in
+			1) ${!2} && ret="-D${arr[0]}=ON" || ret="-D${arr[0]}=OFF";;
+			2) ${!2} && ret="-D${arr[0]}" || ret="-D${arr[1]}";;
+		esac
+	fi
+	echo "${ret}"
+=======
 	local arr
 	local ret
 	if [ -n "${!1}" ]; then
@@ -725,6 +851,7 @@ cmake_readkey(){
 		esac
 	fi
 	echo "${ret}"
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 }
 
 doStrip(){
@@ -762,51 +889,81 @@ make_findtarget(){
 }
 
 check_install(){
-local ext=''
-case $1 in
-	# check includes
-	inc*)
-	for h in $lst_inc; do 
-		[ -z "$(ls ${dir_install}/include/$h 2>/dev/null)" ] && echo && return 0
-	done
-	echo 1
+	local ext=''
+	case $1 in
+		# check includes
+		inc*)
+			for h in $lst_inc; do 
+				[ -z "$(ls ${dir_install}/include/$h 2>/dev/null)" ] && echo && return 0
+			done
+			echo 1
+			return 0
+			;;
+		# check libs
+		static*) ext='\.a';;
+		shared*) $host_mingw && ext='\.dll*' || ext='\.so*';;
+		lib*) ext='.*';;
+		# check bin
+		bin)
+			for h in $lst_bin; do 
+				[ -z "$(ls "${dir_install}/bin/${h}" 2>/dev/null)" ] && echo && return 0
+			done
+			echo 1
+			return 0
+			;;
+		# check pkgconfig
+		pc|pkgconfig)
+			[ -z "${lst_pc}" ] && echo && return 0
+			for h in $lst_pc; do 
+				[ -z "$(ls "${dir_install}/lib/pkgconfig/${h}" 2>/dev/null)" ] && echo && return 0
+			done
+			echo 1
+			return 0
+			;;
+	esac
+	if [ -n "${ext}" ];then
+		for h in $lst_lib; do
+		echo "listing ${dir_install}/lib/${h}${ext}"
+		[ -z "$(ls ${dir_install}/lib/${h}.* | grep ''${ext}'' 2>/dev/null)" ] && echo && return 0
+		done
+		echo 1
+		return 0
+	fi
+	echo
 	return 0
-	;;
-	# check libs
-	static*) ext='\.a';;
-	shared*) $host_mingw && ext='\.dll*' || ext='\.so*';;
-	lib*) ext='.*';;
-	# check bin
-	bin)
-	for h in $lst_bin; do 
-		[ -z "$(ls "${dir_install}/bin/${h}" 2>/dev/null)" ] && echo && return 0
-	done
-	echo 1
-	return 0
-	;;
-	# check pkgconfig
-	pc|pkgconfig)
-	[ -z "${lst_pc}" ] && echo && return 0
-	for h in $lst_pc; do 
-		[ -z "$(ls "${dir_install}/lib/pkgconfig/${h}" 2>/dev/null)" ] && echo && return 0
-	done
-	echo 1
-	return 0
-	;;
-esac
-if [ -n "${ext}" ];then
-	for h in $lst_lib; do
-	echo "listing ${dir_install}/lib/${h}${ext}"
-	[ -z "$(ls ${dir_install}/lib/${h}.* | grep ''${ext}'' 2>/dev/null)" ] && echo && return 0
-	done
-	echo 1
-	return 0
-fi
-echo
-return 0
 }
 
 check_xbautopatch(){
+<<<<<<< HEAD
+	pushdir ${dir_root}
+	local match=$(grep -oP "(?<=^<<').*?(?=')" $0)
+	if [ -n "${match}" ]; then
+		local block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $0)
+		case $match in
+			XB_CREATE_CMAKELISTS)
+				echo "${block}" >${dir_src}/CMakeLists.txt
+				echo -e "\ncreate CMakeLists.txt: \n$block" >>${log_file}
+				;;
+			XB_PATCH) pushdir ${dir_src}
+				patch -p0 <<<$(echo "${block}") 2>&1 >${log_file}
+				echo -e "\npatch found: \n$block" >>${log_file}
+				popdir
+				;;
+			XB64_PATCH) pushdir ${dir_src}
+				patch -p0 <<<$(echo "${block}" | base64 -d) 2>&1 >${log_file}
+				popdir
+				;;
+			LZS_PATCH) pushdir ${dir_src}
+				patch -p0 <<<$(echo "${block}" | ${dir_root}/utils/lz-string -d -) 2>&1 >${log_file}
+				popdir
+				;;
+			*) echo -e "\nUnknown block name ${match} with this contents (ignoring):\n$block" >>${log_file}
+				;;
+		esac
+	fi
+	popdir
+	return 0
+=======
 pushdir ${dir_root}
 local match=$(grep -oP "(?<=^<<').*?(?=')" $0)
 if [ -n "${match}" ]; then
@@ -835,6 +992,7 @@ if [ -n "${match}" ]; then
 fi
 popdir
 return 0
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 }
 
 # usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
@@ -874,17 +1032,17 @@ create_pkgconfig_file(){
 }
 
 build_packages_getdistdir(){
-[ -f "${dir_install_pc}/${pkg}.pc" ] && vrs=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
-[ -z "$vrs" ] && set_git_version
-echo "${dir_root}/packages/${lib}_${vrs}_${arch}"
+	[ -f "${dir_install_pc}/${pkg}.pc" ] && vrs=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
+	[ -z "$vrs" ] && set_git_version
+	echo "${dir_root}/packages/${lib}_${vrs}_${arch}"
 }
 
 build_packages_filelist(){
-local scfile="${dir_root}/${lib}.sh"
-if [ -z "$(cat $scfile | grep '# Filelist')" ]; then
-	echo -e "\n\n# Filelist\n# --------" >> $scfile
-	find ./ -type f | sed 's|^./|# |g' >> $scfile
-fi
+	local scfile="${dir_root}/${lib}.sh"
+	if [ -z "$(cat $scfile | grep '# Filelist')" ]; then
+		echo -e "\n\n# Filelist\n# --------" >> $scfile
+		find ./ -type f | sed 's|^./|# |g' >> $scfile
+	fi
 }
 
 build_package_cmake(){
@@ -896,6 +1054,16 @@ build_package_cmake(){
 		flist="$(echo $l | sed 's|'${dir_install}'/||') $flist"
 	done < ${dir_build}/install_manifest.txt
 
+<<<<<<< HEAD
+	# add manual pc files
+	if [ -n "${pc_llib}" ]; then
+		flist="lib/pkgconfig/${pc_llib//-l/lib}.pc ${flist}"
+	elif [ -n "${pc_llibs}" ]; then
+		for ll in $pc_llibs; do
+		flist="lib/pkgconfig/${ll//-l/lib}.pc ${flist}"
+		done
+	fi
+=======
 	# add manual pc files
 	if [ -n "${pc_llib}" ]; then
 		flist="lib/pkgconfig/${pc_llib//-l/lib}.pc ${flist}"
@@ -904,7 +1072,18 @@ build_package_cmake(){
 			flist="lib/pkgconfig/${ll//-l/lib}.pc ${flist}"
 		done
 	fi
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 
+<<<<<<< HEAD
+	# check licence files
+	if [ -n "${lst_lic}" ]; then
+		[ -d "${dir_install}/share/doc/${lib}" ] || mkdir -p "${dir_install}/share/doc/${lib}"
+		for f in ${lst_lic}; do
+		[ -f "${dir_install}/share/doc/${lib}/${f}" ] || cp ${dir_src}/${f} "${dir_install}/share/doc/${lib}/"
+		flist="share/doc/${lib}/${f} ${flist}"
+		done
+	fi
+=======
 	# check licence files
 	if [ -n "${lst_lic}" ]; then
 		[ -d "${dir_install}/share/doc/${lib}" ] || mkdir -p "${dir_install}/share/doc/${lib}"
@@ -915,6 +1094,7 @@ build_package_cmake(){
 			fi
 		done
 	fi
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 
 	# no flist, return
 	[ -z "${flist}" ] && return 0
@@ -931,6 +1111,24 @@ build_package_cmake(){
 	$build_static || sfx='-shared'
 	local fn="${lib}${sfx}_${v}_${arch}"
 
+<<<<<<< HEAD
+	case ${pkg_fmt} in
+		tbz)
+			fn="${fn}.tar.bz2"
+			tar -cvjSf "${fn}" ${flist}
+			;;
+		zip)
+			fn="${fn}.zip"
+			zip -r "${fn}" ${flist}
+			;;
+		*)
+		fn="${fn}.tar.gz"
+		tar -czvf "${fn}" ${flist}
+		;;
+	esac
+	[ -d "${dir_pkgdist}" ] || mkdir -p ${dir_pkgdist}
+	mv "${fn}" ${dir_pkgdist}/${fn}
+=======
 	case ${pkg_fmt} in
 		tbz)
 		fn="${fn}.tar.bz2"
@@ -947,6 +1145,7 @@ build_package_cmake(){
 	esac
 	[ -d "${dir_pkgdist}" ] || mkdir -p ${dir_pkgdist}
 	mv "${fn}" ${dir_pkgdist}/${fn}
+>>>>>>> 367ee0fcda4fc53ffd895b22cccec4fae478f874
 
 	if [ -z "$(cat ${dir_root}/${lib}.sh | grep '# Filelist')" ]; then
 		echo -e "\n\n# Filelist\n# --------" >> ${dir_root}/${lib}.sh
