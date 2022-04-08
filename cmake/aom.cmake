@@ -1,0 +1,23 @@
+include(${CMAKE_BINARY_DIR}/toolchain)
+
+set(CONFIG_STATIC $<BOOL:BUILD_STATIC_LIBS>)
+set(ENABLE_EXAMPLES $<BOOL:BUILD_PROGRAMS>)
+
+set(ENABLE_TESTS    OFF)
+set(DENABLE_TOOLS   OFF)
+set(ENABLE_TESTDATA OFF)
+set(ENABLE_DOCS     OFF)
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES ^a)
+    set(CONFIG_RUNTIME_CPU_DETECT 0)
+    set(AS_EXECUTABLE ${CMAKE_AS})
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES ^a.*64)
+        set(AOM_NEON_INTRIN_FLAG "")
+    else()
+        set(AOM_NEON_INTRIN_FLAG "-mfpu=neon")
+    endif()
+endif()
+
+if(UNIX)
+    set(CONFIG_PIC 1)
+endif()

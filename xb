@@ -9,7 +9,7 @@ EOF
 
 jload(){
     lib=$1
-    jlib=$(cat .pkglist | jq '."'${lib}'"')
+    jlib=$(cat .jdata | jq '."'${lib}'"')
     jpkg=$(echo "${jlib}" | jq -r '.pkg // empty')
 }
 
@@ -43,6 +43,9 @@ if [ -n "$script" ];then
     exit 0
 fi
 
+git=$(jval git)
+[ -n "${git}" ] && src=${git} || src=$(jval src)
+
 src=$(jval src)     url=$(jval url)     dsc=$(jval dsc)
 lic=$(jval lic)     cbk=$(jval cbk)     mki=$(jval mki)
 dep=$(jval dep)     cfg=$(jval bld)     mkf=$(jval mkf)
@@ -55,7 +58,7 @@ src_patch=$(jval src_patch)
 patch=$(jval patch)
 pc_llib=$(jval pc_llib)
 
-shift && source xbuilder $@
+shift && source xbuild $@
 
 echo -e "  latest release: $(get_latest_release )"
 CFG=$(eval echo $(echo $p | jq -r '.cfg // empty'))
