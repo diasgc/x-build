@@ -296,9 +296,17 @@ fi
 if $init; then
 	splash
 	if	[ -z "${ANDROID_NDK_HOME}" ] || [ ! -d "${ANDROID_NDK_HOME}" ]; then
-        select_ndk
-	    [ -n "${XB_NDK_URL}" ] && install_ndk
-	fi
+        ndk_clang_bin_dir=$(find ~ -name "aarch64-linux-android??-clang" | tail -n1)
+        if [ -f "${ndk_clang_bin_dir}" ]; then
+            export ANDROID_NDK_HOME=$(echo ${ndk_clang_bin_dir} | sed 's|/toolchains/llvm/prebuilt.*||')
+        else
+            select_ndk
+	        [ -n "${XB_NDK_URL}" ] && install_ndk
+        fi
+        if [ -d "${ANDROID_NDK_HOME}" ]; then
+            printf "\nexport ANDROID_NDK_HOME=${ANDROID_NDK_HOME}\n" >> ~/.bashrc && source ~/.bashrc
+        fi
+    fi
 	if	[ -z "$(command -v clang)" ]; then
 		read -p "Linux LLVM/Clang Support: Install LLVM/Clang Toolchain? [Y|n]: " p_install_llvm_gnu
         test "${p_install_llvm_gnu,,}" == "y" && p_install_llvm_gnu=true || p_install_llvm_gnu=false
