@@ -1,4 +1,15 @@
 {
+  "aom": {
+    "git": "https://aomedia.googlesource.com/aom.git",
+    "bdep": "perl",
+    "ldep": ""
+  },
+  "aribb24": {
+    "git": "https://github.com/nkoriyama/aribb24.git"
+  },
+  "aribb25": {
+    "git": "https://code.videolan.org/videolan/aribb25.git"
+  },
   "espeak-ng" : {
     "dsc" : "",
     "git": "https://github.com/espeak-ng/espeak-ng"
