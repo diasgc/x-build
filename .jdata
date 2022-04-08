@@ -1,0 +1,6 @@
+{
+  "espeak-ng" : {
+    "dsc" : "",
+    "git": "https://github.com/espeak-ng/espeak-ng"
+  }
+}
