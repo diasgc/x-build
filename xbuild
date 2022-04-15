@@ -980,12 +980,12 @@ else
 	fi
 	
 	# also include .pc manually-built file
-	if fn_defined 'build_pkgconfig_file' || [ -n "$pc_llib" ];then
+	if fn_defined 'build_pkgconfig_file' || [ -n "$pc_llib" ]; then
 		local xb_pkgd=$(pwd)/lib/pkgconfig
 		[ ! -d "${xb_pkgd}" ] && mkdir -p $xb_pkgd
-		if [ -n "${pc_filelist}" ];then
+		if [ -n "${pc_filelist}" ]; then
 			for pp in ${pc_filelist}; do
-			cp ${dir_install_pc}/${pp} ${xb_pkgd}/
+				cp ${dir_install_pc}/${pp} ${xb_pkgd}/
 			done
 		else
 			cp ${dir_install_pc}/${pkg}.pc ${xb_pkgd}/
@@ -1010,34 +1010,34 @@ set +x
 }
 
 build_dependencies(){
-local pkgfile=
-local o_csh
-local o_cbh
-local cf
-local ldir
-while [ -n "${1}" ]; do
-	[ -f "./${1}.sh" ] || doErr "no script file ${1}.sh.\n  Aborting..."
-	pkgfile=$(./${1}.sh ${arch} --get pc)
-	libname=$(./${1}.sh --get libname)
-	if [ ! -f "${pkgfile}" ]; then
-		o_csh=$CSH
-		o_cbh=$CBH
-		$build_pkgdl && local dl="--dl" || local dl=''
-		unset CSH CBH
-		
-		./${1}.sh ${arch} ${dep_build} ${dl}
-		
-		CSH=$o_csh
-		CBH=$o_cbh
-	fi
-	if [ -f "${pkgfile}" ]; then
-		local cmi=$(./${1}.sh ${arch} --get cmake_include)
-		[ -n "$cmi" ] && cmake_includes="$cmi $cmake_includes"
-		ldir="$(dirname ${pkgfile})"
-		str_contains $PKG_CONFIG_LIBDIR ${ldir} || PKG_CONFIG_LIBDIR="${ldir}:${PKG_CONFIG_LIBDIR}"
-	fi
-	shift
-done
+	local pkgfile=
+	local o_csh
+	local o_cbh
+	local cf
+	local ldir
+	while [ -n "${1}" ]; do
+		[ -f "./${1}.sh" ] || doErr "no script file ${1}.sh.\n  Aborting..."
+		pkgfile=$(./${1}.sh ${arch} --get pc)
+		libname=$(./${1}.sh --get libname)
+		if [ ! -f "${pkgfile}" ]; then
+			o_csh=$CSH
+			o_cbh=$CBH
+			$build_pkgdl && local dl="--dl" || local dl=''
+			unset CSH CBH
+			
+			./${1}.sh ${arch} ${dep_build} ${dl}
+			
+			CSH=$o_csh
+			CBH=$o_cbh
+		fi
+		if [ -f "${pkgfile}" ]; then
+			local cmi=$(./${1}.sh ${arch} --get cmake_include)
+			[ -n "$cmi" ] && cmake_includes="$cmi $cmake_includes"
+			ldir="$(dirname ${pkgfile})"
+			str_contains $PKG_CONFIG_LIBDIR ${ldir} || PKG_CONFIG_LIBDIR="${ldir}:${PKG_CONFIG_LIBDIR}"
+		fi
+		shift
+	done
 }
 
 
@@ -1152,7 +1152,6 @@ cmake_create_toolchainfile(){
 		set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
 		set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 		set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
-		include(CPack)
 		EOF
 	[ -n "${WFLAGS}" ] && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
 	$host_x86 && cat <<-EOF >>${cmake_toolchain_file}
@@ -2336,8 +2335,10 @@ while [ $1 ];do
 		--api)      shift; export API=$1;;
 		--clang)    use_clang=true;;
 		--gcc)      use_clang=false;;
-		--tune)     shift; menu_tune $1
-		;;
+		--tune)     shift; menu_tune $1;;
+		--cpus)     loadToolchain; $CC --print-supported-cpus;;
+		--mcpu)		shift; export CPPFLAGS+=" -mcpu=${1}";;
+		--mtune)	shift; export CPPFLAGS+=" -mtune=${1}";;
 
 		--download|--dl) build_pkgdl=true;;
 
