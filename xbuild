@@ -2336,7 +2336,7 @@ while [ $1 ];do
 		--clang)    use_clang=true;;
 		--gcc)      use_clang=false;;
 		--tune)     shift; menu_tune $1;;
-		--cpus)     loadToolchain; $CC --print-supported-cpus;;
+		--cpus)     loadToolchain; $CC --print-supported-cpus; exit 0;;
 		--mcpu)		shift; export CPPFLAGS+=" -mcpu=${1}";;
 		--mtune)	shift; export CPPFLAGS+=" -mtune=${1}";;
 
