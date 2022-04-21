@@ -15,7 +15,7 @@ lst_lic='COPYING'
 lst_pc='zimg.pc'
 
 dev_bra='main'
-dev_vrs='3.0.3'
+dev_vrs='3.0.4'
 stb_bra=''
 stb_vrs=''
 
