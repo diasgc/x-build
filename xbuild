@@ -1152,6 +1152,7 @@ cmake_create_toolchainfile(){
 		set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
 		set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 		set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
+		set(CMAKE_POSITION_INDEPENDENT_CODE 1)
 		EOF
 	[ -n "${WFLAGS}" ] && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
 	$host_x86 && cat <<-EOF >>${cmake_toolchain_file}
