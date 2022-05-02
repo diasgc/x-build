@@ -2007,14 +2007,14 @@ prompt_remove(){
 
 showBanner(){
 	if $banner; then
-		echo -ne "\n\n${CW}Cross Builder Scripts ${vsh} for Linux${C0}\n"
+		echo -ne "\n\n${CW}Cross Build scripts ${vsh} for Linux${C0}\n"
 		[ -n $(command -v lsb_release) ] && echo -ne "$(lsb_release -sd) "
 		if [ -n "$(uname -r | grep 'microsoft')" ];then
 		echo -ne "WSL2 "
 		elif [ -n "$(uname -r | grep 'Microsoft')" ];then
 		echo -ne "WSL "
 		fi
-		echo -e "$(uname -o) $(uname -m) ${C0} $(uname -r)"
+		echo -e "$(uname -o) $(uname -m) ${C0} kernel $(uname -r)"
 		echo -e "${CW}$(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
 	fi
 }
