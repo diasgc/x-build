@@ -1,4 +1,5 @@
 builds/*
+FFmpeg/*
 sources/*
 packages/*
 llvm-gnu/*
