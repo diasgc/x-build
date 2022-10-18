@@ -1782,7 +1782,7 @@ loadToolchain(){
 			TOOLCHAIN="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64"
 			SYSROOT="${TOOLCHAIN}/sysroot"
 			CROSS_PREFIX="${TOOLCHAIN}/bin/${arch}-"
-			
+
 			local ndk_cc_prefix=${arch}${API}
 			if $host_arm32; then
 				ndk_cc_prefix="armv7a-linux-androideabi${API}"
@@ -2298,32 +2298,31 @@ wx64='@(w64|wx64|*64-win*|*64-*mingw*|windows|win|w*64)'
 while [ $1 ];do
 	case $1 in
 		native)		set_target_build; host_native=true;;
-		
+
 		$aa64 )		set_target '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6;;
 		$aa32 )		set_target '1' 'arm' 'v7a' 'linux' 'android' 'eabi' 'armeabi-v7a' '32' $CG2 $CG5;;
 		$ax86 )		set_target '2' 'i686' '' 'linux' 'android' '' 'x86' '32' $CG0 $CG1;;
 		$ax64 )		set_target '3' 'x86_64' '' 'linux' 'android' '' 'x86_64' '64' $CG0 $CG1;;
-		
+
 		$la64 )		set_target '4' 'aarch64' '' 'linux' 'gnu' '' 'aarch64' '64' $CM4 $CM6;;
 		$la32 )		set_target '5' 'arm' '' 'linux' 'gnu' 'eabihf' 'armv7' '32' $CM4 $CM6;;
 		$lx86 )		set_target '6' 'i686' '' 'linux' 'gnu' '' 'x86' '32' $CM0 $CM1;;
 		$lx64 )		set_target '7' 'x86_64' '' 'linux' 'gnu' '' 'x86_64' '64' $CM0 $CM1;;
-		
+
 		$wa64 )		set_target '8' 'aarch64' '' 'w64' 'mingw32' '' 'arm64' '64' $CC0 $CC1;;
 		$wa32 )		set_target '9' 'arm' 'v7' 'w64' 'mingw32' '' 'armv7' '32' $CC0 $CC1;;
 		$wx86 )		set_target '10' 'i686' '' 'w64' 'mingw32' '' 'x86' '32' $CB0 $CB1;;
 		$wx64 )		set_target '11' 'x86_64' '' 'w64' 'mingw32' '' 'x86_64' '64' $CB0 $CB1;;
-		
-		
-		--help|-h)  showBanner; usage; exit 0
-		;;
-		
-		--full)     build_shared=true
-					build_static=true
-					build_bin=true
-					build_dist=true
-					dep_build="--full"
-					;;
+
+		--help|-h)	showBanner; usage; exit 0
+				;;
+
+		--full)     	build_shared=true
+				build_static=true
+				build_bin=true
+				build_dist=true
+				dep_build="--full"
+				;;
 		--bra*)     shift; export bra=$1;;
 		--shared)   build_shared=true; build_static=false;;
 		--static)   build_static=true; build_shared=false;;

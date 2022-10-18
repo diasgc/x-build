@@ -59,7 +59,7 @@ lst_opts="$lst_opts_aud $lst_opts_vid $lst_opts_sub $lst_opts_net $lst_opts_io"
 
 extraOpts(){
      case $1 in
-          --audio) dep+=" lame libvorbis opus fdk-aac";;
+          --audio) dep+=" lame vorbis opus fdk-aac";;
           --video) dep+=" aom libvpx libwebp vidstab x264 x265 xvidcore";;
           --net) dep+=" libressl";;
           --*) [ -f "${1:2}.sh" ] && dep+=" ${1:2}"
@@ -110,12 +110,15 @@ fi
 
 $host_arm && extopts+=' --enable-neon'
 $host_x86 && extopts+=' --disable-asm'
-$build_arch
+
 case $host_os in
      android) CPPFLAGS+=" -Ofast -fPIC -fPIE  -Wno-implicit-const-int-float-conversion -Wno-deprecated-declarations"
           extopts+=" --disable-alsa --enable-opencl --enable-jni --enable-vulkan --enable-opengl --enable-cross-compile "
           ;;
-     gnu) extopts+=" --enable-opencl --enable-nvenc --enable-opengl --enable-pic" LDFLAGS+=" -ldl -lstdc++";;
+     gnu) extopts+=" --enable-opencl --enable-opengl --enable-pic" LDFLAGS+=" -ldl -lstdc++"
+          lspci -k | grep -A 2 -i "VGA" | grep amd && extopts+=" --enable-nvenc"
+          lspci -k | grep -A 2 -i "VGA" | grep nvidia && extopts+=" --enable-nvenc"
+          ;;
 esac
 
 ac_config="--arch=$CPU \
