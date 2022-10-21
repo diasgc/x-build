@@ -22,6 +22,8 @@ fi
 trap err ERR
 fi
 
+clangv=-15
+
 sudo=$(command -v sudo)
 
 # defvar debug=false
