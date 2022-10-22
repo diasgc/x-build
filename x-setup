@@ -220,7 +220,7 @@ p_install_llvm_sysroot=false
 
 # load config
 [ -f ".config" ] && . .config || init=true
-[ -n "$(command -v sudo)" ] && sudo echo -ne "Password: "
+[ -n "$(command -v sudo)" ] && sudo echo -ne "Password: " && echo
 #export cmd_install="sudo apt install"
 
 if [ -z "${cmd_install}" ];then
@@ -339,7 +339,7 @@ check_install 'gcc-i686-linux-gnu' 'g++-i686-linux-gnu'
 echo -e "\n${CC1}LLVM-Clang:"
 $XB_HAS_GNU_CLANG && check_install clang-format clang-tidy clang-tools clang clangd \
                         libc++-dev libstdc++-12-dev libc++1 libc++abi-dev libc++abi1 libclang-dev \
-                        libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 \
+                        libclang-common-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 \
                         lld lldb llvm-dev llvm-runtime llvm python3-clang
 echo
 cclang=$(command -v clang)
@@ -422,22 +422,22 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
                 check_wrapper_ndk "clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
             fi
             #[ -f "${dir_toolchain}/bin/as" ] || sudo ln -s "${ndk_toolchain}/bin/${c_lib[${i}]}-as" "${dir_toolchain}/bin/as"
-            [ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s "${ndk_toolchain}/bin/lld" "${dir_toolchain}/bin/ld"
+            [ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s -f "${ndk_toolchain}/bin/lld" "${dir_toolchain}/bin/ld"
             
             for j in as ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
-                [ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -s "${ndk_toolchain}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
+                [ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -s -f "${ndk_toolchain}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
             done
             
-            [ -d "${dir_toolchain}/lib" ] || sudo ln -s "${ndk_toolchain}/sysroot/usr/lib/${c_lib[${i}]}" "${dir_toolchain}/lib"
+            [ -d "${dir_toolchain}/lib" ] || sudo ln -s -f "${ndk_toolchain}/sysroot/usr/lib/${c_lib[${i}]}" "${dir_toolchain}/lib"
             [ -f "${dir_toolchain}/lib/libpthread.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/libpthread.a"
             [ -f "${dir_toolchain}/lib/librt.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/librt.a"
             
-            [ -d "${dir_toolchain}/include" ] || sudo ln -s "${ndk_sysroot}/usr/include" "${dir_toolchain}/include"
+            [ -d "${dir_toolchain}/include" ] || sudo ln -s -f "${ndk_sysroot}/usr/include" "${dir_toolchain}/include"
             
             [ -d "${dir_root}/builds/android/${c_abi[${i}]}" ] || mkdir -p "${dir_root}/builds/android/${c_abi[${i}]}"
             
             [ -d "${dir_toolchain}/local" ] && sudo unlink ${dir_toolchain}/local
-            sudo ln -s "${dir_root}/builds/android/${c_abi[${i}]}" "${dir_toolchain}/local"
+            sudo ln -s -f "${dir_root}/builds/android/${c_abi[${i}]}" "${dir_toolchain}/local"
         done
         printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
         [ -f "${dir_toolchain}/include/sys/soundcard.h" ] || printf "#include <linux/soundcard.h>" >"${dir_toolchain}/include/sys/soundcard.h"

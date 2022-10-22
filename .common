@@ -83,7 +83,7 @@ hwinfoCountCoresReadable(){
     "4") echo "Quad-Core";;
     "6") echo "Hexa-Core";;
     "8") echo "Octa-Core";;
-    *) echo "$n-Core";;
+    *) echo "$(nproc)-Core";;
   esac
 }
 

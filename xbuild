@@ -25,7 +25,7 @@ fi
 clangv=-15
 
 sudo=$(command -v sudo)
-
+export HOST_NPROC=$(nproc)
 # defvar debug=false
 : "${host_native:=false}"
 : "${debug:=false}"
