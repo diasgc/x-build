@@ -22,7 +22,7 @@ lst_pc='xvidcore.pc'
 
 unset CSH # unsupported static/shared tags
 
-$host_ndk && $host_x86 && CFG+=" --disable-assembly";;
+$host_ndk && $host_x86 && CFG+=" --disable-assembly"
 
 start
 

@@ -53,15 +53,20 @@ lst_opts_io='decklink jni ladspa libdc1394 libjack libklvanc libopenvino
 librist librsvg libtensorflow libv4l2 libxcb libxcb-shape libxcb-shm libxcb-xfixes
 libxml2 mediacodec mediafoundation openal opencl opengl vulkan'
 
-lst_opts="$lst_opts_aud $lst_opts_vid $lst_opts_sub $lst_opts_net $lst_opts_io"
+#lst_opts="$lst_opts_aud $lst_opts_vid $lst_opts_sub $lst_opts_net $lst_opts_io"
+
+lst_opts="libfdk-aac libmp3lame libopus libtwolame libvorbis libvo-amrwbenc libopencore-amrnb libopencore-amrwb
+libaom libkvazaar libopenjpeg libvpx libwebp libx264 libx265 libxvid mbedtls jni mediacodec"
+
 
 #dep='zlib bzip2 gmp libiconv lzma libxml2'
 
 extraOpts(){
      case $1 in
           --audio) dep+=" lame vorbis opus fdk-aac";;
-          --video) dep+=" aom libvpx libwebp vidstab x264 x265 xvidcore";;
+          --video) dep+=" aom vpx libwebp vidstab x264 x265";;
           --net) dep+=" libressl";;
+          --help) echo "USAGE: ffmpeg aa8|aa7|... --video|--audio|--net --static|--shared|--bin --no-strip"; exit 0;;
           --*) [ -f "${1:2}.sh" ] && dep+=" ${1:2}"
                ;;
      esac
@@ -75,26 +80,27 @@ v3=false
 
 for d in $dep; do
      case $d in
+          aom) extlibs+=" --enable-libaom";;
           lame) extlibs+=" --enable-libmp3lame";;
-          fdk-aac) extlibs+=" --enable-libfdkaac" nonfree=true;;
+          vorbis) extlibs+=" --enable-libvorbis";;
+          opus) extlibs+=" --enable-libopus";;
+          libwebp) extlibs+=" --enable-libwebp";;
+          fdk-aac) extlibs+=" --enable-libfdk-aac" nonfree=true;;
           openssl) extlibs+=" --enable-openssl" nonfree=true;;
           frei0r) extlibs+=' --enable-frei0r' gpl=true;;
-          libcdio) extlibs+=' --enable-frei0r' gpl=true;;
-          librubberband) extlibs+=' --enable-frei0r' gpl=true;;
-          vidstab) extlibs+=' --enable-frei0r' gpl=true;;
+          vidstab) extlibs+=' --enable-libvidstab' gpl=true;;
           x264) extlibs+=' --enable-libx264' gpl=true;;
+          # found error on x265.pc -> replace -l-l:libunwind.a for -l:libunwind.a
           x265) extlibs+=' --enable-libx265' gpl=true;;
           xavs) extlibs+=' --enable-libxavs' gpl=true;;
+          vpx) extlibs+=' --enable-libvpx';;
           xvidcore) extlibs+=' --enable-libxvid' gpl=true;;
           opencore-amr) extlibs+=" --enable-libopencore-amrnb --enable-libopencore-amrwb";;
-          *) if [ -z "${lst_opts##*${1}*}" ] || [ -z "${lst_opts##*lib${1}*}" ]; then
-                    extlibs+=" --enable-${1}"
-               fi
-               ;;
      esac
 done
 
-extopts="--pkg-config-flags=--static --enable-lto --enable-runtime-cpudetect --disable-symver --cross-prefix=${CROSS_PREFIX}-"
+extopts="--pkg-config-flags=--static --enable-lto --enable-runtime-cpudetect --disable-symver --pkgconfigdir=${dir_install_pc}"
+#--cross-prefix=${CROSS_PREFIX} <- remove or pkg-config cannot find aom version > 1.0.0
 
 $nonfree && extlibs+=' --enable-nonfree'
 $gpl && extlibs+=' --enable-gpl'
@@ -113,7 +119,7 @@ $host_x86 && extopts+=' --disable-asm'
 
 case $host_os in
      android) CPPFLAGS+=" -Ofast -fPIC -fPIE  -Wno-implicit-const-int-float-conversion -Wno-deprecated-declarations"
-          extopts+=" --disable-alsa --enable-opencl --enable-jni --enable-vulkan --enable-opengl --enable-cross-compile "
+          extopts+=" --disable-alsa --enable-jni --enable-cross-compile "
           ;;
      gnu) extopts+=" --enable-opencl --enable-opengl --enable-pic" LDFLAGS+=" -ldl -lstdc++"
           lspci -k | grep -A 2 -i "VGA" | grep amd && extopts+=" --enable-nvenc"

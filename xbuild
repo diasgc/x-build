@@ -43,7 +43,7 @@ export HOST_NPROC=$(nproc)
 : "${build_dist:=true}"
 : "${dep_build:=--static}"
 : "${build_strip:=true}"
-: "${API:=24}"
+: "${API:=33}"
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
 : "${build_pkgdl:=false}"
@@ -1695,7 +1695,7 @@ downloadP(){
 }
 
 download(){
-	# bsdtar from stdin doesn't extract file +x permission
+	# bsdtar from stdin doesnt extract file +x permission
 	# wget -qO- $1 | bsdtar -xvf- >/dev/null 2>&1
 	echo -ne " ${CD}checking tools"
 	test -z $(command -v unzip) && aptInstallBr unzip
@@ -1752,6 +1752,7 @@ toolchain_android(){
 
 	CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
 	LT_SYS_LIBRARY_PATH="/usr/${arch}/lib:/usr/${arch}/${API}"
+	PKG_CONFIG_DIR="/usr/${arch}/local/lib/pkgconfig"
 	CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/lib -I${SYSROOT}/usr/local/include"
 	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
 
@@ -1777,34 +1778,35 @@ loadToolchain(){
 		case $PLATFORM in
 		Android)
 			if $ndk_testtc; then
-			toolchain_android
+  			toolchain_android
 			else
-			[ -z "$API" ] && API=24
-			CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
-			TOOLCHAIN="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64"
-			SYSROOT="${TOOLCHAIN}/sysroot"
-			CROSS_PREFIX="${TOOLCHAIN}/bin/${arch}-"
+			  #decaprated
+			  [ -z "$API" ] && API=24
+			  CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
+			  TOOLCHAIN="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64"
+			  SYSROOT="${TOOLCHAIN}/sysroot"
+			  CROSS_PREFIX="${TOOLCHAIN}/bin/${arch}-"
 
-			local ndk_cc_prefix=${arch}${API}
-			if $host_arm32; then
-				ndk_cc_prefix="armv7a-linux-androideabi${API}"
-				cmake_system_processor="armv7-a"
-			fi
-			CC="${TOOLCHAIN}/bin/${ndk_cc_prefix}-clang"
-			CXX="${CC}++"
-			AS="${CC}" #AS see https://developer.android.com/ndk/guides/other_build_systems
-			LD="${TOOLCHAIN}/bin/ld.lld" #Linker (also llvm-link?)
-			GCOV="${TOOLCHAIN}/bin/llvm-cov" # should we disable this?
-			# change cross_prefix for bin tools in ndk > r23
-			[ ! -f "${CROSS_PREFIX}ar" ] && CROSS_PREFIX="${TOOLCHAIN}/bin/llvm-"
-			LT_SYS_LIBRARY_PATH="$SYSROOT/usr/lib/$arch:$SYSROOT/usr/lib/${arch}/${API}"
-			LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-			CPPFLAGS+=" -I${SYSROOT}/usr/include/${arch} -I$SYSROOT/usr/include -I$SYSROOT/usr/local/include"
-			YASM=${TOOLCHAIN}/bin/yasm
-			cmake_findrootpath="${SYSROOT}/usr
-				${SYSROOT}/usr/lib/${arch}
-				${SYSROOT}/usr/lib/${arch}/${API}
-				${dir_install}"
+			  local ndk_cc_prefix=${arch}${API}
+			  if $host_arm32; then
+				  ndk_cc_prefix="armv7a-linux-androideabi${API}"
+				  cmake_system_processor="armv7-a"
+			  fi
+			  CC="${TOOLCHAIN}/bin/${ndk_cc_prefix}-clang"
+			  CXX="${CC}++"
+			  AS="${CC}" #AS see https://developer.android.com/ndk/guides/other_build_systems
+			  LD="${TOOLCHAIN}/bin/ld.lld" #Linker (also llvm-link?)
+			  GCOV="${TOOLCHAIN}/bin/llvm-cov" # should we disable this?
+			  # change cross_prefix for bin tools in ndk > r23
+			  [ ! -f "${CROSS_PREFIX}ar" ] && CROSS_PREFIX="${TOOLCHAIN}/bin/llvm-"
+			  LT_SYS_LIBRARY_PATH="$SYSROOT/usr/lib/$arch:$SYSROOT/usr/lib/${arch}/${API}"
+			  LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
+			  CPPFLAGS+=" -I${SYSROOT}/usr/include/${arch} -I$SYSROOT/usr/include -I$SYSROOT/usr/local/include"
+			  YASM=${TOOLCHAIN}/bin/yasm
+			  cmake_findrootpath="${SYSROOT}/usr
+				  ${SYSROOT}/usr/lib/${arch}
+				  ${SYSROOT}/usr/lib/${arch}/${API}
+				  ${dir_install}"
 			fi
 			;;
 		Linux)
@@ -1972,7 +1974,21 @@ create_patch(){
 }
 
 usage(){
-	printf "\n\n${CW}Usage: ${0} ${CC1}<target> ${CC0}<build-options> ${CB1}<builder-options> ${CB0}<other-options>${C0}" 
+	printf "\n\n${CW}Usage: ${0} ${CC1}<target> ${CC1}<build-options> ${CB1}<builder-options> ${CM1}<other-options>${C0}\n\n"
+	printf "${CC1}target:${CC0}   native|${CC1}[a-android|l-linux|w-windows]${CC2}[a-arm|x-x86]${CC1}[hf-armhf|7-armv7|8-armv8|86-x86|64-x64]\n"
+	printf "          ${CC1}eg. aa8, lx64, wa64)\n\n"
+  printf "${CC2}build:    --static* --shared | --both\n"
+  printf "          --bin*|--no-bin \n\n"
+  printf "${CB1}builder:  --api <api> --cmake  --ndkcmake  --ccmake\n"
+  printf "          --no-dist --no-strip --dirbuild <dir> \n\n"
+  printf "${CB1}compiler: --clang*|--gcc --cpus\n"
+  printf "          --tune <tune> --mcpu <mcpu> --mtune <mtune> \n\n"
+  printf "${CM1}source:   --git --clone --nodev --download|--dl --stable\n"
+  printf "          --update --upd-all --refresh --retry --force --clear\n"
+  printf "          --patch <add|make|get> --diff --opts\n\n"
+  printf "${CM1}control:  --desc --get --list --checkPkg --libName --var <var> \n\n"
+  printf "${CM1}other:    --skip --goto \n\n"
+  printf "Example targeting android armv8 build shared libs and executable:\n\n\n  ${CW}${0} aa8 --shared --bin --no-strip --no-dist\n\n\n${C0}"
 }
 
 hwinfoCountCores(){
@@ -2297,6 +2313,8 @@ wa32='@(wa7|arm*-w64*|arm*-*mingw*)'
 wx86='@(w86|wx86|*86-win*|*86-*mingw*|w*32)'
 wx64='@(w64|wx64|*64-win*|*64-*mingw*|windows|win|w*64)'
 
+test $# -eq 0 && usage && exit 0
+
 while [ $1 ];do
 	case $1 in
 		native)		set_target_build; host_native=true;;
@@ -2339,8 +2357,8 @@ while [ $1 ];do
 		--gcc)      use_clang=false;;
 		--tune)     shift; menu_tune $1;;
 		--cpus)     loadToolchain; $CC --print-supported-cpus; exit 0;;
-		--mcpu)		shift; export CPPFLAGS+=" -mcpu=${1}";;
-		--mtune)	shift; export CPPFLAGS+=" -mtune=${1}";;
+		--mcpu)		 shift; export CPPFLAGS+=" -mcpu=${1}";;
+		--mtune)	 shift; export CPPFLAGS+=" -mtune=${1}";;
 
 		--download|--dl) build_pkgdl=true;;
 
