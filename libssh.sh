@@ -11,7 +11,7 @@ src='https://git.libssh.org/projects/libssh.git'
 bra='stable-0.9'
 cfg='cmake'
 eta='170'
-
+dep='openssl mbedtls'
 cfg_static='BUILD_STATIC_LIB'
 #cfg_shared=''
 #cfg_bin=''

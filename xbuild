@@ -42,7 +42,7 @@ export HOST_NPROC=$(nproc)
 : "${update:=false}"
 : "${build_dist:=true}"
 : "${dep_build:=--static}"
-: "${build_strip:=true}"
+: "${build_strip:=false}"
 : "${API:=33}"
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
@@ -68,7 +68,7 @@ use_clang=true
 
 skip_pc=false
 skip_dl=false
-skip_cpack=false
+skip_cpack=true
 
 # default build static, no shared, no executables
 build_shared=false
@@ -308,6 +308,7 @@ fi
 # Create INSTALL_DIR and PKGCONFIG DIR
 mkdir -p ${dir_install_pc} ${dir_install}/share/pkgconfig
 export PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
+export PKG_CONFIG_PATH=
 
 # check build tools
 check_tools $tls
@@ -1973,24 +1974,6 @@ create_patch(){
 	cd $od
 }
 
-usage(){
-	printf "\n\n${CW}Usage: ${0} ${CC1}<target> ${CC1}<build-options> ${CB1}<builder-options> ${CM1}<other-options>${C0}\n\n"
-	printf "${CC1}target:${CC0}   native|${CC1}[a-android|l-linux|w-windows]${CC2}[a-arm|x-x86]${CC1}[hf-armhf|7-armv7|8-armv8|86-x86|64-x64]\n"
-	printf "          ${CC1}eg. aa8, lx64, wa64)\n\n"
-  printf "${CC2}build:    --static* --shared | --both\n"
-  printf "          --bin*|--no-bin \n\n"
-  printf "${CB1}builder:  --api <api> --cmake  --ndkcmake  --ccmake\n"
-  printf "          --no-dist --no-strip --dirbuild <dir> \n\n"
-  printf "${CB1}compiler: --clang*|--gcc --cpus\n"
-  printf "          --tune <tune> --mcpu <mcpu> --mtune <mtune> \n\n"
-  printf "${CM1}source:   --git --clone --nodev --download|--dl --stable\n"
-  printf "          --update --upd-all --refresh --retry --force --clear\n"
-  printf "          --patch <add|make|get> --diff --opts\n\n"
-  printf "${CM1}control:  --desc --get --list --checkPkg --libName --var <var> \n\n"
-  printf "${CM1}other:    --skip --goto \n\n"
-  printf "Example targeting android armv8 build shared libs and executable:\n\n\n  ${CW}${0} aa8 --shared --bin --no-strip --no-dist\n\n\n${C0}"
-}
-
 hwinfoCountCores(){
 	cat /proc/cpuinfo | grep -Po -c 'model name\s+: \K(.*)'
 }
@@ -2299,7 +2282,31 @@ set_env(){
 	export dir_install_pc="${dir_install_lib}/pkgconfig"
 }
 
+usage(){
+  printf "\n\n${CW}Usage: ${0} ${CC1}<target> ${CC1}<build-options> ${CB1}<builder-options> ${CM1}<other-options>${C0}\n\n"
+  printf "${CC1}target:${CC0}   native|${CC1}[a-android|l-linux|w-windows]${CC2}[a-arm|x-x86]${CC1}[hf-armhf|7-armv7|8-armv8|86-x86|64-x64]\n"
+  printf "          ${CC1}eg. aa8, lx64, wa64)\n\n"
+  printf "${CC2}build:    --static* --shared | --both\n"
+  printf "          --bin*|--no-bin \n\n"
+  printf "${CB1}builder:  --api <api> --cmake  --ndkcmake  --ccmake\n"
+  printf "          --dist --strip --dirbuild <dir> \n\n"
+  printf "${CB1}compiler: --clang*|--gcc --cpus\n"
+  printf "          --tune <tune> --mcpu <mcpu> --mtune <mtune> \n\n"
+  printf "${CM1}source:   --git --clone --nodev --download|--dl --stable\n"
+  printf "          --update --upd-all --refresh --retry --force --clear\n"
+  printf "          --patch <add|make|get> --diff --opts\n\n"
+  printf "${CM1}control:  --desc --get --list --checkPkg --libName --var <var> \n\n"
+  printf "${CM1}other:    --skip --goto \n\n"
+  printf "Example targeting android armv8 build shared libs and executable:\n\n\n  ${CW}${0} aa8 --shared --bin --no-strip --no-dist\n\n\n${C0}"
+}
+
+
+
+
 # main
+
+test $# -eq 0 && usage && exit 0
+
 aa64='@(aa64|aa8|a*64-*android|android*-a*64|arm*8*android|android*arm*8)'
 aa32='@(aa32|aa7|arm-*android*|arm*7*-android*|android*arm*7*)'
 ax86='@(a86|ax86|*86-*android|android*86)'
@@ -2313,10 +2320,15 @@ wa32='@(wa7|arm*-w64*|arm*-*mingw*)'
 wx86='@(w86|wx86|*86-win*|*86-*mingw*|w*32)'
 wx64='@(w64|wx64|*64-win*|*64-*mingw*|windows|win|w*64)'
 
-test $# -eq 0 && usage && exit 0
+optVrs='@(--version|--vrs|--ver|-v)'
+optDnl='@(--download|--dl|-d)'
+optHelp='@(--help|-h)'
 
 while [ $1 ];do
 	case $1 in
+		
+		$optHelp)	showBanner; usage; exit 0;;
+
 		native)		set_target_build; host_native=true;;
 
 		$aa64 )		set_target '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6;;
@@ -2334,33 +2346,31 @@ while [ $1 ];do
 		$wx86 )		set_target '10' 'i686' '' 'w64' 'mingw32' '' 'x86' '32' $CB0 $CB1;;
 		$wx64 )		set_target '11' 'x86_64' '' 'w64' 'mingw32' '' 'x86_64' '64' $CB0 $CB1;;
 
-		--help|-h)	showBanner; usage; exit 0
-				;;
-
-		--full)     	build_shared=true
-				build_static=true
-				build_bin=true
-				build_dist=true
-				dep_build="--full"
-				;;
+		--full)    	build_shared=true
+					build_static=true
+					build_bin=true
+					build_dist=true
+					dep_build="--full"
+					;;
+		$optVrs)	shift; vrs=$1;;
 		--bra*)     shift; export bra=$1;;
 		--shared)   build_shared=true; build_static=false;;
 		--static)   build_static=true; build_shared=false;;
 		--both)     build_static=true; build_shared=true;;
 		--bin)      build_bin=true;;
-		--man)      build_man=true;;
 		--no-bin)   build_bin=false;;
-		--no-dist)  build_dist=false;;
-		--no-strip) build_strip=false;;
+		--man)      build_man=true;;
+		--dist)     build_dist=true;;
+		--strip)    build_strip=true;;
 		--api)      shift; export API=$1;;
 		--clang)    use_clang=true;;
 		--gcc)      use_clang=false;;
 		--tune)     shift; menu_tune $1;;
 		--cpus)     loadToolchain; $CC --print-supported-cpus; exit 0;;
-		--mcpu)		 shift; export CPPFLAGS+=" -mcpu=${1}";;
-		--mtune)	 shift; export CPPFLAGS+=" -mtune=${1}";;
+		--mcpu)		shift; export CPPFLAGS+=" -mcpu=${1}";;
+		--mtune)	shift; export CPPFLAGS+=" -mtune=${1}";;
 
-		--download|--dl) build_pkgdl=true;;
+		$optDnl)	build_pkgdl=true;;
 
 		--prefix)   shift; dir_install=$1;;
 		--stable)   git_stable=true;;
@@ -2385,9 +2395,9 @@ while [ $1 ];do
 
 		--patch)    shift;
 					case $1 in
-					a|add|append)       shift; patch_append $@; exit 0;;
-					m|make|e|embed)     shift; patch_embed $1; exit 0;;
-					g|get|show)         patch_get; exit 0;;
+						a|add|append)       shift; patch_append $@; exit 0;;
+						m|make|e|embed)     shift; patch_embed $1; exit 0;;
+						g|get|show)         patch_get; exit 0;;
 					esac
 					;;
 

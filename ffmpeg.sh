@@ -7,13 +7,13 @@
 lib='ffmpeg'
 dsc='FFmpeg is the leading multimedia framework'
 lic='GLP-2.0'
-vrs='n4.5-dev^{}'
+#vrs='n4.5-dev^{}'
 src='https://github.com/FFmpeg/FFmpeg.git'
 cfg='ac'
 eta='777'
 mki='install'
 make_install='install'
-cb0='--disable-programs'
+#cb0='--disable-programs'
 
 ac_nohost=true
 ac_nosysroot=true
@@ -60,13 +60,14 @@ libaom libkvazaar libopenjpeg libvpx libwebp libx264 libx265 libxvid mbedtls jni
 
 
 #dep='zlib bzip2 gmp libiconv lzma libxml2'
+extraversion=
 
 extraOpts(){
      case $1 in
-          --audio) dep+=" lame vorbis opus fdk-aac";;
-          --video) dep+=" aom vpx libwebp vidstab x264 x265";;
-          --net) dep+=" libressl";;
-          --help) echo "USAGE: ffmpeg aa8|aa7|... --video|--audio|--net --static|--shared|--bin --no-strip"; exit 0;;
+          --audio) dep+=" lame fdk-aac opus vorbis";; #
+          --video) dep+=" libwebp x264 x265 kvazaar vidstab vpx";; #
+          --net) dep+=" libssh";;
+          --extra-version) shift; extopts+=" --extra-version=${1}";;
           --*) [ -f "${1:2}.sh" ] && dep+=" ${1:2}"
                ;;
      esac
@@ -74,17 +75,21 @@ extraOpts(){
 
 . xbuild
 
+#--cross-prefix=${CROSS_PREFIX} <- remove or pkg-config cannot find aom version > 1.0.0
+extopts="--pkg-config-flags=--static --enable-lto --enable-runtime-cpudetect --disable-symver --cross-prefix=${CROSS_PREFIX}"
 nonfree=false
 gpl=false
 v3=false
 
 for d in $dep; do
      case $d in
-          aom) extlibs+=" --enable-libaom";;
+          # aom) extlibs+=" --enable-libaom";;
           lame) extlibs+=" --enable-libmp3lame";;
-          vorbis) extlibs+=" --enable-libvorbis";;
-          opus) extlibs+=" --enable-libopus";;
-          libwebp) extlibs+=" --enable-libwebp";;
+          # vorbis) extlibs+=" --enable-libvorbis";;
+          # opus) extlibs+=" --enable-libopus";;
+          # svtav1) extlibs+=" --enable-svtav1";;
+          # kvazaar) extlibs+=" --enable-kvazaar";;
+          # libwebp) extlibs+=" --enable-libwebp";;
           fdk-aac) extlibs+=" --enable-libfdk-aac" nonfree=true;;
           openssl) extlibs+=" --enable-openssl" nonfree=true;;
           frei0r) extlibs+=' --enable-frei0r' gpl=true;;
@@ -93,14 +98,14 @@ for d in $dep; do
           # found error on x265.pc -> replace -l-l:libunwind.a for -l:libunwind.a
           x265) extlibs+=' --enable-libx265' gpl=true;;
           xavs) extlibs+=' --enable-libxavs' gpl=true;;
-          vpx) extlibs+=' --enable-libvpx';;
+          # vpx) extlibs+=' --enable-libvpx';;
           xvidcore) extlibs+=' --enable-libxvid' gpl=true;;
           opencore-amr) extlibs+=" --enable-libopencore-amrnb --enable-libopencore-amrwb";;
+          
+          lib*) extlibs+=" --enable-${d}";;
+          *) extlibs+=" --enable-lib${d}";;
      esac
 done
-
-extopts="--pkg-config-flags=--static --enable-lto --enable-runtime-cpudetect --disable-symver --pkgconfigdir=${dir_install_pc}"
-#--cross-prefix=${CROSS_PREFIX} <- remove or pkg-config cannot find aom version > 1.0.0
 
 $nonfree && extlibs+=' --enable-nonfree'
 $gpl && extlibs+=' --enable-gpl'
@@ -127,6 +132,8 @@ case $host_os in
           ;;
 esac
 
+export PKG_CONFIG_LIBDIR="/home/diasgc/Code/x-build/builds/android/arm64-v8a/lib/pkgconfig"
+
 ac_config="--arch=$CPU \
      --target-os=${PLATFORM,,} \
      --cc=$CC \
@@ -135,6 +142,7 @@ ac_config="--arch=$CPU \
      --disable-doc \
      --disable-htmlpages \
      --disable-ffplay \
+     --pkg-config=$(which pkg-config) \
      --extra-libs=-lpthread \
      $extopts \
      $extlibs"
@@ -142,6 +150,7 @@ ac_config="--arch=$CPU \
 # make the log cleaner
 
 NPROC=16
+
 start
 
 <<'OPTIONS'
