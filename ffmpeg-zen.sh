@@ -15,11 +15,10 @@ eta='777'
 mki='install'
 make_install='install'
 dep=
-API=29
 
 ac_nohost=true
-ac_nosysroot=true
-ac_nopic=true
+#ac_nosysroot=true
+#ac_nopic=true
 
 lst_inc=''
 lst_lib=''
@@ -124,6 +123,7 @@ videoOptsExt=(
     false	vmaf	    "libvmaf,--enable-libvmaf"
     false	xavs	    "libxavs,--enable-libxavs"
     false	xavs2	    "libxavs2,--enable-libxavs2"
+    false   xEV/Mpeg5   "xeve;xevd,--enable-libxeve;--enable-libxevd"
     false	zimg	    "libzimg,--enable-libzimg"
     false	zvbi	    "libzvbi,--enable-libzvbi"
 )
@@ -296,8 +296,8 @@ $host_arm && extopts+=' --enable-neon'
 $host_x86 && extopts+=' --disable-asm'
 
 case $host_os in
-    android)    CPPFLAGS+=" -Ofast -fPIC -fPIE  -Wno-implicit-const-int-float-conversion -Wno-deprecated-declarations" # -ffunction-sections -fdata-sections -Wl,--gc-sections"
-                extopts+=" --enable-jni --enable-cross-compile" #unecessary --disable-alsa
+    android)    CPPFLAGS+=" -Ofast -fPIC -fPIE -fblocks -Wno-implicit-const-int-float-conversion -Wno-deprecated-declarations" # -ffunction-sections -fdata-sections -Wl,--gc-sections"
+                extopts+=" --disable-indev=android_camera --enable-jni --enable-mediacodec --enable-asm --enable-inline-asm --enable-pic --enable-cross-compile" #unecessary --disable-alsa
                 ;;
      gnu)       extopts+=" --enable-opencl --enable-opengl --enable-pic" LDFLAGS+=" -ldl -lstdc++"
                 lspci -k | grep -A 2 -i "VGA" | grep amd && extopts+=" --enable-nvenc"

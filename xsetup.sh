@@ -4,6 +4,9 @@
 # ................................................
 [ -z ${vsh+x} ] && . .common
 
+echo -e "${CR1}\n\n\t THIS IS A DECAPRATED VERSION run ./x-setup instead${C0}\n\n"
+exit 1
+
 # load config
 [ -f ".config" ] && . .config
 install=false
@@ -223,6 +226,16 @@ ndkPatchLrt(){
   # NDK Patch: create missing librt in NDK
   lrt="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/${arch}/librt.a"
   [ ! -f $lrt ] && $AR cr $lrt
+}
+
+check_android_ndk_symlinks(){
+    NDK_TOOLCHAIN="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64"
+    for arch in aarch64-linux-android arm-linux-androideabi i686-linux-android x86_64-linux-android; do
+        for tool in add2line ar as nm objcopy objdump ranlib readelf readobj size strings strip; do
+            ln -s "${TOOLCHAIN}/bin/llvm-${tool} "/usr/${arch}/${tool}
+        done
+
+    done
 }
 
 check_android_ndk(){

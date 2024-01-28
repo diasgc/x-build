@@ -1303,6 +1303,7 @@ logf(){
 }
 
 log_vars(){
+	local t;
 	while [ -n "$1" ]; do
 		echo "$1=${!1}" >>${log_file} 2>&1
 		shift
@@ -1755,7 +1756,7 @@ toolchain_android(){
 	YASM=${TOOLCHAIN}/bin/yasm
 
 	CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
-	LT_SYS_LIBRARY_PATH="/usr/${arch}/lib:/usr/${arch}/${API}"
+	LT_SYS_LIBRARY_PATH="/usr/${arch}/lib:${SYSROOT}/usr/lib/${arch}/${API}"
 	PKG_CONFIG_DIR="/usr/${arch}/local/lib/pkgconfig"
 	CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/lib -I${SYSROOT}/usr/local/include"
 	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
@@ -1777,8 +1778,6 @@ loadToolchain(){
 	CPPFLAGS+=" -I${dir_install_include}"
 	LDFLAGS="-L${dir_install_lib}"
 	cmake_system_processor="${target_trip[0]}${target_trip[1]}"
-	
-	API=33
 
 	if $host_cross; then
 		case $PLATFORM in
