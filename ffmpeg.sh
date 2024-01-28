@@ -7,7 +7,8 @@
 lib='ffmpeg'
 dsc='FFmpeg is the leading multimedia framework'
 lic='GLP-2.0'
-#vrs='n4.5-dev^{}'
+bra='n6.1.1' 
+#bra='n6.2-dev' fails
 src='https://github.com/FFmpeg/FFmpeg.git'
 cfg='ac'
 eta='777'
@@ -124,7 +125,7 @@ $host_x86 && extopts+=' --disable-asm'
 
 case $host_os in
      android) CPPFLAGS+=" -Ofast -fPIC -fPIE  -Wno-implicit-const-int-float-conversion -Wno-deprecated-declarations"
-          extopts+=" --disable-alsa --enable-jni --enable-cross-compile "
+          extopts+=" --enable-jni --enable-cross-compile " #--disable-alsa  remove for n6.2+
           ;;
      gnu) extopts+=" --enable-opencl --enable-opengl --enable-pic" LDFLAGS+=" -ldl -lstdc++"
           lspci -k | grep -A 2 -i "VGA" | grep amd && extopts+=" --enable-nvenc"
@@ -132,7 +133,7 @@ case $host_os in
           ;;
 esac
 
-export PKG_CONFIG_LIBDIR="/home/diasgc/Code/x-build/builds/android/arm64-v8a/lib/pkgconfig"
+#export PKG_CONFIG_LIBDIR="/home/diasgc/Code/x-build/builds/android/arm64-v8a/lib/pkgconfig"
 
 ac_config="--arch=$CPU \
      --target-os=${PLATFORM,,} \

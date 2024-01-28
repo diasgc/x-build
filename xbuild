@@ -43,7 +43,8 @@ export HOST_NPROC=$(nproc)
 : "${build_dist:=true}"
 : "${dep_build:=--static}"
 : "${build_strip:=false}"
-: "${API:=33}"
+: "${build_cpack:=false}"
+: "${API:=29}"
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
 : "${build_pkgdl:=false}"
@@ -283,323 +284,325 @@ gitjson=
 
 start(){
 
-if $build_pkgdl; then
-	local lnk=$(get_link_pkg ${arch} ${lib})
-	#echo "link=$lnk"
-	if [ -n "${lnk}" ]; then
-	wget_pkg_tgz ${lnk} ${dir_install}
-	$skip_pc || logver "${dir_install_pc}/${pkg}.pc"
-	end_script
-	exit 0
-	fi
-fi
-
-# check whether to update source of main lib and dependencies
-if $update; then
-	[ -d "${dir_src}" ] && rm -rf "${dir_src}" 2>/dev/null
-	! $req_update_deps && update=false
-else
-	! $retry && [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
-fi
-
-# Reset LOGFILE
-[ -f "${log_file}" ] && rm -f ${log_file}
-
-# Create INSTALL_DIR and PKGCONFIG DIR
-mkdir -p ${dir_install_pc} ${dir_install}/share/pkgconfig
-export PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
-export PKG_CONFIG_PATH=
-
-# check build tools
-check_tools $tls
-
-local ovrs=$vrs
-local ocsh=$CSH
-local ocbn=$CBN
-unset vrs CSH CBN
-
-build_dependencies $dep
-
-vrs=$ovrs
-CSH=$ocsh
-CBN=$ocbn
-
-log_start $arch ${eta}s
-local bss=
-$build_static && bss="${SSB}[static]" || bss="${CD}[static]"
-$build_shared && bss="${bss}${SSB}[shared]" || bss="${bss}${CD}[shared]"
-$build_bin && echo -ne "${bss}${SSB}[bin]${C0} " || echo -ne "${bss}${CD}[bin]${C0} "
-cd ${dir_sources}
-
-! $retry && [ "${dir_build}" != "${dir_src}" ] && rm -rf ${dir_build}
-
-# default dir_config is dir_src
-: "${dir_config:=${dir_src}}"
-# check if defined custom dir_config location (config_dir)
-[ -n "${config_dir+x}" ] && dir_config="${dir_src}/${config_dir}"
-
-local req_src_config=false
-local req_src_patch=false
-
-# get source
-if [ ! -d ${dir_src} ];then
-	if ! $skip_dl; then
-	# test internet connection...
-	wget -q --spider http://google.com
-	[ ! $? -eq 0 ] && doErr 'No Internet Connection. Aborting...'
-	# check whether to custom get source
-	if fn_defined 'source_get'; then
-		fn_log 'get' source_get
-	elif [ -n "${sty}" ]; then
-		case $sty in
-		git)         git_clone $src $lib $src_opt;;
-		tgz|txz|tlz) wget_tarxx $src $lib;;
-		svn)         do_svn $src $lib;;
-		hg)          do_hg $src $lib;;
-		*)           doErr "unknown sty=$sty for $src";;
-		esac
-	else
-		case $src in
-		*.tar.*|*.tgz) wget_tarxx $src $lib;;
-		*.git|*git.*)  git_clone $src $lib $src_opt;;
-		*svn.*)  do_svn $src $lib;;
-		*) doErr "Unknown source type for $src";;
-		esac
-	fi
-	fi
-	req_src_config=true
-fi
-
-if [ -n "${bra}" ]; then
-	cd ${dir_src}
-	do_log "${bra}" git checkout ${bra}
-fi
-
-case ${target_trip[3]} in
-	android) fn_defined 'on_config_ndk' && fn_log '' on_config_ndk;;
-	gnu)     fn_defined 'on_config_gnu' && fn_log '' on_config_gnu;;
-	mingw32) fn_defined 'on_config_mingw' && fn_log '' on_config_mingw;;
-esac
-
-if $host_arm; then 
-	fn_defined 'on_config_arm' && fn_log '' on_config_arm
-else
-	fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
-fi
-
-cd ${dir_config}
-
-if [ -z "${cfg}" ]; then
-	guess_cfg
-fi
-
-if $req_src_config; then
-	# check whether to custom config source
-	if fn_defined 'source_config'; then
-		fn_log 'config' source_config
-	elif [ -n "${cfg_cmd}" ];then
-		do_log 'config' ${cfg_cmd}
-	unset cfg_cmd
-	else case $cfg in
-		ab)		[ -f "${dir_config}/boostrap" ] && do_log 'bootstrap' ${dir_config}/boostrap
-				[ -f "${dir_config}/boostrap.sh" ] && do_log 'bootstrap' ${dir_config}/boostrap.sh
-				;;
-		ag) 	doAutogen ${dir_config} --noconfigure;;
-		ar) 	doAutoreconf ${dir_config};;
-		am)		if [ ! -f "${dir_config}/configure" ];then
-					if [ -f "${dir_config}/autogen.sh" ];then
-						doAutogen ${dir_config} --noconfigure
-					else
-						doAutoreconf ${dir_config}
-					fi
-				fi
-				;;
-		esac
-	fi
-	req_src_patch=true
-fi
-
-if $req_src_patch; then
-	# check whether to auto patch source
-	check_xbautopatch
-	# check whether to custom patch source
-	if fn_defined 'source_patch'; then
-	fn_log 'patch' source_patch
-	fi
-fi
-
-$only_repo && end_script
-
-if [ -z "${dir_build}" ];then
-	case ${build_system} in
-	cmake|meson|automake) dir_build="${dir_config}/build_${arch}"
-		[ -d "${dir_build}" ] && rm -rf ${dir_build} 2>/dev/null
-		;;
-	*) dir_build=${dir_config};;
-	esac
-fi
-
-[ -d "${dir_build}" ] || mkdir -p "${dir_build}"
-cd ${dir_build}
-
-log_vars dir_src dep PKG_CONFIG_LIBDIR
-log_vars CC CXX LD AS AR NM RANLIB STRIP
-
-if fn_defined 'build_all'; then
-	fn_log 'build' build_all
-	end_script
-fi
-
-if fn_defined 'build_prepare'; then
-	fn_log 'prepare' build_prepare
-fi
-
-if fn_defined 'build_clean'; then
-	fn_log 'clean' build_clean
-elif [ -f "Makefile" ]; then
-	mkc=$(make_findtarget "distclean" "clean")
-	[ -n "${mkc}" ] && do_quietly 'clean' ${MAKE_EXECUTABLE} $mkc
-fi
-
-local arr
-if fn_defined 'build_config'; then
-	build_config
-	unset -f build_config
-else case $build_system in
-	cmake)
-		cmake_configure
-		cfg_cmd=cmake
-		: "${cmake_bdir:=${dir_config}}"
-		cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}" "-Wno-dev")
-		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
-		#do_log 'cmake' ${exec_config} ${dir_config} -DCMAKE_INSTALL_PREFIX=${dir_install} -DCMAKE_BUILD_TYPE=${cmake_build_type} ${CTC} ${CFG} ${CSH} ${CBN} ${CPACK}
-		case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
-		
-		;;
-
-	automake) # use autotools and configure executable to create makefile
-		ac_configure
-		cfg_cmd="${dir_config}/configure"
-		cfg_args+=("--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
-		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
-		#do_log 'configure' ${dir_config}/${exec_config} --prefix=${dir_install} ${CFG} ${CSH} ${CBN} ${cfg_args[@]}
-		;;
-
-	meson)
-		meson_configure
-		cfg_cmd='meson'
-		cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
-		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
-		#do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
-		;;
-
-	make)
-		: "${mkf:=$CFG}"
-		MAKE_EXECUTABLE=make
-		;;
-	bazel)
-		cfg_cmd='bazel'
-		do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
-		;;
-	*)	if [ -n "${cfg_cmd}" ]; then
-			do_log 'config' ${cfg_cmd} ${cfg_args[@]}
-		else doErr ""
-			doErr "cfg ${cfg} unknown or cfg_cmd not defined. Use build_config to custom configure makefile"
+	if $build_pkgdl; then
+		local lnk=$(get_link_pkg ${arch} ${lib})
+		#echo "link=$lnk"
+		if [ -n "${lnk}" ]; then
+		wget_pkg_tgz ${lnk} ${dir_install}
+		$skip_pc || logver "${dir_install_pc}/${pkg}.pc"
+		end_script
+		exit 0
 		fi
-		;;
-	esac
-fi
-
-if fn_defined 'before_make'; then
-	fn_log 'preparing' before_make
-fi
-
-[ -n "${WFLAGS}" ] && CPPFLAGS+=" ${WFLAGS}"
-
-if [ -z "${static_ldflag}" ];then
-	static_ldflag='-static'
-	# set -all-static flags at make time (see: https://stackoverflow.com/questions/20068947/how-to-static-link-linux-software-that-uses-configure)
-	# $build_static && [[ "$LDFLAGS" != *"-all-static"* ]] && LDFLAGS="-all-static $LDFLAGS"
-	$host_clang && static_ldflag="-all${static_ldflag}"
-fi
-$build_static && LDFLAGS="${static_ldflag} $LDFLAGS"
-
-
-log_vars CFLAGS CXXFLAGS WFLAGS CPPFLAGS LDFLAGS LIBS
-
-[ -z "${mki}" ] && mki="install"
-: "${skip_make:=false}"
-
-if fn_defined 'on_make'; then
-	fn_log 'make' on_make
-elif ! $skip_make; then
-	do_progress 'make' ${MAKE_EXECUTABLE} ${mkf} -j${HOST_NPROC} || err
-	unset skip_make
-fi
-
-if fn_defined 'before_install'; then
-	fn_log 'preparing' before_install
-fi
-
-# strip libs
-if ! $host_mingw; then
-	if fn_defined 'on_strip'; then
-	fn_log 'strip' on_strip
-	elif $build_strip; then
-	do_log 'strip' doStrip
 	fi
-fi
 
-if fn_defined 'on_install'; then
-	fn_log 'install' on_install
-else
-	cd $dir_build
-	do_log 'install' ${MAKE_EXECUTABLE} ${mki}
-fi
-
-# check whether to create pkg-config .pc file
-if ! $skip_pc; then
-	if fn_defined 'on_create_pc'; then
-	fn_log 'pkgconfig' on_create_pc
-	elif [ -n "$pc_llib" ]; then
-	do_log 'pkgconfig' create_pkgconfig_file $pkg $pc_llib
-	elif [ -n "${pc_llibs}" ]; then
-	local p
-	for f in ${pc_llibs}; do
-		[ "${f::2}" == "-l" ] && p="${f:2}" || p="$f"
-		create_pkgconfig_file $p $f
-	done
-	fi
-fi
-
-local pcfile=${dir_install_pc}/${lib}.pc
-if [ ! -f "$pcfile" ] && [ -f "${dir_install}/share/pkgconfig/${lib}.pc" ]; then
-	pcfile=${dir_install}/share/pkgconfig/${lib}.pc
-fi
-
-if [ -z "${CPACK}" ]; then
-	if fn_defined 'on_pack'; then
-	fn_log 'pack' on_pack
-	elif $build_package; then
-	if [ -f "${dir_build}/install_manifest.txt" ]; then
-		do_log 'cpack' build_package_cmake
+	# check whether to update source of main lib and dependencies
+	if $update; then
+		[ -d "${dir_src}" ] && rm -rf "${dir_src}" 2>/dev/null
+		! $req_update_deps && update=false
 	else
-		do_log 'pack' build_packages_bin
+		! $retry && [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
 	fi
+
+	# Reset LOGFILE
+	[ -f "${log_file}" ] && rm -f ${log_file}
+
+	# Create INSTALL_DIR and PKGCONFIG DIR
+	mkdir -p ${dir_install_pc} ${dir_install}/share/pkgconfig
+	export PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
+	export PKG_CONFIG_PATH=
+
+	# check build tools
+	check_tools $tls
+
+	local ovrs=$vrs
+	local ocsh=$CSH
+	local ocbn=$CBN
+	unset vrs CSH CBN
+
+	build_dependencies $dep
+
+	vrs=$ovrs
+	CSH=$ocsh
+	CBN=$ocbn7
+
+	log_start $arch ${eta}s
+	local bss=
+	$build_static && bss="${SSB}[static]" || bss="${CD}[static]"
+	$build_shared && bss="${bss}${SSB}[shared]" || bss="${bss}${CD}[shared]"
+	$build_bin && echo -ne "${bss}${SSB}[bin]${C0} " || echo -ne "${bss}${CD}[bin]${C0} "
+	cd ${dir_sources}
+
+	! $retry && [ "${dir_build}" != "${dir_src}" ] && rm -rf ${dir_build}
+
+	# default dir_config is dir_src
+	: "${dir_config:=${dir_src}}"
+	# check if defined custom dir_config location (config_dir)
+	[ -n "${config_dir+x}" ] && dir_config="${dir_src}/${config_dir}"
+
+	local req_src_config=false
+	local req_src_patch=false
+
+	# get source
+	if [ ! -d ${dir_src} ];then
+		if ! $skip_dl; then
+		# test internet connection...
+		wget -q --spider http://google.com
+		[ ! $? -eq 0 ] && doErr 'No Internet Connection. Aborting...'
+		# check whether to custom get source
+		if fn_defined 'source_get'; then
+			fn_log 'get' source_get
+		elif [ -n "${sty}" ]; then
+			case $sty in
+			git)         git_clone $src $lib $src_opt;;
+			tgz|txz|tlz) wget_tarxx $src $lib;;
+			svn)         do_svn $src $lib;;
+			hg)          do_hg $src $lib;;
+			*)           doErr "unknown sty=$sty for $src";;
+			esac
+		else
+			case $src in
+			*.tar.*|*.tgz) wget_tarxx $src $lib;;
+			*.git|*git.*)  git_clone $src $lib $src_opt;;
+			*svn.*)  do_svn $src $lib;;
+			*) doErr "Unknown source type for $src";;
+			esac
+		fi
+		fi
+		req_src_config=true
 	fi
-else
+
+	if [ -n "${bra}" ]; then
+		cd ${dir_src}
+		do_log "${bra}" git checkout ${bra}
+	fi
+
+	case ${target_trip[3]} in
+		android) fn_defined 'on_config_ndk' && fn_log '' on_config_ndk;;
+		gnu)     fn_defined 'on_config_gnu' && fn_log '' on_config_gnu;;
+		mingw32) fn_defined 'on_config_mingw' && fn_log '' on_config_mingw;;
+	esac
+
+	if $host_arm; then 
+		fn_defined 'on_config_arm' && fn_log '' on_config_arm
+	else
+		fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
+	fi
+
+	cd ${dir_config}
+
+	if [ -z "${cfg}" ]; then
+		guess_cfg
+	fi
+
+	if $req_src_config; then
+		# check whether to custom config source
+		if fn_defined 'source_config'; then
+			fn_log 'config' source_config
+		elif [ -n "${cfg_cmd}" ];then
+			do_log 'config' ${cfg_cmd}
+		unset cfg_cmd
+		else case $cfg in
+			ab)		[ -f "${dir_config}/boostrap" ] && do_log 'bootstrap' ${dir_config}/boostrap
+					[ -f "${dir_config}/boostrap.sh" ] && do_log 'bootstrap' ${dir_config}/boostrap.sh
+					;;
+			ag) 	doAutogen ${dir_config} --noconfigure;;
+			ar) 	doAutoreconf ${dir_config};;
+			am)		if [ ! -f "${dir_config}/configure" ];then
+						if [ -f "${dir_config}/autogen.sh" ];then
+							doAutogen ${dir_config} --noconfigure
+						else
+							doAutoreconf ${dir_config}
+						fi
+					fi
+					;;
+			esac
+		fi
+		req_src_patch=true
+	fi
+
+	if $req_src_patch; then
+		# check whether to auto patch source
+		check_xbautopatch
+		# check whether to custom patch source
+		if fn_defined 'source_patch'; then
+		fn_log 'patch' source_patch
+		fi
+	fi
+
+	$only_repo && end_script
+
+	if [ -z "${dir_build}" ];then
+		case ${build_system} in
+		cmake|meson|automake) dir_build="${dir_config}/build_${arch}"
+			[ -d "${dir_build}" ] && rm -rf ${dir_build} 2>/dev/null
+			;;
+		*) dir_build=${dir_config};;
+		esac
+	fi
+
+	[ -d "${dir_build}" ] || mkdir -p "${dir_build}"
 	cd ${dir_build}
-	vrs=$(pkg-config ${pcfile} --modversion)
-	do_log 'cpack' cpack -G DEB -P "${lib}_${vrs}_${arch}"
-fi
 
-cd ${dir_src}
+	log_vars dir_src dep PKG_CONFIG_LIBDIR
+	log_vars API CC CXX LD AS AR NM RANLIB STRIP
 
-$skip_pc || logver "${pcfile}"
+	if fn_defined 'build_all'; then
+		fn_log 'build' build_all
+		end_script
+	fi
 
-fn_defined 'on_end' && fn_log 'end' on_end
+	if fn_defined 'build_prepare'; then
+		fn_log 'prepare' build_prepare
+	fi
 
-end_script
+	if fn_defined 'build_clean'; then
+		fn_log 'clean' build_clean
+	elif [ -f "Makefile" ]; then
+		mkc=$(make_findtarget "distclean" "clean")
+		[ -n "${mkc}" ] && do_quietly 'clean' ${MAKE_EXECUTABLE} $mkc
+	fi
+
+	local arr
+	if fn_defined 'build_config'; then
+		build_config
+		unset -f build_config
+	else case $build_system in
+		cmake)
+			cmake_configure
+			cfg_cmd=cmake
+			: "${cmake_bdir:=${dir_config}}"
+			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}" "-Wno-dev")
+			do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
+			#do_log 'cmake' ${exec_config} ${dir_config} -DCMAKE_INSTALL_PREFIX=${dir_install} -DCMAKE_BUILD_TYPE=${cmake_build_type} ${CTC} ${CFG} ${CSH} ${CBN} ${CPACK}
+			case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
+			
+			;;
+
+		automake) # use autotools and configure executable to create makefile
+			ac_configure
+			cfg_cmd="${dir_config}/configure"
+			cfg_args+=("--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
+			do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
+			#do_log 'configure' ${dir_config}/${exec_config} --prefix=${dir_install} ${CFG} ${CSH} ${CBN} ${cfg_args[@]}
+			;;
+
+		meson)
+			meson_configure
+			cfg_cmd='meson'
+			cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
+			do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
+			#do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
+			;;
+
+		make)
+			: "${mkf:=$CFG}"
+			MAKE_EXECUTABLE=make
+			;;
+		bazel)
+			cfg_cmd='bazel'
+			do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
+			;;
+		*)	if [ -n "${cfg_cmd}" ]; then
+				do_log 'config' ${cfg_cmd} ${cfg_args[@]}
+			else doErr ""
+				doErr "cfg ${cfg} unknown or cfg_cmd not defined. Use build_config to custom configure makefile"
+			fi
+			;;
+		esac
+	fi
+
+	if fn_defined 'before_make'; then
+		fn_log 'preparing' before_make
+	fi
+
+	[ -n "${WFLAGS}" ] && CPPFLAGS+=" ${WFLAGS}"
+
+	if [ -z "${static_ldflag}" ];then
+		static_ldflag='-static'
+		# set -all-static flags at make time (see: https://stackoverflow.com/questions/20068947/how-to-static-link-linux-software-that-uses-configure)
+		# $build_static && [[ "$LDFLAGS" != *"-all-static"* ]] && LDFLAGS="-all-static $LDFLAGS"
+		$host_clang && static_ldflag="-all${static_ldflag}"
+	fi
+	$build_static && LDFLAGS="${static_ldflag} $LDFLAGS"
+
+
+	log_vars CFLAGS CXXFLAGS WFLAGS CPPFLAGS LDFLAGS LIBS
+
+	[ -z "${mki}" ] && mki="install"
+	: "${skip_make:=false}"
+
+	if fn_defined 'on_make'; then
+		fn_log 'make' on_make
+	elif ! $skip_make; then
+		do_progress 'make' ${MAKE_EXECUTABLE} ${mkf} -j${HOST_NPROC} || err
+		unset skip_make
+	fi
+
+	if fn_defined 'before_install'; then
+		fn_log 'preparing' before_install
+	fi
+
+	# strip libs
+	if ! $host_mingw; then
+		if fn_defined 'on_strip'; then
+		fn_log 'strip' on_strip
+		elif $build_strip; then
+		do_log 'strip' doStrip
+		fi
+	fi
+
+	if fn_defined 'on_install'; then
+		fn_log 'install' on_install
+	else
+		cd $dir_build
+		do_log 'install' ${MAKE_EXECUTABLE} ${mki}
+	fi
+
+	# check whether to create pkg-config .pc file
+	if ! $skip_pc; then
+		if fn_defined 'on_create_pc'; then
+		fn_log 'pkgconfig' on_create_pc
+		elif [ -n "$pc_llib" ]; then
+		do_log 'pkgconfig' create_pkgconfig_file $pkg $pc_llib
+		elif [ -n "${pc_llibs}" ]; then
+		local p
+		for f in ${pc_llibs}; do
+			[ "${f::2}" == "-l" ] && p="${f:2}" || p="$f"
+			create_pkgconfig_file $p $f
+		done
+		fi
+	fi
+
+	local pcfile=${dir_install_pc}/${lib}.pc
+	if [ ! -f "$pcfile" ] && [ -f "${dir_install}/share/pkgconfig/${lib}.pc" ]; then
+		pcfile=${dir_install}/share/pkgconfig/${lib}.pc
+	fi
+
+	if $build_cpack; then
+		if [ -z "${CPACK}" ]; then
+			if fn_defined 'on_pack'; then
+			fn_log 'pack' on_pack
+			elif $build_package; then
+			if [ -f "${dir_build}/install_manifest.txt" ]; then
+				do_log 'cpack' build_package_cmake
+			else
+				do_log 'pack' build_packages_bin
+			fi
+			fi
+		else
+			cd ${dir_build}
+			vrs=$(pkg-config ${pcfile} --modversion)
+			do_log 'cpack' cpack -G DEB -P "${lib}_${vrs}_${arch}"
+		fi
+	fi
+
+	cd ${dir_src}
+
+	$skip_pc || logver "${pcfile}"
+
+	fn_defined 'on_end' && fn_log 'end' on_end
+
+	end_script
 }
 
 meson_configure(){
@@ -1774,6 +1777,8 @@ loadToolchain(){
 	CPPFLAGS+=" -I${dir_install_include}"
 	LDFLAGS="-L${dir_install_lib}"
 	cmake_system_processor="${target_trip[0]}${target_trip[1]}"
+	
+	API=33
 
 	if $host_cross; then
 		case $PLATFORM in
@@ -1782,7 +1787,7 @@ loadToolchain(){
   			toolchain_android
 			else
 			  #decaprated
-			  [ -z "$API" ] && API=24
+			  [ -z "$API" ] && API=33
 			  CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
 			  TOOLCHAIN="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64"
 			  SYSROOT="${TOOLCHAIN}/sysroot"
@@ -2282,6 +2287,27 @@ set_env(){
 	export dir_install_pc="${dir_install_lib}/pkgconfig"
 }
 
+checkForArch(){
+	case $1 in
+		native)		set_target_build; host_native=true;;
+
+		$aa64 )		set_target '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6;;
+		$aa32 )		set_target '1' 'arm' 'v7a' 'linux' 'android' 'eabi' 'armeabi-v7a' '32' $CG2 $CG5;;
+		$ax86 )		set_target '2' 'i686' '' 'linux' 'android' '' 'x86' '32' $CG0 $CG1;;
+		$ax64 )		set_target '3' 'x86_64' '' 'linux' 'android' '' 'x86_64' '64' $CG0 $CG1;;
+
+		$la64 )		set_target '4' 'aarch64' '' 'linux' 'gnu' '' 'aarch64' '64' $CM4 $CM6;;
+		$la32 )		set_target '5' 'arm' '' 'linux' 'gnu' 'eabihf' 'armv7' '32' $CM4 $CM6;;
+		$lx86 )		set_target '6' 'i686' '' 'linux' 'gnu' '' 'x86' '32' $CM0 $CM1;;
+		$lx64 )		set_target '7' 'x86_64' '' 'linux' 'gnu' '' 'x86_64' '64' $CM0 $CM1;;
+
+		$wa64 )		set_target '8' 'aarch64' '' 'w64' 'mingw32' '' 'arm64' '64' $CC0 $CC1;;
+		$wa32 )		set_target '9' 'arm' 'v7' 'w64' 'mingw32' '' 'armv7' '32' $CC0 $CC1;;
+		$wx86 )		set_target '10' 'i686' '' 'w64' 'mingw32' '' 'x86' '32' $CB0 $CB1;;
+		$wx64 )		set_target '11' 'x86_64' '' 'w64' 'mingw32' '' 'x86_64' '64' $CB0 $CB1;;
+	esac
+}
+
 usage(){
   printf "\n\n${CW}Usage: ${0} ${CC1}<target> ${CC1}<build-options> ${CB1}<builder-options> ${CM1}<other-options>${C0}\n\n"
   printf "${CC1}target:${CC0}   native|${CC1}[a-android|l-linux|w-windows]${CC2}[a-arm|x-x86]${CC1}[hf-armhf|7-armv7|8-armv8|86-x86|64-x64]\n"
@@ -2361,6 +2387,7 @@ while [ $1 ];do
 		--no-bin)   build_bin=false;;
 		--man)      build_man=true;;
 		--dist)     build_dist=true;;
+		--cpack)    build_cpack=true;;
 		--strip)    build_strip=true;;
 		--api)      shift; export API=$1;;
 		--clang)    use_clang=true;;
