@@ -7,8 +7,11 @@ sh=$1 && shift
 args=
 while test ${#} -gt 0; do
     case $1 in
+        android) archs="aarch64-linux-android";;
         android-all) archs="aarch64-linux-android arm-linux-androideabi i686-linux-android x86_64-linux-android";;
+        linux) archs="x86_64-linux-gnu";;
         linux-all) archs="aarch64-linux-gnu arm-linux-gnuhfeabi i686-linux-gnu x86_64-linux-gnu";;
+        windows) archs="x86_64-w64-mingw32";;
         windows-all) archs="aarch64-w64-mingw32 armv7-w64-mingw32 i686-w64-mingw32 x86_64-w64-mingw32";;
         all) archs="aarch64-linux-android arm-linux-androideabi i686-linux-android x86_64-linux-android i686-linux-gnu x86_64-linux-gnu aarch64-w64-mingw32 armv7-w64-mingw32 i686-w64-mingw32 x86_64-w64-mingw32";;
         *-android*|*-linux-gnu*|*-mingw32) archs="$archs $1";;

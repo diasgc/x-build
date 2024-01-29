@@ -148,6 +148,7 @@ netOptsExt=(
     false	tls	        "libtls,--enable-libtls"
     false	zmq	        "libzmq,--enable-libzmq"
 )
+
 netOpts=(
     false	gmp         "gmp,--enable-gmp"
     false	gnutls      "gnutls,--enable-gnutls"
