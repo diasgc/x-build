@@ -16,7 +16,7 @@ lst_lic='AUTHORS.md LICENSE.txt'
 lst_pc='libvvenc.pc'
 
 dev_bra='master'
-dev_vrs='1.3.1'
+dev_vrs='1.10.0'
 
 on_config_arm(){
   cmake_config+=' -DVVENC_ENABLE_X86_SIMD=FALSE -DVVENC_ENABLE_ARM_SIMD=TRUE'

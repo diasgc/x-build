@@ -9,34 +9,14 @@ dsc='An extensible audio plugin interface'
 lic='LGPL-2.1'
 src='https://gitlab.com/lv2/lv2.git'
 sty='git'
-cfg='wf'
+cfg='meson'
 pkg='lv2'
 dep='sndfile'
 eta='19'
 
 . xbuild
 
-CFG="--prefix=${dir_install} --no-plugins"
-
-source_config(){
-  do_log 'prepare' git submodule update --init --recursive
-}
-
-build_clean(){
-  do_log 'clean' $dir_src/waf distclean
-}
-build_config(){
-  do_log 'config' $dir_src/waf configure $CFG
-}
-on_make(){
-  $dir_src/waf build $CFG
-}
-on_install(){
-  $dir_src/waf install --prefix=${dir_install}
-}
-build_make_package(){
-  $dir_src/waf install --destdir=${1}
-}
+meson_cfg='-Ddocs=disabled -Dtests=disabled'
 
 start
 

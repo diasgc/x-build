@@ -10,9 +10,9 @@ dep='sndfile samplerate fftw'
 eta='49'
 
 dev_bra='default'
-dev_vrs='2.0.2'
-stb_bra='tags/v2.0.2'
-stb_vrs='2.0.2'
+dev_vrs='3.3.0'
+stb_bra='tags/v'${dev_vrs}
+stb_vrs=${dev_vrs}
 
 lst_inc='rubberband/*.h'
 lst_lib='librubberband librubberband-jni'

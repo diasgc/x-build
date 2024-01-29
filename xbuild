@@ -371,10 +371,12 @@ start(){
 		req_src_config=true
 	fi
 
+	cd ${dir_src}
 	if [ -n "${bra}" ]; then
-		cd ${dir_src}
 		do_log "${bra}" git checkout ${bra}
 	fi
+
+	case $src in *git*) echo -ne "${CT0}[$(git describe --tags)]${CD} ";; esac
 
 	case ${target_trip[3]} in
 		android) fn_defined 'on_config_ndk' && fn_log '' on_config_ndk;;
@@ -561,19 +563,19 @@ start(){
 	# check whether to create pkg-config .pc file
 	if ! $skip_pc; then
 		if fn_defined 'on_create_pc'; then
-		fn_log 'pkgconfig' on_create_pc
+			fn_log 'pkgconfig' on_create_pc
 		elif [ -n "$pc_llib" ]; then
-		do_log 'pkgconfig' create_pkgconfig_file $pkg $pc_llib
+			do_log 'pkgconfig' create_pkgconfig_file $pkg $pc_llib
 		elif [ -n "${pc_llibs}" ]; then
-		local p
-		for f in ${pc_llibs}; do
-			[ "${f::2}" == "-l" ] && p="${f:2}" || p="$f"
-			create_pkgconfig_file $p $f
-		done
+			local p
+			for f in ${pc_llibs}; do
+				[ "${f::2}" == "-l" ] && p="${f:2}" || p="$f"
+				create_pkgconfig_file $p $f
+			done
 		fi
 	fi
 
-	local pcfile=${dir_install_pc}/${lib}.pc
+	local pcfile=${dir_install_pc}/${pkg}.pc
 	if [ ! -f "$pcfile" ] && [ -f "${dir_install}/share/pkgconfig/${lib}.pc" ]; then
 		pcfile=${dir_install}/share/pkgconfig/${lib}.pc
 	fi
@@ -1154,6 +1156,13 @@ cmake_create_toolchainfile(){
 		set(CMAKE_CXX_COMPILER_AR "${AR}")
 		set(CMAKE_C_COMPILER_RANLIB "${RANLIB}")
 		set(CMAKE_CXX_COMPILER_RANLIB "${RANLIB}")
+		set(CMAKE_OBJDUMP "${OBJDUMP}")
+		set(CMAKE_OBJCOPY "${OBJCOPY}")
+		set(CMAKE_READELF "${READELF}")
+		set(CMAKE_STRIP "${STRIP}")
+		set(CMAKE_ADDR2LINE "${ADDR2LINE}")
+		set(CMAKE_LINKER "${LD}")
+		set(CMAKE_NM "${NM}")
 		set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 		set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
 		set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)

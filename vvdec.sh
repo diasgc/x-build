@@ -10,16 +10,18 @@ eta='480'
 cmake_bin="BUILD_TOOLS"
 cmake_static="BUILD_STATIC_LIBS"
 
-lst_inc='vvenc/*.h'
-lst_lib='libvvenc'
-lst_bin='vvencapp vvencFFapp'
+lst_inc='vvdec/*.h'
+lst_lib='libvvdec'
+lst_bin='vvdecapp'
 lst_lic='AUTHORS.md LICENSE.txt'
-lst_pc='libvvenc.pc'
+lst_pc='libvvdec.pc'
 
 dev_bra='master'
-dev_vrs='1.4.0'
+dev_vrs='2.2.0'
 
-. xbuild && start
+. xbuild
+
+start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

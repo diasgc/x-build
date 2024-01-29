@@ -32,7 +32,7 @@ applyOptions(){
     IFS='|' read -r -a keys <<<"$1"
     for k in "${keys[@]}"; do
         IFS=',' read -r -a field <<<"$k"
-        dep+=(${field[0]})
+        dep+=(${field[0]/;/ })
         opt+=(${field[1]/;/ })
     done
 }
@@ -109,7 +109,6 @@ videoOptsExt=(
     false	glslang	    "libglslang,--enable-libglslang"
     false	iec61883	"libiec61883,--enable-libiec61883"
     false	lensfun	    "lensfun,--enable-liblensfun"
-    false	mysofa	    "libmysofa,--enable-libmysofa"
     false	opencv	    "libopencv,--enable-libopencv"
     false	openh264	"libopenh264,--enable-libopenh264"
     false	openjpeg	"libopenjpeg,--enable-libopenjpeg"
@@ -123,7 +122,7 @@ videoOptsExt=(
     false	vmaf	    "libvmaf,--enable-libvmaf"
     false	xavs	    "xavs,--enable-libxavs"
     false	xavs2	    "xavs2,--enable-libxavs2"
-    false   xEV/Mpeg5   "xeve;xevd,--enable-libxeve;--enable-libxevd"
+    false   EVC/Mpeg5   "xeve;xevd,--enable-libxeve;--enable-libxevd"
     false	zimg	    "libzimg,--enable-libzimg"
     false	zvbi	    "libzvbi,--enable-libzvbi"
 )
@@ -136,6 +135,7 @@ videoOpts=(
     TRUE	x264	    "x264,--enable-libx264"
     TRUE	x265	    "x265,--enable-libx265"
     false	xvid	    "xvidcore,--enable-libxvid"
+    TRUE    vvc         "vvenc;vvdec,--enable-libvvdec;--enable-libvvenc"
 )
 
 netOptsExt=(
@@ -280,6 +280,7 @@ for d in $dep; do
         fdk-aac|openssl) nonfree=true;;
         frei0r|vidstab|x264|x265|xavs|xvidcore) gpl=true;;
         opencore-amr) v3=true;;
+        vvenc) applyVvcPatch=true;;
      esac
 done
 
@@ -297,8 +298,7 @@ $host_x86 && extopts+=' --disable-asm'
 
 case $host_os in
     android)    CPPFLAGS+=" -Ofast -fPIC -fPIE -fblocks -Wno-implicit-const-int-float-conversion -Wno-deprecated-declarations" # -ffunction-sections -fdata-sections -Wl,--gc-sections"
-                extopts+=" --enable-jni --enable-mediacodec --enable-asm --enable-inline-asm --enable-pic --enable-cross-compile" #unecessary --disable-alsa
-                case $bra in n6.2*) extopts+=" --disable-indev=android_camera";; esac
+                extopts+=" --disable-indev=android_camera --enable-jni --enable-mediacodec --enable-asm --enable-inline-asm --enable-pic --enable-cross-compile" #unecessary --disable-alsa
                 ;;
      gnu)       extopts+=" --enable-opencl --enable-opengl --enable-pic" LDFLAGS+=" -ldl -lstdc++"
                 lspci -k | grep -A 2 -i "VGA" | grep amd && extopts+=" --enable-nvenc"
@@ -320,5 +320,20 @@ ac_config="--arch=$CPU \
      $extlibs"
 # make the log cleaner
 
+applyPatch(){
+    if [ ! -f "${dir_src}/vvc_patched" ]; then
+        pushd ${dir_src}
+        wget -O Add-support-for-H266-VVC.patch https://patchwork.ffmpeg.org/series/9992/mbox/
+        git apply --check Add-support-for-H266-VVC.patch || git apply Add-support-for-H266-VVC.patch --exclude=libavcodec/version.h
+        touch vvc_patched
+        popd
+    fi
+}
+
+before_build(){
+    test ${applyVvcPatch} && applyPatch
+}
+
 NPROC=16
+
 start
