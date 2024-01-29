@@ -25,8 +25,8 @@ cmake_config="-DBUILD_TESTING=OFF"
 
 . xbuild
 
-$host_ndk && LDFLAGS+=" -L$SYSROOT/usr/${arch}/lib -llog"
-WFLAGS='-Wno-unused-command-line-argument'
+$host_ndk && LDFLAGS+=" -llog"
+WFLAGS='-Wno-unused-command-line-argument -Wno-implicit-function-declaration'
 
 start
 

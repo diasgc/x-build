@@ -432,8 +432,8 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
             done
             
             [ -d "${dir_toolchain}/lib" ] || sudo ln -s -f "${ndk_toolchain}/sysroot/usr/lib/${c_lib[${i}]}" "${dir_toolchain}/lib"
-            [ -f "${dir_toolchain}/lib/libpthread.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/libpthread.a"
-            [ -f "${dir_toolchain}/lib/librt.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/librt.a"
+            [ -f "${dir_toolchain}/lib/libpthread.a" ] || sudo ${dir_toolchain}/bin/llvm-ar cr "${dir_toolchain}/lib/libpthread.a"
+            [ -f "${dir_toolchain}/lib/librt.a" ] || sudo ${dir_toolchain}/bin/llvm-ar cr "${dir_toolchain}/lib/librt.a"
             
             [ -d "${dir_toolchain}/include" ] || sudo ln -s -f "${ndk_sysroot}/usr/include" "${dir_toolchain}/include"
             

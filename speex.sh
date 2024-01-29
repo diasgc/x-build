@@ -18,6 +18,8 @@ dev_vrs='1.2.0'
 
 . xbuild
 
+LDFLAGS+=" -lm"
+
 start
 
 # cpu av8 av7 x86 x64
