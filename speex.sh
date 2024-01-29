@@ -3,8 +3,8 @@
 lib='speex'
 dsc='Speex is an audio codec tuned for speech'
 lic='BSD'
-src='https://github.com/xiph/speex.git'
-#cfg='ag'
+src='https://gitlab.xiph.org/xiph/speex'
+cfg='ag'
 dep='ogg speexdsp'
 eta='90'
 ac_bin="--disable-binaries|--enable-binaries"
