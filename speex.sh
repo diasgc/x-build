@@ -4,6 +4,7 @@ lib='speex'
 dsc='Speex is an audio codec tuned for speech'
 lic='BSD'
 src='https://gitlab.xiph.org/xiph/speex'
+# meson won't build static libs
 cfg='ag'
 dep='ogg speexdsp'
 eta='90'
