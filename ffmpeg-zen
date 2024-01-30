@@ -24,6 +24,44 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
+ffmpeg_cfg="$(pwd)/ffmpeg.cfg"
+
+generate_lists(){
+    lst_opts_aud='avisynth chromaprint libbs2b libcelt libfdk-aac 
+    libflite libgme libgsm libilbc libmodplug libmp3lame 
+    libopencore-amrnb libopencore-amrwb libopus libpulse 
+    librubberband libshine libsnappy libsoxr libspeex libtwolame 
+    libvo-amrwbenc libvorbis lv2 pocketsphinx vapoursynth'
+
+    lst_opts_vid='frei0r libaom libcodec2 libdav1d libdavs2 
+    libglslang libiec61883 libkvazaar liblensfun libmysofa 
+    libopencv libopenh264 libopenjpeg libopenmpt librav1e librist 
+    librsvg libsvtav1 libtheora libuavs3d libvidstab libvmaf libvpx 
+    libwebp libx264 libx265 libxavs libxavs2 libxcb libxcb-shape 
+    libxcb-shm libxcb-xfixes libxvid libzimg libzvbi'
+
+    lst_opts_sub='libaribb24 libass libcaca libfontconfig libfreetype 
+    libfribidi libtesseract'
+
+    lst_opts_net='gcrypt gmp gnutls librabbitmq librtmp libsmbclient
+    libsrt libssh libtls libzmq mbedtls openssl'
+
+    lst_opts_io='decklink jni ladspa libdc1394 libjack libklvanc libopenvino
+    librist librsvg libtensorflow libv4l2 libxcb libxcb-shape libxcb-shm libxcb-xfixes
+    libxml2 mediacodec mediafoundation openal opencl opengl vulkan'
+
+    lst_opts="$lst_opts_aud $lst_opts_vid $lst_opts_sub $lst_opts_net $lst_opts_io"
+
+    local p=$(pwd)
+    for sh in ${lst_opts}; do
+        f = "${p}/${sh}"
+        if [ -f "${f}" ]; then
+            dsc="$(cat ${f} | grep 'dsc=' | sed 's/dsc=//g;s/\'//g')" #'
+            echo -e "FALSE\t${sh}\t${dsc}"
+        fi
+    done
+}
+
 test "$TERM_PROGRAM" == "vscode" && \
      printf "\nThis won't run on VSCODE.\nExiting...\n\n" && \
      exit 0
@@ -46,6 +84,10 @@ zenTagList(){
     tagList=$(git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g')
     echo "$tagList" | grep '^n' | tail -n 6 | sed -z 's/\n/|/g'
 }
+
+test -f "${ffmpeg_cfg}" || generate_lists
+
+
 
 archOpts=(
     TRUE    NATIVE          "native"
