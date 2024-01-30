@@ -54,10 +54,10 @@ generate_lists(){
 
     local p=$(pwd)
     for sh in ${lst_opts}; do
-        f="${p}/${sh}"
+        f="${p}/${sh}.sh"
         if [ -f "${f}" ]; then
             dsc="$(cat ${f} | grep 'dsc=' | sed 's/dsc=//g')"
-            echo -e "FALSE\t${sh}\t${dsc}" >>${ffmpeg_cfg}
+            echo -e "FALSE\n${sh}\n${dsc}" >>${ffmpeg_cfg}
         fi
     done
 }
@@ -85,9 +85,19 @@ zenTagList(){
     echo "$tagList" | grep '^n' | tail -n 6 | sed -z 's/\n/|/g'
 }
 
+zenArgs=(
+    --print-column=3 --hide-column=3 
+    --height=400 --width=300 
+    --column "Use" --column "Feature" --column "Value"
+)
+
 test -f "${ffmpeg_cfg}" || generate_lists
-cfgzen="$(cat ${ffmpeg_cfg})"
-test_zen=$(IFS="\t\n" zenity  --width=500 --forms --title "Build Options" --add-combo "Source Version"    --combo-values  "${cfgzen}")
+cfgzen=()
+while IFS=$'\n' read -r -a entry; do
+    cfgzen+=( "${entry}" );
+done <"${ffmpeg_cfg}"
+echo "${cfgzen[@]}"
+test_zen=$(IFS='\t' zenity --list --checklist --text="Features" --print-column=2 --height=400 --width=300 --column "Use" --column "Feature" --column "Value" "${cfgzen[@]}")
 echo $test_zen
 exit 0
 
