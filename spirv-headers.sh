@@ -27,4 +27,8 @@ eta='20'
 
 . xbuild
 
-start
+if [ $host_ndk ]; then
+    CXXFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/third_party/spirv-tools/external/spirv-headers"
+else
+    start
+fi

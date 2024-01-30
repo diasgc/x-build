@@ -18,10 +18,14 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
-
 . xbuild
 
-start
+/home/diasgc/Android/Sdk/ndk/26.1.10909125/
+if [ $host_ndk ]; then
+    CXXFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include"
+else
+    start
+fi
 
 # Filelist
 # --------

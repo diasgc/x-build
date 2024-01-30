@@ -28,8 +28,9 @@ eta='20'
 
 . xbuild
 
-cmake_config='-DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON'
-
-$host_ndk && bra='ndkr25'
-
-start
+if [ $host_ndk ]; then
+    CXXFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/libshaderc/include"
+else
+    cmake_config='-DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON'
+    start
+fi
