@@ -53,12 +53,10 @@ generate_lists(){
     lst_opts="$lst_opts_aud $lst_opts_vid $lst_opts_sub $lst_opts_net $lst_opts_io"
 
     local p=$(pwd)
-    for sh in ${lst_opts}; do
-        f="${p}/${sh}.sh"
-        if [ -f "${f}" ]; then
-            dsc="$(cat ${f} | grep 'dsc=' | sed 's/dsc=//g')"
-            echo -e "FALSE\n${sh}\n${dsc}" >>${ffmpeg_cfg}
-        fi
+    for sh in *.sh; do
+        f_lib="$(cat ${sh} | grep '^lib=' | sed 's/lib=//g;s/\x27//g')"
+        f_dsc="$(cat ${sh} | grep '^dsc=' | sed 's/dsc=//g;s/\x27//g')"
+        echo -e "FALSE\t${sh}\t${f_lib}\t${f_dsc}" >>${ffmpeg_cfg}
     done
 }
 
