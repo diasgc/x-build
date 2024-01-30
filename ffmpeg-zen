@@ -54,9 +54,9 @@ generate_lists(){
 
     local p=$(pwd)
     for sh in ${lst_opts}; do
-        f = "${p}/${sh}"
+        f="${p}/${sh}"
         if [ -f "${f}" ]; then
-            dsc="$(cat ${f} | grep 'dsc=' | sed 's/dsc=//g;s/\'//g')" #'
+            dsc="$(cat ${f} | grep 'dsc=' | sed 's/dsc=//g')"
             echo -e "FALSE\t${sh}\t${dsc}" >>${ffmpeg_cfg}
         fi
     done
