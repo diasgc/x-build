@@ -57,7 +57,7 @@ generate_lists(){
         f = "${p}/${sh}"
         if [ -f "${f}" ]; then
             dsc="$(cat ${f} | grep 'dsc=' | sed 's/dsc=//g;s/\'//g')" #'
-            echo -e "FALSE\t${sh}\t${dsc}"
+            echo -e "FALSE\t${sh}\t${dsc}" >>${ffmpeg_cfg}
         fi
     done
 }
@@ -86,8 +86,10 @@ zenTagList(){
 }
 
 test -f "${ffmpeg_cfg}" || generate_lists
-
-
+cfgzen="$(cat ${ffmpeg_cfg})"
+test_zen=$(IFS="\t\n" zenity  --width=500 --forms --title "Build Options" --add-combo "Source Version"    --combo-values  "${cfgzen}")
+echo $test_zen
+exit 0
 
 archOpts=(
     TRUE    NATIVE          "native"
