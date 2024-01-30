@@ -96,8 +96,11 @@ cfgzen=()
 while IFS=$'\n' read -r -a entry; do
     cfgzen+=( "${entry}" );
 done <"${ffmpeg_cfg}"
-echo "${cfgzen[@]}"
-test_zen=$(IFS='\t' zenity --list --checklist --text="Features" --print-column=2 --height=400 --width=300 --column "Use" --column "Feature" --column "Value" "${cfgzen[@]}")
+test_zen=$(zenity --list --checklist \
+    --text="Features" --print-column=2 --height=400 --width=500 \
+    --column "Use" --column "Feature" --column "Description" \
+    "${cfgzen[@]}"\
+)
 echo $test_zen
 exit 0
 
