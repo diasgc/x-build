@@ -6,13 +6,14 @@
 
 lib='opencl'
 dsc='Khronos OpenCL-Headers'
+pkg='OpenCL-Headers'
 lic='Apache-2.0'
 src='https://github.com/KhronosGroup/OpenCL-Headers.git'
 cfg='cmake'
 eta='0'
 #pc_llib='-lOpenCL'
 
-lst_inc=''
+lst_inc='CL/cl*.h'
 lst_lib=''
 lst_bin=''
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
+# NDK ++?  .   .   .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 

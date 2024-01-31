@@ -14,7 +14,7 @@ cfg='ac'
 eta='777'
 mki='install'
 make_install='install'
-dep=
+pkg='libavcodec'
 
 ac_nohost=true
 #ac_nosysroot=true
@@ -25,6 +25,9 @@ lst_lib=''
 lst_bin=''
 
 ffmpeg_cfg="$(pwd)/ffmpeg.cfg"
+
+use_ffmpeg_cfg="skip"
+use_ffblock="FFDATA"
 
 generate_lists(){
     lst_opts_aud='avisynth chromaprint libbs2b libcelt libfdk-aac 
@@ -89,18 +92,41 @@ zenArgs=(
     --column "Use" --column "Feature" --column "Value"
 )
 
-test -f "${ffmpeg_cfg}" || generate_lists
-cfgzen=()
-while IFS=$'\n' read -r -a entry; do
-    cfgzen+=( "${entry}" );
-done <"${ffmpeg_cfg}"
-test_zen=$(zenity --list --checklist \
-    --text="Features" --print-column=2 --height=400 --width=500 \
-    --column "Use" --column "Feature" --column "Description" \
-    "${cfgzen[@]}"\
-)
-echo $test_zen
-exit 0
+if [ -z "${use_ffmpeg_cfg}" ]; then
+    test -f "${ffmpeg_cfg}" || generate_lists
+    cfgzen=()
+    while IFS=$'\n' read -r -a entry; do
+        cfgzen+=( "${entry}" );
+    done <"${ffmpeg_cfg}"
+    test_zen=$(zenity --list --checklist \
+        --text="Features" --print-column=2 --height=400 --width=500 \
+        --column "Use" --column "Feature" --column "Description" \
+        "${cfgzen[@]}"\
+    )
+    echo $test_zen
+    exit 0
+fi
+
+selectExtras(){
+    local tag=$1
+    local block=$(awk '/^<<.'"$use_ffblock"'./{flag=1; next} /^'"$use_ffblock"'/{flag=0} flag' $0 | grep -P "\t${tag}\t" | sed 's/\t/\n/g')
+    local cfgzen=()
+    while IFS=$'\n' read -r -a entry; do
+        cfgzen+=( "${entry}" );
+    done <<<"${block}"
+    local test_zen=$(IFS=$'\n' zenity --list --checklist --text="Features" \
+        --print-column=4 --hide-column=4 --height=600 --width=800 \
+        --column "Use" --column "lib" --column "type" --column "ffopt"  --column "Description" \
+        "${cfgzen[@]}")
+    IFS='|' read -r -a keys <<<"$test_zen"
+    for k in "${keys[@]}"; do
+        IFS=';' read -r -a field <<<"$k"
+        dep+=(${field[0]/\'/})
+        opt+=(${field[1]/\'/})
+    done
+    #echo "deps: ${dep[@]}"
+    #echo "opts: ${opt[@]}"
+}
 
 archOpts=(
     TRUE    NATIVE          "native"
@@ -118,137 +144,6 @@ sizeOpts=(
     TRUE    Performance     ","
     false   Size            ",--enable-small;--disable-debug"
 )
-
-audioOpts=(
-
-    false   FDK-AAC         "fdk-aac,--enable-libfdk-aac"
-    TRUE    LameMP3         "lame,--enable-libmp3lame"
-    false   OpenCAmr-NB     "opencore-amr,--enable-libopencore-amrnb"
-    false   OpenCAmr-WB     "opencore-amr,--enable-libopencore-amrwb"
-    TRUE    Opus            "opus,--enable-libopus"
-    false   ShineMP3        "shine,--enable-libshine"
-    false   SnappyCompress  "snappy,--enable-libsnappy"
-    false   Speex           "speex,--enable-libspeex"
-    TRUE    Vorbis          "vorbis,--enable-libvorbis"
-    false   VoAmr-WB        "vo-amrwbenc,--enable-libvo-amrwbenc"
-)
-
-audioOptsExt=(
-    false   AviSynth        "avisynth,--enable-avisynth"
-    false   Chromaprint     "chromaprint,--enable-chromaprint"
-    false   DSP-bs2b        "libbs2b,--enable-libbs2b"
-    false   Celt            "celt,--enable-libcelt"
-    false   Codec2          "codec2,--enable-libcodec2"
-    false   Flite           "flite,--enable-libflite"
-    false   GameMusicEmu    "libgme,--enable-libgme"
-    false   GSM             "libgsm,--enable-libgsm"
-    false   iLBC            "libilbc,--enable-libilbc"
-    false   ModPlug         "libmodplug,--enable-libmodplug"
-    false   LADSPA-Filter   "ladspa,--enable-ladspa"
-    false   OpenMTP         "openmtp,--enable-libopenmpt"
-    false   PulseAudio      "libpulse,--enable-libpulse"
-    false   Rubberband      "librubberband,--enable-librubberband"
-    false   SoXresampler    "soxr,--enable-libsoxr"
-    false   TwoLame-MP2     "twolame,--enable-libtwolame"
-    false   LV2-AudioFilter "lv2,--enable-lv2"
-    false   SofalizerFilter "libmysofa,--enable-libmysofa"
-    false   PocketSphinx    "pocketsphinx,--enable-pocketsphinx"
-    false   VapourSynth     "vapoursynth,--enable-vapoursynth"
-)
-
-videoOptsExt=(
-    false	codec2	    "libcodec2,--enable-libcodec2"
-    false	dav1d	    "libdav1d,--enable-libdav1d"
-    false	davs2	    "libdavs2,--enable-libdavs2"
-    false   frei0r      "frei0r,--enable-frei0r"
-    false	glslang	    "libglslang,--enable-libglslang"
-    false	iec61883	"libiec61883,--enable-libiec61883"
-    false	lensfun	    "lensfun,--enable-liblensfun"
-    false	opencv	    "libopencv,--enable-libopencv"
-    false	openh264	"libopenh264,--enable-libopenh264"
-    false	openjpeg	"libopenjpeg,--enable-libopenjpeg"
-    false	openmpt	    "libopenmpt,--enable-libopenmpt"
-    false	rav1e	    "librav1e,--enable-librav1e"
-    false	rist	    "librist,--enable-librist"
-    false	rsvg	    "librsvg,--enable-librsvg"
-    false	svtav1	    "svtav1,--enable-libsvtav1"
-    false	theora	    "libtheora,--enable-libtheora"
-    false	uavs3d	    "libuavs3d,--enable-libuavs3d"
-    false	vmaf	    "libvmaf,--enable-libvmaf"
-    false	xavs	    "xavs,--enable-libxavs"
-    false	xavs2	    "xavs2,--enable-libxavs2"
-    false   EVC/Mpeg5   "xeve;xevd,--enable-libxeve;--enable-libxevd"
-    false	zimg	    "libzimg,--enable-libzimg"
-    false	zvbi	    "libzvbi,--enable-libzvbi"
-)
-videoOpts=(
-    false	aom	        "libaom,--enable-libaom"
-    TRUE	kvazaar     "kvazaar,--enable-libkvazaar"
-    TRUE	vidstab	    "vidstab,--enable-libvidstab"
-    TRUE	vpx	        "vpx,--enable-libvpx"
-    TRUE	webp	    "libwebp,--enable-libwebp"
-    TRUE	x264	    "x264,--enable-libx264"
-    TRUE	x265	    "x265,--enable-libx265"
-    false	xvid	    "xvidcore,--enable-libxvid"
-    TRUE    vvc         "vvenc;vvdec,--enable-libvvdec;--enable-libvvenc"
-)
-
-netOptsExt=(
-    false	gcrypt      "gcrypt,--enable-gcrypt"
-    false	rabbitmq	"librabbitmq,--enable-librabbitmq"
-    false	rtmp        "librtmp,--enable-librtmp"
-    false	smbclient	"libsmbclient,--enable-libsmbclient"
-    false	srt	        "libsrt,--enable-libsrt"
-    false	ssh	        "libssh,--enable-libssh"
-    false	tls	        "libtls,--enable-libtls"
-    false	zmq	        "libzmq,--enable-libzmq"
-)
-
-netOpts=(
-    false	gmp         "gmp,--enable-gmp"
-    false	gnutls      "gnutls,--enable-gnutls"
-    false	mbedtls	    "mbedtls,--enable-mbedtls"
-    false	openssl	    "openssl,--enable-openssl"
-)
-
-subOptsExt=(
-    false	aribb24	    "libaribb24,--enable-libaribb24"
-    false	ass	        "libass,--enable-libass"
-    false	caca	    "libcaca,--enable-libcaca"
-    false	fontconfig	"libfontconfig,--enable-libfontconfig"
-)
-subOpts=(
-    false	freetype	"libfreetype,--enable-libfreetype"
-    false	fribidi	    "libfribidi,--enable-libfribidi"
-    false	tesseract	"tesseract,--enable-libtesseract"
-)
-
-ioOptsExt=(
-    false	decklink	"decklink,--enable-decklink"
-    false	dc1394  	"libdc1394,--enable-libdc1394"
-    false	klvanc	    "libklvanc,--enable-libklvanc"
-    false	openvino	"libopenvino,--enable-libopenvino"
-    false	rist	    "librist,--enable-librist"
-    false	tensorflow	"libtensorflow,--enable-libtensorflow"
-    false	v4l2	    "libv4l2,--enable-libv4l2"
-    false	xcb	        "libxcb,--enable-libxcb"
-    false	xcb-shape	"libxcb-shape,--enable-libxcb-shape"
-    false	xcb-shm	    "libxcb-shm,--enable-libxcb-shm"
-    false	xcb-xfixes	"libxcb-xfixes,--enable-libxcb-xfixes"
-    false	xml2	    "libxml2,--enable-libxml2"
-)
-
-ioOpts=(
-    TRUE	jni         ",--enable-jni"
-    false	jack	    "libjack,--enable-libjack"
-    false	mediacodec	",--enable-mediacodec"
-    false	mediafoundation	"mediafoundation,--enable-mediafoundation"
-    false	openal	    "openal,--enable-openal"
-    false	opencl	    "opencl,--enable-opencl"
-    false	opengl	    "opengl,--enable-opengl"
-    false	vulkan	    ",--enable-vulkan"
-)
-
 
 zen=$(zenity --width=500 --forms --title "Build Options" \
     --add-combo "Target Arch" --combo-values "native|android-armv8|android-armv7|android-x64|linux-arm64|linux-x64|windows-arm64|windows-x64" \
@@ -269,6 +164,9 @@ zen=$(zenity --width=500 --forms --title "Build Options" \
 #2 static yes Performance basic basic none none 6.2-basicAV
 extopts=
 mainOpts=( $(zenSplit ${zen[@]}) )
+zfilter=()
+dep=
+opt=
 
 argList=( "${mainOpts[0]}" )
 bra=${mainOpts[1]}
@@ -276,56 +174,30 @@ test "x${mainOpts[2]}" != "xshared" && argList+=( "--static" )
 test "x${mainOpts[2]}" != "xstatic" && argList+=( "--shared" )
 test "x${mainOpts[3]}" != "xno" && argList+=( "--bin" )
 test "x${mainOpts[4]}" != "xPerformance" && extopts="--enable-small"
-
-zenArgs=(
-    --print-column=3 --hide-column=3 
-    --height=400 --width=300 
-    --column "Use" --column "Feature" --column "Value"
-)
-
-dep=
-opt=
-
-if [ "x${mainOpts[5]}" != "xnone" ]; then
-    test "x${mainOpts[5]}" != "xbasic" && audioOpts+=( "${audioOptsExt[@]}" )
-    applyOptions $(zenity --list --checklist --text="Audio ${mainOpts[5]} Features" ${zenArgs[@]} ${audioOpts[@]})
-fi
-
-if [ "x${mainOpts[6]}" != "xnone" ]; then
-    test "x${mainOpts[6]}" != "xbasic" && videoOpts+=( "${videoOptsExt[@]}" )
-    applyOptions $(zenity --list --checklist --text="Audio ${mainOpts[6]} Features" ${zenArgs[@]} ${videoOpts[@]})
-fi
-
-if [ "x${mainOpts[7]}" != "xnone" ]; then
-    test "x${mainOpts[7]}" == "xbasic" && netOpts+=( "${netOptsExt[@]}" )
-    applyOptions $(zenity --list --checklist --text="Audio ${mainOpts[7]} Features" ${zenArgs[@]} ${netOpts[@]})
-fi
-
-if [ "x${mainOpts[8]}" != "xnone" ]; then
-    test "x${mainOpts[8]}" == "xbasic" && subOpts+=( "${subOptsExt[@]}" )
-    applyOptions $(zenity --list --checklist --text="Audio ${mainOpts[8]} Features" ${zenArgs[@]} ${subOpts[@]})
-fi
-
-if [ "x${mainOpts[9]}" != "xnone" ]; then
-    test "x${mainOpts[9]}" == "xbasic" && ioOpts+=( "${ioOptsExt[@]}" )
-    applyOptions $(zenity --list --checklist --text="Audio ${mainOpts[9]} Features" ${zenArgs[@]} ${ioOpts[@]})
-fi
-
+test "x${mainOpts[5]}" != "xnone" && zfilter+=( "audio" )
+test "x${mainOpts[6]}" != "xnone" && zfilter+=( "video" )
+test "x${mainOpts[7]}" != "xnone" && zfilter+=( "net" )
+test "x${mainOpts[8]}" != "xnone" && zfilter+=( "sub" )
+test "x${mainOpts[9]}" != "xnone" && zfilter+=( "io" )
 extraversion="${mainOpts[10]}"
 
-echo "arguments: ${argList[@]}"
-echo "ffmpeg options: ${opt[@]}"
-echo "lib dependencies: ${dep[@]}"
+selectExtras $(IFS=$'|'; printf %s "${zfilter[*]}")
+
+argList+=( "--force" )
+#echo "arguments: ${argList[@]}"
+#echo "ffmpeg options: ${opt[@]}"
+#echo "lib dependencies: ${dep[@]}"
 dep=$(echo "${dep[@]}")
 set -- "${argList[@]}"
 source xbuild
 
-#test "x${mainOpts[2]}" != "xshared" && build_static=true
-#test "x${mainOpts[2]}" != "xstatic" && build_shared=true
-#test "x${mainOpts[3]}" != "xno" && build_bin=true
+extopts="--pkg-config-flags=--static \
+         --enable-lto \
+         --enable-runtime-cpudetect \
+         --disable-symver \
+         --cross-prefix=${CROSS_PREFIX} \
+         --extra-version=$extraversion $extopts"
 
-#--cross-prefix=${CROSS_PREFIX} <- remove or pkg-config cannot find aom version > 1.0.0
-extopts="--pkg-config-flags=--static --enable-lto --enable-runtime-cpudetect --disable-symver --cross-prefix=${CROSS_PREFIX} --extra-version=$extraversion $extopts"
 extlibs=$(echo "${opt[@]}")
 nonfree=false
 gpl=false
@@ -355,6 +227,7 @@ $host_x86 && extopts+=' --disable-asm'
 case $host_os in
     android)    CPPFLAGS+=" -Ofast -fPIC -fPIE -fblocks -Wno-implicit-const-int-float-conversion -Wno-deprecated-declarations" # -ffunction-sections -fdata-sections -Wl,--gc-sections"
                 extopts+=" --disable-indev=android_camera --enable-jni --enable-mediacodec --enable-asm --enable-inline-asm --enable-pic --enable-cross-compile" #unecessary --disable-alsa
+                extopts+=" --enable-vulkan --extra-cflags=-I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include/vulkan"
                 ;;
      gnu)       extopts+=" --enable-opencl --enable-opengl --enable-pic" LDFLAGS+=" -ldl -lstdc++"
                 lspci -k | grep -A 2 -i "VGA" | grep amd && extopts+=" --enable-nvenc"
@@ -393,3 +266,98 @@ before_build(){
 NPROC=16
 
 start
+
+
+
+<<'FFDATA'
+FALSE	aom	video	'aom;--enable-libaom'	'Alliance for Open Media AV1 codec'
+FALSE	aribb24	video	'aribb24;--enable-libaribb24'	'A library for ARIB STD-B24, decoding JIS 8 bit characters and parsing MPEG-TS stream'
+FALSE	avisynth	video	'avisynth;--enable-avisynth'	'A powerful nonlinear scripting language for video'
+FALSE	celt	audio	'celt;--enable-libcelt'	'CELT is a low-delay audio codec'
+FALSE	chromaprint	audio	'chromaprint;--enable-chromaprint'	'C library for generating audio fingerprints used by AcoustID'
+FALSE	codec2	audio	'codec2;--enable-libcodec2'	'A speech codec for 2400 bit/s and below'
+FALSE	dav1d	video	'dav1d;--enable-libdav1d'	'AV1 cross-platform decoder, open-source, and focused on speed and correctness.'
+FALSE	davs2	video	'davs2;--enable-libdavs2'	'An open-source decoder of AVS2-P2/IEEE1857.4 video coding standard'
+FALSE	fdk-aac	audio	'fdk-aac;--enable-libfdk-aac'	'A standalone library of the Fraunhofer FDK AAC code from Android'
+FALSE	flite	audio	'flite;--enable-libflite'	'A small fast portable speech synthesis system'
+FALSE	fontconfig	sub	'fontconfig;--enable-libfontconfig'	'Font customization and configuration library'
+FALSE	freetype	sub	'freetype;--enable-libfreetype'	'A free, high-quality, and portable font engine.'
+FALSE	frei0r	video	'frei0r;--enable-frei0r'	'A large collection of free and portable video plugins'
+FALSE	fribidi	sub	'fribidi;--enable-libfribidi'	'Unicode Bidirectional Algorithm Library'
+FALSE	glslang	video	'glslang;--enable-libglslang'	'OpenGL and OpenGL ES shader front end and validator'
+FALSE	gmp	net	'gmp;--enable-gmp'	'GNU Multiple Precision Arithmetic Library'
+FALSE	gnutls	net	'gnutls;--enable-gnutls'	'GnuTLS implements the TLS/SSL (Transport Layer Security aka Secure Sockets Layer) protocol'
+FALSE	harfbuzz	sub	'harfbuzz;--enable-libharfbuzz'	'HarfBuzz text shaping engine'
+FALSE	kvazaar	video	'kvazaar;--enable-libkvazaar'	'An open source C library for efficient image processing and image analysis operations'
+FALSE	ladspa	audio	'ladspa;--enable-ladspa'	'Linux Audio Developers Simple Plugin API'
+FALSE	lame	audio	'lame;--enable-libmp3lame'	'LAME is a high quality MPEG Audio Layer III (MP3) encoder'
+FALSE	lcms2	video	'lcms2;--enable-lcms2'	'A free, open source, CMM engine. It provides fast transforms between ICC profiles'
+FALSE	lensfun	video	'lensfun;--enable-liblensfun'	'An open source database of photographic lenses and their characteristics'
+FALSE	libass	sub	'libass;--enable-libass'	'LibASS is an SSA/ASS subtitles rendering library'
+FALSE	libbluray	io	'libbluray;--enable-libbluray'	'Library to access Blu-Ray disks'
+FALSE	libbs2b	audio	'libbs2b;--enable-libbs2b'	'Bauer stereophonic-to-binaural DSP'
+FALSE	libcaca	sub	'libcaca;--enable-libcaca'	'Colour AsCii Art library'
+FALSE	libcdio	io	'libcdio;--enable-libcdio'	'Portable CD-ROM I/O library'
+FALSE	libdc1394	io	'libdc1394;--enable-libdc1394'	'IIDC Camera Control Library '
+FALSE	libgcrypt	net	'libgcrypt;--enable-gcrypt'	'The GNU crypto library'
+FALSE	libgme	audio	'libgme;--enable-libgme'	'Blarggs video game music emulation library'
+FALSE	libgsm	audio	'libgsm;--enable-libgsm'	'GSM 06.10 lossy speech compression'
+FALSE	libiec61883	io	'libiec61883;--enable-libiec61883'	'An isochronous streaming media library for IEEE 1394'
+FALSE	libilbc	net	'libilbc;--enable-libilbc'	'Internet Low Bitrate Codec (iLBC) library'
+FALSE	libjack	audio	'libjack;--enable-libjack'	'Jack Audio Connection Kit: a low-latency synchronous callback-based media server'
+FALSE	libjxl	video	'libjxl;--enable-libjxl'	'A fast, compressed, persistent binary data store library for C.'
+FALSE	libklvanc	?	'libklvanc;--enable-libklvanc'	'VANC Processing Framework'
+FALSE	libmodplug	audio	'libmodplug;--enable-libmodplug'	'The ModPlug mod file playing library.'
+FALSE	libmysofa	extra	'libmysofa;--enable-libmysofa'	'Reader for AES SOFA files to get better HRTFs'
+FALSE	libplacebo	video	'libplacebo;--enable-libplacebo'	'Reusable library for GPU-accelerated image/video processing primitives and shaders'
+FALSE	libpulse	audio	'libpulse;--enable-libpulse'	'PulseAudio Client Interface'
+FALSE	librist	net	'librist;--enable-librist'	'A library that can be used to easily add the RIST protocol to your application.'
+FALSE	librsvg	video	'librsvg;--enable-librsvg'	'A small library to render Scalable Vector Graphics (SVG)'
+FALSE	librtmp	net	'librtmp;--enable-librtmp'	'rtmpdump is a toolkit for RTMP streams. All forms of RTMP are supported, including rtmp://, rtmpt://, rtmpe://, rtmpte://, and rtmps://.'
+FALSE	librubberband	audio	'librubberband;--enable-librubberband'	'An audio time-stretching and pitch-shifting library and utility program.'
+FALSE	libshaderc	video	'libshaderc;--enable-libshaderc'	'A library for compiling shader strings into SPIR-V.'
+FALSE	libsrt	net	'libsrt;--enable-libsrt'	'Secure Reliable Transport (SRT) is an open source transport technology that optimizes streaming performance across unpredictable networks, such as the Internet.'
+FALSE	libssh	net	'libssh;--enable-libssh'	'The SSH library'
+FALSE	libwebp	video	'libwebp;--enable-libwebp'	'Library to encode and decode images in WebP format'
+FALSE	libxml2	extra	'libxml2;--enable-libxml2'	'GNOME XML library'
+FALSE	libzmq	net	'libzmq;--enable-libzmq'	'ZeroMQ core engine in C++, implements ZMTP/3.1'
+FALSE	lv2	audio	'lv2;--enable-lv2'	'An extensible audio plugin interface'
+FALSE	mbedtls	net	'mbedtls;--enable-mbedtls'	'An open source, portable, easy to use, readable and flexible SSL library.'
+FALSE	openal	audio	'openal;--enable-openal'	'OpenAL Soft with Android support'
+FALSE	opencl	video	'opencl;--enable-opencl'	'Khronos OpenCL-Headers'
+FALSE	opencore-amr	audio	'opencore-amr;--enable-libopencore-amrnb --enable-libopencore-amrwb'	'OpenCORE Adaptive Multi Rate (AMR) speech codec'
+FALSE	opencv	video	'opencv;--enable-libopencv'	'Open Source Computer Vision Library'
+FALSE	openh264	video	'openh264;--enable-libopenh264'	'Open Source H.264 Codec'
+FALSE	openjpeg	video	'openjpeg;--enable-libopenjpeg'	'OpenJPEG is an open-source JPEG 2000 codec written in C language.'
+FALSE	openmpt	audio	'openmpt;--enable-libopenmpt'	'a library to render tracker music'
+FALSE	openssl	net	'openssl;--enable-openssl'	'TLS/SSL and crypto library'
+FALSE	opus	audio	'opus;--enable-libopus'	'Opus is a codec for interactive speech and audio transmission over the Internet'
+FALSE	pocketsphinx	audio	'pocketsphinx;--enable-pocketsphinx'	'Speech recognition tool'
+FALSE	shine	audio	'shine;--enable-libshine'	'Super fast fixed-point MP3 encoder.'
+FALSE	snappy	audio	'snappy;--enable-libsnappy'	'Snappy is a compression/decompression library'
+FALSE	soxr	audio	'soxr;--enable-libsoxr'	'The SoX resampler library'
+FALSE	speex	audio	'speex;--enable-libspeex'	'Speex is an audio codec tuned for speech'
+FALSE	svtav1	video	'svtav1;--enable-libsvtav1'	'Scalable Video Technology for AV1 (SVT-AV1 Encoder and Decoder)'
+FALSE	tensorflow	extra	'tensorflow;--enable-libtensorflow'	'An Open Source Machine Learning Framework for Everyone'
+FALSE	tesseract	sub	'tesseract;--enable-libtesseract'	'An OCR Engine that was developed at HP Labs between 1985 and 1995... and now at Google'
+FALSE	theora	video	'theora;--enable-libtheora'	'Theora video compression format'
+FALSE	twolame	audio	'twolame;--enable-libtwolame'	'MPEG Audio Layer 2 (MP2) encoder'
+FALSE	uavs3d	audio	'uavs3d;--enable-libuavs3d'	'AVS3 decoder which supports AVS3-P2 baseline profile.'
+FALSE	vapoursynth	video	'vapoursynth;--enable-vapoursynth'	'A video processing framework with simplicity in mind'
+FALSE	vidstab	video	'vidstab;--enable-libvidstab'	'Vidstab is a video stabilization library which can be plugged-in with Ffmpeg and Transcode'
+FALSE	vmaf	video	'vmaf;--enable-libvmaf'	'Perceptual video quality assessment based on multi-method fusion'
+FALSE	vo-amrwbenc	audio	'vo-amrwbenc;--enable-libvo-amrwbenc'	'VisualOn Adaptive Multi-Rate Wideband speech codec library'
+FALSE	vorbis	audio	'vorbis;--enable-libvorbis'	'Ogg Vorbis audio format'
+FALSE	vpx	video	'vpx;--enable-libvpx'	'WebM Project VPx codec implementation'
+FALSE	vulkan	video	'vulkan;--enable-vulkan'	'Khronos Vulkan-Headers'
+FALSE	vvdec	video	'vvdec;--enable-libvvdec'	'Fraunhofer Versatile Video Decoder (VVdeC)'
+FALSE	vvenc	video	'vvenc;--enable-libvvenc'	'Fraunhofer Versatile Video Encoder'
+FALSE	x264	video	'x264;--enable-libx264'	'x264, the best and fastest H.264 encoder'
+FALSE	x265	video	'x265;--enable-libx265'	'x265 is an open source HEVC encoder'
+FALSE	xavs2	video	'xavs2;--enable-libxavs2'	'An open-source encoder of AVS2-P2/IEEE1857.4 video coding standard'
+FALSE	xavs	video	'xavs;--enable-libxavs'	'High quality encoder and decoder of the Audio Video Standard of China (AVS)'
+FALSE	xvidcore	video	'xvidcore;--enable-libxvid'	'Xvid decoder/encoder library'
+FALSE	zimg	video	'zimg;--enable-libzimg'	'Scaling, colorspace conversion, and dithering library'
+FALSE	zvbi	io	'zvbi;--enable-libzvbi'	'VBI Capturing and Decoding Library'
+
+FFDATA
