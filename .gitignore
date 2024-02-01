@@ -9,3 +9,4 @@ utils/lz-string
 _test.sh
 _template.sh
 ffmpeg-*.cfg
+ffmpeg.oldz
