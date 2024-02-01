@@ -17,55 +17,13 @@ make_install='install'
 pkg='libavcodec'
 
 ac_nohost=true
-#ac_nosysroot=true
-#ac_nopic=true
+
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
 
-ffmpeg_cfg="$(pwd)/ffmpeg.cfg"
-
-use_ffmpeg_cfg="skip"
-use_ffblock="FFDATA"
-
-generate_lists(){
-    lst_opts_aud='avisynth chromaprint libbs2b libcelt libfdk-aac 
-    libflite libgme libgsm libilbc libmodplug libmp3lame 
-    libopencore-amrnb libopencore-amrwb libopus libpulse 
-    librubberband libshine libsnappy libsoxr libspeex libtwolame 
-    libvo-amrwbenc libvorbis lv2 pocketsphinx vapoursynth'
-
-    lst_opts_vid='frei0r libaom libcodec2 libdav1d libdavs2 
-    libglslang libiec61883 libkvazaar liblensfun libmysofa 
-    libopencv libopenh264 libopenjpeg libopenmpt librav1e librist 
-    librsvg libsvtav1 libtheora libuavs3d libvidstab libvmaf libvpx 
-    libwebp libx264 libx265 libxavs libxavs2 libxcb libxcb-shape 
-    libxcb-shm libxcb-xfixes libxvid libzimg libzvbi'
-
-    lst_opts_sub='libaribb24 libass libcaca libfontconfig libfreetype 
-    libfribidi libtesseract'
-
-    lst_opts_net='gcrypt gmp gnutls librabbitmq librtmp libsmbclient
-    libsrt libssh libtls libzmq mbedtls openssl'
-
-    lst_opts_io='decklink jni ladspa libdc1394 libjack libklvanc libopenvino
-    librist librsvg libtensorflow libv4l2 libxcb libxcb-shape libxcb-shm libxcb-xfixes
-    libxml2 mediacodec mediafoundation openal opencl opengl vulkan'
-
-    lst_opts="$lst_opts_aud $lst_opts_vid $lst_opts_sub $lst_opts_net $lst_opts_io"
-
-    local p=$(pwd)
-    for sh in *.sh; do
-        f_lib="$(cat ${sh} | grep '^lib=' | sed 's/lib=//g;s/\x27//g')"
-        f_dsc="$(cat ${sh} | grep '^dsc=' | sed 's/dsc=//g;s/\x27//g')"
-        echo -e "FALSE\t${sh}\t${f_lib}\t${f_dsc}" >>${ffmpeg_cfg}
-    done
-}
-
-test "$TERM_PROGRAM" == "vscode" && \
-     printf "\nThis won't run on VSCODE.\nExiting...\n\n" && \
-     exit 0
+ffblock="FFDATA"
 
 applyOptions(){
     IFS='|' read -r -a keys <<<"$1"
@@ -86,30 +44,9 @@ zenTagList(){
     echo "$tagList" | grep '^n' | tail -n 6 | sed -z 's/\n/|/g'
 }
 
-zenArgs=(
-    --print-column=3 --hide-column=3 
-    --height=400 --width=300 
-    --column "Use" --column "Feature" --column "Value"
-)
-
-if [ -z "${use_ffmpeg_cfg}" ]; then
-    test -f "${ffmpeg_cfg}" || generate_lists
-    cfgzen=()
-    while IFS=$'\n' read -r -a entry; do
-        cfgzen+=( "${entry}" );
-    done <"${ffmpeg_cfg}"
-    test_zen=$(zenity --list --checklist \
-        --text="Features" --print-column=2 --height=400 --width=500 \
-        --column "Use" --column "Feature" --column "Description" \
-        "${cfgzen[@]}"\
-    )
-    echo $test_zen
-    exit 0
-fi
-
 selectExtras(){
     local tag=$1
-    local block=$(awk '/^<<.'"$use_ffblock"'./{flag=1; next} /^'"$use_ffblock"'/{flag=0} flag' $0 | grep -P "\t${tag}\t" | sed 's/\t/\n/g')
+    local block=$(awk '/^<<.'"$ffblock"'./{flag=1; next} /^'"$ffblock"'/{flag=0} flag' $0 | grep -P "\t${tag}\t" | sed 's/\t/\n/g')
     local cfgzen=()
     while IFS=$'\n' read -r -a entry; do
         cfgzen+=( "${entry}" );
@@ -128,67 +65,113 @@ selectExtras(){
     #echo "opts: ${opt[@]}"
 }
 
-archOpts=(
-    TRUE    NATIVE          "native"
-    false   android-arm64   "aa8"
-    false   android-armv7   "aa7"
-    false   android-x64     "aa64"
-    false   linux-arm64     "la8"
-    false   linux-armv7     "la7"
-    false   linux-x64       "la7"
-    false   windows-arm64   "wa8"
-    false   windows-x64     "wx64"
-)
+ffmpegConfig(){
 
-sizeOpts=(
-    TRUE    Performance     ","
-    false   Size            ",--enable-small;--disable-debug"
-)
+    test "$TERM_PROGRAM" == "vscode" && \
+        printf "\nThis won't run on VSCODE.\nExiting...\n\n" && \
+        exit 0
+        
+    archOpts=(
+        TRUE    NATIVE          "native"
+        false   android-arm64   "aa8"
+        false   android-armv7   "aa7"
+        false   android-x64     "aa64"
+        false   linux-arm64     "la8"
+        false   linux-armv7     "la7"
+        false   linux-x64       "la7"
+        false   windows-arm64   "wa8"
+        false   windows-x64     "wx64"
+    )
 
-zen=$(zenity --width=500 --forms --title "Build Options" \
-    --add-combo "Target Arch" --combo-values "native|android-armv8|android-armv7|android-x64|linux-arm64|linux-x64|windows-arm64|windows-x64" \
-    --add-combo "Source Version" --combo-values "$(zenTagList)" \
-    --add-combo "Link Type" --combo-values "static|shared|both" \
-    --add-combo "Build Executables" --combo-values "yes|no" \
-    --add-combo "Optimize for" --combo-values "Size|Performance" \
-    --add-combo "Audio External Libs" --combo-values "none|basic|extended" \
-    --add-combo "Video External Libs" --combo-values "none|basic|extended" \
-    --add-combo "Net External Libs" --combo-values "none|basic|extended" \
-    --add-combo "Subtitle External Libs" --combo-values "none|basic|extended" \
-    --add-combo "I/O External Libs" --combo-values "none|basic|extended" \
-    --add-entry "Version Name" \
-)
+    sizeOpts=(
+        TRUE    Performance     ","
+        false   Size            ",--enable-small;--disable-debug"
+    )
 
-#0 android-armv8
-#1 n6.2-dev^{}
-#2 static yes Performance basic basic none none 6.2-basicAV
-extopts=
-mainOpts=( $(zenSplit ${zen[@]}) )
-zfilter=()
-dep=
-opt=
+    zen=$(zenity --width=500 --forms --title "Build Options" \
+        --add-combo "Target Arch" --combo-values "native|android-armv8|android-armv7|android-x64|linux-arm64|linux-x64|windows-arm64|windows-x64" \
+        --add-combo "Source Version" --combo-values "$(zenTagList)" \
+        --add-combo "Link Type" --combo-values "static|shared|both" \
+        --add-combo "Build Executables" --combo-values "yes|no" \
+        --add-combo "Optimize for" --combo-values "Size|Performance" \
+        --add-combo "Audio External Libs" --combo-values "none|basic|extended" \
+        --add-combo "Video External Libs" --combo-values "none|basic|extended" \
+        --add-combo "Net External Libs" --combo-values "none|basic|extended" \
+        --add-combo "Subtitle External Libs" --combo-values "none|basic|extended" \
+        --add-combo "I/O External Libs" --combo-values "none|basic|extended" \
+        --add-entry "Version Name" \
+    )
 
-argList=( "${mainOpts[0]}" )
-bra=${mainOpts[1]}
-test "x${mainOpts[2]}" != "xshared" && argList+=( "--static" )
-test "x${mainOpts[2]}" != "xstatic" && argList+=( "--shared" )
-test "x${mainOpts[3]}" != "xno" && argList+=( "--bin" )
-test "x${mainOpts[4]}" != "xPerformance" && extopts="--enable-small"
-test "x${mainOpts[5]}" != "xnone" && zfilter+=( "audio" )
-test "x${mainOpts[6]}" != "xnone" && zfilter+=( "video" )
-test "x${mainOpts[7]}" != "xnone" && zfilter+=( "net" )
-test "x${mainOpts[8]}" != "xnone" && zfilter+=( "sub" )
-test "x${mainOpts[9]}" != "xnone" && zfilter+=( "io" )
-extraversion="${mainOpts[10]}"
+    #0 android-armv8
+    #1 n6.2-dev^{}
+    #2 static yes Performance basic basic none none 6.2-basicAV
+    extopts=
+    mainOpts=( $(zenSplit ${zen[@]}) )
+    zfilter=()
+    dep=
+    opt=
 
-selectExtras $(IFS=$'|'; printf %s "${zfilter[*]}")
+    argList=( "${mainOpts[0]}" )
+    bra=${mainOpts[1]}
 
-argList+=( "--force" )
-#echo "arguments: ${argList[@]}"
-#echo "ffmpeg options: ${opt[@]}"
-#echo "lib dependencies: ${dep[@]}"
-dep=$(echo "${dep[@]}")
-set -- "${argList[@]}"
+    test "x${mainOpts[2]}" != "xshared" && argList+=( "--static" )
+    test "x${mainOpts[2]}" != "xstatic" && argList+=( "--shared" )
+    test "x${mainOpts[3]}" != "xno" && argList+=( "--bin" )
+    test "x${mainOpts[4]}" != "xPerformance" && extopts="--enable-small"
+    test "x${mainOpts[5]}" != "xnone" && zfilter+=( "audio" )
+    test "x${mainOpts[6]}" != "xnone" && zfilter+=( "video" )
+    test "x${mainOpts[7]}" != "xnone" && zfilter+=( "net" )
+    test "x${mainOpts[8]}" != "xnone" && zfilter+=( "sub" )
+    test "x${mainOpts[9]}" != "xnone" && zfilter+=( "io" )
+    extraversion="${mainOpts[10]}"
+
+    selectExtras $(IFS=$'|'; printf %s "${zfilter[*]}")
+    argList+=( "--force" )
+    #echo "arguments: ${argList[@]}"
+    #echo "ffmpeg options: ${opt[@]}"
+    #echo "lib dependencies: ${dep[@]}"
+    dep=$(echo "${dep[@]}")
+    extlibs=$(echo "${opt[@]}")
+	cat <<-EOF >$(pwd)/ffmpeg-${extraversion}.cfg
+		#!/bin/bash
+
+		dep='${dep}'
+		argList=( ${argList[@]} )
+		extlibs='${extlibs}'
+        extraversion='${extraversion}'
+		EOF
+
+    set -- "${argList[@]}"
+}
+
+loadConfig(){
+    echo "loading $1"
+    if [ -f "$1" ]; then
+        source $1
+        echo "arguments: ${argList[@]}"
+        echo "ffmpeg options: ${extlibs}"
+        echo "lib dependencies: ${dep}"
+        echo "version: ${extraversion}"
+    fi
+    exit 0
+    set -- "${argList[@]}"
+}
+
+
+extraOpts(){
+    case $1 in
+        --patch-vvc) applyVvcPatch=true;;
+        --enable-*)  extlibs+=" $1"; addDep $1;;
+        --disable-*) extlibs+=" $1";;
+    esac
+    return 0
+}
+
+case $1 in
+    --config)   ffmpegConfig;;
+    --load)     shift; loadConfig $1;;
+esac
+
 source xbuild
 
 extopts="--pkg-config-flags=--static \
@@ -198,7 +181,6 @@ extopts="--pkg-config-flags=--static \
          --cross-prefix=${CROSS_PREFIX} \
          --extra-version=$extraversion $extopts"
 
-extlibs=$(echo "${opt[@]}")
 nonfree=false
 gpl=false
 v3=false
@@ -359,5 +341,4 @@ FALSE	xavs	video	'xavs;--enable-libxavs'	'High quality encoder and decoder of th
 FALSE	xvidcore	video	'xvidcore;--enable-libxvid'	'Xvid decoder/encoder library'
 FALSE	zimg	video	'zimg;--enable-libzimg'	'Scaling, colorspace conversion, and dithering library'
 FALSE	zvbi	io	'zvbi;--enable-libzvbi'	'VBI Capturing and Decoding Library'
-
 FFDATA

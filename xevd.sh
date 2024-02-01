@@ -7,12 +7,12 @@
 lib='xevd'
 dsc='eXtra-fast Essential Video Decoder, MPEG-5 EVC (Essential Video Coding)'
 lic='BSD-3c'
-src='https://github.com/mpeg5/xeve.git'
+src='https://github.com/mpeg5/xevd.git'
 cfg='cmake'
 cmake_static="XEVD_APP_STATIC_BUILD"
 
 . xbuild
 
-$host_arm && doErr "${lib} does not support cross-build for arm (${arch})."
+#$host_arm && doErr "${lib} does not support cross-build for arm (${arch})."
 
 start

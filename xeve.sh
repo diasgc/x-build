@@ -23,7 +23,7 @@ stb_vrs='1.11.0'
 
 . xbuild
 
-on_config_arm(){
+_on_config_arm(){
   doErr 'Unsupported arm architecture'
   #$host_arm && cmake_config="-DARM=1" #doErr "${lib} does not support cross-build for arm (${arch})."
   # see https://github.com/lighttransport/embree-aarch64/blob/master/common/math/SSE2NEON.h
@@ -31,7 +31,7 @@ on_config_arm(){
   # port AVX/SSE port to aarch64
 }
 
-
+$host_arm && bra='xeve_satd_neon_dev' && cmake_config="-DARM=TRUE"
 $host_native && cmake_config='-DXEVE_NATIVE_BUILD=ON'
 
 start

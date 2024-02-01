@@ -22,11 +22,13 @@ stb_vrs=''
 . xbuild
 
 source_patch(){
-    sed 's/Windows.h/windows.h/g' src/zimg/common/arm/cpuinfo_arm.cpp
+    git submodule update --init --recursive
+    #sed 's/Windows.h/windows.h/g' src/zimg/common/arm/cpuinfo_arm.cpp
 }
 
 on_editpack(){
-    rm -rf share/doc/zimg/example
+    #rm -rf share/doc/zimg/example
+    return 0
 }
 
 start
