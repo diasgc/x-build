@@ -369,6 +369,9 @@ start(){
 		fi
 		fi
 		req_src_config=true
+
+		fn_defined 'on_source' && fn_log '' on_source
+		
 	fi
 
 	cd ${dir_src}
@@ -377,7 +380,7 @@ start(){
 	fi
 
 	case $src in *git*) echo -ne "${CT0}[$(git describe --tags)]${CD} ";; esac
-
+	
 	case ${target_trip[3]} in
 		android) fn_defined 'on_config_ndk' && fn_log '' on_config_ndk;;
 		gnu)     fn_defined 'on_config_gnu' && fn_log '' on_config_gnu;;
