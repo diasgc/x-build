@@ -28,7 +28,7 @@ eta='20'
 
 . xbuild
 
-on_source(){
+patch_source(){
     curl -L -O https://github.com/arsv/perl-cross/releases/download/${cross_vrs}/perl-cross-${cross_vrs}.tar.gz
     tar --strip-components=1 -zxf perl-cross-${cross_vrs}.tar.gz && rm -f perl-cross-${cross_vrs}.tar.gz
 }
