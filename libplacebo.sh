@@ -20,11 +20,19 @@ lst_lic='LICENSE'
 lst_pc=''
 
 . xbuild
+
 meson_cfg="-Ddemos=false"
+
 case $host_os in
     android) dep='glslang vulkan' meson_cfg+=" -Dvulkan-registry=${dir_install}/share/vulkan/registry/vk.xml";;
     gnu) LD="bfd";;
 esac
+
+patch_source(){
+    cd $dir_src
+    do_log 'submodule' git submodule update --init
+}
+
 start
 
 # cpu av8 av7 x86 x64

@@ -2122,8 +2122,8 @@ menu_tune(){
 menu_clear(){
 	while [ -n "$1" ];do
 		case $1 in
-			srclib)   prompt_remove ${dir_src};;
-			sources)  prompt_remove ${dir_sources};;
+			source|srclib)   prompt_remove ${dir_src};;
+			allsources|sources)  prompt_remove ${dir_sources};;
 			builds)   prompt_remove ${dir_install};;
 			packages) prompt_remove ${dir_pkgdist};;
 			wipe*)    prompt_remove ${dir_pkgdist} ${dir_install} ${dir_sources};;
