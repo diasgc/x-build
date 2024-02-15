@@ -146,8 +146,6 @@ function install_ndk {
 
 function install_llvm_gnu {
     $cmd_install llvm clang libc6-dev-arm64-cross libc6-dev-armhf-cross
-
-
 }
 
 function install_llvm_mingw {
@@ -265,7 +263,7 @@ case $1 in
 						esac
 						shift
 					done
-					exec x-setup
+					#exec ./x-setup
 					exit 0
 					;;
     --libcheck)		libcheck; exit 0
@@ -375,6 +373,9 @@ if [ -n "${cclang}" ]; then
 fi
 
 
+check_ndk_symlink(){
+    [[ -z "$(readlink "$1" | grep ${ANDROID_NDK_HOME})" ]]
+}
 
 if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
     echo -e "\n${CC1}Android NDK:"
@@ -412,6 +413,8 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
         c_abi=('arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64')
         c_clang=('aarch64-linux-android' 'armv7a-linux-androideabi' 'i686-linux-android' 'x86_64-linux-android')
         c_lib=('aarch64-linux-android' 'arm-linux-androideabi' 'i686-linux-android' 'x86_64-linux-android')
+
+        
         for i in 0 1 2 3; do
             #cl="${c_arch[${i}]}"
 
@@ -425,22 +428,26 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
                 check_wrapper_ndk "clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
             fi
             #[ -f "${dir_toolchain}/bin/as" ] || sudo ln -s "${ndk_toolchain}/bin/${c_lib[${i}]}-as" "${dir_toolchain}/bin/as"
-            [ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s -f "${ndk_toolchain}/bin/lld" "${dir_toolchain}/bin/ld"
+            #[ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s -f "${ndk_toolchain}/bin/lld" "${dir_toolchain}/bin/ld"
+            check_ndk_symlink "${dir_toolchain}/bin/ld" && sudo ln -sf "${ndk_toolchain}/bin/ld" "${dir_toolchain}/bin/ld"
             
             for j in as ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
-                [ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -s -f "${ndk_toolchain}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
+                check_ndk_symlink "${dir_toolchain}/bin/${j}" && sudo ln -sf "${ndk_toolchain}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
+                #[ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -s -f "${ndk_toolchain}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
             done
             
             [ -d "${dir_toolchain}/lib" ] || sudo ln -s -f "${ndk_toolchain}/sysroot/usr/lib/${c_lib[${i}]}" "${dir_toolchain}/lib"
             [ -f "${dir_toolchain}/lib/libpthread.a" ] || sudo ${dir_toolchain}/bin/llvm-ar cr "${dir_toolchain}/lib/libpthread.a"
             [ -f "${dir_toolchain}/lib/librt.a" ] || sudo ${dir_toolchain}/bin/llvm-ar cr "${dir_toolchain}/lib/librt.a"
             
-            [ -d "${dir_toolchain}/include" ] || sudo ln -s -f "${ndk_sysroot}/usr/include" "${dir_toolchain}/include"
+            check_ndk_symlink "${dir_toolchain}/sysroot" && sudo ln -sf "${ndk_sysroot}" "${dir_toolchain}/sysroot"
+            check_ndk_symlink "${dir_toolchain}/include" && sudo ln -sf "${ndk_sysroot}/usr/include" "${dir_toolchain}/include"
             
             [ -d "${dir_root}/builds/android/${c_abi[${i}]}" ] || mkdir -p "${dir_root}/builds/android/${c_abi[${i}]}"
             
             [ -d "${dir_toolchain}/local" ] && sudo unlink ${dir_toolchain}/local
-            sudo ln -s -f "${dir_root}/builds/android/${c_abi[${i}]}" "${dir_toolchain}/local"
+            sudo ln -sf "${dir_root}/builds/android/${c_abi[${i}]}" "${dir_toolchain}/local"
+
         done
         printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
         [ -f "${dir_toolchain}/include/sys/soundcard.h" ] || printf "#include <linux/soundcard.h>" >"${dir_toolchain}/include/sys/soundcard.h"
@@ -547,6 +554,7 @@ export config_lastupdate=$(date +%s) \\
     vrs_ndk="${ndk_version}" \\
     vrs_ndk_major="$(echo ${ndk_version} | sed 's/\..*//')" \\
     ndk_toolchain="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64" \\
+    ndk_sysroot="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
     LLVM_MINGW_HOME="${llvm_mingw}" \\
     LLVM_MINGW_REL="${llvm_mingw_rel}" \\
     MAKE_EXECUTABLE="$(command -v make)" \\
