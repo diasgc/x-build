@@ -1793,40 +1793,8 @@ loadToolchain(){
 
 	if $host_cross; then
 		case $PLATFORM in
-		Android)
-			if $ndk_testtc; then
-  			toolchain_android
-			else
-			  #decaprated
-			  [ -z "$API" ] && API=33
-			  CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
-			  TOOLCHAIN="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64"
-			  SYSROOT="${TOOLCHAIN}/sysroot"
-			  CROSS_PREFIX="${TOOLCHAIN}/bin/${arch}-"
-
-			  local ndk_cc_prefix=${arch}${API}
-			  if $host_arm32; then
-				  ndk_cc_prefix="armv7a-linux-androideabi${API}"
-				  cmake_system_processor="armv7-a"
-			  fi
-			  CC="${TOOLCHAIN}/bin/${ndk_cc_prefix}-clang"
-			  CXX="${CC}++"
-			  AS="${CC}" #AS see https://developer.android.com/ndk/guides/other_build_systems
-			  LD="${TOOLCHAIN}/bin/ld.lld" #Linker (also llvm-link?)
-			  GCOV="${TOOLCHAIN}/bin/llvm-cov" # should we disable this?
-			  # change cross_prefix for bin tools in ndk > r23
-			  [ ! -f "${CROSS_PREFIX}ar" ] && CROSS_PREFIX="${TOOLCHAIN}/bin/llvm-"
-			  LT_SYS_LIBRARY_PATH="$SYSROOT/usr/lib/$arch:$SYSROOT/usr/lib/${arch}/${API}"
-			  LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-			  CPPFLAGS+=" -I${SYSROOT}/usr/include/${arch} -I$SYSROOT/usr/include -I$SYSROOT/usr/local/include"
-			  YASM=${TOOLCHAIN}/bin/yasm
-			  cmake_findrootpath="${SYSROOT}/usr
-				  ${SYSROOT}/usr/lib/${arch}
-				  ${SYSROOT}/usr/lib/${arch}/${API}
-				  ${dir_install}"
-			fi
-			;;
-		Linux)
+			Android) toolchain_android;;	
+			Linux)
 			local cross
 			local ltsdir
 			case $arch in
@@ -1982,16 +1950,17 @@ create_patch(){
 	case $# in
 		0) return 1;;
 		1) touch "${1}_"
-		$b64 && diff -Naur "${1}_" "${1}" >"${1}.patch" || diff -Naur "${1}_" "${1}" | base64 -w 72 >"${1}.patch"
-		;;
+		   $b64 && diff -Naur "${1}_" "${1}" >"${1}.patch" || diff -Naur "${1}_" "${1}" | base64 -w 72 >"${1}.patch"
+		   ;;
 		*) $b64 && diff -Naur "${1}" "${2}" >"${2}.patch" || diff -Naur "${1}" "${2}" | base64 -w 72 >"${2}.patch"
-		;;
+		   ;;
 	esac
 	cd $od
 }
 
 hwinfoCountCores(){
-	cat /proc/cpuinfo | grep -Po -c 'model name\s+: \K(.*)'
+	echo $(nproc)
+	# or cat /proc/cpuinfo | grep -Po -c 'model name\s+: \K(.*)'
 }
 
 hwinfoCountCoresReadable(){

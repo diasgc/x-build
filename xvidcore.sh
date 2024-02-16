@@ -4,11 +4,12 @@ lib='xvidcore'
 dsc='Xvid decoder/encoder library'
 lic='GPL'
 url='https://labs.xvid.com/source/'
-vrs="1.3.7"
-src="https://downloads.xvid.com/downloads/xvidcore-${vrs}.tar.gz"
+src='https://github.com/Distrotech/xvidcore.git'
+#vrs="1.3.7"
+#src="https://downloads.xvid.com/downloads/xvidcore-${vrs}.tar.gz"
 cfg='ac'
 eta='20'
-config_dir='build/generic'
+config_dir='xvidcore/build/generic'
 pc_url=$url
 pc_llib='-lxvidcore'
 
@@ -23,6 +24,10 @@ lst_pc='xvidcore.pc'
 unset CSH # unsupported static/shared tags
 
 $host_ndk && $host_x86 && CFG+=" --disable-assembly"
+
+before_make(){
+    cd ..
+}
 
 start
 

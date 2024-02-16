@@ -6,10 +6,10 @@ dsc='Library to encode and decode images in WebP format'
 lic='BSD'
 src='https://chromium.googlesource.com/webm/libwebp.git'
 dep='giflib libpng'
-cfg='ag' # cmake not supporting dual static+shared build
+cfg='cmake' # cmake not supporting dual static+shared build
 eta='70'
 
-dev_vrs='1.2.2'
+dev_vrs='1.3.2'
 
 lst_inc='webp/*.h'
 lst_lib='libwebp libwebpmux libwebpdemux libwebpdecoder'
@@ -19,7 +19,7 @@ lst_pc='libwebp.pc libwebpmux.pc libwebpdemux.pc libwebpdecoder.pc'
 
 . xbuild
 
-$host_ndk && $host_x64 && cfg="cmake"
+#$host_ndk && $host_x64 && cfg="cmake"
 
 start
 

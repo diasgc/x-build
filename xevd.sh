@@ -13,6 +13,10 @@ cmake_static="XEVD_APP_STATIC_BUILD"
 
 . xbuild
 
+source_patch(){
+    $host_arm && git checkout xeve_itx_neon_dev
+}
+
 #$host_arm && doErr "${lib} does not support cross-build for arm (${arch})."
 
 start
