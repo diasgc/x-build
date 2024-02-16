@@ -377,6 +377,11 @@ check_ndk_symlink(){
     [[ -z "$(readlink "$1" | grep ${ANDROID_NDK_HOME})" ]]
 }
 
+update_ndkhome(){
+    sed -i 's@^export ANDROID_NDK_HOME=.*$@export ANDROID_NDK_HOME='"$ANDROID_NDK_HOME"'@' ~/.bashrc
+    source ~/.bashrc
+}
+
 if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
     echo -e "\n${CC1}Android NDK:"
     if [ -z "${ANDROID_NDK_HOME}" ]; then
@@ -400,6 +405,18 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
             echo -e "(updated)"
         else
             echo -e "${CY1} latest is ${ndk_version_latest}${C0}"
+            ndk_parent="$(dirname $ANDROID_NDK_HOME)"
+            if [ -d "${ndk_parent}/${ndk_version_latest}" ]; then
+                read -p "  Switch from ${ndk_version} to ${ndk_version_latest}? [Y|n]" yn;
+                case $yn in
+                    y*|Y*)
+                        export ANDROID_NDK_HOME="${ndk_parent}/${ndk_version_latest}"
+                        vrs_ndk=${ndk_version_latest}
+                        sed -i 's@^export ANDROID_NDK_HOME=.*$@export ANDROID_NDK_HOME='"$ANDROID_NDK_HOME"'@' ~/.bashrc
+                        source ~/.bashrc
+                        ;;
+                esac
+            fi
         fi
         
         ndk_build="linux-$(uname -m)"
