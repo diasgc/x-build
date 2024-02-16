@@ -1758,7 +1758,7 @@ toolchain_android(){
 	[ -d "${ANDROID_NDK_HOME}" ] || doErr "No ANDROID NDK Toolchain found. Aborting."
 
 	TOOLCHAIN="${ndk_toolchain}"
-	SYSROOT="${TOOLCHAIN}/sysroot"
+	SYSROOT="/usr/${arch}/sysroot"
 	CROSS_PREFIX="/usr/${arch}/bin/"
 
 	CC="${CROSS_PREFIX}clang"
