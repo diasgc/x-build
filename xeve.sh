@@ -31,7 +31,9 @@ _on_config_arm(){
   # port AVX/SSE port to aarch64
 }
 
-$host_arm && bra='xeve_satd_neon_dev' && cmake_config="-DARM=TRUE"
 $host_native && cmake_config='-DXEVE_NATIVE_BUILD=ON'
 
+source_patch(){
+    $host_arm && git checkout xeve_itx_neon_dev
+}
 start

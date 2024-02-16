@@ -4,8 +4,7 @@ lib='kvazaar'
 dsc='An open source C library for efficient image processing and image analysis operations'
 lic='LGPL-2.1'
 src='https://github.com/ultravideo/kvazaar.git'
-cfg='ag'
-cfg_cmd='./autogen.sh'
+cfg='cmake'
 eta='70'
 
 lst_inc='kvazaar.h'
@@ -14,7 +13,7 @@ lst_bin='kvazaar'
 lst_lic='COPYING CREDITS README.md'
 lst_pc='kvazaar.pc'
 
-dev_vrs='2.1.0'
+dev_vrs='2.3.0'
 
 . xbuild
 

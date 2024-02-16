@@ -20,7 +20,7 @@ lst_pc='xavs2.pc'
 
 . xbuild
 
-ac_config="-enable-lto --enable-strip"
+#ac_config="-enable-lto --enable-strip"
 $host_x86 && AS=nasm || ac_config+=' --disable-asm'
 
 start

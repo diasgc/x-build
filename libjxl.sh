@@ -4,7 +4,6 @@
 # GNU  F  ... ... ... GCC
 # WIN  F  ... ... ... CLANG/GCC
 
-lvr='0.7.0'
 lib='libjxl'
 dsc='A fast, compressed, persistent binary data store library for C.'
 lic='BSD-3c'
@@ -14,7 +13,7 @@ cfg='cmake'
 eta='164'
 dep='highway openexr gflags lcms2'
 cmake_static='JPEGXL_STATIC'
-cmake_config="-DBUILD_TESTING=OFF -DJPEGXL_ENABLE_BENCHMARK=OFF -DJPEGXL_ENABLE_EXAMPLES=OFF -DJPEGXL_ENABLE_MANPAGES=OFF"
+cmake_config="-DBUILD_TESTING=OFF -DJPEGXL_ENABLE_DOXYGEN=OFF -DJPEGXL_ENABLE_BENCHMARK=OFF -DJPEGXL_ENABLE_EXAMPLES=OFF -DJPEGXL_ENABLE_MANPAGES=OFF -DJPEGXL_ENABLE_TOOLS=OFF"
 API=28
 
 lst_inc=''
@@ -22,11 +21,11 @@ lst_lib=''
 lst_bin=''
 lst_lic='LICENSE PATENTS AUTHORS'
 lst_pc=''
+dev_vrs='0.9.2'
 
 . xbuild
 
-
-
+$host_ndk && cmake_config+=" -DSJPEG_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"
 
 start
 
