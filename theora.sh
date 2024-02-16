@@ -5,8 +5,8 @@ apt='libtheora-dev'
 dsc='Theora video compression format'
 lic='BSD'
 src='https://github.com/xiph/theora.git'
-bra='tags/v1.1.1'
-cfg='ac'
+#bra='tags/v1.1.1'
+cfg='ag'
 dep='ogg vorbis'
 eta='391'
 
@@ -23,7 +23,7 @@ lst_pc='theora.pc theoraenc.pc theoradec.pc'
 
 . xbuild
 
-source_config(){
+_source_config(){
     # dont run configure on autogen
     sed -i 's/^cd \$olddir/exit 0;&/' autogen.sh
     ./autogen.sh

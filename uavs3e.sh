@@ -11,11 +11,15 @@ src='https://github.com/uavs3/uavs3e.git'
 cfg='cmake'
 eta='0'
 
+cmake_config='-DCOMPILE_10BIT=1'
+cmake_static='-DBUILD_SHARED_LIBS=0'
+
 lst_inc=''
 lst_lib=''
 lst_bin=''
+dev_vrs='1.3.1'
 
-on_config_arm(){
+_on_config_arm(){
     doErr "Arm not supported."
 }
 
@@ -23,7 +27,7 @@ on_config_arm(){
 
 start
 
-<<'LZS_PATCH'
+<<'LZS_PATCH_IGNORE'
 LQgEGEFkEMGsFMAyBLAzgF1QOgPYBsATASACYAGEgRmErOAGYzQSSAuMgDlfoDYsyA7AE4yosaADUZWmQBQEhRBgIU
 GbOgAe6UhWq0GTFuy4BWPiQEmyAFh6MmUmbIACz0DQA0AyZS+hXsqAAxgC2cPAA+iHIAHbIIQCuIREATvAAjgnIaQQ
 AFABqAKIASgDKAJIA8gByzFgcAJSBgQAOKTgAVvBB6LkJ0ABuqPTwTcDy0AQEEUE4IS3IeJE4LejIODGoucAA6jE4w
@@ -45,7 +49,7 @@ IgiAtqmos0Ig6x/0TPyXq/PIH8v4/w/gfAAZFA0AABCF+2JQERDzNUPUsZyh6kgeLRBPwcDonRHafBV8
 Q8BrBiBEfBhCsLENQKQhei1lqyH7GAckmpnZwjSJMT23s5xpyMGQEwa4NzWEsOHPcBcjwx24bw2E/CCCCJTsIv2ojV
 wfnqNYXOu4HAHkLm4YAJB6B+AkGYyu4FRbV3gHgF4GExZtGgFcMIDcQhDxhLkPANJJ4llWMo+Akx8jgBIFgXx1J5qa
 k1M4lIrj3EUi8b0SJ/jAkqNCeEyJItxZQQSDBUAAAeF4YQWiwlVPAT2AA+XJjtoI/EKek4JqjYQ1KAA=
-LZS_PATCH
+LZS_PATCH_IGNORE
 
 # Filelist
 # --------
