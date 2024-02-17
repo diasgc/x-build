@@ -5,7 +5,7 @@ dsc='A video processing framework with simplicity in mind'
 lic='LGPL-2.1'
 src='https://github.com/vapoursynth/vapoursynth.git'
 #cfg='ag'
-cfg='cmake'
+cfg='ag'
 tls='python'
 dep='zimg'
 eta='60'
@@ -19,7 +19,7 @@ lst_pc='vapoursynth.pc'
 dev_bra='main'
 dev_vrs='58'
 stb_bra=''
-stb_vrs=''
+stb_vrs='R66-RC1-4'
 
 cmake_static='BUILD_STATIC_LIBS'
 
@@ -31,6 +31,7 @@ get_version(){
 
 build_strip=false
 
+# ffmpeg requires vsscript
 ac_config="--enable-python-module=no --enable-vspipe=no --enable-vsscript=no"
 $host_arm && ac_config+=" --enable-x86-asm=no"
 $host_arm && $host_clang && CPPFLAGS+=' -mno-outline-atomics'
@@ -64,7 +65,7 @@ start
 # ld: error: undefined symbol: vs_generic_3x3_sobel_word_avx2
 # >>> referenced by ld-temp.o
 # >>>               lto.tmp:(VSFrame const* genericGetframe<(GenericOperations)1>(int, int, void*, void**, VSFrameContext*, VSCore*, VSAPI const*))
-<<'LZS_PATCH'
+<<'LZS_PATCH_OLD'
 LQgEGEFkEMGsFMAyBLAzgF1QOnQD3QJACMAnAOwAMwFR1RoNAXBRcxVi516ANQ0sAoHsIgwEKDNjyEATBRkzqAZmAy
 lDVhQAcjIgFYsANiXGSMoi15cBAARuhqAGgq8ijmXpmg7QgMYBbOHgAfX9kADtkfwBXf2CAJ3gAR2jkRIATAAoANQB
 RACUAZQBJAHkAOVAlLCJDAEohIQAHeIB7ACt4X3RMgDdoJtbo+NQAT3D0AAsGngBiUAXQRABBcoBxAFVltdzCiAgAD
@@ -93,7 +94,7 @@ xOmSKtGqiRTBEttbLmP1E4rygCIsRJpJHBC8kos0aq9goHCNEXAWp8iiANZ9I1UjTXKItaAZYnC2jIHS
 5NyeW2tchKxVhjdWFCIJYhRO4mhJozQbClNpUN+QdbKytFGjWRBJRGK/IIgA6hjJQXcxKxKYeEQ+IatYZvDTtMsJbf
 alCLRHGGdLwClCek5YInbu2GLEnGn4HjMhJuNCm20aa62ZqbRjbkrb235qEF/BxAiV46L9bvRhJDmHTvcmG7aesDY6
 ORv4V2TRAhTDMhmBw/gMzlsoQsYdCax2Q0nZKfdCsG3HtDOGF6y6eHGJoVugNVaa3pp1r+oUxsSlDuRCOxN77U21oP
-fWo9+tDawcA6un+9ItHVOeMENUQgCC/jeB8WC0Brw+iHugaE2AARNAYmR54FHPjQF6NCBNrt4jQDjXRriTHSPkfeJ8
+fWo9+tDawcA6un+97ItHVOeMENUQgCC/jeB8WC0Brw+iHugaE2AARNAYmR54FHPjQF6NCBNrt4jQDjXRriTHSPkfeJ8
 VUrRcCJmGIJ+I/xAQsdE5Rt4IFXbwCdMMZE8mmgibY2J2CAJohqY04kaFunXj6ZeAiFoVncAtG04pvTynrPxFs/Zki
 PBWMWec3Z1z7QyTvH8E0HOcmmOOe858FzLx/PoEC8FjEcmPNefY7BFzsmHPmZSy8WTqBFQZFEp5pTnwPHhGhMgXwOW
 MuFac58CI9H4jxjRJVpLRXYIIAa+xF4nHuMeKq8lyz7XStoi61xvjvWWs1ba9CIbKnogYi42iPrrWXiDc64Z+b7ECv
@@ -130,4 +131,4 @@ oWAUAACkAAuqAPWGzqAM+aAOBaJcTZbb4CcHKPCDCB8JCMXMQvAA6KMP4BJmiJCN8MENPn+EoLgEoBXq
 zihScAAHz8OgCx3QjYhIjyiqijAqiFH0ZBZYCtB8MCNWVWVs6tA4BBaMA5CFBdglHwCgB9HoAABUoADDaw34vG/G8A
 AAPJkCY6VhdqUDJE6AfHUEQLw8iugI4JBO45g60D6vox4wPr4341OFo+Y48brgYx46WNRIkEE6WNHMULozRAY3UA0F
 lOUMKqVvNPaTo06FCJwqAK0AEkPPAAIEAA==
-LZS_PATCH
+LZS_PATCH_OLD

@@ -19,6 +19,8 @@ lst_bin=''
 
 . xbuild
 
+test -d $dir_install_include/CL && exit 0
+
 start
 
 # Filelist

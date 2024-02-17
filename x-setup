@@ -453,9 +453,9 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
                 #[ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -s -f "${ndk_toolchain}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
             done
             
-            [ -d "${dir_toolchain}/lib" ] || sudo ln -sfn "${ndk_toolchain}/sysroot/usr/lib/${c_lib[${i}]}" "${dir_toolchain}/lib"
-            [ -f "${dir_toolchain}/lib/libpthread.a" ] || sudo ${dir_toolchain}/bin/llvm-ar cr "${dir_toolchain}/lib/libpthread.a"
-            [ -f "${dir_toolchain}/lib/librt.a" ] || sudo ${dir_toolchain}/bin/llvm-ar cr "${dir_toolchain}/lib/librt.a"
+            check_ndk_symlink "${dir_toolchain}/lib" && sudo ln -sfn "${ndk_toolchain}/sysroot/usr/lib/${c_lib[${i}]}" "${dir_toolchain}/lib"
+            [ -f "${dir_toolchain}/lib/libpthread.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/libpthread.a"
+            [ -f "${dir_toolchain}/lib/librt.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/librt.a"
             
             check_ndk_symlink "${dir_toolchain}/sysroot" && sudo ln -sfn "${ndk_sysroot}" "${dir_toolchain}/sysroot"
             check_ndk_symlink "${dir_toolchain}/include" && sudo ln -sfn "${ndk_sysroot}/usr/include" "${dir_toolchain}/include"
@@ -464,9 +464,9 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
             
             [ -d "${dir_toolchain}/local" ] && sudo unlink ${dir_toolchain}/local
             sudo ln -sf "${dir_root}/builds/android/${c_abi[${i}]}" "${dir_toolchain}/local"
-
         done
         printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
+        
         [ -f "${dir_toolchain}/include/sys/soundcard.h" ] || printf "#include <linux/soundcard.h>" >"${dir_toolchain}/include/sys/soundcard.h"
     else
         echo -e "  not installed"

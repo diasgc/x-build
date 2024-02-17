@@ -817,34 +817,37 @@ check_install(){
 }
 
 check_xbautopatch(){
-pushdir ${dir_root}
-local match=$(grep -oP "(?<=^<<').*?(?=')" $0)
-if [ -n "${match}" ]; then
-	local block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $0)
-	case $match in
-	XB_CREATE_CMAKELISTS|CMakeLists.txt)
-		echo "${block}" >${dir_src}/CMakeLists.txt
-		echo -e "\ncreate CMakeLists.txt: \n$block" >>${log_file}
-		;;
-	XB_PATCH) pushdir ${dir_src}
-		patch -p0 <<<$(echo "${block}") 2>&1 >${log_file}
-		echo -e "\npatch found: \n$block" >>${log_file}
-		popdir
-		;;
-	XB64_PATCH) pushdir ${dir_src}
-		patch -p0 <<<$(echo "${block}" | base64 -d) 2>&1 >${log_file}
-		popdir
-		;;
-	LZS_PATCH) pushdir ${dir_src}
-		patch -p0 <<<$(echo "${block}" | ${dir_root}/utils/lz-string -d -) 2>&1 >${log_file}
-		popdir
-		;;
-	*) echo -e "\nUnknown block name ${match} with this contents (ignoring):\n$block" >>${log_file}
-		;;
-	esac
-fi
-popdir
-return 0
+	pushdir ${dir_root}
+	local matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
+	if [ ${#matches[@]} -gt 0 ]; then
+		for match in ${matches[@]}; do
+			echo $match
+			local block=$(awk '/^<<.'${match}'./{flag=1; next} /^'{$match}'/{flag=0} flag' $0)
+			case $match in
+				XB_CREATE_CMAKELISTS|CMakeLists.txt)
+					echo "${block}" >${dir_src}/CMakeLists.txt
+					echo -e "\ncreate CMakeLists.txt: \n$block" >>${log_file}
+					;;
+				XB_PATCH) pushdir ${dir_src}
+					patch -p0 <<<$(echo "${block}") 2>&1 >${log_file}
+					echo -e "\npatch found: \n$block" >>${log_file}
+					popdir
+					;;
+				XB64_PATCH) pushdir ${dir_src}
+					patch -p0 <<<$(echo "${block}" | base64 -d) 2>&1 >${log_file}
+					popdir
+					;;
+				LZS_PATCH) pushdir ${dir_src}
+					patch -p0 <<<$(echo "${block}" | ${dir_root}/utils/lz-string -d -) 2>&1 >${log_file}
+					popdir
+					;;
+				*) echo -e "\nUnknown block name ${match} with this contents (ignoring):\n$block" >>${log_file}
+					;;
+			esac
+		done
+	fi
+	popdir
+	return 0
 }
 
 # usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
@@ -2043,13 +2046,15 @@ patch_embed(){
 }
 
 patch_get(){
-	match=$(grep -oP "(?<=^<<').*?(?=')" $0)
-	if [ -n "${match}" ]; then
-		block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $0)
-		case $match in
-		XB64_PATCH) echo "${block}" | base64 -d;;
-		LZS_PATCH)  echo "${block}" | utils/lz-string -d -;;
-		esac
+	matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
+	if [ ${#matches[@]} -gt 0 ]; then
+		for match in ${matches[@]}; do
+			block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $0)
+			case $match in
+				XB64_PATCH) echo "${block}" | base64 -d;;
+				LZS_PATCH)  echo "${block}" | utils/lz-string -d -;;
+			esac
+		done
 	fi
 	return 0;
 }

@@ -34,3 +34,4 @@ else
     cmake_config='-DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON'
     start
 fi
+
