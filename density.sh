@@ -3,6 +3,7 @@
 lib='density'
 dsc='Small & portable byte-aligned LZ77 compression'
 lic='BSD-3c'
+sub='submodule update --init --recursive'
 #vrs='0.14.2'
 src='https://github.com/k0dai/density.git'
 cfg='cmake'
@@ -26,7 +27,7 @@ cmake_config="-DBUILD_BENCHMARK=ON"
 
 . xbuild
 
-source_config(){
+_source_config(){
   git submodule update --init --recursive
 }
 
