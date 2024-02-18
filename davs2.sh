@@ -20,13 +20,8 @@ lst_lic='COPYING'
 lst_pc='davs2.pc'
 
 on_config_ndk(){
-    ac_config="-enable-lto --enable-pic --enable-strip --disable-asm"
-    CFLAGS="-fPIE -pie"
-
-    $host_arm && CFLAGS="-D__ARM_ARCH_7__ -D__ARM_ARCH_7A__ $CFLAGS" && ac_config+=" --host=arm-linux"
-    $host_arm64 && CFLAGS="-march=armv8-a $CFLAGS"
-    $host_arm32 && CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=neon $CFLAGS"
-    LDFLAGS="-fPIE -pie -llog"
+    ac_config="--enable-lto --enable-pic --enable-strip"
+    LDFLAGS="-llog"
 }
 
 . xbuild
