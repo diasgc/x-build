@@ -1,30 +1,32 @@
 #!/bin/bash
 # ................................................
-# X-Build util 0.3.2 2021-diasgc
+# X-Build util 0.4.0 2024-diasgc
 # ................................................
 
 
 function trap_sigint {
-tput cnorm -- normal
-cd $(dirname $0)
-echo -e "\n\n${CY1}  Interrupted by user${C0}\n  Log available at \e[4m${log_file}\e[24m\n\n"
+	tput cnorm -- normal
+	cd $(dirname $0)
+	echo -e "\n\n${CY1}  Interrupted by user${C0}\n  Log available at \e[4m${log_file}\e[24m\n\n"
 }
 
 # first load .common functions and error trap
 if [ -z ${vsh+x} ];then
-. .common
-set -o pipefail
-if [ "${1}" == "--debug" ];then
-	shift
-	set -x
-	debug=true
-fi
-trap err ERR
+	source .common
+	source ./utils/.options
+	set -o pipefail
+	if [ "${1}" == "--debug" ];then
+		shift
+		set -x
+		debug=true
+	fi
+	trap err ERR
 fi
 
 clangv=-15
 
 sudo=$(command -v sudo)
+
 export HOST_NPROC=$(nproc)
 # defvar debug=false
 : "${host_native:=false}"
@@ -66,6 +68,13 @@ update=false
 retry=false
 use_llvm_mingw=true
 use_clang=true
+
+break_on_git=false
+break_on_patch=false
+break_on_config=false
+break_on_build=false
+break_on_make=false
+
 
 skip_pc=false
 skip_dl=false
@@ -141,12 +150,12 @@ done
 }
 
 init(){
-[ -f ".config" ] && . .config
-if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
-	./x-setup
-	. .config || doErr 'Unable to initialize config file'
-fi
-export is_init=true
+	[ -f ".config" ] && . .config
+	if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
+		./x-setup
+		. .config || doErr 'Unable to initialize config file'
+	fi
+	export is_init=true
 }
 
 ! $is_init && init
@@ -164,6 +173,7 @@ if [ -n "${dir_install}" ] && [ -z "${src}" ]; then
 fi
 
 inc_tab
+
 if [ -z "${lic}" ] || [ -z "${dsc}" ];then
 	gitjson=$(git_api_tojson $src)
 	if [ -n "${gitjson}" ];then
@@ -326,18 +336,21 @@ start(){
 	CBN=$ocbn7
 
 	log_start $arch ${eta}s
+
 	local bss=
+	
 	$build_static && bss="${SSB}[static]" || bss="${CD}[static]"
 	$build_shared && bss="${bss}${SSB}[shared]" || bss="${bss}${CD}[shared]"
 	$build_bin && echo -ne "${bss}${SSB}[bin]${C0} " || echo -ne "${bss}${CD}[bin]${C0} "
+	
 	cd ${dir_sources}
 
-	! $retry && [ "${dir_build}" != "${dir_src}" ] && rm -rf ${dir_build}
 
-	# default dir_config is dir_src
-	: "${dir_config:=${dir_src}}"
-	# check if defined custom dir_config location (config_dir)
-	[ -n "${config_dir+x}" ] && dir_config="${dir_src}/${config_dir}"
+	if [ ! ${retry} ]; then
+		if [ "${dir_build}" != "${dir_src}" ] && [[ "${dir_build}" != "${dir_config}" ]]; then
+			rm -rf ${dir_build}
+		fi
+	fi
 
 	local req_src_config=false
 	local req_src_patch=false
@@ -345,30 +358,32 @@ start(){
 	# get source
 	if [ ! -d ${dir_src} ];then
 		if ! $skip_dl; then
-		# test internet connection...
-		wget -q --spider http://google.com
-		[ ! $? -eq 0 ] && doErr 'No Internet Connection. Aborting...'
-		# check whether to custom get source
-		if fn_defined 'source_get'; then
-			fn_log 'get' source_get
-		elif [ -n "${sty}" ]; then
-			case $sty in
-			git)         git_clone $src $lib $src_opt;;
-			tgz|txz|tlz) wget_tarxx $src $lib;;
-			svn)         do_svn $src $lib;;
-			hg)          do_hg $src $lib;;
-			*)           doErr "unknown sty=$sty for $src";;
-			esac
-		else
-			case $src in
-			*.tar.*|*.tgz) wget_tarxx $src $lib;;
-			*.git|*git.*)  git_clone $src $lib $src_opt;;
-			*svn.*)  do_svn $src $lib;;
-			*) doErr "Unknown source type for $src";;
-			esac
-		fi
+			# test internet connection...
+			wget -q --spider http://google.com
+			[ ! $? -eq 0 ] && doErr 'No Internet Connection. Aborting...'
+			# check whether to custom get source
+			if fn_defined 'source_get'; then
+				fn_log 'get' source_get
+			elif [ -n "${sty}" ]; then
+				case $sty in
+					git)           git_clone $src $lib $src_opt;;
+					tgz|txz|tlz)   wget_tarxx $src $lib;;
+					svn)           do_svn $src $lib;;
+					hg)            do_hg $src $lib;;
+					*)             doErr "unknown sty=$sty for $src";;
+				esac
+			else
+				case $src in
+					*.tar.*|*.tgz) wget_tarxx $src $lib;;
+					*.git|*git.*)  git_clone $src $lib $src_opt;;
+					*svn.*)        do_svn $src $lib;;
+					*)             doErr "Unknown source type for $src";;
+				esac
+			fi
 		fi
 		req_src_config=true
+
+		$break_on_git && end_script
 
 		fn_defined 'patch_source' && fn_log '' patch_source
 		
@@ -393,6 +408,11 @@ start(){
 		fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
 	fi
 
+	# default dir_config is dir_src
+	: "${dir_config:=${dir_src}}"
+	# check if defined custom dir_config location (config_dir)
+	[ -n "${config_dir+x}" ] && dir_config="${dir_src}/${config_dir}"
+
 	cd ${dir_config}
 
 	if [ -z "${cfg}" ]; then
@@ -405,7 +425,7 @@ start(){
 			fn_log 'config' source_config
 		elif [ -n "${cfg_cmd}" ];then
 			do_log 'config' ${cfg_cmd}
-		unset cfg_cmd
+			unset cfg_cmd
 		else case $cfg in
 			ab)		[ -f "${dir_config}/boostrap" ] && do_log 'bootstrap' ${dir_config}/boostrap
 					[ -f "${dir_config}/boostrap.sh" ] && do_log 'bootstrap' ${dir_config}/boostrap.sh
@@ -434,14 +454,14 @@ start(){
 		fi
 	fi
 
-	$only_repo && end_script
+	$break_on_patch && end_script
 
 	if [ -z "${dir_build}" ];then
 		case ${build_system} in
-		cmake|meson|automake) dir_build="${dir_config}/build_${arch}"
-			[ -d "${dir_build}" ] && rm -rf ${dir_build} 2>/dev/null
-			;;
-		*) dir_build=${dir_config};;
+			cmake|meson|automake) dir_build="${dir_config}/build_${arch}"
+				[ -d "${dir_build}" ] && rm -rf ${dir_build} 2>/dev/null
+				;;
+			*) dir_build=${dir_config};;
 		esac
 	fi
 
@@ -516,6 +536,9 @@ start(){
 		esac
 	fi
 
+	$break_on_config && end_script
+
+
 	if fn_defined 'before_make'; then
 		fn_log 'preparing' before_make
 	fi
@@ -530,7 +553,6 @@ start(){
 	fi
 	$build_static && LDFLAGS="${static_ldflag} $LDFLAGS"
 
-
 	log_vars CFLAGS CXXFLAGS WFLAGS CPPFLAGS LDFLAGS LIBS
 
 	[ -z "${mki}" ] && mki="install"
@@ -542,6 +564,10 @@ start(){
 		do_progress 'make' ${MAKE_EXECUTABLE} ${mkf} -j${HOST_NPROC} || err
 		unset skip_make
 	fi
+
+	$break_on_make && end_script
+	
+
 
 	if fn_defined 'before_install'; then
 		fn_log 'preparing' before_install
@@ -821,7 +847,7 @@ check_xbautopatch(){
 	local matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
 	if [ ${#matches[@]} -gt 0 ]; then
 		for match in ${matches[@]}; do
-			echo $match
+			echo -ne "${CC2}${match} ${C0}"
 			local block=$(awk '/^<<.'${match}'./{flag=1; next} /^'{$match}'/{flag=0} flag' $0)
 			case $match in
 				XB_CREATE_CMAKELISTS|CMakeLists.txt)
@@ -969,58 +995,58 @@ build_package_cmake(){
 }
 
 build_packages_bin(){
-set -x
-local xb_distdir=$(build_packages_getdistdir)
-if fn_defined 'create_package'; then
-	fn_log 'pack' create_package ${xb_distdir}
-else
-	if fn_defined 'build_make_package'; then
-		fn_log 'pack' build_make_package ${xb_distdir}
-	elif [ "$MAKE_EXECUTABLE" = "ninja" ];then
-		DESTDIR=${xb_distdir} ninja -C ${dir_build} install
+	set -x
+	local xb_distdir=$(build_packages_getdistdir)
+	if fn_defined 'create_package'; then
+		fn_log 'pack' create_package ${xb_distdir}
 	else
-		[ -z "$mkd" ] && mkd="DESTDIR=${xb_distdir} install"
-		${MAKE_EXECUTABLE} $mkd
-		fi
-		[ -z "$mkd_suffix" ] && mkd_suffix=${dir_install}
-		pushdir "${xb_distdir}${mkd_suffix}"
-
-		# dont forget licence files
-		if [ -n "${lst_lic}" ]; then
-		[ -d "share/doc/${lib}" ] || mkdir -p "share/doc/${lib}"
-		for f in ${lst_lic}; do
-			[ -f "share/doc/${lib}/$f" ] || cp ${dir_src}/${f} "share/doc/${lib}/"
-		done
-	fi
-	
-	# also include .pc manually-built file
-	if fn_defined 'build_pkgconfig_file' || [ -n "$pc_llib" ]; then
-		local xb_pkgd=$(pwd)/lib/pkgconfig
-		[ ! -d "${xb_pkgd}" ] && mkdir -p $xb_pkgd
-		if [ -n "${pc_filelist}" ]; then
-			for pp in ${pc_filelist}; do
-				cp ${dir_install_pc}/${pp} ${xb_pkgd}/
-			done
+		if fn_defined 'build_make_package'; then
+			fn_log 'pack' build_make_package ${xb_distdir}
+		elif [ "$MAKE_EXECUTABLE" = "ninja" ];then
+			DESTDIR=${xb_distdir} ninja -C ${dir_build} install
 		else
-			cp ${dir_install_pc}/${pkg}.pc ${xb_pkgd}/
+			[ -z "$mkd" ] && mkd="DESTDIR=${xb_distdir} install"
+			${MAKE_EXECUTABLE} $mkd
+			fi
+			[ -z "$mkd_suffix" ] && mkd_suffix=${dir_install}
+			pushdir "${xb_distdir}${mkd_suffix}"
+
+			# dont forget licence files
+			if [ -n "${lst_lic}" ]; then
+			[ -d "share/doc/${lib}" ] || mkdir -p "share/doc/${lib}"
+			for f in ${lst_lic}; do
+				[ -f "share/doc/${lib}/$f" ] || cp ${dir_src}/${f} "share/doc/${lib}/"
+			done
 		fi
-		fn_undef build_pkgconfig_file
-	fi
+		
+		# also include .pc manually-built file
+		if fn_defined 'build_pkgconfig_file' || [ -n "$pc_llib" ]; then
+			local xb_pkgd=$(pwd)/lib/pkgconfig
+			[ ! -d "${xb_pkgd}" ] && mkdir -p $xb_pkgd
+			if [ -n "${pc_filelist}" ]; then
+				for pp in ${pc_filelist}; do
+					cp ${dir_install_pc}/${pp} ${xb_pkgd}/
+				done
+			else
+				cp ${dir_install_pc}/${pkg}.pc ${xb_pkgd}/
+			fi
+			fn_undef build_pkgconfig_file
+		fi
 
-	if fn_defined 'on_editpack'; then
-		fn_log 'edit' on_editpack
-	fi
+		if fn_defined 'on_editpack'; then
+			fn_log 'edit' on_editpack
+		fi
 
-	build_packages_filelist
-	case $pkg_fmt in
-		tgz) tar -czvf "${xb_distdir}.tar.gz" *;;
-		tbz) tar -cvjSf "${xb_distdir}.tar.bz2" *;;
-		zip) zip -r "${xb_distdir}.zip" *;;
-	esac
-	rm -rf ${xb_distdir}
-	popdir
-fi
-set +x
+		build_packages_filelist
+		case $pkg_fmt in
+			tgz) tar -czvf "${xb_distdir}.tar.gz" *;;
+			tbz) tar -cvjSf "${xb_distdir}.tar.bz2" *;;
+			zip) zip -r "${xb_distdir}.zip" *;;
+		esac
+		rm -rf ${xb_distdir}
+		popdir
+	fi
+	set +x
 }
 
 build_dependencies(){
@@ -1775,6 +1801,7 @@ toolchain_android(){
 	PKG_CONFIG_DIR="/usr/${arch}/local/lib/pkgconfig"
 	CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/lib -I${SYSROOT}/usr/local/include"
 	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
+	test $build_shared && LDFLAGS+=" -static-libstdc++ -lc++_static"
 
 	cmake_system_processor="${target_trip[0]}${target_trip[1]}"
 	$host_arm32 && cmake_system_processor="armv7-a"
@@ -2084,6 +2111,18 @@ create_diff(){
 	popdir
 }
 
+
+set_break(){
+    case $1 in
+        git)    break_on_git=true;;
+        patch)  break_on_patch=true;;
+        config) break_on_config=true;;
+        build)  break_on_build=true;;
+        make)   break_on_make=true;;
+    esac
+    return 0
+}
+
 menu_tune(){
 	case $1 in
 		smd855)   CPPFLAGS+=" -mtune=cortex-a76.cortex-a55";;
@@ -2363,7 +2402,11 @@ while [ $1 ];do
 					build_dist=true
 					dep_build="--full"
 					;;
+
+		--break)    shift; set_break $1; shift;;
+
 		$optVrs)	shift; vrs=$1;;
+
 		--bra*)     shift; export bra=$1;;
 		--shared)   build_shared=true; build_static=false;;
 		--static)   build_static=true; build_shared=false;;

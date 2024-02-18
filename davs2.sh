@@ -6,13 +6,12 @@ lic='GPL-2.0'
 src='https://github.com/pkuvcl/davs2.git'
 cfg='ac'
 eta='40'
-config_dir="build/linux"
 ac_bin="--disable-cli| "
+build_static=''
+build_shared='--enable-shared'
 
 dev_bra='main'
-dev_vrs='1.6.205'
-stb_bra='tags/1.6'
-stb_vrs='1.6'
+dev_vrs='1.7.1'
 
 lst_inc='davs2.h davs2_config.h'
 lst_lib='libdavs2'
@@ -20,17 +19,21 @@ lst_bin='davs2'
 lst_lic='COPYING'
 lst_pc='davs2.pc'
 
-on_config_arm(){
-    ac_config+=" --disable-asm"
-}
-
 on_config_ndk(){
-    LDFLAGS+=" -L${SYSROOT}/usr/lib -llog"
+    ac_config="-enable-lto --enable-pic --enable-strip --disable-asm"
+    CFLAGS="-fPIE -pie"
+
+    $host_arm && CFLAGS="-D__ARM_ARCH_7__ -D__ARM_ARCH_7A__ $CFLAGS" && ac_config+=" --host=arm-linux"
+    $host_arm64 && CFLAGS="-march=armv8-a $CFLAGS"
+    $host_arm32 && CFLAGS="-march=armv7-a -mfloat-abi=softfp -mfpu=neon $CFLAGS"
+    LDFLAGS="-fPIE -pie -llog"
 }
 
 . xbuild
 
-AS=nasm
+dir_config="${dir_src}/build/linux"
+dir_build="${dir_src}/build/linux"
+mkf="STRIP="
 
 start
 

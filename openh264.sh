@@ -14,6 +14,11 @@ lst_bin=''
 lst_lic='LICENSE'
 lst_pc='openh264.pc'
 
+meson_cfg='-Dcpp_rtti=false -Dcpp_lib=-lc++_static'
+
+_build_prepare(){
+    $host_ndk && $build_static && sed -i 's/-lc++/-lc++_static/g' "${dir_src}/meson.build"
+}
 
 . xbuild
 

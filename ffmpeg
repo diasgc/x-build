@@ -25,6 +25,9 @@ lst_bin=''
 
 ffblock="FFDATA"
 
+tested_ndk_libs=( aribb24 avisynth frei0r kvazaar lcms2 libwebp openjpeg svtav1 theora vidstab vpx vulkan vvdec vvenc x264 x265 zimg opencl openh264 libplacebo)
+failed_ndk_libs=( lensfun )
+
 applyOptions(){
     IFS='|' read -r -a keys <<<"$1"
     for k in "${keys[@]}"; do
@@ -68,7 +71,7 @@ selectExtras(){
 ffmpegConfig(){
 
     test "$TERM_PROGRAM" == "vscode" && \
-        printf "\nThis won't run on VSCODE.\nExiting...\n\n" && \
+        printf "\nThis won't run on VSCODE terminal.\nExiting...\n\n" && \
         exit 0
         
     archOpts=(
@@ -187,12 +190,18 @@ nonfree=false
 gpl=false
 v3=false
 
+gpl_libs='@(avisynth|aribb24|frei0r|libcdio|libutvideo|libvidstab|x264|x265|xavs|xvidcode)'
+vs3_libs='@(aribb24|opencore-amr|lensfun|vo-amrwbenc)'
+nfr_libs='@(fdk-aac|openssl)'
+
 for d in $dep; do
      case $d in
-        fdk-aac|openssl) nonfree=true;;
-        frei0r|vidstab|x264|x265|xavs|xvidcore) gpl=true;;
-        opencore-amr|lensfun) v3=true;;
-        vvenc) applyVvcPatch=true;;
+        $nfr_libs) nonfree=true;;&
+        $gpl_libs) gpl=true;;&
+        $vs3_libs) v3=true;;&
+        vv??c)     patch_vvc=true;;
+        kvazaar)   ldflags_lm="-lm";;
+        openh264|libplacebo) ldflags_lcpp="-lc++_static -lc++abi";;
      esac
 done
 
@@ -203,7 +212,7 @@ $v3 && extlibs+=' --enable-version3'
 if $build_shared; then
      extlibs+=" --enable-shared --disable-static"
 fi
-CSH=
+unset CSH
 
 $host_arm && extopts+=' --enable-neon'
 $host_x86 && extopts+=' --disable-asm'
@@ -213,7 +222,7 @@ case $host_os in
                 CFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/libshaderc/include -I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include/vulkan"
                 extopts+=" --enable-jni --enable-mediacodec --enable-asm --enable-inline-asm --enable-pic --enable-cross-compile" #unecessary --disable-alsa
                 #extopts+=" --disable-indev=android_camera"
-                LDFLAGS+=" -ldl -lm"
+                LDFLAGS+=" -ldl -lm -lc++_static -lc++abi"
                 ;;
      gnu)       extopts+=" --enable-opencl --enable-opengl --enable-pic" LDFLAGS+=" -ldl -lstdc++"
                 lspci -k | grep -A 2 -i "VGA" | grep amd && extopts+=" --enable-nvenc"
@@ -236,8 +245,8 @@ ac_config="--arch=$CPU \
 
 test -n "$extraversion" && ac_config="--extra-version=$extraversion $ac_config"
 # make the log cleaner
-
-applyPatch(){
+WFLAGS='-Wno-unused-command-line-argument'
+vvc_patch(){
     if [ ! -f "${dir_src}/vvc_patched" ]; then
         pushd ${dir_src}
         wget -O Add-support-for-H266-VVC.patch https://patchwork.ffmpeg.org/series/9992/mbox/
@@ -247,14 +256,18 @@ applyPatch(){
     fi
 }
 
+lensfun_patch(){
+    sed -i '/lensfun.h lf_db_new/lensfun.h lf_db_create/g' "${dir_src}/configure"
+}
+
 patch_source(){
-    test ${applyVvcPatch} && applyPatch
+    test ${patch_vvc} && vvc_patch
+    lensfun_patch
 }
 
 NPROC=16
 
 start
-
 
 # Patch to libavdevice/android_camera.c in n6.2-dev
 <<'LZS_PATCH'

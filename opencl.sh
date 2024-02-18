@@ -1,47 +1,29 @@
 #!/bin/bash
 # cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
+# NDK  +   .   .   .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
 lib='opencl'
-dsc='Khronos OpenCL-Headers'
-pkg='OpenCL-Headers'
+dsc='Khronos OpenCL-SDK'
+pkg='OpenCL'
 lic='Apache-2.0'
-src='https://github.com/KhronosGroup/OpenCL-Headers.git'
+src='https://github.com/KhronosGroup/OpenCL-SDK.git'
+src_opt='--recursive'
 cfg='cmake'
 eta='0'
-#pc_llib='-lOpenCL'
 
-lst_inc='CL/cl*.h'
-lst_lib=''
+lst_inc='CL/*.h CL/*.hpp'
+lst_lib='libOpenC'
 lst_bin=''
+lst_pc='OpenCL.pc OpenCL-Headers.pc OpenCL-CLHPP.pc'
+
+dev_vrs='3.0'
+
+cmake_config='-DOPENCL_SDK_BUILD_UTILITY_LIBRARIES=OFF -DBUILD_DOCS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF \
+              -DENABLE_OPENCL_LAYERINFO=ON -DENABLE_OPENCL_LAYERS=ON -DOPENCL_HEADERS_BUILD_CXX_TESTS=ON \
+              -DTHREADS_PREFER_PTHREAD_FLAG=ON'
 
 . xbuild
 
-test -d $dir_install_include/CL && exit 0
-
 start
-
-# Filelist
-# --------
-# include/CL/cl_gl_ext.h
-# include/CL/cl_ext.h
-# include/CL/cl_d3d10.h
-# include/CL/cl_half.h
-# include/CL/cl_platform.h
-# include/CL/cl_ext_intel.h
-# include/CL/cl_version.h
-# include/CL/cl_egl.h
-# include/CL/cl_layer.h
-# include/CL/cl.h
-# include/CL/cl_dx9_media_sharing_intel.h
-# include/CL/cl_va_api_media_sharing_intel.h
-# include/CL/cl_icd.h
-# include/CL/cl_dx9_media_sharing.h
-# include/CL/cl_gl.h
-# include/CL/opencl.h
-# include/CL/cl_d3d11.h
-# share/cmake/OpenCLHeaders/OpenCLHeadersConfig.cmake
-# share/cmake/OpenCLHeaders/OpenCLHeadersConfigVersion.cmake
-# share/cmake/OpenCLHeaders/OpenCLHeadersTargets.cmake

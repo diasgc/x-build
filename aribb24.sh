@@ -6,9 +6,10 @@ dsc='A library for ARIB STD-B24, decoding JIS 8 bit characters and parsing MPEG-
 lic='LGPL-3.0'
 src='https://github.com/nkoriyama/aribb24.git'
 cfg='cmake'
-dep='libpng'
+dep='libpng bzip2'
 eta='10'
 build_strip=false
+cmake_bin='BUILD_EXECUTABLES'
 
 dev_bra='master'
 dev_vrs='1.0.3'
@@ -22,6 +23,9 @@ lst_lic='COPYING README.md'
 lst_pc='aribb24.pc'
 
 . xbuild
+
+cmake_config='-DINSTALL_DOCS=OFF'
+WFLAGS="-Wno-pointer-to-int-cast -Wno-unused-command-line-argument"
 
 _before_make(){
     # to build shared libs on mingw

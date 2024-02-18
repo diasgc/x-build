@@ -12,7 +12,7 @@ cmake_bin='BUILD_LENSTOOL'
 cmake_static='BUILD_STATIC'
 cmake_config="-DBUILD_TESTS=OFF -DBUILD_DOC=OFF -DINSTALL_HELPER_SCRIPTS=OFF -DINSTALL_PYTHON_MODULE=OFF -DBUILD_AUXFUN=ON"
 
-dev_vrs='0.3.95'
+dev_vrs='0.3.99'
 
 lst_inc='lensfun/lensfun.h'
 lst_lib='liblensfun'
@@ -24,7 +24,8 @@ lst_pc='lensfun.pc'
 
 start
 
-<<'LZS_PATCH'
+# CMakeLists.txt patch to dual build static/shared
+<<'LZS_PATCH_DISABLE'
 LQgEBsEsCMGcHpwFMB2sBmBXF8DCBZAQwGskAZSWAF1gDoqAPKgSACYAGV14dgZh4DsoVgEYAXAFZ2Y3q1oDWvThKX
 tQAanZb2AKHX6IMBMjRYcBEuUo16TNp259Bw1mPYAWMe4Bs8gJxKrCpaGtq6AALhoMAiIgA0HBqxCbygkTqgAMoAog
 AqAPqZAPIAqgBKuNn5AGIAkmTZmfkACmVFzdllubWNABQAtgD2ACbAAMaD4IMATsCwsEhyYwAOyxmgoK3tnd2NoLhF
@@ -40,7 +41,7 @@ nnmvshzHA0rrXNEnqAj6mR+gGQYhmGyIRlGZlIXGSJmWeF5Xjed4mSg7EQusrmFWU3LdIZoDoo03T6f8
 vS3BpV2AfGqIYliOIsucsagPdZCYpkirWSBmRmedkqXXMVCEFQkBjBp55PYByXxrCoAZAAxKAyzEAA5hMKDoJAaOgL
 AmCrDMVAZF6dSXOUpwnL0I2bVUuDlNZAIFMU5SVPke2IDltDLGMtBjP0lgbQ1dMM0hBRtdK7MdRCnPZig3NjGkgJkN
 GOhAA===
-LZS_PATCH
+LZS_PATCH_DISABLE
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

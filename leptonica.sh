@@ -1,15 +1,15 @@
 #!/bin/bash
 
 lib='leptonica'
-pkg='lept'
+pkg='lept_Release'
 apt='libleptonica-dev'
 dsc='An open source C library for efficient image processing and image analysis operations'
 lic='copyleft'
 src='https://github.com/DanBloomberg/leptonica.git'
-cfg='am'
+cfg='cmake'
 dep='zlib libjpeg libpng libwebp libtiff giflib openjpeg'
-mki='install'
-make_install='install-strip'
+#mki='install'
+#make_install='install-strip'
 eta='180'
 ac_nosysroot=true
 
@@ -19,20 +19,20 @@ lst_bin='converttops converttopdf convertsegfilestops
   convertfilestops convertsegfilestopdf imagetops
   xtractprotos fileinfo convertformat convertfilestopdf'
 lst_lic='leptonica-license.txt'
-lst_pc='lept.pc'
+lst_pc='lept_Release.pc'
 
-dev_vrs='1.83.0'
+dev_vrs='1.84.0'
 
 cmake_bin="BUILD_PROG"
 cmake_config="-DSW_BUILD=OFF"
-ac_config="--disable-fast-install"
-ac_bin="--enable-programs|--disable-programs"
+#ac_config="--disable-fast-install"
+#ac_bin="--enable-programs|--disable-programs"
 
 extraOpts(){
       case $1 in --min) unset dep;; esac
 }
 
-WFLAGS="-Wno-address-of-packed-member"
+WFLAGS+=" -Wno-address-of-packed-member"
 
 . xbuild
 
