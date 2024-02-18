@@ -20,6 +20,7 @@ lst_pc='jpegxr.pc xrglue.pc'
 
 dev_vrs='2019.10.9'
 
+CFLAGS+=" -std=c17"
 WFLAGS="-Wno-implicit-int -Wno-endif-labels -Wno-dangling-else -Wno-incompatible-pointer-types -Wno-shift-negative-value -Wno-unused-value"
 
 . xbuild
