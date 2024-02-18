@@ -1799,9 +1799,9 @@ toolchain_android(){
 	CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
 	LT_SYS_LIBRARY_PATH="/usr/${arch}/lib:${SYSROOT}/usr/lib/${arch}/${API}"
 	PKG_CONFIG_DIR="/usr/${arch}/local/lib/pkgconfig"
-	CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/lib -I${SYSROOT}/usr/local/include"
+	CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/include -I${SYSROOT}/usr/local/include"
 	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-	test $build_shared && LDFLAGS+=" -static-libstdc++ -lc++_static"
+	test $build_static && LDFLAGS+=" -static-libstdc++ -lc++_static"
 
 	cmake_system_processor="${target_trip[0]}${target_trip[1]}"
 	$host_arm32 && cmake_system_processor="armv7-a"

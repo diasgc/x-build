@@ -20,14 +20,11 @@ lst_pc='jpegxr.pc xrglue.pc'
 
 dev_vrs='2019.10.9'
 
-WFLAGS='-Wno-implicit-int
-  -Wno-endif-labels
-  -Wno-dangling-else
-  -Wno-incompatible-pointer-types
-  -Wno-shift-negative-value
-  -Wno-unused-value'
+WFLAGS="-Wno-implicit-int -Wno-endif-labels -Wno-dangling-else -Wno-incompatible-pointer-types -Wno-shift-negative-value -Wno-unused-value"
 
 . xbuild
+
+
 start
 
 # patch 01: provides cmake build with dual static shared support
