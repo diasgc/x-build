@@ -2403,7 +2403,7 @@ while [ $1 ];do
 					dep_build="--full"
 					;;
 
-		--break)    shift; set_break $1; shift;;
+		--break)    shift; set_break $1;;
 
 		$optVrs)	shift; vrs=$1;;
 

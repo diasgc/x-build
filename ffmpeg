@@ -200,9 +200,9 @@ for d in $dep; do
         $gpl_libs) gpl=true;;&
         $vs3_libs) v3=true;;&
         vv??c)     patch_vvc=true;;
-        kvazaar)   ldflags_lm="-lm";;
-        openh264|  libplacebo) ldflags_lcpp="-lc++_static -lc++abi";;
-        lensfun)   ldflags_iconv="-liconv";;
+        kvazaar)   lm="-lm";;
+        openh264|libplacebo|lensfun) lcpp="-lc++_static -lc++abi";;&
+        lensfun)   liconv="-liconv";;
      esac
 done
 
@@ -223,7 +223,7 @@ case $host_os in
                 CFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/libshaderc/include -I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include/vulkan"
                 extopts+=" --enable-jni --enable-mediacodec --enable-asm --enable-inline-asm --enable-pic --enable-cross-compile" #unecessary --disable-alsa
                 #extopts+=" --disable-indev=android_camera"
-                LDFLAGS+=" -ldl $ldflags_lm $ldflags_lcpp $ldflags_iconv"
+                LDFLAGS+=" -ldl -lm -lc++_static -lc++abi -liconv"
                 ;;
      gnu)       extopts+=" --enable-opencl --enable-opengl --enable-pic" LDFLAGS+=" -ldl -lstdc++"
                 lspci -k | grep -A 2 -i "VGA" | grep amd && extopts+=" --enable-nvenc"
