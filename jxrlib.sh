@@ -24,9 +24,9 @@ WFLAGS="-Wno-implicit-int -Wno-endif-labels -Wno-dangling-else -Wno-incompatible
 
 . xbuild
 
-
 start
 
+# another cmake at https://gist.github.com/rsky/5868136
 # patch 01: provides cmake build with dual static shared support
 <<'XB64_PATCH'
 LS0tIENNYWtlTGlzdHMudHh0CTIwMjItMDEtMjUgMTk6MDk6NTIuNDk5MDk4NDAwICswMDAwCisr
