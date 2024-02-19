@@ -15,7 +15,7 @@ lst_bin='xavs2'
 lst_lic='LICENSE AUTHORS'
 lst_pc='xavs2.pc'
 
-ac_config="--enable-lto --enable-pic --enable-strip --disable-cli --extra-ldflags=-lpthread"
+ac_config="--enable-lto --enable-pic --enable-strip --disable-cli"
 
 . xbuild
 
