@@ -1582,6 +1582,7 @@ github_latest_tgz(){
 	esac
 }
 
+
 # usage: wget_tarxx type url libname
 wget_tarxx(){
 	local tag="get"
@@ -1630,6 +1631,13 @@ wget_pkg_tgz(){
 	wget -qO- ${1} 2>>${log_file} | tar --transform 's/^dbt2-0.37.50.3/dbt2/' -xvz -C ${2} >>${log_file} 2>&1 || err
 	echo -e "\n\n" >>${log_file}
 	logok $tag
+}
+
+# Usage: wget_targz src_url dest_dir
+wget_targz(){
+	pushd $(dirname $2)
+	wget -qO- $1 2>>${log_file} | tar --transform 's/^dbt2-0.37.50.3/dbt2/' -xvz -C $2 >/dev/null 2>&1 || err
+	popd
 }
 
 wget_tar(){

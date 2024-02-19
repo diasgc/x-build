@@ -15,12 +15,13 @@ lst_lib='frei0r-1/*.*'
 lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='frei0r.pc'
+build_static='--enable-static --disable-shared'
 
 . xbuild
 
 unset CSH
 cmake_config='-DWITHOUT_GAVL=ON -DWITHOUT_OPENCV=ON -DBUILD_SHARED_LIBS=ON'
-ac_config='--enable-shared'
+#ac_config='--enable-shared'
 
 start
 

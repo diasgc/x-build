@@ -44,7 +44,8 @@ zenSplit(){
 
 zenTagList(){
     tagList=$(git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g')
-    echo "$tagList" | grep '^n' | tail -n 6 | sed -z 's/\n/|/g'
+    tagList=$(echo "$tagList" | grep '^n' | tail -n 10 | sed '1!G;h;$!d' | sed -z 's/\n/|/g' | sed 's/|$//')
+    echo "master|$tagList"
 }
 
 selectExtras(){
@@ -105,6 +106,7 @@ ffmpegConfig(){
         --add-entry "Version Name" \
     )
 
+    test -z "$zen" && exit 1
     #0 android-armv8
     #1 n6.2-dev^{}
     #2 static yes Performance basic basic none none 6.2-basicAV
@@ -247,11 +249,20 @@ ac_config="--arch=$CPU \
 test -n "$extraversion" && ac_config="--extra-version=$extraversion $ac_config"
 # make the log cleaner
 WFLAGS='-Wno-unused-command-line-argument'
-vvc_patch(){
+_vvc_patch(){
     if [ ! -f "${dir_src}/vvc_patched" ]; then
         pushd ${dir_src}
         wget -O Add-support-for-H266-VVC.patch https://patchwork.ffmpeg.org/series/9992/mbox/
         git apply Add-support-for-H266-VVC.patch --exclude=libavcodec/version.h
+        touch vvc_patched
+        popd
+    fi
+}
+
+vvc_patch(){
+    if [ ! -f "${dir_src}/vvc_patched" ]; then
+        pushd ${dir_src}
+        git apply ../../patches/ffmpeg-vvc.patch --exclude=libavcodec/version.h
         touch vvc_patched
         popd
     fi
@@ -369,6 +380,8 @@ FALSE	x264	video	'x264;--enable-libx264'	'x264, the best and fastest H.264 encod
 FALSE	x265	video	'x265;--enable-libx265'	'x265 is an open source HEVC encoder'
 FALSE	xavs2	video	'xavs2;--enable-libxavs2'	'An open-source encoder of AVS2-P2/IEEE1857.4 video coding standard'
 FALSE	xavs	video	'xavs;--enable-libxavs'	'High quality encoder and decoder of the Audio Video Standard of China (AVS)'
+FALSE	xeve	video	'xeve;--enable-libxeve'	'eXtra-fast Essential Video Encoder, MPEG-5 EVC (Essential Video Coding)'
+FALSE	xevd	video	'xevd;--enable-libxevd'	'eXtra-fast Essential Video Decoder, MPEG-5 EVC (Essential Video Coding)'
 FALSE	xvidcore	video	'xvidcore;--enable-libxvid'	'Xvid decoder/encoder library'
 FALSE	zimg	video	'zimg;--enable-libzimg'	'Scaling, colorspace conversion, and dithering library'
 FALSE	zvbi	io	'zvbi;--enable-libzvbi'	'VBI Capturing and Decoding Library'

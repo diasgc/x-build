@@ -1,0 +1,4314 @@
+diff --git a/configure b/configure
+index 7afeebebcd..dab6427b41 100755
+--- a/configure
++++ b/configure
+@@ -286,6 +286,7 @@ External library support:
+   --enable-libvorbis       enable Vorbis en/decoding via libvorbis,
+                            native implementation exists [no]
+   --enable-libvpx          enable VP8 and VP9 de/encoding via libvpx [no]
++  --enable-libvvenc        enable H.266/VVC encoding via vvenc [no]
+   --enable-libwebp         enable WebP encoding via libwebp [no]
+   --enable-libx264         enable H.264 encoding via x264 [no]
+   --enable-libx265         enable HEVC encoding via x265 [no]
+@@ -1900,6 +1901,7 @@ EXTERNAL_LIBRARY_LIST="
+     libvmaf
+     libvorbis
+     libvpx
++    libvvenc
+     libwebp
+     libxml2
+     libzimg
+@@ -3444,6 +3446,8 @@ libvpx_vp8_decoder_deps="libvpx"
+ libvpx_vp8_encoder_deps="libvpx"
+ libvpx_vp9_decoder_deps="libvpx"
+ libvpx_vp9_encoder_deps="libvpx"
++libvvenc_encoder_deps="libvvenc"
++libvvenc_encoder_select="atsc_a53"
+ libwebp_encoder_deps="libwebp"
+ libwebp_anim_encoder_deps="libwebp"
+ libx262_encoder_deps="libx262"
+@@ -6853,6 +6857,7 @@ enabled libvpx            && {
+         die "libvpx enabled but no supported decoders found"
+     fi
+ }
++enabled libvvenc          && require_pkg_config libvvenc "libvvenc >= 1.6.1" "vvenc/vvenc.h" vvenc_get_version
+ 
+ enabled libwebp           && {
+     enabled libwebp_encoder      && require_pkg_config libwebp "libwebp >= 0.2.0" webp/encode.h WebPGetEncoderVersion
+diff --git a/libavcodec/Makefile b/libavcodec/Makefile
+index ab7fba394a..b2bec7a2c2 100644
+--- a/libavcodec/Makefile
++++ b/libavcodec/Makefile
+@@ -1140,6 +1140,7 @@ OBJS-$(CONFIG_LIBVPX_VP8_DECODER)         += libvpxdec.o
+ OBJS-$(CONFIG_LIBVPX_VP8_ENCODER)         += libvpxenc.o
+ OBJS-$(CONFIG_LIBVPX_VP9_DECODER)         += libvpxdec.o
+ OBJS-$(CONFIG_LIBVPX_VP9_ENCODER)         += libvpxenc.o
++OBJS-$(CONFIG_LIBVVENC_ENCODER)           += libvvenc.o
+ OBJS-$(CONFIG_LIBWEBP_ENCODER)            += libwebpenc_common.o libwebpenc.o
+ OBJS-$(CONFIG_LIBWEBP_ANIM_ENCODER)       += libwebpenc_common.o libwebpenc_animencoder.o
+ OBJS-$(CONFIG_LIBX262_ENCODER)            += libx264.o
+diff --git a/libavcodec/allcodecs.c b/libavcodec/allcodecs.c
+index 5136a566f1..2e8cb1f8fd 100644
+--- a/libavcodec/allcodecs.c
++++ b/libavcodec/allcodecs.c
+@@ -805,6 +805,7 @@ extern const FFCodec ff_libvpx_vp8_encoder;
+ extern const FFCodec ff_libvpx_vp8_decoder;
+ extern FFCodec ff_libvpx_vp9_encoder;
+ extern const FFCodec ff_libvpx_vp9_decoder;
++extern const FFCodec ff_libvvenc_encoder;
+ /* preferred over libwebp */
+ extern const FFCodec ff_libwebp_anim_encoder;
+ extern const FFCodec ff_libwebp_encoder;
+diff --git a/libavcodec/libvvenc.c b/libavcodec/libvvenc.c
+new file mode 100644
+index 0000000000..14cbecea4a
+--- /dev/null
++++ b/libavcodec/libvvenc.c
+@@ -0,0 +1,500 @@
++/*
++ * H.266 encoding using the VVenC library
++ *
++ * Copyright (C) 2022, Thomas Siedel
++ *
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++#include "config_components.h"
++
++#include <vvenc/vvenc.h>
++#include <vvenc/vvencCfg.h>
++#include <vvenc/version.h>
++
++#include "avcodec.h"
++#include "codec_internal.h"
++#include "encode.h"
++#include "internal.h"
++#include "packet_internal.h"
++#include "profiles.h"
++
++#include "libavutil/avutil.h"
++#include "libavutil/pixdesc.h"
++#include "libavutil/opt.h"
++#include "libavutil/common.h"
++#include "libavutil/imgutils.h"
++#include "libavutil/frame.h"
++#include "libavutil/log.h"
++
++typedef struct VVenCOptions {
++    int preset;                 // preset 0: faster  4: slower
++    int qp;                     // quantization parameter 0-63
++    int subjectiveOptimization; // perceptually motivated QP adaptation, XPSNR based
++    int flag8bitCoding;         // encode in 8bit instead of 10bit
++    int intraRefreshSec;        // intra period/refresh in seconds
++    int levelIdc;               // vvc level_idc
++    int tier;                   // vvc tier
++    AVDictionary *vvenc_opts;
++} VVenCOptions;
++
++typedef struct VVenCContext {
++    AVClass         *av_class;
++    VVenCOptions    options;      // encoder options
++    vvencEncoder    *vvencEnc;
++    vvencAccessUnit *pAU;
++    bool            encodeDone;
++} VVenCContext;
++
++
++static av_cold void ff_vvenc_log_callback(void *avctx, int level,
++                                          const char *fmt, va_list args)
++{
++    vfprintf(level == 1 ? stderr : stdout, fmt, args);
++}
++
++static void ff_vvenc_internalLog(void *ctx, int level, const char *fmt, ...)
++{
++    va_list args;
++    va_start(args, fmt);
++    ff_vvenc_log_callback(ctx, level, fmt, args);
++    va_end(args);
++}
++
++static av_cold int ff_vvenc_encode_init(AVCodecContext *avctx)
++{
++    int ret;
++    int framerate, qp, parse_ret;
++    VVenCContext *s;
++    vvenc_config params;
++    vvencPresetMode preset;
++    AVDictionaryEntry *en;
++    char statsfile[1024] = "vvenc-rcstats.json";
++
++    s = (VVenCContext *) avctx->priv_data;
++    qp = (vvencPresetMode) s->options.qp;
++    preset = (vvencPresetMode) s->options.preset;
++
++    if (avctx->flags & AV_CODEC_FLAG_INTERLACED_DCT) {
++        av_log(avctx, AV_LOG_ERROR,
++               "ff_vvenc_encode_init::init() interlaced encoding not supported yet\n");
++        return AVERROR_INVALIDDATA;
++    }
++
++    vvenc_config_default(&params);
++
++    // set desired encoding options
++    framerate = avctx->time_base.den / avctx->time_base.num;
++    vvenc_init_default(&params, avctx->width, avctx->height, framerate,
++                       (qp >= 0) ? 0 : avctx->bit_rate, (qp < 0) ? 32 : qp, preset);
++    params.m_FrameRate = avctx->time_base.den;
++    params.m_FrameScale = avctx->time_base.num;
++
++    params.m_verbosity = VVENC_VERBOSE;
++    if (av_log_get_level() >= AV_LOG_DEBUG)
++        params.m_verbosity = VVENC_DETAILS;
++    else if (av_log_get_level() >= AV_LOG_VERBOSE)
++        params.m_verbosity = VVENC_NOTICE;      // output per picture info
++    else if (av_log_get_level() >= AV_LOG_INFO)
++        params.m_verbosity = VVENC_WARNING;     // ffmpeg default ffmpeg loglevel
++    else
++        params.m_verbosity = VVENC_SILENT;
++
++FF_DISABLE_DEPRECATION_WARNINGS
++
++#if FF_API_TICKS_PER_FRAME
++    if (avctx->ticks_per_frame == 1) {
++#endif
++        params.m_TicksPerSecond = -1;   // auto mode for ticks per frame = 1
++#if FF_API_TICKS_PER_FRAME
++    } else {
++        params.m_TicksPerSecond =
++            ceil((avctx->time_base.den / (double) avctx->time_base.num) *
++                 (double) avctx->ticks_per_frame);
++    }
++#endif
++FF_ENABLE_DEPRECATION_WARNINGS
++
++    if (avctx->thread_count > 0)
++        params.m_numThreads = avctx->thread_count;
++
++    // GOP settings (IDR/CRA)
++    if (avctx->flags & AV_CODEC_FLAG_CLOSED_GOP)
++        params.m_DecodingRefreshType = VVENC_DRT_IDR;
++
++    if (avctx->gop_size == 1) {
++        params.m_GOPSize = 1;
++        params.m_IntraPeriod = 1;
++    } else {
++        params.m_IntraPeriodSec = s->options.intraRefreshSec;
++    }
++
++    params.m_usePerceptQPA = s->options.subjectiveOptimization;
++    params.m_level         = (vvencLevel) s->options.levelIdc;
++    params.m_levelTier     = (vvencTier) s->options.tier;
++
++    params.m_AccessUnitDelimiter = true;
++
++    params.m_internChromaFormat = VVENC_CHROMA_420;
++    params.m_inputBitDepth[0]   = 10;
++
++    if ( avctx->pix_fmt != AV_PIX_FMT_YUV420P10LE ){
++        av_log(avctx, AV_LOG_ERROR,
++               "unsupported pixel format %s, currently only support for yuv420p10le\n",
++                av_get_pix_fmt_name(avctx->pix_fmt));
++        return AVERROR(EINVAL);
++    }
++
++    if ( s->options.flag8bitCoding ) {
++#if VVENC_VERSION_MAJOR > 1 || (VVENC_VERSION_MAJOR == 1 && VVENC_VERSION_MINOR > 9) || (VVENC_VERSION_MAJOR == 1 && VVENC_VERSION_MINOR >= 9 && VVENC_VERSION_PATCH >= 1)
++        params.m_internalBitDepth[0] = 8;
++#else
++        av_log(avctx, AV_LOG_ERROR,
++                "unsupported 8bit coding mode. 8bit coding needs at least vvenc version >= 1.9.1\n",
++                av_get_pix_fmt_name(avctx->pix_fmt));
++        return AVERROR(EINVAL);
++#endif
++    }
++
++    if (avctx->color_primaries != AVCOL_PRI_UNSPECIFIED)
++        params.m_colourPrimaries = (int) avctx->color_primaries;
++    if (avctx->colorspace != AVCOL_SPC_UNSPECIFIED)
++        params.m_matrixCoefficients = (int) avctx->colorspace;
++    if (avctx->color_trc != AVCOL_TRC_UNSPECIFIED) {
++        params.m_transferCharacteristics = (int) avctx->color_trc;
++
++        if (avctx->color_trc == AVCOL_TRC_SMPTE2084)
++            params.m_HdrMode = (avctx->color_primaries == AVCOL_PRI_BT2020) ?
++                VVENC_HDR_PQ_BT2020 : VVENC_HDR_PQ;
++        else if (avctx->color_trc == AVCOL_TRC_BT2020_10
++                 || avctx->color_trc == AVCOL_TRC_ARIB_STD_B67)
++            params.m_HdrMode = (avctx->color_trc == AVCOL_TRC_BT2020_10 ||
++                                avctx->color_primaries == AVCOL_PRI_BT2020 ||
++                                avctx->colorspace == AVCOL_SPC_BT2020_NCL ||
++                                avctx->colorspace == AVCOL_SPC_BT2020_CL) ?
++                               VVENC_HDR_HLG_BT2020 : VVENC_HDR_HLG;
++    }
++
++    if (params.m_HdrMode == VVENC_HDR_OFF
++        && (avctx->color_primaries != AVCOL_PRI_UNSPECIFIED
++            || avctx->colorspace != AVCOL_SPC_UNSPECIFIED)) {
++        params.m_vuiParametersPresent = 1;
++        params.m_colourDescriptionPresent = true;
++    }
++
++    params.m_RCNumPasses = 1;
++    en = NULL;
++    while ((en = av_dict_get(s->options.vvenc_opts, "", en,
++                             AV_DICT_IGNORE_SUFFIX))) {
++        av_log(avctx, AV_LOG_DEBUG, "vvenc_set_param: '%s:%s'\n", en->key,
++               en->value);
++        parse_ret = vvenc_set_param(&params, en->key, en->value);
++        switch (parse_ret) {
++        case VVENC_PARAM_BAD_NAME:
++            av_log(avctx, AV_LOG_WARNING, "Unknown vvenc option: %s.\n",
++                   en->key);
++            break;
++        case VVENC_PARAM_BAD_VALUE:
++            av_log(avctx, AV_LOG_WARNING,
++                   "Invalid vvenc value for %s: %s.\n", en->key, en->value);
++            break;
++        default:
++            break;
++        }
++
++        if (memcmp(en->key, "rcstatsfile", 11) == 0 ||
++            memcmp(en->key, "RCStatsFile", 11) == 0) {
++            strncpy(statsfile, en->value, sizeof(statsfile) - 1);
++            statsfile[sizeof(statsfile) - 1] = '\0';
++        }
++    }
++
++    if (params.m_RCPass != -1 && params.m_RCNumPasses == 1)
++        params.m_RCNumPasses = 2;       // enable 2pass mode
++
++#if VVENC_VERSION_MAJOR > 1 || (VVENC_VERSION_MAJOR == 1 && VVENC_VERSION_MINOR > 8)
++    if(avctx->rc_max_rate) {
++        if(!avctx->bit_rate) {
++            av_log( avctx, AV_LOG_ERROR, "Rate control parameters set without a bitrate\n");
++            return AVERROR(EINVAL);
++        }
++        else
++            params.m_RCMaxBitrate = avctx->rc_max_rate;
++    }
++#endif
++
++    s->vvencEnc = vvenc_encoder_create();
++    if (NULL == s->vvencEnc) {
++        av_log(avctx, AV_LOG_ERROR, "cannot create vvc encoder (vvenc)\n");
++        return AVERROR(ENOMEM);
++    }
++
++    vvenc_set_msg_callback(&params, s->vvencEnc, ff_vvenc_log_callback);
++    ret = vvenc_encoder_open(s->vvencEnc, &params);
++    if (0 != ret) {
++        av_log(avctx, AV_LOG_ERROR, "cannot open vvc encoder (vvenc): %s\n",
++               vvenc_get_last_error(s->vvencEnc));
++        vvenc_encoder_close(s->vvencEnc);
++        return AVERROR(EINVAL);
++    }
++
++    vvenc_get_config(s->vvencEnc, &params);     // get the adapted config
++
++    if (params.m_verbosity >= VVENC_INFO
++        && av_log_get_level() <= AV_LOG_INFO) {
++        ff_vvenc_internalLog(avctx, params.m_verbosity, "vvenc version: %s\n",
++                             vvenc_get_version());
++        ff_vvenc_internalLog(avctx, params.m_verbosity, "%s\n",
++                             vvenc_get_config_as_string(&params,
++                                                        params.m_verbosity));
++    } else {
++        vvencMsgLevel loglvl = VVENC_INFO;
++        if (av_log_get_level() >= AV_LOG_DEBUG)
++            loglvl = VVENC_DETAILS;
++        else if (av_log_get_level() >= AV_LOG_VERBOSE)
++            loglvl = VVENC_VERBOSE;
++
++        av_log(avctx, av_log_get_level(), "vvenc version: %s\n",
++              vvenc_get_version());
++        av_log(avctx, av_log_get_level(), "%s\n",
++              vvenc_get_config_as_string(&params, loglvl ));
++    }
++
++    if (params.m_RCNumPasses == 2) {
++        ret = vvenc_init_pass(s->vvencEnc, params.m_RCPass - 1, &statsfile[0]);
++        if (0 != ret) {
++            av_log(avctx, AV_LOG_ERROR,
++                   "cannot init pass %d for vvc encoder (vvenc): %s\n",
++                   params.m_RCPass, vvenc_get_last_error(s->vvencEnc));
++            vvenc_encoder_close(s->vvencEnc);
++            return AVERROR(EINVAL);
++        }
++    }
++
++    s->pAU = vvenc_accessUnit_alloc();
++    vvenc_accessUnit_alloc_payload(s->pAU, avctx->width * avctx->height);
++
++    if (avctx->flags & AV_CODEC_FLAG_GLOBAL_HEADER) {
++        ret = vvenc_get_headers(s->vvencEnc, s->pAU);
++        if (0 != ret) {
++            av_log(avctx, AV_LOG_ERROR,
++                   "cannot get headers (SPS,PPS) from vvc encoder(vvenc): %s\n",
++                   vvenc_get_last_error(s->vvencEnc));
++            vvenc_encoder_close(s->vvencEnc);
++            return AVERROR(EINVAL);
++        }
++
++        if (s->pAU->payloadUsedSize <= 0) {
++            vvenc_encoder_close(s->vvencEnc);
++            return AVERROR_INVALIDDATA;
++        }
++
++        avctx->extradata_size = s->pAU->payloadUsedSize;
++        avctx->extradata =
++            av_malloc(avctx->extradata_size + AV_INPUT_BUFFER_PADDING_SIZE);
++        if (!avctx->extradata) {
++            av_log(avctx, AV_LOG_ERROR,
++                   "Cannot allocate VVC header of size %d.\n",
++                   avctx->extradata_size);
++            vvenc_encoder_close(s->vvencEnc);
++            return AVERROR(ENOMEM);
++        }
++
++        memcpy(avctx->extradata, s->pAU->payload, avctx->extradata_size);
++        memset(avctx->extradata + avctx->extradata_size, 0,
++               AV_INPUT_BUFFER_PADDING_SIZE);
++    }
++    s->encodeDone = false;
++    return 0;
++}
++
++static av_cold int ff_vvenc_encode_close(AVCodecContext * avctx)
++{
++    VVenCContext *s = (VVenCContext *) avctx->priv_data;
++    if (s->vvencEnc) {
++        if (av_log_get_level() >= AV_LOG_VERBOSE)
++            vvenc_print_summary(s->vvencEnc);
++
++        if (0 != vvenc_encoder_close(s->vvencEnc)) {
++            av_log(avctx, AV_LOG_ERROR, "cannot close vvenc\n");
++            return -1;
++        }
++    }
++
++    vvenc_accessUnit_free(s->pAU, true);
++
++    return 0;
++}
++
++static av_cold int ff_vvenc_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
++                                         const AVFrame *frame, int *got_packet)
++{
++    VVenCContext *s = (VVenCContext *) avctx->priv_data;
++    vvencYUVBuffer *pyuvbuf;
++    vvencYUVBuffer yuvbuf;
++    int pict_type;
++    int ret;
++
++    pyuvbuf = NULL;
++    if (frame) {
++        if (avctx->pix_fmt == AV_PIX_FMT_YUV420P10LE) {
++            vvenc_YUVBuffer_default(&yuvbuf);
++            yuvbuf.planes[0].ptr = (int16_t *) frame->data[0];
++            yuvbuf.planes[1].ptr = (int16_t *) frame->data[1];
++            yuvbuf.planes[2].ptr = (int16_t *) frame->data[2];
++
++            yuvbuf.planes[0].width = frame->width;
++            yuvbuf.planes[0].height = frame->height;
++            yuvbuf.planes[0].stride = frame->linesize[0] >> 1;  // stride is used in samples (16bit) in vvenc, ffmpeg uses stride in bytes
++
++            yuvbuf.planes[1].width = frame->width >> 1;
++            yuvbuf.planes[1].height = frame->height >> 1;
++            yuvbuf.planes[1].stride = frame->linesize[1] >> 1;
++
++            yuvbuf.planes[2].width = frame->width >> 1;
++            yuvbuf.planes[2].height = frame->height >> 1;
++            yuvbuf.planes[2].stride = frame->linesize[2] >> 1;
++
++            yuvbuf.cts = frame->pts;
++            yuvbuf.ctsValid = true;
++            pyuvbuf = &yuvbuf;
++        } else {
++            av_log(avctx, AV_LOG_ERROR,
++                   "unsupported input colorspace! input must be yuv420p10le");
++            return AVERROR(EINVAL);
++        }
++    }
++
++    if (!s->encodeDone) {
++        ret = vvenc_encode(s->vvencEnc, pyuvbuf, s->pAU, &s->encodeDone);
++        if (ret != 0) {
++            av_log(avctx, AV_LOG_ERROR, "error in vvenc::encode - ret:%d\n",
++                   ret);
++            return AVERROR(EINVAL);
++        }
++    } else {
++        *got_packet = 0;
++        return 0;
++    }
++
++    if (s->pAU->payloadUsedSize > 0) {
++        ret = ff_get_encode_buffer(avctx, pkt, s->pAU->payloadUsedSize, 0);
++        if (ret < 0) {
++            av_log(avctx, AV_LOG_ERROR, "Error getting output packet.\n");
++            return ret;
++        }
++
++        memcpy(pkt->data, s->pAU->payload, s->pAU->payloadUsedSize);
++
++        if (s->pAU->ctsValid)
++            pkt->pts = s->pAU->cts;
++        if (s->pAU->dtsValid)
++            pkt->dts = s->pAU->dts;
++        pkt->flags |= AV_PKT_FLAG_KEY * s->pAU->rap;
++
++        switch (s->pAU->sliceType) {
++        case VVENC_I_SLICE:
++            pict_type = AV_PICTURE_TYPE_I;
++            break;
++        case VVENC_P_SLICE:
++            pict_type = AV_PICTURE_TYPE_P;
++            break;
++        case VVENC_B_SLICE:
++            pict_type = AV_PICTURE_TYPE_B;
++            break;
++        default:
++            av_log(avctx, AV_LOG_ERROR, "Unknown picture type encountered.\n");
++            return AVERROR_EXTERNAL;
++        }
++
++        ff_side_data_set_encoder_stats(pkt, 0, NULL, 0, pict_type);
++
++        *got_packet = 1;
++
++        return 0;
++    } else {
++        *got_packet = 0;
++        return 0;
++    }
++
++    return 0;
++}
++
++static const enum AVPixelFormat pix_fmts_vvenc[] = {
++    AV_PIX_FMT_YUV420P10LE,
++    AV_PIX_FMT_NONE
++};
++
++#define OFFSET(x) offsetof(VVenCContext, x)
++#define VE AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM
++static const AVOption libvvenc_options[] = {
++    {"preset", "set encoding preset(0: faster - 4: slower", OFFSET( options.preset), AV_OPT_TYPE_INT, {.i64 = 2} , 0 , 4 , VE, "preset"},
++        { "faster", "0", 0, AV_OPT_TYPE_CONST, {.i64 = VVENC_FASTER}, INT_MIN, INT_MAX, VE, "preset" },
++        { "fast",   "1", 0, AV_OPT_TYPE_CONST, {.i64 = VVENC_FAST},   INT_MIN, INT_MAX, VE, "preset" },
++        { "medium", "2", 0, AV_OPT_TYPE_CONST, {.i64 = VVENC_MEDIUM}, INT_MIN, INT_MAX, VE, "preset" },
++        { "slow",   "3", 0, AV_OPT_TYPE_CONST, {.i64 = VVENC_SLOW},   INT_MIN, INT_MAX, VE, "preset" },
++        { "slower", "4", 0, AV_OPT_TYPE_CONST, {.i64 = VVENC_SLOWER}, INT_MIN, INT_MAX, VE, "preset" },
++    { "qp"     , "set quantization", OFFSET(options.qp), AV_OPT_TYPE_INT,  {.i64 = -1}, -1 , 63 ,VE, "qp_mode" },
++    { "period" , "set (intra) refresh period in seconds", OFFSET(options.intraRefreshSec), AV_OPT_TYPE_INT,  {.i64 = 1},  1 , INT_MAX ,VE,"irefreshsec" },
++    { "subjopt", "set subjective (perceptually motivated) optimization", OFFSET(options.subjectiveOptimization), AV_OPT_TYPE_BOOL, {.i64 = 1},  0 , 1, VE},
++    { "bitdepth8", "set 8bit coding mode", OFFSET(options.flag8bitCoding), AV_OPT_TYPE_BOOL, {.i64 = 0},  0 , 1, VE},
++    { "vvenc-params", "set the vvenc configuration using a :-separated list of key=value parameters", OFFSET(options.vvenc_opts), AV_OPT_TYPE_DICT, { 0 }, 0, 0, VE },
++    { "levelidc", "vvc level_idc", OFFSET( options.levelIdc), AV_OPT_TYPE_INT, {.i64 = 0}, 0, 105, VE, "levelidc"},
++        { "0",   "auto", 0, AV_OPT_TYPE_CONST, {.i64 = 0},  INT_MIN, INT_MAX, VE, "levelidc"},
++        { "1",   "1"   , 0, AV_OPT_TYPE_CONST, {.i64 = 16}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "2",   "2"   , 0, AV_OPT_TYPE_CONST, {.i64 = 32}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "2.1", "2.1" , 0, AV_OPT_TYPE_CONST, {.i64 = 35}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "3",   "3"   , 0, AV_OPT_TYPE_CONST, {.i64 = 48}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "3.1", "3.1" , 0, AV_OPT_TYPE_CONST, {.i64 = 51}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "4",   "4"   , 0, AV_OPT_TYPE_CONST, {.i64 = 64}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "4.1", "4.1" , 0, AV_OPT_TYPE_CONST, {.i64 = 67}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "5",   "5"   , 0, AV_OPT_TYPE_CONST, {.i64 = 80}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "5.1", "5.1" , 0, AV_OPT_TYPE_CONST, {.i64 = 83}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "5.2", "5.2" , 0, AV_OPT_TYPE_CONST, {.i64 = 86}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "6",   "6"   , 0, AV_OPT_TYPE_CONST, {.i64 = 96}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "6.1", "6.1" , 0, AV_OPT_TYPE_CONST, {.i64 = 99}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "6.2", "6.2" , 0, AV_OPT_TYPE_CONST, {.i64 = 102}, INT_MIN, INT_MAX, VE, "levelidc"},
++        { "6.3", "6.3" , 0, AV_OPT_TYPE_CONST, {.i64 = 105}, INT_MIN, INT_MAX, VE, "levelidc"},
++    { "tier", "set vvc tier", OFFSET( options.tier), AV_OPT_TYPE_INT, {.i64 = 0},  0 , 1 , VE, "tier"},
++        { "main", "main", 0, AV_OPT_TYPE_CONST, {.i64 = 0}, INT_MIN, INT_MAX, VE, "tier"},
++        { "high", "high", 0, AV_OPT_TYPE_CONST, {.i64 = 1}, INT_MIN, INT_MAX, VE, "tier"},
++    {NULL}
++};
++
++static const AVClass class_libvvenc = {
++    .class_name = "libvvenc-vvc encoder",
++    .item_name  = av_default_item_name,
++    .option     = libvvenc_options,
++    .version    = LIBAVUTIL_VERSION_INT,
++};
++
++FFCodec ff_libvvenc_encoder = {
++    .p.name         = "libvvenc",
++    CODEC_LONG_NAME("H.266 / VVC Encoder VVenC"),
++    .p.type         = AVMEDIA_TYPE_VIDEO,
++    .p.id           = AV_CODEC_ID_VVC,
++    .p.capabilities = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_OTHER_THREADS,
++    .p.profiles     = NULL_IF_CONFIG_SMALL(ff_vvc_profiles),
++    .p.priv_class   = &class_libvvenc,
++    .p.wrapper_name = "libvvenc",
++    .priv_data_size = sizeof(VVenCContext),
++    .p.pix_fmts     = pix_fmts_vvenc,
++    .init           = ff_vvenc_encode_init,
++    FF_CODEC_ENCODE_CB(ff_vvenc_encode_frame),
++    .close          = ff_vvenc_encode_close,
++    .caps_internal  = FF_CODEC_CAP_AUTO_THREADS,
++};
+diff --git a/libavformat/Makefile b/libavformat/Makefile
+index 329055ccfd..595f6bdf08 100644
+--- a/libavformat/Makefile
++++ b/libavformat/Makefile
+@@ -341,7 +341,7 @@ OBJS-$(CONFIG_MATROSKA_DEMUXER)          += matroskadec.o matroska.o  \
+                                             oggparsevorbis.o vorbiscomment.o \
+                                             qtpalette.o replaygain.o dovi_isom.o
+ OBJS-$(CONFIG_MATROSKA_MUXER)            += matroskaenc.o matroska.o \
+-                                            av1.o avc.o hevc.o \
++                                            av1.o avc.o hevc.o vvc.o\
+                                             flacenc_header.o avlanguage.o \
+                                             vorbiscomment.o wv.o dovi_isom.o
+ OBJS-$(CONFIG_MCA_DEMUXER)               += mca.o
+@@ -363,7 +363,7 @@ OBJS-$(CONFIG_MODS_DEMUXER)              += mods.o
+ OBJS-$(CONFIG_MOFLEX_DEMUXER)            += moflex.o
+ OBJS-$(CONFIG_MOV_DEMUXER)               += mov.o mov_chan.o mov_esds.o \
+                                             qtpalette.o replaygain.o dovi_isom.o
+-OBJS-$(CONFIG_MOV_MUXER)                 += movenc.o av1.o avc.o hevc.o vpcc.o \
++OBJS-$(CONFIG_MOV_MUXER)                 += movenc.o av1.o avc.o hevc.o vvc.o vpcc.o \
+                                             movenchint.o mov_chan.o rtp.o \
+                                             movenccenc.o movenc_ttml.o rawutils.o \
+                                             dovi_isom.o evc.o
+@@ -516,7 +516,7 @@ OBJS-$(CONFIG_RTP_MUXER)                 += rtp.o         \
+                                             rtpenc_vp8.o  \
+                                             rtpenc_vp9.o                \
+                                             rtpenc_xiph.o \
+-                                            avc.o hevc.o
++                                            avc.o hevc.o vvc.o
+ OBJS-$(CONFIG_RTSP_DEMUXER)              += rtsp.o rtspdec.o httpauth.o \
+                                             urldecode.o
+ OBJS-$(CONFIG_RTSP_MUXER)                += rtsp.o rtspenc.o httpauth.o \
+diff --git a/libavformat/isom.c b/libavformat/isom.c
+index 6d019881e5..9fbccd4437 100644
+--- a/libavformat/isom.c
++++ b/libavformat/isom.c
+@@ -36,6 +36,7 @@ const AVCodecTag ff_mp4_obj_type[] = {
+     { AV_CODEC_ID_MPEG4       , 0x20 },
+     { AV_CODEC_ID_H264        , 0x21 },
+     { AV_CODEC_ID_HEVC        , 0x23 },
++    { AV_CODEC_ID_VVC         , 0x33 },
+     { AV_CODEC_ID_AAC         , 0x40 },
+     { AV_CODEC_ID_MP4ALS      , 0x40 }, /* 14496-3 ALS */
+     { AV_CODEC_ID_MPEG2VIDEO  , 0x61 }, /* MPEG-2 Main */
+diff --git a/libavformat/isom_tags.c b/libavformat/isom_tags.c
+index a575b7c160..705811e950 100644
+--- a/libavformat/isom_tags.c
++++ b/libavformat/isom_tags.c
+@@ -123,6 +123,9 @@ const AVCodecTag ff_codec_movvideo_tags[] = {
+     { AV_CODEC_ID_HEVC, MKTAG('d', 'v', 'h', 'e') }, /* HEVC-based Dolby Vision derived from hev1 */
+                                                      /* dvh1 is handled within mov.c */
+ 
++    { AV_CODEC_ID_VVC, MKTAG('v', 'v', 'i', '1') },  /* VVC/H.266 which indicates parameter sets may be in ES */
++    { AV_CODEC_ID_VVC, MKTAG('v', 'v', 'c', '1') },  /* VVC/H.266 which indicates parameter shall not be in ES */
++
+     { AV_CODEC_ID_H264, MKTAG('a', 'v', 'c', '1') }, /* AVC-1/H.264 */
+     { AV_CODEC_ID_H264, MKTAG('a', 'v', 'c', '2') },
+     { AV_CODEC_ID_H264, MKTAG('a', 'v', 'c', '3') },
+diff --git a/libavformat/mov.c b/libavformat/mov.c
+index e8efccf6eb..11b43ac135 100644
+--- a/libavformat/mov.c
++++ b/libavformat/mov.c
+@@ -2117,6 +2117,11 @@ static int mov_read_glbl(MOVContext *c, AVIOContext *pb, MOVAtom atom)
+     if ((uint64_t)atom.size > (1<<30))
+         return AVERROR_INVALIDDATA;
+ 
++    if (atom.type == MKTAG('v','v','c','C')) {
++        avio_rb32(pb);
++        atom.size -= 4;
++    }
++
+     if (atom.size >= 10) {
+         // Broken files created by legacy versions of libavformat will
+         // wrap a whole fiel atom inside of a glbl atom.
+@@ -7921,6 +7926,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
+ { MKTAG('s','g','p','d'), mov_read_sgpd },
+ { MKTAG('s','b','g','p'), mov_read_sbgp },
+ { MKTAG('h','v','c','C'), mov_read_glbl },
++{ MKTAG('v','v','c','C'), mov_read_glbl },
+ { MKTAG('u','u','i','d'), mov_read_uuid },
+ { MKTAG('C','i','n', 0x8e), mov_read_targa_y216 },
+ { MKTAG('f','r','e','e'), mov_read_free },
+diff --git a/libavformat/movenc.c b/libavformat/movenc.c
+index e39f1ac987..093a04d0c2 100644
+--- a/libavformat/movenc.c
++++ b/libavformat/movenc.c
+@@ -68,6 +68,7 @@
+ #include "ttmlenc.h"
+ #include "version.h"
+ #include "vpcc.h"
++#include "vvc.h"
+ 
+ static const AVOption options[] = {
+     { "movflags", "MOV muxer flags", offsetof(MOVMuxContext, flags), AV_OPT_TYPE_FLAGS, {.i64 = 0}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
+@@ -1473,6 +1474,23 @@ static int mov_write_evcc_tag(AVIOContext *pb, MOVTrack *track)
+     return update_size(pb, pos);
+ }
+ 
++static int mov_write_vvcc_tag(AVIOContext *pb, MOVTrack *track)
++{
++    int64_t pos = avio_tell(pb);
++
++    avio_wb32(pb, 0);
++    ffio_wfourcc(pb, "vvcC");
++
++    avio_w8  (pb, 0); /* version */
++    avio_wb24(pb, 0); /* flags */
++
++    if (track->tag == MKTAG('v','v','c','1'))
++        ff_isom_write_vvcc(pb, track->vos_data, track->vos_len, 1);
++    else
++        ff_isom_write_vvcc(pb, track->vos_data, track->vos_len, 0);
++    return update_size(pb, pos);
++}
++
+ /* also used by all avid codecs (dv, imx, meridien) and their variants */
+ static int mov_write_avid_tag(AVIOContext *pb, MOVTrack *track)
+ {
+@@ -2382,6 +2400,8 @@ static int mov_write_video_tag(AVFormatContext *s, AVIOContext *pb, MOVMuxContex
+         avid = 1;
+     } else if (track->par->codec_id == AV_CODEC_ID_HEVC)
+         mov_write_hvcc_tag(pb, track);
++    else if (track->par->codec_id == AV_CODEC_ID_VVC)
++        mov_write_vvcc_tag(pb, track);
+     else if (track->par->codec_id == AV_CODEC_ID_H264 && !TAG_IS_AVCI(track->tag)) {
+         mov_write_avcc_tag(pb, track);
+         if (track->mode == MODE_IPOD)
+@@ -6170,6 +6190,7 @@ int ff_mov_write_packet(AVFormatContext *s, AVPacket *pkt)
+     if ((par->codec_id == AV_CODEC_ID_DNXHD ||
+          par->codec_id == AV_CODEC_ID_H264 ||
+          par->codec_id == AV_CODEC_ID_HEVC ||
++         par->codec_id == AV_CODEC_ID_VVC ||
+          par->codec_id == AV_CODEC_ID_VP9 ||
+          par->codec_id == AV_CODEC_ID_EVC ||
+          par->codec_id == AV_CODEC_ID_TRUEHD) && !trk->vos_len &&
+@@ -6235,6 +6256,18 @@ int ff_mov_write_packet(AVFormatContext *s, AVPacket *pkt)
+                 size = ff_hevc_annexb2mp4(pb, pkt->data, pkt->size, 0, NULL);
+             }
+         }
++    } else if (par->codec_id == AV_CODEC_ID_VVC && trk->vos_len > 6 &&
++             (AV_RB24(trk->vos_data) == 1 || AV_RB32(trk->vos_data) == 1)) {
++      /* extradata is Annex B, assume the bitstream is too and convert it */
++      if (trk->hint_track >= 0 && trk->hint_track < mov->nb_streams) {
++            ret = ff_h266_annexb2mp4_buf(pkt->data, &reformatted_data,
++                                         &size, 0, NULL);
++            if (ret < 0)
++                return ret;
++            avio_write(pb, reformatted_data, size);
++      } else {
++          size = ff_h266_annexb2mp4(pb, pkt->data, pkt->size, 0, NULL);
++      }
+     } else if (par->codec_id == AV_CODEC_ID_AV1) {
+         if (trk->hint_track >= 0 && trk->hint_track < mov->nb_streams) {
+             ret = ff_av1_filter_obus_buf(pkt->data, &reformatted_data,
+@@ -6281,6 +6314,9 @@ int ff_mov_write_packet(AVFormatContext *s, AVPacket *pkt)
+             } else if(par->codec_id == AV_CODEC_ID_HEVC && par->extradata_size > 21) {
+                 int nal_size_length = (par->extradata[21] & 0x3) + 1;
+                 ret = ff_mov_cenc_avc_write_nal_units(s, &trk->cenc, nal_size_length, pb, pkt->data, size);
++            } else if(par->codec_id == AV_CODEC_ID_VVC && par->extradata_size > 21) {
++                int nal_size_length = (par->extradata[21] & 0x3) + 1;
++                ret = ff_mov_cenc_avc_write_nal_units(s, &trk->cenc, nal_size_length, pb, pkt->data, size);
+             } else {
+                 ret = ff_mov_cenc_write_packet(&trk->cenc, pb, pkt->data, size);
+             }
+@@ -7363,7 +7399,8 @@ static int mov_init(AVFormatContext *s)
+ 
+         if (mov->encryption_scheme == MOV_ENC_CENC_AES_CTR) {
+             ret = ff_mov_cenc_init(&track->cenc, mov->encryption_key,
+-                (track->par->codec_id == AV_CODEC_ID_H264 || track->par->codec_id == AV_CODEC_ID_HEVC),
++                (track->par->codec_id == AV_CODEC_ID_H264 || track->par->codec_id == AV_CODEC_ID_HEVC ||
++                 track->par->codec_id == AV_CODEC_ID_VVC),
+                 s->flags & AVFMT_FLAG_BITEXACT);
+             if (ret)
+                 return ret;
+@@ -7832,6 +7869,8 @@ static const AVCodecTag codec_mp4_tags[] = {
+     { AV_CODEC_ID_HEVC,            MKTAG('h', 'e', 'v', '1') },
+     { AV_CODEC_ID_HEVC,            MKTAG('h', 'v', 'c', '1') },
+     { AV_CODEC_ID_HEVC,            MKTAG('d', 'v', 'h', '1') },
++    { AV_CODEC_ID_VVC,             MKTAG('v', 'v', 'c', '1') },
++    { AV_CODEC_ID_VVC,             MKTAG('v', 'v', 'i', '1') },
+     { AV_CODEC_ID_EVC,             MKTAG('e', 'v', 'c', '1') },
+     { AV_CODEC_ID_MPEG2VIDEO,      MKTAG('m', 'p', '4', 'v') },
+     { AV_CODEC_ID_MPEG1VIDEO,      MKTAG('m', 'p', '4', 'v') },
+diff --git a/libavformat/vvc.c b/libavformat/vvc.c
+new file mode 100644
+index 0000000000..8ec0136862
+--- /dev/null
++++ b/libavformat/vvc.c
+@@ -0,0 +1,998 @@
++/*
++ * H.266/VVC helper functions for muxers
++ *
++ * Copyright (C) 2022, Thomas Siedel
++ *
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++#include "libavcodec/get_bits.h"
++#include "libavcodec/golomb.h"
++#include "libavcodec/vvc.h"
++#include "libavutil/intreadwrite.h"
++#include "avc.h"
++#include "avio.h"
++#include "avio_internal.h"
++#include "vvc.h"
++
++typedef struct VVCCNALUnitArray {
++    uint8_t array_completeness;
++    uint8_t NAL_unit_type;
++    uint16_t num_nalus;
++    uint16_t *nal_unit_length;
++    uint8_t **nal_unit;
++} VVCCNALUnitArray;
++
++typedef struct VVCPTLRecord {
++    uint8_t num_bytes_constraint_info;
++    uint8_t general_profile_idc;
++    uint8_t general_tier_flag;
++    uint8_t general_level_idc;
++    uint8_t ptl_frame_only_constraint_flag;
++    uint8_t ptl_multilayer_enabled_flag;
++    uint8_t general_constraint_info[9];
++    uint8_t *ptl_sublayer_level_present_flag;
++    uint8_t *sublayer_level_idc;
++    uint8_t ptl_num_sub_profiles;
++    uint32_t *general_sub_profile_idc;
++} VVCPTLRecord;
++
++typedef struct VVCDecoderConfigurationRecord {
++    uint8_t lengthSizeMinusOne;
++    uint8_t ptl_present_flag;
++    uint16_t ols_idx;
++    uint8_t num_sublayers;
++    uint8_t constant_frame_rate;
++    uint8_t chroma_format_idc;
++    uint8_t bit_depth_minus8;
++    VVCPTLRecord ptl;
++    uint16_t max_picture_width;
++    uint16_t max_picture_height;
++    uint16_t avg_frame_rate;
++    uint8_t num_of_arrays;
++    VVCCNALUnitArray *array;
++} VVCDecoderConfigurationRecord;
++
++typedef struct VVCCProfileTierLevel {
++    uint8_t profile_idc;
++    uint8_t tier_flag;
++    uint8_t general_level_idc;
++    uint8_t ptl_frame_only_constraint_flag;
++    uint8_t ptl_multilayer_enabled_flag;
++// general_constraint_info
++    uint8_t gci_present_flag;
++    uint8_t gci_general_constraints[9];
++    uint8_t gci_num_reserved_bits;
++// end general_constraint_info
++    uint8_t *ptl_sublayer_level_present_flag;
++    uint8_t *sublayer_level_idc;
++    uint8_t ptl_num_sub_profiles;
++    uint32_t *general_sub_profile_idc;
++} VVCCProfileTierLevel;
++
++static void vvcc_update_ptl(VVCDecoderConfigurationRecord *vvcc,
++                            VVCCProfileTierLevel *ptl)
++{
++    /*
++     * The level indication general_level_idc must indicate a level of
++     * capability equal to or greater than the highest level indicated for the
++     * highest tier in all the parameter sets.
++     */
++    if (vvcc->ptl.general_tier_flag < ptl->tier_flag)
++        vvcc->ptl.general_level_idc = ptl->general_level_idc;
++    else
++        vvcc->ptl.general_level_idc =
++            FFMAX(vvcc->ptl.general_level_idc, ptl->general_level_idc);
++
++    /*
++     * The tier indication general_tier_flag must indicate a tier equal to or
++     * greater than the highest tier indicated in all the parameter sets.
++     */
++    vvcc->ptl.general_tier_flag =
++        FFMAX(vvcc->ptl.general_tier_flag, ptl->tier_flag);
++
++    /*
++     * The profile indication general_profile_idc must indicate a profile to
++     * which the stream associated with this configuration record conforms.
++     *
++     * If the sequence parameter sets are marked with different profiles, then
++     * the stream may need examination to determine which profile, if any, the
++     * entire stream conforms to. If the entire stream is not examined, or the
++     * examination reveals that there is no profile to which the entire stream
++     * conforms, then the entire stream must be split into two or more
++     * sub-streams with separate configuration records in which these rules can
++     * be met.
++     *
++     * Note: set the profile to the highest value for the sake of simplicity.
++     */
++    vvcc->ptl.general_profile_idc =
++        FFMAX(vvcc->ptl.general_profile_idc, ptl->profile_idc);
++
++    /*
++     * Each bit in flags may only be set if all
++     * the parameter sets set that bit.
++     */
++    vvcc->ptl.ptl_frame_only_constraint_flag &=
++        ptl->ptl_frame_only_constraint_flag;
++    vvcc->ptl.ptl_multilayer_enabled_flag &= ptl->ptl_multilayer_enabled_flag;
++
++    /*
++     * Constraints Info
++     */
++    if (ptl->gci_present_flag) {
++        vvcc->ptl.num_bytes_constraint_info = 9;
++        memcpy(&vvcc->ptl.general_constraint_info[0],
++               &ptl->gci_general_constraints[0], sizeof(uint8_t) * 9);
++
++    } else {
++        vvcc->ptl.num_bytes_constraint_info = 1;
++        memset(&vvcc->ptl.general_constraint_info[0], 0, sizeof(uint8_t) * 9);
++    }
++
++    /*
++     * Each bit in flags may only be set if one of
++     * the parameter sets set that bit.
++     */
++    vvcc->ptl.ptl_sublayer_level_present_flag =
++        (uint8_t *) malloc(sizeof(uint8_t) * vvcc->num_sublayers - 1);
++    vvcc->ptl.sublayer_level_idc =
++        (uint8_t *) malloc(sizeof(uint8_t) * vvcc->num_sublayers - 1);
++
++    memset(vvcc->ptl.ptl_sublayer_level_present_flag, 0,
++           sizeof(uint8_t) * vvcc->num_sublayers - 1);
++    memset(vvcc->ptl.sublayer_level_idc, 0,
++           sizeof(uint8_t) * vvcc->num_sublayers - 1);
++
++    for (int i = vvcc->num_sublayers - 2; i >= 0; i--) {
++        vvcc->ptl.ptl_sublayer_level_present_flag[i] |=
++            ptl->ptl_sublayer_level_present_flag[i];
++        if (vvcc->ptl.ptl_sublayer_level_present_flag[i]) {
++            vvcc->ptl.sublayer_level_idc[i] =
++                FFMAX(vvcc->ptl.sublayer_level_idc[i],
++                      ptl->sublayer_level_idc[i]);
++        } else {
++            if (i == vvcc->num_sublayers - 1) {
++                vvcc->ptl.sublayer_level_idc[i] = vvcc->ptl.general_level_idc;
++            } else {
++                vvcc->ptl.sublayer_level_idc[i] =
++                    vvcc->ptl.sublayer_level_idc[i + 1];
++            }
++        }
++    }
++
++    vvcc->ptl.ptl_num_sub_profiles =
++        FFMAX(vvcc->ptl.ptl_num_sub_profiles, ptl->ptl_num_sub_profiles);
++    if (vvcc->ptl.ptl_num_sub_profiles) {
++        vvcc->ptl.general_sub_profile_idc =
++            (uint32_t *) malloc(sizeof(uint32_t) *
++                                vvcc->ptl.ptl_num_sub_profiles);
++        for (int i = 0; i < vvcc->ptl.ptl_num_sub_profiles; i++) {
++            vvcc->ptl.general_sub_profile_idc[i] =
++                ptl->general_sub_profile_idc[i];
++        }
++    } else {
++        vvcc->ptl.general_sub_profile_idc =
++            (uint32_t *) malloc(sizeof(uint32_t));
++    }
++}
++
++static void vvcc_parse_ptl(GetBitContext *gb,
++                           VVCDecoderConfigurationRecord *vvcc,
++                           unsigned int profileTierPresentFlag,
++                           unsigned int max_sub_layers_minus1)
++{
++    VVCCProfileTierLevel general_ptl;
++    int j;
++
++    if (profileTierPresentFlag) {
++        general_ptl.profile_idc = get_bits(gb, 7);
++        general_ptl.tier_flag = get_bits1(gb);
++    }
++    general_ptl.general_level_idc = get_bits(gb, 8);
++
++    general_ptl.ptl_frame_only_constraint_flag = get_bits1(gb);
++    general_ptl.ptl_multilayer_enabled_flag = get_bits1(gb);
++    if (profileTierPresentFlag) {       // parse constraint info
++        general_ptl.gci_present_flag = get_bits1(gb);
++        if (general_ptl.gci_present_flag) {
++            for (j = 0; j < 8; j++)
++                general_ptl.gci_general_constraints[j] = get_bits(gb, 8);
++            general_ptl.gci_general_constraints[8] = 0;
++            general_ptl.gci_general_constraints[8] = get_bits(gb, 7);
++
++            general_ptl.gci_num_reserved_bits = get_bits(gb, 8);
++            skip_bits(gb, general_ptl.gci_num_reserved_bits);
++        }
++        while (gb->index % 8 != 0)
++            skip_bits1(gb);
++    }
++
++    general_ptl.ptl_sublayer_level_present_flag =
++        (uint8_t *) malloc(sizeof(uint8_t) * max_sub_layers_minus1);
++    for (int i = max_sub_layers_minus1 - 1; i >= 0; i--) {
++        general_ptl.ptl_sublayer_level_present_flag[i] = get_bits1(gb);
++    }
++    while (gb->index % 8 != 0)
++        skip_bits1(gb);
++
++    general_ptl.sublayer_level_idc =
++        (uint8_t *) malloc(sizeof(uint8_t) * max_sub_layers_minus1);
++    for (int i = max_sub_layers_minus1 - 1; i >= 0; i--) {
++        if (general_ptl.ptl_sublayer_level_present_flag[i])
++            general_ptl.sublayer_level_idc[i] = get_bits(gb, 8);
++    }
++
++    if (profileTierPresentFlag) {
++        general_ptl.ptl_num_sub_profiles = get_bits(gb, 8);
++        if (general_ptl.ptl_num_sub_profiles) {
++            general_ptl.general_sub_profile_idc =
++                (uint32_t *) malloc(sizeof(uint32_t) *
++                                    general_ptl.ptl_num_sub_profiles);
++            for (int i = 0; i < general_ptl.ptl_num_sub_profiles; i++) {
++                general_ptl.general_sub_profile_idc[i] = get_bits_long(gb, 32);
++            }
++        } else {
++            general_ptl.general_sub_profile_idc =
++                (uint32_t *) malloc(sizeof(uint32_t));
++        }
++    }
++
++    vvcc_update_ptl(vvcc, &general_ptl);
++
++    free(general_ptl.ptl_sublayer_level_present_flag);
++    free(general_ptl.sublayer_level_idc);
++    free(general_ptl.general_sub_profile_idc);
++}
++
++static int vvcc_parse_vps(GetBitContext *gb,
++                          VVCDecoderConfigurationRecord *vvcc)
++{
++    unsigned int vps_max_layers_minus1;
++    unsigned int vps_max_sub_layers_minus1;
++    unsigned int vps_default_ptl_dpb_hrd_max_tid_flag;
++    unsigned int vps_all_independant_layer_flag;
++    unsigned int vps_each_layer_is_an_ols_flag;
++    unsigned int vps_ols_mode_idc;
++
++    unsigned int *vps_pt_present_flag;
++    unsigned int *vps_ptl_max_tid;
++    unsigned int vps_num_ptls_minus1 = 0;
++
++    /*
++     * vps_video_parameter_set_id u(4)
++     */
++    skip_bits(gb, 4);
++
++    vps_max_layers_minus1 = get_bits(gb, 6);
++    vps_max_sub_layers_minus1 = get_bits(gb, 3);
++
++    /*
++     * numTemporalLayers greater than 1 indicates that the stream to which this
++     * configuration record applies is temporally scalable and the contained
++     * number of temporal layers (also referred to as temporal sub-layer or
++     * sub-layer in ISO/IEC 23008-2) is equal to numTemporalLayers. Value 1
++     * indicates that the stream is not temporally scalable. Value 0 indicates
++     * that it is unknown whether the stream is temporally scalable.
++     */
++    vvcc->num_sublayers = FFMAX(vvcc->num_sublayers,
++                                vps_max_sub_layers_minus1 + 1);
++
++    if (vps_max_layers_minus1 > 0 && vps_max_sub_layers_minus1 > 0)
++        vps_default_ptl_dpb_hrd_max_tid_flag = get_bits1(gb);
++    if (vps_max_layers_minus1 > 0)
++        vps_all_independant_layer_flag = get_bits1(gb);
++
++    for (int i = 0; i <= vps_max_layers_minus1; i++) {
++        skip_bits(gb, 6);    //vps_default_ptl_dpb_hrd_max_tid_flag[i]
++        if (i > 0 && !vps_all_independant_layer_flag) {
++            if (get_bits1(gb)) {    // vps_independant_layer_flag
++                unsigned int vps_max_tid_ref_present_flag = get_bits1(gb);
++                for (int j = 0; j < i; j++) {
++                    if (vps_max_tid_ref_present_flag && get_bits1(gb))  // vps_direct_ref_layer_flag[i][j]
++                        skip_bits(gb, 3);                               // vps_max_tid_il_ref_pics_plus1
++                }
++            }
++        }
++    }
++
++    if (vps_max_layers_minus1 > 0) {
++        if (vps_all_independant_layer_flag)
++            vps_each_layer_is_an_ols_flag = get_bits1(gb);
++        if (vps_each_layer_is_an_ols_flag) {
++            if (!vps_all_independant_layer_flag)
++                vps_ols_mode_idc = get_bits(gb, 2);
++            if (vps_ols_mode_idc == 2) {
++                unsigned int vps_num_output_layer_sets_minus2 = get_bits(gb, 8);
++                for (int i = 1; i <= vps_num_output_layer_sets_minus2 + 1; i++) {
++                    for (int j = 0; j <= vps_max_layers_minus1; j++) {
++                        skip_bits1(gb);
++                    }
++                }
++            }
++        }
++        vps_num_ptls_minus1 = get_bits(gb, 8);
++    }
++
++    vps_pt_present_flag =
++        (unsigned int *) malloc(sizeof(unsigned int) *
++                                (vps_num_ptls_minus1 + 1));
++    vps_ptl_max_tid =
++        (unsigned int *) malloc(sizeof(unsigned int) *
++                                (vps_num_ptls_minus1 + 1));
++    for (int i = 0; i <= vps_num_ptls_minus1; i++) {
++        if (i > 0)
++            vps_pt_present_flag[i] = get_bits1(gb);
++        if (!vps_default_ptl_dpb_hrd_max_tid_flag)
++            vps_ptl_max_tid[i] = get_bits(gb, 3);
++    }
++
++    while (gb->index % 8 != 0)
++        skip_bits1(gb);
++
++    for (int i = 0; i <= vps_num_ptls_minus1; i++) {
++        vvcc_parse_ptl(gb, vvcc, vps_pt_present_flag[i], vps_ptl_max_tid[i]);
++    }
++
++    free(vps_pt_present_flag);
++    free(vps_ptl_max_tid);
++
++    /* nothing useful for vvcc past this point */
++    return 0;
++}
++
++static int vvcc_parse_sps(GetBitContext *gb,
++                          VVCDecoderConfigurationRecord *vvcc)
++{
++    unsigned int sps_max_sub_layers_minus1, log2_ctu_size_minus5;
++    //unsigned int num_short_term_ref_pic_sets, num_delta_pocs[VVC_MAX_REF_PIC_LISTS];
++    //unsigned int sps_chroma_format_idc;
++    unsigned int sps_subpic_same_size_flag, sps_pic_height_max_in_luma_sample,
++        sps_pic_width_max_in_luma_sample;
++    unsigned int sps_independant_subpics_flag;
++    unsigned int flag;
++
++    skip_bits(gb, 8);  // sps_seq_parameter_set_id && sps_video_parameter_set_id
++    sps_max_sub_layers_minus1 = get_bits(gb, 3);
++
++    /*
++     * numTemporalLayers greater than 1 indicates that the stream to which this
++     * configuration record applies is temporally scalable and the contained
++     * number of temporal layers (also referred to as temporal sub-layer or
++     * sub-layer in ISO/IEC 23008-2) is equal to numTemporalLayers. Value 1
++     * indicates that the stream is not temporally scalable. Value 0 indicates
++     * that it is unknown whether the stream is temporally scalable.
++     */
++    vvcc->num_sublayers = FFMAX(vvcc->num_sublayers,
++                                sps_max_sub_layers_minus1 + 1);
++
++    vvcc->chroma_format_idc = get_bits(gb, 2);
++    log2_ctu_size_minus5 = get_bits(gb, 2);
++
++    if (get_bits1(gb))          //sps_ptl_dpb_hrd_params_present_flag
++        vvcc_parse_ptl(gb, vvcc, 1, sps_max_sub_layers_minus1);
++
++    flag = get_bits(gb, 1);     //skip_bits1(gb); //sps_gdr_enabled_flag
++    flag = get_bits(gb, 1);     //sps_ref_pic_resampling_enabled_flag
++    if (flag) {                 //sps_ref_pic_resampling_enabled_flag
++        flag = get_bits(gb, 1); //skip_bits1(gb); //sps_res_change_in_clvs_allowed_flag
++    }
++
++    sps_pic_width_max_in_luma_sample = get_ue_golomb_long(gb);
++    vvcc->max_picture_width =
++        FFMAX(vvcc->max_picture_width, sps_pic_width_max_in_luma_sample);
++    sps_pic_height_max_in_luma_sample = get_ue_golomb_long(gb);
++    vvcc->max_picture_height =
++        FFMAX(vvcc->max_picture_height, sps_pic_height_max_in_luma_sample);
++
++    if (get_bits1(gb)) {
++        get_ue_golomb_long(gb); // sps_conf_win_left_offset
++        get_ue_golomb_long(gb); // sps_conf_win_right_offset
++        get_ue_golomb_long(gb); // sps_conf_win_top_offset
++        get_ue_golomb_long(gb); // sps_conf_win_bottom_offset
++    }
++
++    if (get_bits1(gb)) {        // sps_subpic_info_present_flag
++        unsigned int sps_num_subpics_minus1 = get_ue_golomb_long(gb);
++        if (sps_num_subpics_minus1 > 0) {       // sps_num_subpics_minus1
++            sps_independant_subpics_flag = get_bits1(gb);
++            sps_subpic_same_size_flag = get_bits1(gb);
++        }
++        for (int i = 0;
++             sps_num_subpics_minus1 > 0 && i <= sps_num_subpics_minus1; i++) {
++            if (!sps_subpic_same_size_flag || i == 0) {
++                int len = FFMIN(log2_ctu_size_minus5 + 5, 16);
++                if (i > 0 && sps_pic_width_max_in_luma_sample > 128)
++                    skip_bits(gb, len);
++                if (i > 0 && sps_pic_height_max_in_luma_sample > 128)
++                    skip_bits(gb, len);
++                if (i < sps_num_subpics_minus1
++                    && sps_pic_width_max_in_luma_sample > 128)
++                    skip_bits(gb, len);
++                if (i < sps_num_subpics_minus1
++                    && sps_pic_height_max_in_luma_sample > 128)
++                    skip_bits(gb, len);
++            }
++            if (!sps_independant_subpics_flag) {
++                skip_bits(gb, 2);       // sps_subpic_treated_as_pic_flag && sps_loop_filter_across_subpic_enabled_flag
++            }
++        }
++        get_ue_golomb_long(gb); // sps_subpic_id_len_minus1
++        if (get_bits1(gb)) {    // sps_subpic_id_mapping_explicitly_signalled_flag
++            if (get_bits1(gb))  // sps_subpic_id_mapping_present_flag
++                for (int i = 0; i <= sps_num_subpics_minus1; i++) {
++                    skip_bits1(gb);     // sps_subpic_id[i]
++                }
++        }
++    }
++    vvcc->bit_depth_minus8 = get_ue_golomb_long(gb);
++
++    /* nothing useful for vvcc past this point */
++    return 0;
++}
++
++static int vvcc_parse_pps(GetBitContext *gb,
++                          VVCDecoderConfigurationRecord *vvcc)
++{
++
++    // Nothing of importance to parse in PPS
++    /* nothing useful for vvcc past this point */
++    return 0;
++}
++
++static void nal_unit_parse_header(GetBitContext *gb, uint8_t *nal_type)
++{
++    /*
++     * forbidden_zero_bit    u(1)
++     * nuh_reserved_zero_bit u(1)
++     * nuh_layer_id          u(6)
++     */
++    skip_bits(gb, 8);
++    *nal_type = get_bits(gb, 5);
++
++    /*
++     * nuh_temporal_id_plus1 u(3)
++     */
++    skip_bits(gb, 3);
++}
++
++static int vvcc_array_add_nal_unit(uint8_t *nal_buf, uint32_t nal_size,
++                                   uint8_t nal_type, int ps_array_completeness,
++                                   VVCDecoderConfigurationRecord *vvcc)
++{
++    int ret;
++    uint8_t index;
++    uint16_t num_nalus;
++    VVCCNALUnitArray *array;
++
++    for (index = 0; index < vvcc->num_of_arrays; index++)
++        if (vvcc->array[index].NAL_unit_type == nal_type)
++            break;
++
++    if (index >= vvcc->num_of_arrays) {
++        uint8_t i;
++
++        ret =
++            av_reallocp_array(&vvcc->array, index + 1,
++                              sizeof(VVCCNALUnitArray));
++        if (ret < 0)
++            return ret;
++
++        for (i = vvcc->num_of_arrays; i <= index; i++)
++            memset(&vvcc->array[i], 0, sizeof(VVCCNALUnitArray));
++        vvcc->num_of_arrays = index + 1;
++    }
++
++    array = &vvcc->array[index];
++    num_nalus = array->num_nalus;
++
++    ret = av_reallocp_array(&array->nal_unit, num_nalus + 1, sizeof(uint8_t *));
++    if (ret < 0)
++        return ret;
++
++    ret =
++        av_reallocp_array(&array->nal_unit_length, num_nalus + 1,
++                          sizeof(uint16_t));
++    if (ret < 0)
++        return ret;
++
++    array->nal_unit[num_nalus] = nal_buf;
++    array->nal_unit_length[num_nalus] = nal_size;
++    array->NAL_unit_type = nal_type;
++    array->num_nalus++;
++
++    /*
++    * When the sample entry name is 'vvc1', the following applies:
++    * • The value of array_completeness shall be equal to 1 for arrays of SPS,
++    *   and PPS NAL units.
++    * • If a VVC bitstream includes DCI NAL unit(s), the value of
++    *   array_completeness shall be equal to 1 for the array of DCI units.
++    *   Otherwise, NAL_unit_type shall not indicate DCI NAL units.
++    * • If a VVC bitstream includes VPS NAL unit(s), the value of
++    *   array_completeness shall be equal to 1 for the array of VPS NAL units.
++    *   Otherwise, NAL_unit_type shall not indicate VPS NAL units.
++    * When the value of array_completeness is equal to 1 for an array of a
++    * particular NAL_unit_type value, NAL units of that NAL_unit_type value
++    * cannot be updated without causing a different sample entry to be used.
++    * When the sample entry name is 'vvi1', the value of array_completeness
++    * of at least one of the following arrays shall be equal to 0:
++      • The array of DCI NAL units, if present.
++      • The array of VPS NAL units, if present.
++      • The array of SPS NAL units
++      • The array of PPS NAL units.
++    */
++    if (nal_type == VVC_VPS_NUT || nal_type == VVC_SPS_NUT ||
++        nal_type == VVC_PPS_NUT || nal_type == VVC_DCI_NUT )
++        array->array_completeness = ps_array_completeness;
++
++    return 0;
++}
++
++static int vvcc_add_nal_unit(uint8_t *nal_buf, uint32_t nal_size,
++                             int ps_array_completeness,
++                             VVCDecoderConfigurationRecord *vvcc)
++{
++    int ret = 0;
++    GetBitContext gbc;
++    uint8_t nal_type;
++    uint8_t *rbsp_buf;
++    uint32_t rbsp_size;
++
++    rbsp_buf = ff_nal_unit_extract_rbsp(nal_buf, nal_size, &rbsp_size, 2);
++    if (!rbsp_buf) {
++        ret = AVERROR(ENOMEM);
++        goto end;
++    }
++
++    ret = init_get_bits8(&gbc, rbsp_buf, rbsp_size);
++    if (ret < 0)
++        goto end;
++
++    nal_unit_parse_header(&gbc, &nal_type);
++
++    /*
++     * Note: only 'declarative' SEI messages are allowed in
++     * vvcc. Perhaps the SEI playload type should be checked
++     * and non-declarative SEI messages discarded?
++     */
++    switch (nal_type) {
++    case VVC_OPI_NUT:
++    case VVC_VPS_NUT:
++    case VVC_SPS_NUT:
++    case VVC_PPS_NUT:
++    case VVC_PREFIX_SEI_NUT:
++    case VVC_SUFFIX_SEI_NUT:
++        ret = vvcc_array_add_nal_unit(nal_buf, nal_size, nal_type,
++                                      ps_array_completeness, vvcc);
++        if (ret < 0)
++            goto end;
++        else if (nal_type == VVC_VPS_NUT)
++            ret = vvcc_parse_vps(&gbc, vvcc);
++        else if (nal_type == VVC_SPS_NUT)
++            ret = vvcc_parse_sps(&gbc, vvcc);
++        else if (nal_type == VVC_PPS_NUT)
++            ret = vvcc_parse_pps(&gbc, vvcc);
++        else if (nal_type == VVC_OPI_NUT) {
++            // not yet supported
++        }
++        if (ret < 0)
++            goto end;
++        break;
++    default:
++        ret = AVERROR_INVALIDDATA;
++        goto end;
++    }
++
++  end:
++    av_free(rbsp_buf);
++    return ret;
++}
++
++static void vvcc_init(VVCDecoderConfigurationRecord *vvcc)
++{
++    memset(vvcc, 0, sizeof(VVCDecoderConfigurationRecord));
++    vvcc->lengthSizeMinusOne = 3;       // 4 bytes
++
++    vvcc->ptl.num_bytes_constraint_info = 1;
++
++    vvcc->ptl_present_flag = 1;
++}
++
++static void vvcc_close(VVCDecoderConfigurationRecord *vvcc)
++{
++    uint8_t i;
++
++    for (i = 0; i < vvcc->num_of_arrays; i++) {
++        vvcc->array[i].num_nalus = 0;
++        av_freep(&vvcc->array[i].nal_unit);
++        av_freep(&vvcc->array[i].nal_unit_length);
++    }
++
++    free(vvcc->ptl.ptl_sublayer_level_present_flag);
++    free(vvcc->ptl.sublayer_level_idc);
++    free(vvcc->ptl.general_sub_profile_idc);
++
++    vvcc->num_of_arrays = 0;
++    av_freep(&vvcc->array);
++}
++
++static int vvcc_write(AVIOContext *pb, VVCDecoderConfigurationRecord *vvcc)
++{
++    uint8_t i;
++    uint16_t j, vps_count = 0, sps_count = 0, pps_count = 0;
++    unsigned char *buf = NULL;
++    /*
++     * It's unclear how to properly compute these fields, so
++     * let's always set them to values meaning 'unspecified'.
++     */
++    vvcc->avg_frame_rate = 0;
++    vvcc->constant_frame_rate = 1;
++
++    av_log(NULL, AV_LOG_TRACE,
++           "lengthSizeMinusOne:                  %" PRIu8 "\n",
++           vvcc->lengthSizeMinusOne);
++    av_log(NULL, AV_LOG_TRACE,
++           "ptl_present_flag:                    %" PRIu8 "\n",
++           vvcc->ptl_present_flag);
++    av_log(NULL, AV_LOG_TRACE,
++           "ols_idx:                             %" PRIu16 "\n", vvcc->ols_idx);
++    av_log(NULL, AV_LOG_TRACE,
++           "num_sublayers:                       %" PRIu8 "\n",
++           vvcc->num_sublayers);
++    av_log(NULL, AV_LOG_TRACE,
++           "constant_frame_rate:                 %" PRIu8 "\n",
++           vvcc->constant_frame_rate);
++    av_log(NULL, AV_LOG_TRACE,
++           "chroma_format_idc:                   %" PRIu8 "\n",
++           vvcc->chroma_format_idc);
++
++    av_log(NULL, AV_LOG_TRACE,
++           "bit_depth_minus8:                    %" PRIu8 "\n",
++           vvcc->bit_depth_minus8);
++    av_log(NULL, AV_LOG_TRACE,
++           "num_bytes_constraint_info:           %" PRIu8 "\n",
++           vvcc->ptl.num_bytes_constraint_info);
++    av_log(NULL, AV_LOG_TRACE,
++           "general_profile_idc:                 %" PRIu8 "\n",
++           vvcc->ptl.general_profile_idc);
++    av_log(NULL, AV_LOG_TRACE,
++           "general_tier_flag:                   %" PRIu8 "\n",
++           vvcc->ptl.general_tier_flag);
++    av_log(NULL, AV_LOG_TRACE,
++           "general_level_idc:                   %" PRIu8 "\n",
++           vvcc->ptl.general_level_idc);
++    av_log(NULL, AV_LOG_TRACE,
++           "ptl_frame_only_constraint_flag:      %" PRIu8 "\n",
++           vvcc->ptl.ptl_frame_only_constraint_flag);
++    av_log(NULL, AV_LOG_TRACE,
++           "ptl_multilayer_enabled_flag:         %" PRIu8 "\n",
++           vvcc->ptl.ptl_multilayer_enabled_flag);
++    for (i = 0; i < vvcc->ptl.num_bytes_constraint_info; i++) {
++        av_log(NULL, AV_LOG_TRACE,
++               "general_constraint_info[%d]:          %" PRIu8 "\n", i,
++               vvcc->ptl.general_constraint_info[i]);
++    }
++
++    for (i = 0; i < vvcc->num_sublayers - 1; i++) {
++        av_log(NULL, AV_LOG_TRACE,
++               "ptl_sublayer_level_present_flag[%" PRIu8 "]:  %" PRIu8 "\n", i,
++               vvcc->ptl.ptl_sublayer_level_present_flag[i]);
++        av_log(NULL, AV_LOG_TRACE,
++               "sublayer_level_idc[%" PRIu8 "]: %" PRIu8 "\n", i,
++               vvcc->ptl.sublayer_level_idc[i]);
++    }
++
++    av_log(NULL, AV_LOG_TRACE,
++           "num_sub_profiles:                    %" PRIu8 "\n",
++           vvcc->ptl.ptl_num_sub_profiles);
++
++    for (i = 0; i < vvcc->ptl.ptl_num_sub_profiles; i++) {
++        av_log(NULL, AV_LOG_TRACE,
++               "general_sub_profile_idc[%" PRIu8 "]:         %" PRIx32 "\n", i,
++               vvcc->ptl.general_sub_profile_idc[i]);
++    }
++
++    av_log(NULL, AV_LOG_TRACE,
++           "max_picture_width:                   %" PRIu16 "\n",
++           vvcc->max_picture_width);
++    av_log(NULL, AV_LOG_TRACE,
++           "max_picture_height:                  %" PRIu16 "\n",
++           vvcc->max_picture_height);
++    av_log(NULL, AV_LOG_TRACE,
++           "avg_frame_rate:                      %" PRIu16 "\n",
++           vvcc->avg_frame_rate);
++
++    av_log(NULL, AV_LOG_TRACE,
++           "num_of_arrays:                       %" PRIu8 "\n",
++           vvcc->num_of_arrays);
++    for (i = 0; i < vvcc->num_of_arrays; i++) {
++        av_log(NULL, AV_LOG_TRACE,
++               "array_completeness[%" PRIu8 "]:               %" PRIu8 "\n", i,
++               vvcc->array[i].array_completeness);
++        av_log(NULL, AV_LOG_TRACE,
++               "NAL_unit_type[%" PRIu8 "]:                    %" PRIu8 "\n", i,
++               vvcc->array[i].NAL_unit_type);
++        av_log(NULL, AV_LOG_TRACE,
++               "num_nalus[%" PRIu8 "]:                        %" PRIu16 "\n", i,
++               vvcc->array[i].num_nalus);
++        for (j = 0; j < vvcc->array[i].num_nalus; j++)
++            av_log(NULL, AV_LOG_TRACE,
++                   "nal_unit_length[%" PRIu8 "][%" PRIu16 "]:               %"
++                   PRIu16 "\n", i, j, vvcc->array[i].nal_unit_length[j]);
++    }
++
++    /*
++     * We need at least one of each: VPS and SPS.
++     */
++    for (i = 0; i < vvcc->num_of_arrays; i++)
++        switch (vvcc->array[i].NAL_unit_type) {
++        case VVC_VPS_NUT:
++            vps_count += vvcc->array[i].num_nalus;
++            break;
++        case VVC_SPS_NUT:
++            sps_count += vvcc->array[i].num_nalus;
++            break;
++        case VVC_PPS_NUT:
++            pps_count += vvcc->array[i].num_nalus;
++            break;
++        default:
++            break;
++        }
++
++    if (!sps_count || sps_count > VVC_MAX_SPS_COUNT)
++        return AVERROR_INVALIDDATA;
++
++    /* bit(5) reserved = ‘11111’b;
++       unsigned int (2) LengthSizeMinusOne
++       unsigned int (1) ptl_present_flag */
++    avio_w8(pb, vvcc->lengthSizeMinusOne << 1 | vvcc->ptl_present_flag | 0xf8);
++
++    if (vvcc->ptl_present_flag) {
++        /*
++         * unsigned int(9) ols_idx;
++         * unsigned int(3) num_sublayers;
++         * unsigned int(2) constant_frame_rate;
++         * unsigned int(2) chroma_format_idc;     */
++        avio_wb16(pb,
++                  vvcc->ols_idx << 7 | vvcc->num_sublayers << 4 | vvcc->
++                  constant_frame_rate << 2 | vvcc->chroma_format_idc);
++
++        /* unsigned int(3) bit_depth_minus8;
++           bit(5) reserved = ‘11111’b; */
++        avio_w8(pb, vvcc->bit_depth_minus8 << 5 | 0x1f);
++
++        //VVCPTLRecord
++
++        /* bit(2) reserved = ‘00’b;
++           unsigned int (6) num_bytes_constraint_info */
++        avio_w8(pb, vvcc->ptl.num_bytes_constraint_info & 0x3f);
++
++        /* unsigned int (7) general_profile_idc
++           unsigned int (1) general_tier_flag */
++        avio_w8(pb,
++                vvcc->ptl.general_profile_idc << 1 | vvcc->ptl.general_tier_flag);
++
++        /* unsigned int (8) general_level_idc */
++        avio_w8(pb, vvcc->ptl.general_level_idc);
++
++        /*
++         * unsigned int (1) ptl_frame_only_constraint_flag
++         * unsigned int (1) ptl_multilayer_enabled_flag
++         * unsigned int (8*num_bytes_constraint_info -2) general_constraint_info */
++        buf =
++            (unsigned char *) malloc(sizeof(unsigned char) *
++                                     vvcc->ptl.num_bytes_constraint_info);
++        *buf = vvcc->ptl.ptl_frame_only_constraint_flag << vvcc->ptl.
++            num_bytes_constraint_info * 8 - 1 | vvcc->ptl.
++            ptl_multilayer_enabled_flag << vvcc->ptl.num_bytes_constraint_info *
++            8 - 2 | *vvcc->ptl.general_constraint_info >> 2;
++        avio_write(pb, buf, vvcc->ptl.num_bytes_constraint_info);
++        free(buf);
++
++        if (vvcc->num_sublayers > 1) {
++            uint8_t ptl_sublayer_level_present_flags = 0;
++            for (int i = vvcc->num_sublayers - 2; i >= 0; i--) {
++                ptl_sublayer_level_present_flags =
++                    (ptl_sublayer_level_present_flags << 1 | vvcc->ptl.
++                     ptl_sublayer_level_present_flag[i]);
++            }
++            avio_w8(pb, ptl_sublayer_level_present_flags);
++        }
++
++        for (int i = vvcc->num_sublayers - 2; i >= 0; i--) {
++            if (vvcc->ptl.ptl_sublayer_level_present_flag[i])
++                avio_w8(pb, vvcc->ptl.sublayer_level_idc[i]);
++        }
++
++        /* unsigned int(8) num_sub_profiles; */
++        avio_w8(pb, vvcc->ptl.ptl_num_sub_profiles);
++
++        for (int j = 0; j < vvcc->ptl.ptl_num_sub_profiles; j++) {
++            /* unsigned int(32) general_sub_profile_idc[j]; */
++            avio_wb32(pb, vvcc->ptl.general_sub_profile_idc[j]);
++        }
++
++        //End of VvcPTLRecord
++
++        /*
++         * unsigned int(16) max_picture_width;*/
++        avio_wb16(pb, vvcc->max_picture_width);
++
++        /*
++         * unsigned int(16) max_picture_height;*/
++        avio_wb16(pb, vvcc->max_picture_height);
++
++        /*
++         * unsigned int(16) avg_frame_rate; */
++        avio_wb16(pb, vvcc->avg_frame_rate);
++    }
++
++    /* unsigned int(8) num_of_arrays; */
++    avio_w8(pb, vvcc->num_of_arrays);
++
++    for (i = 0; i < vvcc->num_of_arrays; i++) {
++        /*
++         * bit(1) array_completeness;
++         * unsigned int(2) reserved = 0;
++         * unsigned int(5) NAL_unit_type;
++         */
++        avio_w8(pb, vvcc->array[i].array_completeness << 7 |
++                vvcc->array[i].NAL_unit_type & 0x1f);
++        /* unsigned int(16) num_nalus; */
++        if (vvcc->array[i].NAL_unit_type != VVC_DCI_NUT &&
++            vvcc->array[i].NAL_unit_type != VVC_OPI_NUT)
++            avio_wb16(pb, vvcc->array[i].num_nalus);
++        for (j = 0; j < vvcc->array[i].num_nalus; j++) {
++            /* unsigned int(16) nal_unit_length; */
++            avio_wb16(pb, vvcc->array[i].nal_unit_length[j]);
++
++            /* bit(8*nal_unit_length) nal_unit; */
++            avio_write(pb, vvcc->array[i].nal_unit[j],
++                       vvcc->array[i].nal_unit_length[j]);
++        }
++    }
++
++    return 0;
++}
++
++int ff_h266_annexb2mp4(AVIOContext *pb, const uint8_t *buf_in,
++                      int size, int filter_ps, int *ps_count)
++{
++    int num_ps = 0, ret = 0;
++    uint8_t *buf, *end, *start = NULL;
++
++    if (!filter_ps) {
++        ret = ff_avc_parse_nal_units(pb, buf_in, size);
++        goto end;
++    }
++
++    ret = ff_avc_parse_nal_units_buf(buf_in, &start, &size);
++    if (ret < 0)
++        goto end;
++
++    ret = 0;
++    buf = start;
++    end = start + size;
++
++    while (end - buf > 4) {
++        uint32_t len = FFMIN(AV_RB32(buf), end - buf - 4);
++        uint8_t type = (buf[5] >> 3);
++
++        buf += 4;
++
++        switch (type) {
++        case VVC_VPS_NUT:
++        case VVC_SPS_NUT:
++        case VVC_PPS_NUT:
++            num_ps++;
++            break;
++        default:
++            ret += 4 + len;
++            avio_wb32(pb, len);
++            avio_write(pb, buf, len);
++            break;
++        }
++
++        buf += len;
++    }
++
++  end:
++    av_free(start);
++    if (ps_count)
++        *ps_count = num_ps;
++    return ret;
++}
++
++int ff_h266_annexb2mp4_buf(const uint8_t *buf_in, uint8_t **buf_out,
++                          int *size, int filter_ps, int *ps_count)
++{
++    AVIOContext *pb;
++    int ret;
++
++    ret = avio_open_dyn_buf(&pb);
++    if (ret < 0)
++        return ret;
++
++    ret = ff_h266_annexb2mp4(pb, buf_in, *size, filter_ps, ps_count);
++    if (ret < 0) {
++        ffio_free_dyn_buf(&pb);
++        return ret;
++    }
++
++    *size = avio_close_dyn_buf(pb, buf_out);
++
++    return 0;
++}
++
++int ff_isom_write_vvcc(AVIOContext *pb, const uint8_t *data,
++                       int size, int ps_array_completeness)
++{
++    VVCDecoderConfigurationRecord vvcc;
++    uint8_t *buf, *end, *start;
++    int ret;
++
++    if (size < 6) {
++        /* We can't write a valid vvcc from the provided data */
++        return AVERROR_INVALIDDATA;
++    } else if (*data == 1) {
++        /* Data is already vvcc-formatted */
++        avio_write(pb, data, size);
++        return 0;
++    } else if (!(AV_RB24(data) == 1 || AV_RB32(data) == 1)) {
++        /* Not a valid Annex B start code prefix */
++        return AVERROR_INVALIDDATA;
++    }
++
++    ret = ff_avc_parse_nal_units_buf(data, &start, &size);
++    if (ret < 0)
++        return ret;
++
++    vvcc_init(&vvcc);
++
++    buf = start;
++    end = start + size;
++
++    while (end - buf > 4) {
++        uint32_t len = FFMIN(AV_RB32(buf), end - buf - 4);
++        uint8_t type = (buf[5] >> 3);
++
++        buf += 4;
++
++        switch (type) {
++        case VVC_OPI_NUT:
++        case VVC_VPS_NUT:
++        case VVC_SPS_NUT:
++        case VVC_PPS_NUT:
++        case VVC_PREFIX_SEI_NUT:
++        case VVC_SUFFIX_SEI_NUT:
++            ret = vvcc_add_nal_unit(buf, len, ps_array_completeness, &vvcc);
++            if (ret < 0)
++                goto end;
++            break;
++        default:
++            break;
++        }
++
++        buf += len;
++    }
++
++    ret = vvcc_write(pb, &vvcc);
++
++  end:
++    vvcc_close(&vvcc);
++    av_free(start);
++    return ret;
++}
+diff --git a/libavformat/vvc.h b/libavformat/vvc.h
+new file mode 100644
+index 0000000000..f58145e4ae
+--- /dev/null
++++ b/libavformat/vvc.h
+@@ -0,0 +1,99 @@
++/*
++ * H.266 / VVC helper functions for muxers
++ *
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++/**
++ * @file
++ * internal header for H.266/VVC (de)muxer utilities
++ */
++
++#ifndef AVFORMAT_H266_H
++#define AVFORMAT_H266_H
++
++#include <stdint.h>
++#include "avio.h"
++
++/**
++ * Writes Annex B formatted H.266/VVC NAL units to the provided AVIOContext.
++ *
++ * The NAL units are converted to an MP4-compatible format (start code prefixes
++ * are replaced by 4-byte size fields, as per ISO/IEC 14496-15).
++ *
++ * If filter_ps is non-zero, any VVC parameter sets found in the input will be
++ * discarded, and *ps_count will be set to the number of discarded PS NAL units.
++ *
++ * @param pb address of the AVIOContext where the data shall be written
++ * @param buf_in address of the buffer holding the input data
++ * @param size size (in bytes) of the input buffer
++ * @param filter_ps whether to write parameter set NAL units to the output (0)
++ *        or to discard them (non-zero)
++ * @param ps_count address of the variable where the number of discarded
++ *        parameter set NAL units shall be written, may be NULL
++ * @return the amount (in bytes) of data written in case of success, a negative
++ *         value corresponding to an AVERROR code in case of failure
++ */
++int ff_h266_annexb2mp4(AVIOContext *pb, const uint8_t *buf_in,
++                      int size, int filter_ps, int *ps_count);
++
++/**
++ * Writes Annex B formatted H.266/VVC NAL units to a data buffer.
++ *
++ * The NAL units are converted to an MP4-compatible format (start code prefixes
++ * are replaced by 4-byte size fields, as per ISO/IEC 14496-15).
++ *
++ * If filter_ps is non-zero, any VVC parameter sets found in the input will be
++ * discarded, and *ps_count will be set to the number of discarded PS NAL units.
++ *
++ * On success, *size holds the size (in bytes) of the output data buffer.
++ *
++ * @param buf_in address of the buffer holding the input data
++ * @param size address of the variable holding the size (in bytes) of the input
++ *        buffer (on input) and of the output buffer (on success)
++ * @param buf_out on success, address of the variable holding the address of
++ *        the output buffer
++ * @param filter_ps whether to write parameter set NAL units to the output (0)
++ *        or to discard them (non-zero)
++ * @param ps_count address of the variable where the number of discarded
++ *        parameter set NAL units shall be written, may be NULL
++ * @return 0 in case of success, a negative value corresponding to an AVERROR
++ *         code in case of failure
++ * @note *buf_out will be treated as uninitialized on input and won't be freed.
++ */
++int ff_h266_annexb2mp4_buf(const uint8_t *buf_in, uint8_t **buf_out,
++                          int *size, int filter_ps, int *ps_count);
++
++/**
++ * Writes H.266/VVC extradata (parameter sets, declarative SEI NAL units) to
++ * the provided AVIOContext.
++ *
++ * If the extradata is Annex B format, it gets converted to vvcC format before
++ * writing.
++ *
++ * @param pb address of the AVIOContext where the vvcC shall be written
++ * @param data address of the buffer holding the data needed to write the vvcC
++ * @param size size (in bytes) of the data buffer
++ * @param ps_array_completeness whether all parameter sets are in the vvcC (1)
++ *        or there may be additional parameter sets in the bitstream (0)
++ * @return >=0 in case of success, a negative value corresponding to an AVERROR
++ *         code in case of failure
++ */
++int ff_isom_write_vvcc(AVIOContext *pb, const uint8_t *data,
++                       int size, int ps_array_completeness);
++
++#endif /* AVFORMAT_H266_H */
+diff --git a/configure b/configure
+index dab6427b41..69021a038b 100755
+--- a/configure
++++ b/configure
+@@ -3521,7 +3521,7 @@ mp3_demuxer_select="mpegaudio_parser"
+ mp3_muxer_select="mpegaudioheader"
+ mp4_muxer_select="mov_muxer"
+ mpegts_demuxer_select="iso_media"
+-mpegts_muxer_select="ac3_parser adts_muxer latm_muxer h264_mp4toannexb_bsf hevc_mp4toannexb_bsf"
++mpegts_muxer_select="ac3_parser adts_muxer latm_muxer h264_mp4toannexb_bsf hevc_mp4toannexb_bsf vvc_mp4toannexb_bsf"
+ mpegtsraw_demuxer_select="mpegts_demuxer"
+ mxf_muxer_select="pcm_rechunk_bsf rangecoder"
+ mxf_d10_muxer_select="mxf_muxer"
+diff --git a/libavformat/mpeg.c b/libavformat/mpeg.c
+index 781c3162d6..a0f2c6da05 100644
+--- a/libavformat/mpeg.c
++++ b/libavformat/mpeg.c
+@@ -546,6 +546,9 @@ redo:
+     } else if (es_type == STREAM_TYPE_VIDEO_HEVC) {
+         codec_id = AV_CODEC_ID_HEVC;
+         type     = AVMEDIA_TYPE_VIDEO;
++    } else if (es_type == STREAM_TYPE_VIDEO_VVC) {
++        codec_id = AV_CODEC_ID_VVC;
++        type     = AVMEDIA_TYPE_VIDEO;
+     } else if (es_type == STREAM_TYPE_AUDIO_AC3) {
+         codec_id = AV_CODEC_ID_AC3;
+         type     = AVMEDIA_TYPE_AUDIO;
+diff --git a/libavformat/mpeg.h b/libavformat/mpeg.h
+index b635295776..20592eb184 100644
+--- a/libavformat/mpeg.h
++++ b/libavformat/mpeg.h
+@@ -56,6 +56,7 @@
+ #define STREAM_TYPE_VIDEO_MPEG4     0x10
+ #define STREAM_TYPE_VIDEO_H264      0x1b
+ #define STREAM_TYPE_VIDEO_HEVC      0x24
++#define STREAM_TYPE_VIDEO_VVC       0x33
+ #define STREAM_TYPE_VIDEO_CAVS      0x42
+ 
+ #define STREAM_TYPE_AUDIO_AC3       0x81
+diff --git a/libavformat/mpegts.c b/libavformat/mpegts.c
+index c7fd1f5d1f..bef00c88e7 100644
+--- a/libavformat/mpegts.c
++++ b/libavformat/mpegts.c
+@@ -812,6 +812,7 @@ static const StreamType ISO_types[] = {
+     { 0x20, AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_H264       },
+     { 0x21, AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_JPEG2000   },
+     { 0x24, AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_HEVC       },
++    { 0x33, AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_VVC        },
+     { 0x42, AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_CAVS       },
+     { 0xd1, AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_DIRAC      },
+     { 0xd2, AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_AVS2       },
+@@ -867,6 +868,7 @@ static const StreamType REGD_types[] = {
+     { MKTAG('D', 'T', 'S', '3'), AVMEDIA_TYPE_AUDIO, AV_CODEC_ID_DTS   },
+     { MKTAG('E', 'A', 'C', '3'), AVMEDIA_TYPE_AUDIO, AV_CODEC_ID_EAC3  },
+     { MKTAG('H', 'E', 'V', 'C'), AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_HEVC  },
++    { MKTAG('V', 'V', 'C', ' '), AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_VVC   },
+     { MKTAG('K', 'L', 'V', 'A'), AVMEDIA_TYPE_DATA,  AV_CODEC_ID_SMPTE_KLV },
+     { MKTAG('V', 'A', 'N', 'C'), AVMEDIA_TYPE_DATA,  AV_CODEC_ID_SMPTE_2038 },
+     { MKTAG('I', 'D', '3', ' '), AVMEDIA_TYPE_DATA,  AV_CODEC_ID_TIMED_ID3 },
+diff --git a/libavformat/mpegts.h b/libavformat/mpegts.h
+index a48f14e768..14ae312c50 100644
+--- a/libavformat/mpegts.h
++++ b/libavformat/mpegts.h
+@@ -128,6 +128,7 @@
+ #define STREAM_TYPE_METADATA        0x15
+ #define STREAM_TYPE_VIDEO_H264      0x1b
+ #define STREAM_TYPE_VIDEO_HEVC      0x24
++#define STREAM_TYPE_VIDEO_VVC       0x33
+ #define STREAM_TYPE_VIDEO_CAVS      0x42
+ #define STREAM_TYPE_VIDEO_AVS2      0xd2
+ #define STREAM_TYPE_VIDEO_AVS3      0xd4
+diff --git a/libavformat/mpegtsenc.c b/libavformat/mpegtsenc.c
+index 84edd418f0..1ca3d49058 100644
+--- a/libavformat/mpegtsenc.c
++++ b/libavformat/mpegtsenc.c
+@@ -368,6 +368,9 @@ static int get_dvb_stream_type(AVFormatContext *s, AVStream *st)
+     case AV_CODEC_ID_HEVC:
+         stream_type = STREAM_TYPE_VIDEO_HEVC;
+         break;
++    case AV_CODEC_ID_VVC:
++        stream_type = STREAM_TYPE_VIDEO_VVC;
++        break;
+     case AV_CODEC_ID_CAVS:
+         stream_type = STREAM_TYPE_VIDEO_CAVS;
+         break;
+@@ -467,6 +470,11 @@ static int get_m2ts_stream_type(AVFormatContext *s, AVStream *st)
+     case AV_CODEC_ID_HEVC:
+         stream_type = STREAM_TYPE_VIDEO_HEVC;
+         break;
++    case AV_CODEC_ID_VVC:
++        av_log(s, AV_LOG_ERROR,
++                "MPEGTS VVC %s.\n", avcodec_get_name(st->codecpar->codec_id));
++        stream_type = STREAM_TYPE_VIDEO_VVC;
++        break;
+     case AV_CODEC_ID_PCM_BLURAY:
+         stream_type = 0x80;
+         break;
+@@ -1791,6 +1799,21 @@ static int check_hevc_startcode(AVFormatContext *s, const AVStream *st, const AV
+     return 0;
+ }
+ 
++static int check_vvc_startcode(AVFormatContext *s, const AVStream *st, const AVPacket *pkt)
++{
++    if (pkt->size < 5 || AV_RB32(pkt->data) != 0x0000001 && AV_RB24(pkt->data) != 0x000001) {
++        if (!st->nb_frames) {
++            av_log(s, AV_LOG_ERROR, "VVC bitstream malformed, no startcode found\n");
++            return AVERROR_PATCHWELCOME;
++        }
++        av_log(s, AV_LOG_WARNING, "VVC bitstream error, startcode missing, size %d", pkt->size);
++        if (pkt->size)
++            av_log(s, AV_LOG_WARNING, " data %08"PRIX32, AV_RB32(pkt->data));
++        av_log(s, AV_LOG_WARNING, "\n");
++    }
++    return 0;
++}
++
+ /* Based on GStreamer's gst-plugins-base/ext/ogg/gstoggstream.c
+  * Released under the LGPL v2.1+, written by
+  * Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+@@ -2015,6 +2038,42 @@ static int mpegts_write_packet_internal(AVFormatContext *s, AVPacket *pkt)
+             buf     = data;
+             size    = pkt->size + 7 + extradd;
+         }
++    } else if (st->codecpar->codec_id == AV_CODEC_ID_VVC) {
++      const uint8_t *p = buf, *buf_end = p + size;
++      uint32_t state = -1;
++      uint32_t naltype = -1;
++      int extradd = (pkt->flags & AV_PKT_FLAG_KEY) ? st->codecpar->extradata_size : 0;
++      int ret = check_vvc_startcode(s, st, pkt);
++      if (ret < 0)
++          return ret;
++
++      if (extradd && AV_RB24(st->codecpar->extradata) > 1)
++          extradd = 0;
++
++      do {
++          p = avpriv_find_start_code(p, buf_end, &state);
++          // state contains byte behind start code, p points 2 bytes behind start code
++          naltype = ((AV_RB8(p)>>3) & 0x1F);
++          av_log(s, AV_LOG_TRACE, "nal %"PRId32"\n", naltype );
++          if (naltype == 14 ) // VPS
++              extradd = 0;
++      } while (p < buf_end && naltype != 20 && naltype >= 12);
++
++      if (naltype >= 12)
++          extradd = 0;
++      if (naltype != 20) { // AUD NAL
++          data = av_malloc(pkt->size + 7 + extradd);
++          if (!data)
++              return AVERROR(ENOMEM);
++          memcpy(data + 7, st->codecpar->extradata, extradd);
++          memcpy(data + 7 + extradd, pkt->data, pkt->size);
++          AV_WB32(data, 0x00000001);
++          data[4] = 20;
++          data[5] = 1;
++          data[6] = 0x50; // any slice type (0x4) + rbsp stop one bit
++          buf     = data;
++          size    = pkt->size + 7 + extradd;
++      }
+     } else if (st->codecpar->codec_id == AV_CODEC_ID_OPUS) {
+         if (pkt->size < 2) {
+             av_log(s, AV_LOG_ERROR, "Opus packet too short\n");
+@@ -2271,6 +2330,12 @@ static int mpegts_check_bitstream(AVFormatContext *s, AVStream *st,
+                               (st->codecpar->extradata_size > 0 &&
+                                st->codecpar->extradata[0] == 1)))
+             ret = ff_stream_add_bitstream_filter(st, "hevc_mp4toannexb", NULL);
++    } else if (st->codecpar->codec_id == AV_CODEC_ID_VVC) {
++        if (pkt->size >= 5 && AV_RB32(pkt->data) != 0x0000001 &&
++                             (AV_RB24(pkt->data) != 0x000001 ||
++                              (st->codecpar->extradata_size > 0 &&
++                               st->codecpar->extradata[0] == 1)))
++            ret = ff_stream_add_bitstream_filter(st, "h266_mp4toannexb", NULL);
+     }
+ 
+     return ret;
+diff --git a/libavcodec/version.h b/libavcodec/version.h
+index d6f1440d54..62e7eba3db 100644
+--- a/libavcodec/version.h
++++ b/libavcodec/version.h
+@@ -29,7 +29,7 @@
+ 
+ #include "version_major.h"
+ 
+-#define LIBAVCODEC_VERSION_MINOR  32
++#define LIBAVCODEC_VERSION_MINOR  33
+ #define LIBAVCODEC_VERSION_MICRO 102
+ 
+ #define LIBAVCODEC_VERSION_INT  AV_VERSION_INT(LIBAVCODEC_VERSION_MAJOR, \
+ diff --git a/configure b/configure
+index 69021a038b..37ca1c9ecf 100755
+--- a/configure
++++ b/configure
+@@ -286,6 +286,7 @@ External library support:
+   --enable-libvorbis       enable Vorbis en/decoding via libvorbis,
+                            native implementation exists [no]
+   --enable-libvpx          enable VP8 and VP9 de/encoding via libvpx [no]
++  --enable-libvvdec        enable H.266/VVC decoding via vvdec [no]
+   --enable-libvvenc        enable H.266/VVC encoding via vvenc [no]
+   --enable-libwebp         enable WebP encoding via libwebp [no]
+   --enable-libx264         enable H.264 encoding via x264 [no]
+@@ -1901,6 +1902,7 @@ EXTERNAL_LIBRARY_LIST="
+     libvmaf
+     libvorbis
+     libvpx
++    libvvdec
+     libvvenc
+     libwebp
+     libxml2
+@@ -3446,8 +3448,9 @@ libvpx_vp8_decoder_deps="libvpx"
+ libvpx_vp8_encoder_deps="libvpx"
+ libvpx_vp9_decoder_deps="libvpx"
+ libvpx_vp9_encoder_deps="libvpx"
++libvvdec_decoder_deps="libvvdec"
++libvvdec_decoder_select="vvc_mp4toannexb_bsf"
+ libvvenc_encoder_deps="libvvenc"
+-libvvenc_encoder_select="atsc_a53"
+ libwebp_encoder_deps="libwebp"
+ libwebp_anim_encoder_deps="libwebp"
+ libx262_encoder_deps="libx262"
+@@ -6857,6 +6860,7 @@ enabled libvpx            && {
+         die "libvpx enabled but no supported decoders found"
+     fi
+ }
++enabled libvvdec          && require_pkg_config libvvdec "libvvdec >= 1.6.0" "vvdec/vvdec.h" vvdec_get_version
+ enabled libvvenc          && require_pkg_config libvvenc "libvvenc >= 1.6.1" "vvenc/vvenc.h" vvenc_get_version
+ 
+ enabled libwebp           && {
+diff --git a/fftools/ffmpeg_dec.c b/fftools/ffmpeg_dec.c
+index fcee8b65ac..9b4e68e75c 100644
+--- a/fftools/ffmpeg_dec.c
++++ b/fftools/ffmpeg_dec.c
+@@ -301,7 +301,8 @@ static int video_frame_process(InputStream *ist, AVFrame *frame)
+     // The following line may be required in some cases where there is no parser
+     // or the parser does not has_b_frames correctly
+     if (ist->par->video_delay < ist->dec_ctx->has_b_frames) {
+-        if (ist->dec_ctx->codec_id == AV_CODEC_ID_H264) {
++        if (ist->dec_ctx->codec_id == AV_CODEC_ID_H264 ||
++            ist->dec_ctx->codec_id == AV_CODEC_ID_VVC) {
+             ist->par->video_delay = ist->dec_ctx->has_b_frames;
+         } else
+             av_log(ist->dec_ctx, AV_LOG_WARNING,
+diff --git a/libavcodec/Makefile b/libavcodec/Makefile
+index b2bec7a2c2..1a5acae064 100644
+--- a/libavcodec/Makefile
++++ b/libavcodec/Makefile
+@@ -1140,6 +1140,7 @@ OBJS-$(CONFIG_LIBVPX_VP8_DECODER)         += libvpxdec.o
+ OBJS-$(CONFIG_LIBVPX_VP8_ENCODER)         += libvpxenc.o
+ OBJS-$(CONFIG_LIBVPX_VP9_DECODER)         += libvpxdec.o
+ OBJS-$(CONFIG_LIBVPX_VP9_ENCODER)         += libvpxenc.o
++OBJS-$(CONFIG_LIBVVDEC_DECODER)           += libvvdec.o vvc_parse_extradata.o vvc_paramset.o
+ OBJS-$(CONFIG_LIBVVENC_ENCODER)           += libvvenc.o
+ OBJS-$(CONFIG_LIBWEBP_ENCODER)            += libwebpenc_common.o libwebpenc.o
+ OBJS-$(CONFIG_LIBWEBP_ANIM_ENCODER)       += libwebpenc_common.o libwebpenc_animencoder.o
+diff --git a/libavcodec/allcodecs.c b/libavcodec/allcodecs.c
+index 2e8cb1f8fd..31a2fd2e97 100644
+--- a/libavcodec/allcodecs.c
++++ b/libavcodec/allcodecs.c
+@@ -805,6 +805,7 @@ extern const FFCodec ff_libvpx_vp8_encoder;
+ extern const FFCodec ff_libvpx_vp8_decoder;
+ extern FFCodec ff_libvpx_vp9_encoder;
+ extern const FFCodec ff_libvpx_vp9_decoder;
++extern const FFCodec ff_libvvdec_decoder;
+ extern const FFCodec ff_libvvenc_encoder;
+ /* preferred over libwebp */
+ extern const FFCodec ff_libwebp_anim_encoder;
+diff --git a/libavcodec/libvvdec.c b/libavcodec/libvvdec.c
+new file mode 100644
+index 0000000000..601855c40f
+--- /dev/null
++++ b/libavcodec/libvvdec.c
+@@ -0,0 +1,567 @@
++/*
++ * H.266 decoding using the VVdeC library
++ *
++ * Copyright (C) 2022, Thomas Siedel
++ *
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++#include "config_components.h"
++
++#include <vvdec/vvdec.h>
++
++#include "libavutil/common.h"
++#include "libavutil/avutil.h"
++#include "libavutil/pixdesc.h"
++#include "libavutil/opt.h"
++#include "libavutil/imgutils.h"
++#include "libavutil/frame.h"
++#include "libavutil/mastering_display_metadata.h"
++#include "libavutil/log.h"
++
++#include "avcodec.h"
++#include "codec_internal.h"
++#include "decode.h"
++#include "internal.h"
++#include "profiles.h"
++
++#include "vvc_paramset.h"
++#include "vvc_parse_extradata.h"
++
++typedef struct VVdeCContext {
++    AVClass      *av_class;
++    vvdecDecoder *vvdecDec;
++    vvdecParams  vvdecParams;
++    H266ParamSets ps;
++    int          is_nalff;
++    int          nal_length_size;
++    bool         bFlush;
++    AVBufferPool *pools[3];     /** Pools for each data plane. */
++    int          pool_size[3];
++} VVdeCContext;
++
++
++static void ff_vvdec_log_callback(void *avctx, int level, const char *fmt,
++                                  va_list args)
++{
++    vfprintf(level == 1 ? stderr : stdout, fmt, args);
++}
++
++static void *ff_vvdec_buffer_allocator(void *ctx, vvdecComponentType comp,
++                                       uint32_t size, uint32_t alignment,
++                                       void **allocator)
++{
++    AVBufferRef *buf;
++    VVdeCContext *s;
++    int plane;
++
++    uint32_t alignedsize = FFALIGN(size, alignment);
++    s = (VVdeCContext *) ctx;
++    plane = (int) comp;
++
++    if (plane < 0 || plane > 3)
++        return NULL;
++
++    if (alignedsize != s->pool_size[plane]) {
++        av_buffer_pool_uninit(&s->pools[plane]);
++        s->pools[plane] = av_buffer_pool_init(alignedsize, NULL);
++        if (!s->pools[plane]) {
++            s->pool_size[plane] = 0;
++            return NULL;
++        }
++        s->pool_size[plane] = alignedsize;
++    }
++
++    buf = av_buffer_pool_get(s->pools[plane]);
++    if (!buf)
++        return NULL;
++
++    *allocator = (void *) buf;
++    return buf->data;
++}
++
++static void ff_vvdec_buffer_unref(void *ctx, void *allocator)
++{
++    AVBufferRef *buf = (AVBufferRef *) allocator;
++    av_buffer_unref(&buf);
++}
++
++static void ff_vvdec_printParameterInfo(AVCodecContext *avctx,
++                                        vvdecParams *params)
++{
++    av_log(avctx, AV_LOG_DEBUG, "Version info: vvdec %s ( threads %d)\n",
++           vvdec_get_version(), params->threads);
++}
++
++static int ff_vvdec_set_pix_fmt(AVCodecContext *avctx, vvdecFrame *frame)
++{
++    if (NULL != frame->picAttributes && NULL != frame->picAttributes->vui &&
++        frame->picAttributes->vui->colourDescriptionPresentFlag) {
++        avctx->color_trc       = frame->picAttributes->vui->transferCharacteristics;
++        avctx->color_primaries = frame->picAttributes->vui->colourPrimaries;
++        avctx->colorspace      = frame->picAttributes->vui->matrixCoefficients;
++    } else {
++        avctx->color_primaries = AVCOL_PRI_UNSPECIFIED;
++        avctx->color_trc       = AVCOL_TRC_UNSPECIFIED;
++        avctx->colorspace      = AVCOL_SPC_UNSPECIFIED;
++    }
++
++    if (NULL != frame->picAttributes && NULL != frame->picAttributes->vui &&
++        frame->picAttributes->vui->videoSignalTypePresentFlag) {
++        avctx->color_range = frame->picAttributes->vui->videoFullRangeFlag ?
++                             AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
++    } else {
++        avctx->color_range = AVCOL_RANGE_MPEG;
++    }
++
++    switch (frame->colorFormat) {
++    case VVDEC_CF_YUV420_PLANAR:
++    case VVDEC_CF_YUV400_PLANAR:
++        if (frame->bitDepth == 8) {
++            avctx->pix_fmt = frame->numPlanes == 1 ?
++                             AV_PIX_FMT_GRAY8 : AV_PIX_FMT_YUV420P;
++            avctx->profile = FF_PROFILE_VVC_MAIN_10;
++            return 0;
++        } else if (frame->bitDepth == 10) {
++            avctx->pix_fmt = frame->numPlanes == 1 ?
++                AV_PIX_FMT_GRAY10 : AV_PIX_FMT_YUV420P10;
++            avctx->profile = FF_PROFILE_VVC_MAIN_10;
++            return 0;
++        } else {
++            return AVERROR_INVALIDDATA;
++        }
++    case VVDEC_CF_YUV422_PLANAR:
++    case VVDEC_CF_YUV444_PLANAR:
++        if (frame->bitDepth == 8) {
++            avctx->pix_fmt = frame->colorFormat == VVDEC_CF_YUV444_PLANAR ?
++                             AV_PIX_FMT_YUV444P : AV_PIX_FMT_YUV422P;
++            if (avctx->profile != FF_PROFILE_VVC_MAIN_10_444)
++                avctx->profile = FF_PROFILE_VVC_MAIN_10_444;
++            return 0;
++        } else if (frame->bitDepth == 10) {
++            avctx->pix_fmt = frame->colorFormat == VVDEC_CF_YUV444_PLANAR ?
++                             AV_PIX_FMT_YUV444P10 : AV_PIX_FMT_YUV422P10;
++            if (avctx->profile != FF_PROFILE_VVC_MAIN_10_444)
++                avctx->profile = FF_PROFILE_VVC_MAIN_10_444;
++            return 0;
++        } else {
++            return AVERROR_INVALIDDATA;
++        }
++    default:
++        return AVERROR_INVALIDDATA;
++    }
++}
++
++static int set_side_data(AVCodecContext *avctx, AVFrame *avframe,
++                         vvdecFrame *frame)
++{
++    vvdecSEI *sei;
++    VVdeCContext *s = (VVdeCContext *) avctx->priv_data;
++
++    sei = vvdec_find_frame_sei(s->vvdecDec,
++                               VVDEC_MASTERING_DISPLAY_COLOUR_VOLUME, frame);
++    if (sei) {
++        // VVC uses a g,b,r ordering, which we convert to a more natural r,g,b
++        const int mapping[3] = { 2, 0, 1 };
++        const int chroma_den = 50000;
++        const int luma_den = 10000;
++        int i;
++        vvdecSEIMasteringDisplayColourVolume *p;
++        AVMasteringDisplayMetadata *metadata =
++            av_mastering_display_metadata_create_side_data(avframe);
++        p = (vvdecSEIMasteringDisplayColourVolume *) (sei->payload);
++        if (p && metadata) {
++            for (i = 0; i < 3; i++) {
++                const int j = mapping[i];
++                metadata->display_primaries[i][0].num = p->primaries[j][0];
++                metadata->display_primaries[i][0].den = chroma_den;
++                metadata->display_primaries[i][1].num = p->primaries[j][1];
++                metadata->display_primaries[i][1].den = chroma_den;
++            }
++            metadata->white_point[0].num = p->whitePoint[0];
++            metadata->white_point[0].den = chroma_den;
++            metadata->white_point[1].num = p->whitePoint[1];
++            metadata->white_point[1].den = chroma_den;
++
++            metadata->max_luminance.num = p->maxLuminance;
++            metadata->max_luminance.den = luma_den;
++            metadata->min_luminance.num = p->minLuminance;
++            metadata->min_luminance.den = luma_den;
++            metadata->has_luminance = 1;
++            metadata->has_primaries = 1;
++
++            av_log(avctx, AV_LOG_DEBUG, "Mastering Display Metadata:\n");
++            av_log(avctx, AV_LOG_DEBUG,
++                   "r(%5.4f,%5.4f) g(%5.4f,%5.4f) b(%5.4f %5.4f) wp(%5.4f, %5.4f)\n",
++                   av_q2d(metadata->display_primaries[0][0]),
++                   av_q2d(metadata->display_primaries[0][1]),
++                   av_q2d(metadata->display_primaries[1][0]),
++                   av_q2d(metadata->display_primaries[1][1]),
++                   av_q2d(metadata->display_primaries[2][0]),
++                   av_q2d(metadata->display_primaries[2][1]),
++                   av_q2d(metadata->white_point[0]),
++                   av_q2d(metadata->white_point[1]));
++            av_log(avctx, AV_LOG_DEBUG, "min_luminance=%f, max_luminance=%f\n",
++                   av_q2d(metadata->min_luminance),
++                   av_q2d(metadata->max_luminance));
++        }
++        return 0;
++    }
++
++    sei = vvdec_find_frame_sei(s->vvdecDec, VVDEC_CONTENT_LIGHT_LEVEL_INFO,
++                               frame);
++    if (sei) {
++        vvdecSEIContentLightLevelInfo *p = NULL;
++        AVContentLightMetadata *light =
++            av_content_light_metadata_create_side_data(avframe);
++        p = (vvdecSEIContentLightLevelInfo *) (sei->payload);
++        if (p && light) {
++            light->MaxCLL  = p->maxContentLightLevel;
++            light->MaxFALL = p->maxPicAverageLightLevel;
++        }
++
++        av_log(avctx, AV_LOG_DEBUG, "Content Light Level Metadata:\n");
++        av_log(avctx, AV_LOG_DEBUG, "MaxCLL=%d, MaxFALL=%d\n",
++               light->MaxCLL, light->MaxFALL);
++    }
++
++    return 0;
++}
++
++static void export_stream_params(AVCodecContext *avctx, const H266SPS *sps)
++{
++    avctx->coded_width  = sps->pic_width_max_in_luma_samples;
++    avctx->coded_height = sps->pic_height_max_in_luma_samples;
++    avctx->width        = sps->pic_width_max_in_luma_samples -
++                          sps->conf_win_left_offset -
++                          sps->conf_win_right_offset;
++    avctx->height       = sps->pic_height_max_in_luma_samples -
++                          sps->conf_win_top_offset -
++                          sps->conf_win_bottom_offset;
++    avctx->has_b_frames = sps->max_sublayers;
++    avctx->profile      = sps->profile_tier_level.general_profile_idc;
++    avctx->level        = sps->profile_tier_level.general_level_idc;
++    avctx->pix_fmt      = sps->pix_fmt;
++
++    avctx->color_range = sps->vui.full_range_flag ? AVCOL_RANGE_JPEG :
++                                                    AVCOL_RANGE_MPEG;
++
++    if (sps->vui.colour_description_present_flag) {
++        avctx->color_primaries = sps->vui.colour_primaries;
++        avctx->color_trc       = sps->vui.transfer_characteristics;
++        avctx->colorspace      = sps->vui.matrix_coeffs;
++    } else {
++        avctx->color_primaries = AVCOL_PRI_UNSPECIFIED;
++        avctx->color_trc       = AVCOL_TRC_UNSPECIFIED;
++        avctx->colorspace      = AVCOL_SPC_UNSPECIFIED;
++    }
++
++    avctx->chroma_sample_location = AVCHROMA_LOC_UNSPECIFIED;
++    if (sps->chroma_format_idc == 1) {
++        if (sps->vui.chroma_loc_info_present_flag) {
++            if (sps->vui.chroma_sample_loc_type_top_field <= 5)
++                avctx->chroma_sample_location =
++                    sps->vui.chroma_sample_loc_type_top_field + 1;
++        } else
++            avctx->chroma_sample_location = AVCHROMA_LOC_LEFT;
++    }
++
++    if (sps->timing_hrd_params_present_flag &&
++        sps->general_timing_hrd_parameters.num_units_in_tick &&
++        sps->general_timing_hrd_parameters.time_scale) {
++        av_reduce(&avctx->framerate.den, &avctx->framerate.num,
++                  sps->general_timing_hrd_parameters.num_units_in_tick,
++                  sps->general_timing_hrd_parameters.time_scale, INT_MAX);
++    }
++}
++
++static int h266_decode_extradata(AVCodecContext *avctx, uint8_t *buf,
++                                int length, int first)
++{
++    VVdeCContext *s = (VVdeCContext *) avctx->priv_data;
++    int ret;
++
++    ret = ff_h266_decode_extradata(buf, length, &s->ps, &s->is_nalff,
++                                  &s->nal_length_size, avctx->err_recognition,
++                                  false, avctx);
++    if (ret < 0)
++        return ret;
++
++    if (s->ps.sps != NULL)
++        export_stream_params(avctx, s->ps.sps);
++
++    return 0;
++}
++
++static av_cold int ff_vvdec_decode_init(AVCodecContext *avctx)
++{
++    int i;
++    VVdeCContext *s = (VVdeCContext *) avctx->priv_data;
++
++    vvdec_params_default(&s->vvdecParams);
++    s->vvdecParams.logLevel = VVDEC_DETAILS;
++
++    if (av_log_get_level() >= AV_LOG_DEBUG)
++        s->vvdecParams.logLevel = VVDEC_DETAILS;
++    else if (av_log_get_level() >= AV_LOG_VERBOSE)
++        s->vvdecParams.logLevel = VVDEC_INFO;     // VVDEC_INFO will output per picture info
++    else if (av_log_get_level() >= AV_LOG_INFO)
++        s->vvdecParams.logLevel = VVDEC_WARNING;  // AV_LOG_INFO is ffmpeg default
++    else
++        s->vvdecParams.logLevel = VVDEC_SILENT;
++
++    if (avctx->thread_count > 0)
++        s->vvdecParams.threads = avctx->thread_count;   // number of worker threads (should not exceed the number of physical cpu's)
++    else
++        s->vvdecParams.threads = -1;    // get max cpus
++
++    ff_vvdec_printParameterInfo(avctx, &s->vvdecParams);
++
++    // using buffer allocation by using AVBufferPool
++    s->vvdecParams.opaque = avctx->priv_data;
++    s->vvdecDec = vvdec_decoder_open_with_allocator(&s->vvdecParams,
++                                                    ff_vvdec_buffer_allocator,
++                                                    ff_vvdec_buffer_unref);
++
++
++    if (!s->vvdecDec) {
++        av_log(avctx, AV_LOG_ERROR, "cannot init vvc decoder\n");
++        return -1;
++    }
++
++    vvdec_set_logging_callback(s->vvdecDec, ff_vvdec_log_callback);
++
++    s->bFlush = false;
++    s->is_nalff = 0;
++    s->nal_length_size = 0;
++
++    for (i = 0; i < FF_ARRAY_ELEMS(s->pools); i++) {
++        s->pools[i] = NULL;
++        s->pool_size[i] = 0;
++    }
++
++    if (!avctx->internal->is_copy) {
++        if (avctx->extradata_size > 0 && avctx->extradata) {
++            int ret = h266_decode_extradata(avctx, avctx->extradata,
++                                           avctx->extradata_size, 1);
++            if (ret < 0) {
++                return ret;
++            }
++        }
++    }
++
++    return 0;
++}
++
++static av_cold int ff_vvdec_decode_close(AVCodecContext *avctx)
++{
++    VVdeCContext *s = (VVdeCContext *) avctx->priv_data;
++
++    for (int i = 0; i < FF_ARRAY_ELEMS(s->pools); i++) {
++        av_buffer_pool_uninit(&s->pools[i]);
++        s->pool_size[i] = 0;
++    }
++
++    if (0 != vvdec_decoder_close(s->vvdecDec)) {
++        av_log(avctx, AV_LOG_ERROR, "cannot close vvdec\n");
++        return -1;
++    }
++
++    ff_h266_ps_uninit(&s->ps);
++    s->bFlush = false;
++    return 0;
++}
++
++static av_cold int ff_vvdec_decode_frame(AVCodecContext *avctx, AVFrame *data,
++                                         int *got_frame, AVPacket *avpkt)
++{
++    VVdeCContext *s = avctx->priv_data;
++    AVFrame *avframe = data;
++
++    int ret = 0;
++    vvdecFrame *frame = NULL;
++
++    if (avframe) {
++        if (!avpkt->size && !s->bFlush)
++            s->bFlush = true;
++
++        if (s->bFlush)
++            ret = vvdec_flush(s->vvdecDec, &frame);
++        else {
++            vvdecAccessUnit accessUnit;
++            vvdec_accessUnit_default(&accessUnit);
++            accessUnit.payload = avpkt->data;
++            accessUnit.payloadSize = avpkt->size;
++            accessUnit.payloadUsedSize = avpkt->size;
++
++            accessUnit.cts = avpkt->pts;
++            accessUnit.ctsValid = true;
++            accessUnit.dts = avpkt->dts;
++            accessUnit.dtsValid = true;
++
++            ret = vvdec_decode(s->vvdecDec, &accessUnit, &frame);
++        }
++
++        if (ret < 0) {
++            if (ret == VVDEC_EOF)
++                s->bFlush = true;
++            else if (ret != VVDEC_TRY_AGAIN) {
++                av_log(avctx, AV_LOG_ERROR,
++                       "error in vvdec::decode - ret:%d - %s %s\n", ret,
++                       vvdec_get_last_error(s->vvdecDec), vvdec_get_last_additional_error( s->vvdecDec));
++                ret=AVERROR_EXTERNAL;
++                goto fail;
++            }
++        } else if (NULL != frame) {
++            const uint8_t *src_data[4] = { frame->planes[0].ptr,
++                                           frame->planes[1].ptr,
++                                           frame->planes[2].ptr, NULL };
++            const int src_linesizes[4] = { (int) frame->planes[0].stride,
++                                           (int) frame->planes[1].stride,
++                                           (int) frame->planes[2].stride, 0 };
++
++            if ((ret = ff_vvdec_set_pix_fmt(avctx, frame)) < 0) {
++                av_log(avctx, AV_LOG_ERROR,
++                       "Unsupported output colorspace (%d) / bit_depth (%d)\n",
++                       frame->colorFormat, frame->bitDepth);
++                goto fail;
++            }
++
++            if ((int) frame->width != avctx->width ||
++                (int) frame->height != avctx->height) {
++                av_log(avctx, AV_LOG_INFO, "dimension change! %dx%d -> %dx%d\n",
++                       avctx->width, avctx->height, frame->width, frame->height);
++
++                ret = ff_set_dimensions(avctx, frame->width, frame->height);
++                if (ret < 0)
++                    goto fail;
++            }
++
++            if (frame->planes[0].allocator)
++                avframe->buf[0] =
++                    av_buffer_ref((AVBufferRef *) frame->planes[0].allocator);
++            if (frame->planes[1].allocator)
++                avframe->buf[1] =
++                    av_buffer_ref((AVBufferRef *) frame->planes[1].allocator);
++            if (frame->planes[2].allocator)
++                avframe->buf[2] =
++                    av_buffer_ref((AVBufferRef *) frame->planes[2].allocator);
++
++            for (int i = 0; i < 4; i++) {
++                avframe->data[i] = (uint8_t *) src_data[i];
++                avframe->linesize[i] = src_linesizes[i];
++            }
++
++            ret = ff_decode_frame_props(avctx, avframe);
++            if (ret < 0)
++                goto fail;
++
++            if (frame->picAttributes) {
++                if (frame->picAttributes->isRefPic)
++                    avframe->flags |= AV_FRAME_FLAG_KEY;
++                else
++                    avframe->flags &= ~AV_FRAME_FLAG_KEY;
++
++                avframe->pict_type = (frame->picAttributes->sliceType !=
++                    VVDEC_SLICETYPE_UNKNOWN) ?
++                    frame->picAttributes->sliceType + 1 : AV_PICTURE_TYPE_NONE;
++            }
++
++            if (frame->ctsValid)
++                avframe->pts = frame->cts;
++
++            ret = set_side_data(avctx, avframe, frame);
++            if (ret < 0)
++                goto fail;
++
++            if (0 != vvdec_frame_unref(s->vvdecDec, frame))
++                av_log(avctx, AV_LOG_ERROR, "cannot free picture memory\n");
++
++            *got_frame = 1;
++        }
++    }
++
++    return avpkt->size;
++
++  fail:
++    if (frame) {
++        if (frame->planes[0].allocator)
++            av_buffer_unref((AVBufferRef **) &frame->planes[0].allocator);
++        if (frame->planes[1].allocator)
++            av_buffer_unref((AVBufferRef **) &frame->planes[1].allocator);
++        if (frame->planes[2].allocator)
++            av_buffer_unref((AVBufferRef **) &frame->planes[2].allocator);
++
++        vvdec_frame_unref(s->vvdecDec, frame);
++    }
++    return ret;
++}
++
++static av_cold void ff_vvdec_decode_flush(AVCodecContext *avctx)
++{
++    VVdeCContext *s = (VVdeCContext *) avctx->priv_data;
++
++    if (0 != vvdec_decoder_close(s->vvdecDec))
++        av_log(avctx, AV_LOG_ERROR, "cannot close vvdec during flush\n");
++
++    s->vvdecDec = vvdec_decoder_open_with_allocator(&s->vvdecParams,
++                                                    ff_vvdec_buffer_allocator,
++                                                    ff_vvdec_buffer_unref);
++    if (!s->vvdecDec)
++        av_log(avctx, AV_LOG_ERROR, "cannot reinit vvdec during flush\n");
++
++    vvdec_set_logging_callback(s->vvdecDec, ff_vvdec_log_callback);
++
++    s->bFlush = false;
++}
++
++static const enum AVPixelFormat pix_fmts_vvdec[] = {
++    AV_PIX_FMT_GRAY8,
++    AV_PIX_FMT_GRAY10,
++    AV_PIX_FMT_YUV420P,
++    AV_PIX_FMT_YUV422P,
++    AV_PIX_FMT_YUV444P,
++    AV_PIX_FMT_YUV420P10LE,
++    AV_PIX_FMT_YUV422P10LE,
++    AV_PIX_FMT_YUV444P10LE,
++    AV_PIX_FMT_NONE
++};
++
++static const AVClass class_libvvdec = {
++    .class_name = "libvvdec-vvc decoder",
++    .item_name  = av_default_item_name,
++    .version    = LIBAVUTIL_VERSION_INT,
++};
++
++FFCodec ff_libvvdec_decoder = {
++    .p.name         = "libvvdec",
++    CODEC_LONG_NAME("H.266 / VVC Decoder VVdeC"),
++    .p.type         = AVMEDIA_TYPE_VIDEO,
++    .p.id           = AV_CODEC_ID_VVC,
++    .p.capabilities = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_OTHER_THREADS,
++    .p.profiles     = NULL_IF_CONFIG_SMALL(ff_vvc_profiles),
++    .p.priv_class   = &class_libvvdec,
++    .p.wrapper_name = "libvvdec",
++    .priv_data_size = sizeof(VVdeCContext),
++    .p.pix_fmts     = pix_fmts_vvdec,
++    .init           = ff_vvdec_decode_init,
++    FF_CODEC_DECODE_CB(ff_vvdec_decode_frame),
++    .close          = ff_vvdec_decode_close,
++    .flush          = ff_vvdec_decode_flush,
++    .bsfs           = "vvc_mp4toannexb",
++    .caps_internal  = FF_CODEC_CAP_AUTO_THREADS,
++};
+diff --git a/libavcodec/vvc_paramset.c b/libavcodec/vvc_paramset.c
+new file mode 100644
+index 0000000000..8935faff9e
+--- /dev/null
++++ b/libavcodec/vvc_paramset.c
+@@ -0,0 +1,1005 @@
++/*
++ * H.266 / VVC Parameter Set decoding
++ *
++ * Copyright (c) 2022, Thomas Siedel
++ *
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++#include "libavutil/imgutils.h"
++#include "golomb.h"
++#include "vvc_paramset.h"
++
++static void remove_sps(H266ParamSets *s, int id)
++{
++    if (s->sps_list[id]) {
++        if (s->sps == (const H266SPS *)s->sps_list[id]->data)
++            s->sps = NULL;
++
++        av_assert0(!(s->sps_list[id] &&
++                     s->sps == (H266SPS *)s->sps_list[id]->data));
++    }
++    av_buffer_unref(&s->sps_list[id]);
++}
++
++static int decode_general_constraints_info(GetBitContext *gb,
++                                           AVCodecContext *avctx,
++                                           H266GeneralConstraintsInfo *gci)
++{
++    int i;
++    gci->gci_present_flag = get_bits1(gb);
++
++    if (gci->gci_present_flag) {
++        /* general */
++        gci->gci_intra_only_constraint_flag = get_bits1(gb);
++        gci->gci_all_layers_independent_constraint_flag = get_bits1(gb);
++        gci->gci_one_au_only_constraint_flag = get_bits1(gb);
++
++        /* picture format */
++        gci->gci_sixteen_minus_max_bitdepth_constraint_idc = get_bits(gb, 4);
++        gci->gci_three_minus_max_chroma_format_constraint_idc = get_bits(gb, 2);
++
++        /* NAL unit type related */
++        gci->gci_no_mixed_nalu_types_in_pic_constraint_flag = get_bits1(gb);
++        gci->gci_no_trail_constraint_flag = get_bits1(gb);
++        gci->gci_no_stsa_constraint_flag  = get_bits1(gb);
++        gci->gci_no_rasl_constraint_flag  = get_bits1(gb);
++        gci->gci_no_radl_constraint_flag  = get_bits1(gb);
++        gci->gci_no_idr_constraint_flag   = get_bits1(gb);
++        gci->gci_no_cra_constraint_flag   = get_bits1(gb);
++        gci->gci_no_gdr_constraint_flag   = get_bits1(gb);
++        gci->gci_no_aps_constraint_flag   = get_bits1(gb);
++        gci->gci_no_idr_rpl_constraint_flag = get_bits1(gb);
++
++        /* tile, slice, subpicture partitioning */
++        gci->gci_one_tile_per_pic_constraint_flag     = get_bits1(gb);
++        gci->gci_pic_header_in_slice_header_constraint_flag = get_bits1(gb);
++        gci->gci_one_slice_per_pic_constraint_flag    = get_bits1(gb);
++        gci->gci_no_rectangular_slice_constraint_flag = get_bits1(gb);
++        gci->gci_one_slice_per_subpic_constraint_flag = get_bits1(gb);
++        gci->gci_no_subpic_info_constraint_flag = get_bits1(gb);
++
++        /* CTU and block partitioning */
++        gci->gci_three_minus_max_log2_ctu_size_constraint_idc = get_bits(gb, 2);
++        gci->gci_no_partition_constraints_override_constraint_flag =
++            get_bits1(gb);
++        gci->gci_no_mtt_constraint_flag = get_bits1(gb);
++        gci->gci_no_qtbtt_dual_tree_intra_constraint_flag = get_bits1(gb);
++
++        /* intra */
++        gci->gci_no_palette_constraint_flag = get_bits1(gb);
++        gci->gci_no_ibc_constraint_flag = get_bits1(gb);
++        gci->gci_no_isp_constraint_flag = get_bits1(gb);
++        gci->gci_no_mrl_constraint_flag = get_bits1(gb);
++        gci->gci_no_mip_constraint_flag = get_bits1(gb);
++        gci->gci_no_cclm_constraint_flag = get_bits1(gb);
++
++        /* inter */
++        gci->gci_no_ref_pic_resampling_constraint_flag  = get_bits1(gb);
++        gci->gci_no_res_change_in_clvs_constraint_flag  = get_bits1(gb);
++        gci->gci_no_weighted_prediction_constraint_flag = get_bits1(gb);
++        gci->gci_no_ref_wraparound_constraint_flag = get_bits1(gb);
++        gci->gci_no_temporal_mvp_constraint_flag   = get_bits1(gb);
++        gci->gci_no_sbtmvp_constraint_flag = get_bits1(gb);
++        gci->gci_no_amvr_constraint_flag   = get_bits1(gb);
++        gci->gci_no_bdof_constraint_flag   = get_bits1(gb);
++        gci->gci_no_smvd_constraint_flag   = get_bits1(gb);
++        gci->gci_no_dmvr_constraint_flag   = get_bits1(gb);
++        gci->gci_no_mmvd_constraint_flag   = get_bits1(gb);
++        gci->gci_no_affine_motion_constraint_flag = get_bits1(gb);
++        gci->gci_no_prof_constraint_flag   = get_bits1(gb);
++        gci->gci_no_bcw_constraint_flag    = get_bits1(gb);
++        gci->gci_no_ciip_constraint_flag   = get_bits1(gb);
++        gci->gci_no_gpm_constraint_flag    = get_bits1(gb);
++
++        /* transform, quantization, residual */
++        gci->gci_no_luma_transform_size_64_constraint_flag = get_bits1(gb);
++        gci->gci_no_transform_skip_constraint_flag         = get_bits1(gb);
++        gci->gci_no_bdpcm_constraint_flag      = get_bits1(gb);
++        gci->gci_no_mts_constraint_flag        = get_bits1(gb);
++        gci->gci_no_lfnst_constraint_flag      = get_bits1(gb);
++        gci->gci_no_joint_cbcr_constraint_flag = get_bits1(gb);
++        gci->gci_no_sbt_constraint_flag        = get_bits1(gb);
++        gci->gci_no_act_constraint_flag        = get_bits1(gb);
++        gci->gci_no_explicit_scaling_list_constraint_flag = get_bits1(gb);
++        gci->gci_no_dep_quant_constraint_flag        = get_bits1(gb);
++        gci->gci_no_sign_data_hiding_constraint_flag = get_bits1(gb);
++        gci->gci_no_cu_qp_delta_constraint_flag      = get_bits1(gb);
++        gci->gci_no_chroma_qp_offset_constraint_flag = get_bits1(gb);
++
++        /* loop filter */
++        gci->gci_no_sao_constraint_flag   = get_bits1(gb);
++        gci->gci_no_alf_constraint_flag   = get_bits1(gb);
++        gci->gci_no_ccalf_constraint_flag = get_bits1(gb);
++        gci->gci_no_lmcs_constraint_flag  = get_bits1(gb);
++        gci->gci_no_ladf_constraint_flag  = get_bits1(gb);
++        gci->gci_no_virtual_boundaries_constraint_flag  = get_bits1(gb);
++        gci->gci_num_additional_bits  = get_bits(gb,8);
++        for (i = 0; i < gci->gci_num_additional_bits; i++) {
++            gci->gci_reserved_bit[i] = get_bits1(gb);
++        }
++    }
++
++    align_get_bits(gb);
++
++    return 0;
++}
++
++
++static int decode_profile_tier_level(GetBitContext *gb, AVCodecContext *avctx,
++                                     H266RawProfileTierLevel *ptl,
++                                     int profile_tier_present_flag,
++                                     int max_num_sub_layers_minus1)
++{
++    int i;
++
++    if (profile_tier_present_flag) {
++        ptl->general_profile_idc = get_bits(gb, 7);
++        ptl->general_tier_flag   = get_bits1(gb);
++    }
++    ptl->general_level_idc              = get_bits(gb, 8);
++    ptl->ptl_frame_only_constraint_flag = get_bits1(gb);
++    ptl->ptl_multilayer_enabled_flag    = get_bits1(gb);
++
++    if (profile_tier_present_flag) {
++        decode_general_constraints_info(gb, avctx,
++                                        &ptl->general_constraints_info);
++    }
++
++    for (i = max_num_sub_layers_minus1 - 1; i >= 0; i--) {
++        ptl->ptl_sublayer_level_present_flag[i] = get_bits1(gb);
++    }
++
++    align_get_bits(gb);
++
++    for (i = max_num_sub_layers_minus1 - 1; i >= 0; i--) {
++        if (ptl->ptl_sublayer_level_present_flag[i])
++            ptl->sublayer_level_idc[i] = get_bits(gb, 8);
++    }
++
++    if (profile_tier_present_flag) {
++        ptl->ptl_num_sub_profiles = get_bits(gb, 8);
++        for (i = 0; i < ptl->ptl_num_sub_profiles; i++)
++            ptl->general_sub_profile_idc[i] = get_bits_long(gb, 32);
++    }
++
++    return 0;
++}
++
++static int decode_dpb_parameters(GetBitContext *gb, AVCodecContext *avctx,
++                                 H266DpbParameters *dpb,
++                                 uint8_t max_sublayers_minus1,
++                                 uint8_t sublayer_info_flag)
++{
++    int i;
++    for (i = (sublayer_info_flag ? 0 : max_sublayers_minus1);
++         i <= max_sublayers_minus1; i++) {
++        dpb->dpb_max_dec_pic_buffering_minus1[i] = get_ue_golomb(gb);
++        dpb->dpb_max_num_reorder_pics[i]         = get_ue_golomb(gb);
++        dpb->dpb_max_latency_increase_plus1[i]   = get_ue_golomb(gb);
++    }
++    return 0;
++}
++
++static int decode_ref_pic_list_struct(GetBitContext *gb, AVCodecContext *avctx,
++                                      H266RefPicListStruct *current,
++                                      uint8_t list_idx, uint8_t rpls_idx,
++                                      const H266SPS *sps)
++{
++    int i, j, num_direct_ref_layers = 0;
++
++    current->num_ref_entries = get_ue_golomb(gb);
++    if (sps->long_term_ref_pics_flag &&
++        rpls_idx < sps->num_ref_pic_lists[list_idx] &&
++        current->num_ref_entries > 0)
++        current->ltrp_in_header_flag = get_bits1(gb);
++    if (sps->long_term_ref_pics_flag &&
++        rpls_idx == sps->num_ref_pic_lists[list_idx])
++        current->ltrp_in_header_flag = 1;
++    for (i = 0, j = 0; i < current->num_ref_entries; i++) {
++        if (sps->inter_layer_prediction_enabled_flag)
++            current->inter_layer_ref_pic_flag[i] = get_bits1(gb);
++        else
++            current->inter_layer_ref_pic_flag[i] = 0;
++
++        if (!current->inter_layer_ref_pic_flag[i]) {
++            if (sps->long_term_ref_pics_flag)
++                current->st_ref_pic_flag[i] = get_bits1(gb);
++            else
++                current->st_ref_pic_flag[i] = 1;
++            if (current->st_ref_pic_flag[i]) {
++                int abs_delta_poc_st;
++                current->abs_delta_poc_st[i] = get_ue_golomb(gb);
++                if ((sps->weighted_pred_flag ||
++                     sps->weighted_bipred_flag) && i != 0)
++                    abs_delta_poc_st = current->abs_delta_poc_st[i];
++                else
++                    abs_delta_poc_st = current->abs_delta_poc_st[i] + 1;
++                if (abs_delta_poc_st > 0)
++                    current->strp_entry_sign_flag[i] = get_bits1(gb);
++            } else {
++                if (!current->ltrp_in_header_flag) {
++                    uint8_t bits = sps->log2_max_pic_order_cnt_lsb_minus4 + 4;
++                    current->rpls_poc_lsb_lt[j] = get_bits(gb, bits);
++                    j++;
++                }
++            }
++        } else {
++            if (num_direct_ref_layers == 0) {
++                av_log(avctx, AV_LOG_ERROR,
++                       "num_direct_ref_layers needs > 0.\n");
++                return AVERROR_INVALIDDATA;
++            }
++            current->ilrp_idx[i] = get_ue_golomb(gb);
++        }
++    }
++    return 0;
++}
++
++static int decode_general_timing_hrd_parameters(GetBitContext *gb,
++                                                H266GeneralTimingHrdParameters *current)
++{
++    current->num_units_in_tick = get_bits_long(gb, 32);
++    current->time_scale = get_bits_long(gb, 32);
++    current->general_nal_hrd_params_present_flag = get_bits1(gb);
++    current->general_vcl_hrd_params_present_flag = get_bits1(gb);
++
++    if (current->general_nal_hrd_params_present_flag ||
++        current->general_vcl_hrd_params_present_flag) {
++        current->general_same_pic_timing_in_all_ols_flag = get_bits1(gb);
++        current->general_du_hrd_params_present_flag = get_bits1(gb);
++        if (current->general_du_hrd_params_present_flag)
++            current->tick_divisor_minus2 = get_bits(gb, 8);
++        current->bit_rate_scale = get_bits(gb, 4);
++        current->cpb_size_scale = get_bits(gb, 4);
++        if (current->general_du_hrd_params_present_flag)
++            current->cpb_size_du_scale = get_bits(gb, 4);
++        current->hrd_cpb_cnt_minus1 = get_ue_golomb_long(gb);
++    } else {
++        current->general_du_hrd_params_present_flag = 0;
++    }
++    return 0;
++}
++
++static int decode_sublayer_hrd_parameters(GetBitContext *gb,
++                                          H266SubLayerHRDParameters *current,
++                                          int sublayer_id,
++                                          const H266GeneralTimingHrdParameters *general)
++{
++    int i;
++    for (i = 0; i <= general->hrd_cpb_cnt_minus1; i++) {
++        current->bit_rate_value_minus1[sublayer_id][i] = get_ue_golomb_long(gb);
++        current->cpb_size_value_minus1[sublayer_id][i] = get_ue_golomb_long(gb);
++        if (general->general_du_hrd_params_present_flag) {
++            current->cpb_size_du_value_minus1[sublayer_id][i] =
++                get_ue_golomb_long(gb);
++            current->bit_rate_du_value_minus1[sublayer_id][i] =
++                get_ue_golomb_long(gb);
++        }
++        current->cbr_flag[sublayer_id][i] = get_bits1(gb);
++    }
++    return 0;
++}
++
++static int decode_ols_timing_hrd_parameters(GetBitContext *gb,
++                                            H266OlsTimingHrdParameters *current,
++                                            uint8_t first_sublayer,
++                                            uint8_t max_sublayers_minus1,
++                                            const H266GeneralTimingHrdParameters * general)
++{
++    int i;
++    for (i = first_sublayer; i <= max_sublayers_minus1; i++) {
++        current->fixed_pic_rate_general_flag[i] = get_bits1(gb);
++        if (!current->fixed_pic_rate_general_flag[i])
++            current->fixed_pic_rate_within_cvs_flag[i] = get_bits1(gb);
++        else
++            current->fixed_pic_rate_within_cvs_flag[i] = 1;
++        if (current->fixed_pic_rate_within_cvs_flag[i]) {
++            current->elemental_duration_in_tc_minus1[i] = get_ue_golomb_long(gb);
++            current->low_delay_hrd_flag[i] = 0;
++        } else if ((general->general_nal_hrd_params_present_flag ||
++                    general->general_vcl_hrd_params_present_flag) &&
++                   general->hrd_cpb_cnt_minus1 == 0) {
++            current->low_delay_hrd_flag[i] = get_bits1(gb);
++        } else {
++            current->low_delay_hrd_flag[i] = 0;
++        }
++        if (general->general_nal_hrd_params_present_flag)
++            decode_sublayer_hrd_parameters(gb,
++                                           &current->
++                                           nal_sub_layer_hrd_parameters, i,
++                                           general);
++        if (general->general_vcl_hrd_params_present_flag)
++            decode_sublayer_hrd_parameters(gb,
++                                           &current->
++                                           nal_sub_layer_hrd_parameters, i,
++                                           general);
++    }
++    return 0;
++}
++
++static int decode_vui(GetBitContext *gb, AVCodecContext *avctx,
++                      H266VUI* vui, uint8_t chroma_format_idc )
++{
++    vui->progressive_source_flag        = get_bits1(gb);
++    vui->interlaced_source_flag         = get_bits1(gb);
++    vui->non_packed_constraint_flag     = get_bits1(gb);
++    vui->non_projected_constraint_flag  = get_bits1(gb);
++    vui->aspect_ratio_info_present_flag = get_bits1(gb);
++    if (vui->aspect_ratio_info_present_flag) {
++        vui->aspect_ratio_constant_flag = get_bits1(gb);
++        vui->aspect_ratio_idc           = get_bits(gb, 8);
++        if (vui->aspect_ratio_idc == 255) {
++            vui->sar_width  = get_bits(gb, 16);
++            vui->sar_height = get_bits(gb, 16);
++        }
++    } else {
++        vui->aspect_ratio_constant_flag = 0;
++        vui->aspect_ratio_idc = 0;
++    }
++    vui->overscan_info_present_flag = get_bits1(gb);
++    if (vui->overscan_info_present_flag)
++        vui->overscan_appropriate_flag   = get_bits1(gb);
++    vui->colour_description_present_flag = get_bits1(gb);
++    if (vui->colour_description_present_flag) {
++        vui->colour_primaries         = get_bits(gb, 8);
++        vui->transfer_characteristics = get_bits(gb, 8);
++        vui->matrix_coeffs            = get_bits(gb, 8);
++        av_log(avctx, AV_LOG_DEBUG,
++               "colour_primaries: %d transfer_characteristics: %d matrix_coeffs: %d \n",
++               vui->colour_primaries, vui->transfer_characteristics,
++               vui->matrix_coeffs);
++
++        vui->full_range_flag = get_bits1(gb);
++    } else {
++        vui->colour_primaries         = 2;
++        vui->transfer_characteristics = 2;
++        vui->matrix_coeffs            = 2;
++        vui->full_range_flag          = 0;
++    }
++    vui->chroma_loc_info_present_flag = get_bits1(gb);
++    if (chroma_format_idc != 1 && vui->chroma_loc_info_present_flag) {
++        av_log(avctx, AV_LOG_ERROR, "chroma_format_idc == %d,"
++               "chroma_loc_info_present_flag can't not be true",
++               chroma_format_idc);
++        return AVERROR_INVALIDDATA;
++    }
++    if (vui->chroma_loc_info_present_flag) {
++        if (vui->progressive_source_flag && !vui->interlaced_source_flag) {
++            vui->chroma_sample_loc_type_frame = get_ue_golomb(gb);
++        } else {
++            vui->chroma_sample_loc_type_top_field    = get_ue_golomb(gb);
++            vui->chroma_sample_loc_type_bottom_field = get_ue_golomb(gb);
++        }
++    } else {
++        if (chroma_format_idc == 1) {
++            vui->chroma_sample_loc_type_frame        = get_ue_golomb(gb);
++            vui->chroma_sample_loc_type_top_field    = get_ue_golomb(gb);
++            vui->chroma_sample_loc_type_bottom_field = get_ue_golomb(gb);
++        }
++    }
++    return 0;
++}
++
++static int map_pixel_format(AVCodecContext *avctx, H266SPS *sps)
++{
++    const AVPixFmtDescriptor *desc;
++    switch (sps->bit_depth) {
++    case 8:
++        if (sps->chroma_format_idc == 0)
++            sps->pix_fmt = AV_PIX_FMT_GRAY8;
++        if (sps->chroma_format_idc == 1)
++            sps->pix_fmt = AV_PIX_FMT_YUV420P;
++        if (sps->chroma_format_idc == 2)
++            sps->pix_fmt = AV_PIX_FMT_YUV422P;
++        if (sps->chroma_format_idc == 3)
++            sps->pix_fmt = AV_PIX_FMT_YUV444P;
++        break;
++    case 9:
++        if (sps->chroma_format_idc == 0)
++            sps->pix_fmt = AV_PIX_FMT_GRAY9;
++        if (sps->chroma_format_idc == 1)
++            sps->pix_fmt = AV_PIX_FMT_YUV420P9;
++        if (sps->chroma_format_idc == 2)
++            sps->pix_fmt = AV_PIX_FMT_YUV422P9;
++        if (sps->chroma_format_idc == 3)
++            sps->pix_fmt = AV_PIX_FMT_YUV444P9;
++        break;
++    case 10:
++        if (sps->chroma_format_idc == 0)
++            sps->pix_fmt = AV_PIX_FMT_GRAY10;
++        if (sps->chroma_format_idc == 1)
++            sps->pix_fmt = AV_PIX_FMT_YUV420P10;
++        if (sps->chroma_format_idc == 2)
++            sps->pix_fmt = AV_PIX_FMT_YUV422P10;
++        if (sps->chroma_format_idc == 3)
++            sps->pix_fmt = AV_PIX_FMT_YUV444P10;
++        break;
++    case 12:
++        if (sps->chroma_format_idc == 0)
++            sps->pix_fmt = AV_PIX_FMT_GRAY12;
++        if (sps->chroma_format_idc == 1)
++            sps->pix_fmt = AV_PIX_FMT_YUV420P12;
++        if (sps->chroma_format_idc == 2)
++            sps->pix_fmt = AV_PIX_FMT_YUV422P12;
++        if (sps->chroma_format_idc == 3)
++            sps->pix_fmt = AV_PIX_FMT_YUV444P12;
++        break;
++    default:
++        av_log(avctx, AV_LOG_ERROR,
++               "The following bit-depths are currently specified: 8, 9, 10 and 12 bits, "
++               "chroma_format_idc is %d, depth is %d\n",
++               sps->chroma_format_idc, sps->bit_depth);
++        return AVERROR_INVALIDDATA;
++    }
++
++    desc = av_pix_fmt_desc_get(sps->pix_fmt);
++    if (!desc)
++        return AVERROR(EINVAL);
++
++    return 0;
++}
++
++int ff_h266_parse_sps(H266SPS *sps, GetBitContext *gb, unsigned int *sps_id,
++                     int apply_defdispwin, AVCodecContext *avctx)
++{
++    int i, j;
++    unsigned int ctb_log2_size_y, ctb_size_y, max_num_merge_cand,
++                 tmp_width_val, tmp_height_val;
++
++    sps->sps_id = get_bits(gb, 4);
++    sps->vps_id = get_bits(gb, 4);
++
++    *sps_id = sps->sps_id;
++
++    sps->max_sublayers = get_bits(gb, 3) + 1;
++    sps->chroma_format_idc = get_bits(gb, 2);
++    sps->log2_ctu_size = get_bits(gb, 2) + 5;
++
++    ctb_log2_size_y = sps->log2_ctu_size;
++    ctb_size_y = 1 << ctb_log2_size_y;
++
++    sps->ptl_dpb_hrd_params_present_flag = get_bits1(gb);
++    if (sps->ptl_dpb_hrd_params_present_flag)
++        decode_profile_tier_level(gb, avctx, &sps->profile_tier_level, 1,
++                                  sps->max_sublayers - 1);
++
++    sps->gdr_enabled_flag = get_bits1(gb);
++    sps->ref_pic_resampling_enabled_flag = get_bits1(gb);
++
++    if (sps->ref_pic_resampling_enabled_flag)
++        sps->res_change_in_clvs_allowed_flag = get_bits1(gb);
++    else
++        sps->res_change_in_clvs_allowed_flag = 0;
++
++    sps->pic_width_max_in_luma_samples  = get_ue_golomb(gb);
++    sps->pic_height_max_in_luma_samples = get_ue_golomb(gb);
++
++    sps->conformance_window_flag = get_bits1(gb);
++
++    if (sps->conformance_window_flag) {
++        sps->conf_win_left_offset   = get_ue_golomb(gb);
++        sps->conf_win_right_offset  = get_ue_golomb(gb);
++        sps->conf_win_top_offset    = get_ue_golomb(gb);
++        sps->conf_win_bottom_offset = get_ue_golomb(gb);
++    } else {
++        sps->conf_win_left_offset   = 0;
++        sps->conf_win_right_offset  = 0;
++        sps->conf_win_top_offset    = 0;
++        sps->conf_win_bottom_offset = 0;
++    }
++
++    tmp_width_val =
++        (sps->pic_width_max_in_luma_samples + ctb_size_y - 1) / ctb_size_y;
++    tmp_height_val =
++        (sps->pic_height_max_in_luma_samples + ctb_size_y - 1) / ctb_size_y;
++
++    sps->subpic_info_present_flag = get_bits1(gb);
++    if (sps->subpic_info_present_flag) {
++        sps->num_subpics_minus1 = get_ue_golomb(gb);
++        if (sps->num_subpics_minus1 > 0) {
++            sps->independent_subpics_flag = get_bits1(gb);
++            sps->subpic_same_size_flag = get_bits1(gb);
++        }
++    }
++
++    if (sps->num_subpics_minus1 > 0) {
++        int wlen = av_ceil_log2(tmp_width_val);
++        int hlen = av_ceil_log2(tmp_height_val);
++        if (sps->pic_width_max_in_luma_samples > ctb_size_y)
++            sps->subpic_width_minus1[0] = get_bits(gb, wlen);
++        else
++            sps->subpic_width_minus1[0] = tmp_width_val - 1;
++
++        if (sps->pic_height_max_in_luma_samples > ctb_size_y)
++            sps->subpic_height_minus1[0] = get_bits(gb, hlen);
++        else
++            sps->subpic_height_minus1[0] = tmp_height_val;
++
++        if (!sps->independent_subpics_flag) {
++            sps->subpic_treated_as_pic_flag[0] = get_bits1(gb);
++            sps->loop_filter_across_subpic_enabled_flag[0] = get_bits1(gb);
++        } else {
++            sps->subpic_treated_as_pic_flag[0] = 1;
++            sps->loop_filter_across_subpic_enabled_flag[0] = 1;
++        }
++
++        for (i = 1; i <= sps->num_subpics_minus1; i++) {
++            if (!sps->subpic_same_size_flag) {
++                if (sps->pic_width_max_in_luma_samples > ctb_size_y)
++                    sps->subpic_ctu_top_left_x[i] = get_bits(gb, wlen);
++                else
++                    sps->subpic_ctu_top_left_x[i] = 0;
++
++                if (sps->pic_height_max_in_luma_samples > ctb_size_y)
++                    sps->subpic_ctu_top_left_y[i] = get_bits(gb, hlen);
++                else
++                    sps->subpic_ctu_top_left_y[i] = 0;
++
++                if (i < sps->num_subpics_minus1 &&
++                    sps->pic_width_max_in_luma_samples > ctb_size_y) {
++                    sps->subpic_width_minus1[i] = get_bits(gb, wlen);
++                } else {
++                    sps->subpic_width_minus1[i] =
++                        tmp_width_val - sps->subpic_ctu_top_left_x[i] - 1;
++                }
++                if (i < sps->num_subpics_minus1 &&
++                    sps->pic_height_max_in_luma_samples > ctb_size_y) {
++                    sps->subpic_height_minus1[i] = get_bits(gb, hlen);
++                } else {
++                    sps->subpic_height_minus1[i] =
++                        tmp_height_val - sps->subpic_ctu_top_left_y[i] - 1;
++                }
++            } else {
++                int num_subpic_cols =
++                    tmp_width_val / (sps->subpic_width_minus1[0] + 1);
++                sps->subpic_ctu_top_left_x[i] = (i % num_subpic_cols) *(sps->subpic_width_minus1[0] + 1);
++                sps->subpic_ctu_top_left_y[i] = (i / num_subpic_cols) *(sps->subpic_height_minus1[0] + 1);
++                sps->subpic_width_minus1[i]   =  sps->subpic_width_minus1[0];
++                sps->subpic_height_minus1[i]  = sps->subpic_height_minus1[0];
++            }
++            if (!sps->independent_subpics_flag) {
++                sps->subpic_treated_as_pic_flag[i] = get_bits1(gb);
++                sps->loop_filter_across_subpic_enabled_flag[i] = get_bits1(gb);
++            } else {
++                sps->subpic_treated_as_pic_flag[i] = 1;
++                sps->loop_filter_across_subpic_enabled_flag[i] = 0;
++            }
++        }
++        sps->subpic_id_len_minus1 = get_ue_golomb(gb);
++
++        if ((1 << (sps->subpic_id_len_minus1 + 1)) <
++            sps->num_subpics_minus1 + 1) {
++            av_log(avctx, AV_LOG_ERROR,
++                   "sps->subpic_id_len_minus1(%d) is too small\n",
++                   sps->subpic_id_len_minus1);
++            return AVERROR_INVALIDDATA;
++        }
++        sps->subpic_id_mapping_explicitly_signalled_flag = get_bits1(gb);
++        if (sps->subpic_id_mapping_explicitly_signalled_flag) {
++            sps->subpic_id_mapping_present_flag = get_bits1(gb);
++            if (sps->subpic_id_mapping_present_flag) {
++                for (i = 0; i <= sps->num_subpics_minus1; i++)
++                    sps->subpic_id[i] =
++                        get_bits(gb, sps->subpic_id_len_minus1 + 1);
++            }
++        } else {
++            sps->subpic_ctu_top_left_x[0] = 0;
++            sps->subpic_ctu_top_left_y[0] = 0;
++            sps->subpic_width_minus1[0] = tmp_width_val - 1;
++            sps->subpic_height_minus1[0] = tmp_height_val - 1;
++        }
++    } else {
++        sps->num_subpics_minus1 = 0;
++        sps->independent_subpics_flag = 1;
++        sps->subpic_same_size_flag = 0;
++        sps->subpic_id_mapping_explicitly_signalled_flag = 0;
++        sps->subpic_ctu_top_left_x[0] = 0;
++        sps->subpic_ctu_top_left_y[0] = 0;
++        sps->subpic_width_minus1[0] = tmp_width_val - 1;
++        sps->subpic_height_minus1[0] = tmp_height_val - 1;
++    }
++
++    sps->bit_depth = get_ue_golomb(gb) + 8;
++
++    sps->entropy_coding_sync_enabled_flag = get_bits1(gb);
++    sps->entry_point_offsets_present_flag = get_bits1(gb);
++
++    sps->log2_max_pic_order_cnt_lsb_minus4 = get_bits(gb, 4);
++
++    sps->poc_msb_cycle_flag = get_bits1(gb);
++    if (sps->poc_msb_cycle_flag)
++        sps->poc_msb_cycle_len_minus1 = get_ue_golomb(gb);
++
++    sps->num_extra_ph_bytes = get_bits(gb, 2);
++
++    for (i = 0; i < FFMIN(16, (sps->num_extra_ph_bytes * 8)); i++) {
++        sps->extra_ph_bit_present_flag[i] = get_bits1(gb);
++    }
++
++    sps->num_extra_sh_bytes = get_bits(gb, 2);
++    for (i = 0; i < FFMIN(16, (sps->num_extra_sh_bytes * 8)); i++) {
++        sps->extra_sh_bit_present_flag[i] = get_bits1(gb);
++    }
++
++    if (sps->ptl_dpb_hrd_params_present_flag) {
++        if (sps->max_sublayers > 1)
++            sps->sublayer_dpb_params_flag = get_bits1(gb);
++        else
++            sps->sublayer_dpb_params_flag = 0;
++
++        decode_dpb_parameters(gb, avctx, &sps->dpb_params,
++                              sps->max_sublayers - 1,
++                              sps->sublayer_dpb_params_flag);
++    }
++
++    sps->log2_min_luma_coding_block_size_minus2 = get_ue_golomb(gb);
++    sps->partition_constraints_override_enabled_flag = get_bits1(gb);
++    sps->log2_diff_min_qt_min_cb_intra_slice_luma = get_ue_golomb(gb);
++    sps->max_mtt_hierarchy_depth_intra_slice_luma = get_ue_golomb(gb);
++
++    if (sps->max_mtt_hierarchy_depth_intra_slice_luma != 0) {
++        sps->log2_diff_max_bt_min_qt_intra_slice_luma = get_ue_golomb(gb);
++        sps->log2_diff_max_tt_min_qt_intra_slice_luma = get_ue_golomb(gb);
++    } else {
++        sps->log2_diff_max_bt_min_qt_intra_slice_luma = 0;
++        sps->log2_diff_max_tt_min_qt_intra_slice_luma = 0;
++    }
++
++    if (sps->chroma_format_idc != 0) {
++        sps->qtbtt_dual_tree_intra_flag = get_bits1(gb);
++    } else {
++        sps->qtbtt_dual_tree_intra_flag = 0;
++    }
++
++    if (sps->qtbtt_dual_tree_intra_flag) {
++        sps->log2_diff_min_qt_min_cb_intra_slice_chroma = get_ue_golomb(gb);
++        sps->max_mtt_hierarchy_depth_intra_slice_chroma = get_ue_golomb(gb);
++        if (sps->max_mtt_hierarchy_depth_intra_slice_chroma != 0) {
++            sps->log2_diff_max_bt_min_qt_intra_slice_chroma = get_ue_golomb(gb);
++            sps->log2_diff_max_tt_min_qt_intra_slice_chroma = get_ue_golomb(gb);
++        }
++    } else {
++        sps->log2_diff_min_qt_min_cb_intra_slice_chroma = 0;
++        sps->max_mtt_hierarchy_depth_intra_slice_chroma = 0;
++    }
++    if (sps->max_mtt_hierarchy_depth_intra_slice_chroma == 0) {
++        sps->log2_diff_max_bt_min_qt_intra_slice_chroma = 0;
++        sps->log2_diff_max_tt_min_qt_intra_slice_chroma = 0;
++    }
++
++    sps->log2_diff_min_qt_min_cb_inter_slice = get_ue_golomb(gb);
++
++    sps->max_mtt_hierarchy_depth_inter_slice = get_ue_golomb(gb);
++    if (sps->max_mtt_hierarchy_depth_inter_slice != 0) {
++        sps->log2_diff_max_bt_min_qt_inter_slice = get_ue_golomb(gb);
++        sps->log2_diff_max_tt_min_qt_inter_slice = get_ue_golomb(gb);
++    } else {
++        sps->log2_diff_max_bt_min_qt_inter_slice = 0;
++        sps->log2_diff_max_tt_min_qt_inter_slice = 0;
++    }
++
++    if (ctb_size_y > 32)
++        sps->max_luma_transform_size_64_flag = get_bits1(gb);
++    else
++        sps->max_luma_transform_size_64_flag = 0;
++
++    sps->transform_skip_enabled_flag = get_bits1(gb);
++    if (sps->transform_skip_enabled_flag) {
++        sps->log2_transform_skip_max_size_minus2 = get_ue_golomb(gb);
++        sps->bdpcm_enabled_flag = get_bits1(gb);
++    }
++
++    sps->mts_enabled_flag = get_bits1(gb);
++    if (sps->mts_enabled_flag) {
++        sps->explicit_mts_intra_enabled_flag = get_bits1(gb);
++        sps->explicit_mts_inter_enabled_flag = get_bits1(gb);
++    } else {
++        sps->explicit_mts_intra_enabled_flag = 0;
++        sps->explicit_mts_inter_enabled_flag = 0;
++    }
++
++    sps->lfnst_enabled_flag = get_bits1(gb);
++
++    if (sps->chroma_format_idc != 0) {
++        uint8_t num_qp_tables;
++        sps->joint_cbcr_enabled_flag = get_bits1(gb);
++        sps->same_qp_table_for_chroma_flag = get_bits1(gb);
++        num_qp_tables = sps->same_qp_table_for_chroma_flag ?
++            1 : (sps->joint_cbcr_enabled_flag ? 3 : 2);
++        for (i = 0; i < num_qp_tables; i++) {
++            sps->qp_table_start_minus26[i] = get_se_golomb(gb);
++            sps->num_points_in_qp_table_minus1[i] = get_ue_golomb(gb);
++            for (j = 0; j <= sps->num_points_in_qp_table_minus1[i]; j++) {
++                sps->delta_qp_in_val_minus1[i][j] = get_ue_golomb(gb);
++                sps->delta_qp_diff_val[i][j] = get_ue_golomb(gb);
++            }
++        }
++    } else {
++        sps->joint_cbcr_enabled_flag = 0;
++        sps->same_qp_table_for_chroma_flag = 0;
++    }
++
++    sps->sao_enabled_flag = get_bits1(gb);
++    sps->alf_enabled_flag = get_bits1(gb);
++    if (sps->alf_enabled_flag && sps->chroma_format_idc)
++        sps->ccalf_enabled_flag = get_bits1(gb);
++    else
++        sps->ccalf_enabled_flag = 0;
++
++    sps->lmcs_enabled_flag = get_bits1(gb);
++    sps->weighted_pred_flag = get_bits1(gb);
++    sps->weighted_bipred_flag = get_bits1(gb);
++    sps->long_term_ref_pics_flag = get_bits1(gb);
++    if (sps->vps_id > 0)
++        sps->inter_layer_prediction_enabled_flag = get_bits1(gb);
++    else
++        sps->inter_layer_prediction_enabled_flag = 0;
++    sps->idr_rpl_present_flag = get_bits1(gb);
++    sps->rpl1_same_as_rpl0_flag = get_bits1(gb);
++
++    for (i = 0; i < (sps->rpl1_same_as_rpl0_flag ? 1 : 2); i++) {
++        sps->num_ref_pic_lists[i] = get_ue_golomb(gb);
++        for (j = 0; j < sps->num_ref_pic_lists[i]; j++)
++            decode_ref_pic_list_struct(gb, avctx,
++                                       &sps->ref_pic_list_struct[i][j],
++                                       i, j, sps);
++    }
++
++    if (sps->rpl1_same_as_rpl0_flag) {
++        sps->num_ref_pic_lists[1] = sps->num_ref_pic_lists[0];
++        for (j = 0; j < sps->num_ref_pic_lists[0]; j++)
++            memcpy(&sps->ref_pic_list_struct[1][j],
++                   &sps->ref_pic_list_struct[0][j],
++                   sizeof(sps->ref_pic_list_struct[0][j]));
++    }
++
++    sps->ref_wraparound_enabled_flag = get_bits1(gb);
++
++    sps->temporal_mvp_enabled_flag = get_bits1(gb);
++    if (sps->temporal_mvp_enabled_flag)
++        sps->sbtmvp_enabled_flag = get_bits1(gb);
++    else
++        sps->sbtmvp_enabled_flag = 0;
++
++    sps->amvr_enabled_flag = get_bits1(gb);
++    sps->bdof_enabled_flag = get_bits1(gb);
++    if (sps->bdof_enabled_flag)
++        sps->bdof_control_present_in_ph_flag = get_bits1(gb);
++    else
++        sps->bdof_control_present_in_ph_flag = 0;
++
++    sps->smvd_enabled_flag = get_bits1(gb);
++    sps->dmvr_enabled_flag = get_bits1(gb);
++    if (sps->dmvr_enabled_flag)
++        sps->dmvr_control_present_in_ph_flag = get_bits1(gb);
++    else
++        sps->dmvr_control_present_in_ph_flag = 0;
++
++    sps->mmvd_enabled_flag = get_bits1(gb);
++    if (sps->mmvd_enabled_flag)
++        sps->mmvd_fullpel_only_enabled_flag = get_bits1(gb);
++    else
++        sps->mmvd_fullpel_only_enabled_flag = 0;
++
++    sps->six_minus_max_num_merge_cand = get_ue_golomb(gb);
++    max_num_merge_cand = 6 - sps->six_minus_max_num_merge_cand;
++
++    sps->sbt_enabled_flag = get_bits1(gb);
++
++    sps->affine_enabled_flag = get_bits1(gb);
++    if (sps->affine_enabled_flag) {
++        sps->five_minus_max_num_subblock_merge_cand = get_ue_golomb(gb);
++        sps->param_affine_enabled_flag = get_bits1(gb);
++        if (sps->amvr_enabled_flag)
++            sps->affine_amvr_enabled_flag = get_bits1(gb);
++        else
++            sps->affine_amvr_enabled_flag = 0;
++        sps->affine_prof_enabled_flag = get_bits1(gb);
++        if (sps->affine_prof_enabled_flag)
++            sps->prof_control_present_in_ph_flag = get_bits1(gb);
++        else
++            sps->prof_control_present_in_ph_flag = 0;
++    } else {
++        sps->param_affine_enabled_flag = 0;
++        sps->affine_amvr_enabled_flag = 0;
++        sps->affine_prof_enabled_flag = 0;
++        sps->prof_control_present_in_ph_flag = 0;
++    }
++
++    sps->bcw_enabled_flag = get_bits1(gb);
++    sps->ciip_enabled_flag = get_bits1(gb);
++
++    if (max_num_merge_cand >= 2) {
++        sps->gpm_enabled_flag = get_bits1(gb);
++        if (sps->gpm_enabled_flag && max_num_merge_cand >= 3)
++            sps->max_num_merge_cand_minus_max_num_gpm_cand = get_ue_golomb(gb);
++    } else {
++        sps->gpm_enabled_flag = 0;
++    }
++
++    sps->log2_parallel_merge_level_minus2 = get_ue_golomb(gb);
++
++    sps->isp_enabled_flag = get_bits1(gb);
++    sps->mrl_enabled_flag = get_bits1(gb);
++    sps->mip_enabled_flag = get_bits1(gb);
++
++    if (sps->chroma_format_idc != 0)
++        sps->cclm_enabled_flag = get_bits1(gb);
++    else
++        sps->cclm_enabled_flag = 0;
++    if (sps->chroma_format_idc == 1) {
++        sps->chroma_horizontal_collocated_flag = get_bits1(gb);
++        sps->chroma_vertical_collocated_flag = get_bits1(gb);
++    } else {
++        sps->chroma_horizontal_collocated_flag = 0;
++        sps->chroma_vertical_collocated_flag = 0;
++    }
++
++    sps->palette_enabled_flag = get_bits1(gb);
++    if (sps->chroma_format_idc == 3 && !sps->max_luma_transform_size_64_flag)
++        sps->act_enabled_flag = get_bits1(gb);
++    else
++        sps->act_enabled_flag = 0;
++    if (sps->transform_skip_enabled_flag || sps->palette_enabled_flag)
++        sps->min_qp_prime_ts = get_ue_golomb(gb);
++
++    sps->ibc_enabled_flag = get_bits1(gb);
++    if (sps->ibc_enabled_flag)
++        sps->six_minus_max_num_ibc_merge_cand = get_ue_golomb(gb);
++
++    sps->ladf_enabled_flag = get_bits1(gb);
++    if (sps->ladf_enabled_flag) {
++        sps->num_ladf_intervals_minus2 = get_bits(gb, 2);
++        sps->ladf_lowest_interval_qp_offset = get_se_golomb(gb);
++        for (i = 0; i < sps->num_ladf_intervals_minus2 + 1; i++) {
++            sps->ladf_qp_offset[i] = get_se_golomb(gb);
++            sps->ladf_delta_threshold_minus1[i] = get_ue_golomb(gb);
++        }
++    }
++
++    sps->explicit_scaling_list_enabled_flag = get_bits1(gb);
++    if (sps->lfnst_enabled_flag && sps->explicit_scaling_list_enabled_flag)
++        sps->scaling_matrix_for_lfnst_disabled_flag = get_bits1(gb);
++
++    if (sps->act_enabled_flag && sps->explicit_scaling_list_enabled_flag)
++        sps->scaling_matrix_for_alternative_colour_space_disabled_flag =
++            get_bits1(gb);
++    else
++        sps->scaling_matrix_for_alternative_colour_space_disabled_flag = 0;
++    if (sps->scaling_matrix_for_alternative_colour_space_disabled_flag)
++        sps->scaling_matrix_designated_colour_space_flag = get_bits1(gb);
++
++    sps->dep_quant_enabled_flag = get_bits1(gb);
++    sps->sign_data_hiding_enabled_flag = get_bits1(gb);
++
++    sps->virtual_boundaries_enabled_flag = get_bits1(gb);
++    if (sps->virtual_boundaries_enabled_flag) {
++        sps->virtual_boundaries_present_flag = get_bits1(gb);
++        if (sps->virtual_boundaries_present_flag) {
++            sps->num_ver_virtual_boundaries = get_ue_golomb(gb);
++            for (i = 0; i < sps->num_ver_virtual_boundaries; i++)
++                sps->virtual_boundary_pos_x_minus1[i] = get_ue_golomb(gb);
++            for (i = 0; i < sps->num_hor_virtual_boundaries; i++)
++                sps->virtual_boundary_pos_y_minus1[i] = get_ue_golomb(gb);
++        }
++    } else {
++        sps->virtual_boundaries_present_flag = 0;
++        sps->num_ver_virtual_boundaries = 0;
++        sps->num_hor_virtual_boundaries = 0;
++    }
++
++    if (sps->ptl_dpb_hrd_params_present_flag) {
++        sps->timing_hrd_params_present_flag = get_bits1(gb);
++        if (sps->timing_hrd_params_present_flag) {
++            uint8_t first_sublayer;
++            decode_general_timing_hrd_parameters(gb,
++                                          &sps->general_timing_hrd_parameters);
++
++            if (sps->max_sublayers > 1)
++                sps->sublayer_cpb_params_present_flag = get_bits1(gb);
++            else
++                sps->sublayer_cpb_params_present_flag = 0;
++
++            first_sublayer = sps->sublayer_cpb_params_present_flag ?
++                0 : sps->max_sublayers - 1;
++
++            decode_ols_timing_hrd_parameters(gb,
++                                             &sps->ols_timing_hrd_parameters,
++                                             first_sublayer,
++                                             sps->max_sublayers - 1,
++                                             &sps->
++                                             general_timing_hrd_parameters);
++        }
++    }
++
++    sps->field_seq_flag = get_bits1(gb);
++    sps->vui_parameters_present_flag = get_bits1(gb);
++    if (sps->vui_parameters_present_flag) {
++        sps->vui_payload_size_minus1 = get_ue_golomb(gb);
++        align_get_bits(gb);
++        decode_vui(gb, avctx, &sps->vui, sps->chroma_format_idc);
++    }
++
++    sps->extension_flag = get_bits1(gb);
++    // TODO: parse sps extension flag and read extension data
++
++    map_pixel_format(avctx, sps);
++
++    return 0;
++}
++
++int ff_h266_decode_nal_sps( GetBitContext *gb, AVCodecContext *avctx,
++                           H266ParamSets *ps, int apply_defdispwin)
++{
++    unsigned int sps_id;
++    int ret;
++    H266SPS *sps;
++    AVBufferRef *sps_buf = av_buffer_allocz(sizeof(*sps));
++
++    if (!sps_buf)
++        return AVERROR(ENOMEM);
++    sps = (H266SPS *) sps_buf->data;
++
++    ret = ff_h266_parse_sps(sps, gb, &sps_id, apply_defdispwin, avctx);
++    if (ret < 0) {
++        av_buffer_unref(&sps_buf);
++        return ret;
++    }
++
++    if (avctx->debug & FF_DEBUG_BITSTREAM) {
++        av_log(avctx, AV_LOG_DEBUG,
++               "Parsed SPS: id %d; coded wxh: %dx%d; "
++               "pix_fmt: %s.\n",
++               sps->sps_id, sps->pic_width_max_in_luma_samples,
++               sps->pic_height_max_in_luma_samples,
++               av_get_pix_fmt_name(sps->pix_fmt));
++    }
++
++    /* check if this is a repeat of an already parsed SPS, then keep the
++     * original one otherwise drop all PPSes that depend on it (PPS,VPS not implemented yet) */
++    if (ps->sps_list[sps_id] &&
++        !memcmp(ps->sps_list[sps_id]->data, sps_buf->data, sps_buf->size)) {
++        av_buffer_unref(&sps_buf);
++    } else {
++        remove_sps(ps, sps_id);
++        ps->sps_list[sps_id] = sps_buf;
++        ps->sps = (H266SPS *) ps->sps_list[sps_id]->data;
++    }
++
++    // TODO: read PPS flag and data
++
++    return 0;
++}
++
++void ff_h266_ps_uninit(H266ParamSets *ps)
++{
++    int i;
++
++    for (i = 0; i < FF_ARRAY_ELEMS(ps->sps_list); i++)
++        av_buffer_unref(&ps->sps_list[i]);
++
++    // TODO: if PPS, VPS is implemended it must be unrefed as well
++    // for (i = 0; i < FF_ARRAY_ELEMS(ps->vps_list); i++)
++    //     av_buffer_unref(&ps->vps_list[i]);
++    // for (i = 0; i < FF_ARRAY_ELEMS(ps->pps_list); i++)
++    //     av_buffer_unref(&ps->pps_list[i]);
++
++    ps->sps = NULL;
++    //ps->pps = NULL;
++    //ps->vps = NULL;
++}
+diff --git a/libavcodec/vvc_paramset.h b/libavcodec/vvc_paramset.h
+new file mode 100644
+index 0000000000..ef3d188bbc
+--- /dev/null
++++ b/libavcodec/vvc_paramset.h
+@@ -0,0 +1,307 @@
++/*
++ * H.266 / VVC parameter set parsing
++ *
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++#ifndef AVCODEC_H266_PARAMSET_H
++#define AVCODEC_H266_PARAMSET_H
++
++#include <stdint.h>
++
++#include "libavutil/buffer.h"
++#include "libavutil/pixfmt.h"
++#include "libavutil/rational.h"
++
++#include "avcodec.h"
++#include "cbs_h266.h"
++#include "get_bits.h"
++#include "vvc.h"
++
++typedef struct H266GeneralTimingHrdParameters {
++    uint32_t num_units_in_tick;
++    uint32_t time_scale;
++    uint8_t  general_nal_hrd_params_present_flag;
++    uint8_t  general_vcl_hrd_params_present_flag;
++    uint8_t  general_same_pic_timing_in_all_ols_flag;
++    uint8_t  general_du_hrd_params_present_flag;
++    uint8_t  tick_divisor_minus2;
++    uint8_t  bit_rate_scale;
++    uint8_t  cpb_size_scale;
++    uint8_t  cpb_size_du_scale;
++    uint8_t  hrd_cpb_cnt_minus1;
++} H266GeneralTimingHrdParameters;
++
++typedef struct H266SubLayerHRDParameters {
++    uint32_t bit_rate_value_minus1[VVC_MAX_SUBLAYERS][VVC_MAX_CPB_CNT];
++    uint32_t cpb_size_value_minus1[VVC_MAX_SUBLAYERS][VVC_MAX_CPB_CNT];
++    uint32_t cpb_size_du_value_minus1[VVC_MAX_SUBLAYERS][VVC_MAX_CPB_CNT];
++    uint32_t bit_rate_du_value_minus1[VVC_MAX_SUBLAYERS][VVC_MAX_CPB_CNT];
++    uint8_t  cbr_flag[VVC_MAX_SUBLAYERS][VVC_MAX_CPB_CNT];
++} H266SubLayerHRDParameters;
++
++typedef struct H266OlsTimingHrdParameters {
++    uint8_t  fixed_pic_rate_general_flag[VVC_MAX_SUBLAYERS];
++    uint8_t  fixed_pic_rate_within_cvs_flag[VVC_MAX_SUBLAYERS];
++    uint16_t elemental_duration_in_tc_minus1[VVC_MAX_SUBLAYERS];
++    uint8_t  low_delay_hrd_flag[VVC_MAX_SUBLAYERS];
++    H266SubLayerHRDParameters nal_sub_layer_hrd_parameters;
++    H266SubLayerHRDParameters vcl_sub_layer_hrd_parameters;
++} H266OlsTimingHrdParameters;
++
++
++typedef struct H266VUI {
++    uint8_t  progressive_source_flag;
++    uint8_t  interlaced_source_flag;
++    uint8_t  non_packed_constraint_flag;
++    uint8_t  non_projected_constraint_flag;
++
++    uint8_t  aspect_ratio_info_present_flag;
++    uint8_t  aspect_ratio_constant_flag;
++    uint8_t  aspect_ratio_idc;
++
++    uint16_t sar_width;
++    uint16_t sar_height;
++
++    uint8_t  overscan_info_present_flag;
++    uint8_t  overscan_appropriate_flag;
++
++    uint8_t  colour_description_present_flag;
++    uint8_t  colour_primaries;
++
++    uint8_t  transfer_characteristics;
++    uint8_t  matrix_coeffs;
++    uint8_t  full_range_flag;
++
++    uint8_t  chroma_loc_info_present_flag;
++    uint8_t  chroma_sample_loc_type_frame;
++    uint8_t  chroma_sample_loc_type_top_field;
++    uint8_t  chroma_sample_loc_type_bottom_field;
++    //H266ExtensionData extension_data;
++} H266VUI;
++
++typedef struct H266SPS {
++    uint8_t  sps_id;
++    uint8_t  vps_id;
++    uint8_t  max_sublayers;
++    uint8_t  chroma_format_idc;
++    uint8_t  log2_ctu_size;
++    uint8_t  ptl_dpb_hrd_params_present_flag;
++    H266RawProfileTierLevel profile_tier_level;
++    uint8_t  gdr_enabled_flag;
++    uint8_t  ref_pic_resampling_enabled_flag;
++    uint8_t  res_change_in_clvs_allowed_flag;
++
++    uint16_t pic_width_max_in_luma_samples;
++    uint16_t pic_height_max_in_luma_samples;
++
++    uint8_t  conformance_window_flag;
++    uint16_t conf_win_left_offset;
++    uint16_t conf_win_right_offset;
++    uint16_t conf_win_top_offset;
++    uint16_t conf_win_bottom_offset;
++
++    uint8_t  subpic_info_present_flag;
++    uint16_t num_subpics_minus1;
++    uint8_t  independent_subpics_flag;
++    uint8_t  subpic_same_size_flag;
++    uint16_t subpic_ctu_top_left_x[VVC_MAX_SLICES];
++    uint16_t subpic_ctu_top_left_y[VVC_MAX_SLICES];
++    uint16_t subpic_width_minus1[VVC_MAX_SLICES];
++    uint16_t subpic_height_minus1[VVC_MAX_SLICES];
++    uint8_t  subpic_treated_as_pic_flag[VVC_MAX_SLICES];
++    uint8_t  loop_filter_across_subpic_enabled_flag[VVC_MAX_SLICES];
++    uint8_t  subpic_id_len_minus1;
++    uint8_t  subpic_id_mapping_explicitly_signalled_flag;
++    uint8_t  subpic_id_mapping_present_flag;
++    uint32_t subpic_id[VVC_MAX_SLICES];
++
++
++    uint8_t  bit_depth;
++    uint8_t  entropy_coding_sync_enabled_flag;
++    uint8_t  entry_point_offsets_present_flag;
++
++    uint8_t  log2_max_pic_order_cnt_lsb_minus4;
++    uint8_t  poc_msb_cycle_flag;
++    uint8_t  poc_msb_cycle_len_minus1;
++
++    uint8_t  num_extra_ph_bytes;
++    uint8_t  extra_ph_bit_present_flag[16];
++
++    uint8_t  num_extra_sh_bytes;
++    uint8_t  extra_sh_bit_present_flag[16];
++
++    uint8_t  sublayer_dpb_params_flag;
++    H266DpbParameters dpb_params;
++
++    uint8_t  log2_min_luma_coding_block_size_minus2;
++    uint8_t  partition_constraints_override_enabled_flag;
++    uint8_t  log2_diff_min_qt_min_cb_intra_slice_luma;
++    uint8_t  max_mtt_hierarchy_depth_intra_slice_luma;
++    uint8_t  log2_diff_max_bt_min_qt_intra_slice_luma;
++    uint8_t  log2_diff_max_tt_min_qt_intra_slice_luma;
++
++    uint8_t  qtbtt_dual_tree_intra_flag;
++    uint8_t  log2_diff_min_qt_min_cb_intra_slice_chroma;
++    uint8_t  max_mtt_hierarchy_depth_intra_slice_chroma;
++    uint8_t  log2_diff_max_bt_min_qt_intra_slice_chroma;
++    uint8_t  log2_diff_max_tt_min_qt_intra_slice_chroma;
++
++    uint8_t  log2_diff_min_qt_min_cb_inter_slice;
++    uint8_t  max_mtt_hierarchy_depth_inter_slice;
++    uint8_t  log2_diff_max_bt_min_qt_inter_slice;
++    uint8_t  log2_diff_max_tt_min_qt_inter_slice;
++
++    uint8_t  max_luma_transform_size_64_flag;
++
++    uint8_t  transform_skip_enabled_flag;
++    uint8_t  log2_transform_skip_max_size_minus2;
++    uint8_t  bdpcm_enabled_flag;
++
++    uint8_t  mts_enabled_flag;
++    uint8_t  explicit_mts_intra_enabled_flag;
++    uint8_t  explicit_mts_inter_enabled_flag;
++
++    uint8_t  lfnst_enabled_flag;
++
++    uint8_t  joint_cbcr_enabled_flag;
++    uint8_t  same_qp_table_for_chroma_flag;
++
++    int8_t   qp_table_start_minus26[VVC_MAX_SAMPLE_ARRAYS];
++    uint8_t  num_points_in_qp_table_minus1[VVC_MAX_SAMPLE_ARRAYS];
++    uint8_t  delta_qp_in_val_minus1[VVC_MAX_SAMPLE_ARRAYS][VVC_MAX_POINTS_IN_QP_TABLE];
++    uint8_t  delta_qp_diff_val[VVC_MAX_SAMPLE_ARRAYS][VVC_MAX_POINTS_IN_QP_TABLE];
++
++    uint8_t  sao_enabled_flag;
++    uint8_t  alf_enabled_flag;
++    uint8_t  ccalf_enabled_flag;
++    uint8_t  lmcs_enabled_flag;
++    uint8_t  weighted_pred_flag;
++    uint8_t  weighted_bipred_flag;
++    uint8_t  long_term_ref_pics_flag;
++    uint8_t  inter_layer_prediction_enabled_flag;
++    uint8_t  idr_rpl_present_flag;
++    uint8_t  rpl1_same_as_rpl0_flag;
++
++    uint8_t  num_ref_pic_lists[2];
++    H266RefPicListStruct ref_pic_list_struct[2][VVC_MAX_REF_PIC_LISTS];
++
++    uint8_t  ref_wraparound_enabled_flag;
++    uint8_t  temporal_mvp_enabled_flag;
++    uint8_t  sbtmvp_enabled_flag;
++    uint8_t  amvr_enabled_flag;
++    uint8_t  bdof_enabled_flag;
++    uint8_t  bdof_control_present_in_ph_flag;
++    uint8_t  smvd_enabled_flag;
++    uint8_t  dmvr_enabled_flag;
++    uint8_t  dmvr_control_present_in_ph_flag;
++    uint8_t  mmvd_enabled_flag;
++    uint8_t  mmvd_fullpel_only_enabled_flag;
++    uint8_t  six_minus_max_num_merge_cand;
++    uint8_t  sbt_enabled_flag;
++    uint8_t  affine_enabled_flag;
++    uint8_t  five_minus_max_num_subblock_merge_cand;
++    uint8_t  param_affine_enabled_flag;
++    uint8_t  affine_amvr_enabled_flag;
++    uint8_t  affine_prof_enabled_flag;
++    uint8_t  prof_control_present_in_ph_flag;
++    uint8_t  bcw_enabled_flag;
++    uint8_t  ciip_enabled_flag;
++    uint8_t  gpm_enabled_flag;
++    uint8_t  max_num_merge_cand_minus_max_num_gpm_cand;
++    uint8_t  log2_parallel_merge_level_minus2;
++    uint8_t  isp_enabled_flag;
++    uint8_t  mrl_enabled_flag;
++    uint8_t  mip_enabled_flag;
++    uint8_t  cclm_enabled_flag;
++    uint8_t  chroma_horizontal_collocated_flag;
++    uint8_t  chroma_vertical_collocated_flag;
++    uint8_t  palette_enabled_flag;
++    uint8_t  act_enabled_flag;
++    uint8_t  min_qp_prime_ts;
++    uint8_t  ibc_enabled_flag;
++    uint8_t  six_minus_max_num_ibc_merge_cand;
++    uint8_t  ladf_enabled_flag;
++    uint8_t  num_ladf_intervals_minus2;
++    int8_t   ladf_lowest_interval_qp_offset;
++    int8_t   ladf_qp_offset[4];
++    uint16_t ladf_delta_threshold_minus1[4];
++
++    uint8_t  explicit_scaling_list_enabled_flag;
++    uint8_t  scaling_matrix_for_lfnst_disabled_flag;
++    uint8_t  scaling_matrix_for_alternative_colour_space_disabled_flag;
++    uint8_t  scaling_matrix_designated_colour_space_flag;
++    uint8_t  dep_quant_enabled_flag;
++    uint8_t  sign_data_hiding_enabled_flag;
++
++    uint8_t  virtual_boundaries_enabled_flag;
++    uint8_t  virtual_boundaries_present_flag;
++    uint8_t  num_ver_virtual_boundaries;
++    uint16_t virtual_boundary_pos_x_minus1[3];
++    uint8_t  num_hor_virtual_boundaries;
++    uint16_t virtual_boundary_pos_y_minus1[3];
++
++    uint8_t  timing_hrd_params_present_flag;
++    uint8_t  sublayer_cpb_params_present_flag;
++    H266GeneralTimingHrdParameters general_timing_hrd_parameters;
++    H266OlsTimingHrdParameters ols_timing_hrd_parameters;
++
++    uint8_t  field_seq_flag;
++    uint8_t  vui_parameters_present_flag;
++    uint16_t vui_payload_size_minus1;
++    H266VUI   vui;
++
++    uint8_t  extension_flag;
++    //H266RawExtensionData extension_data;   /* TODO: read extension flag and data*/
++
++    enum AVPixelFormat pix_fmt;
++} H266SPS;
++
++
++typedef struct H266ParamSets {
++    AVBufferRef *sps_list[VVC_MAX_SPS_COUNT];
++    //AVBufferRef *vps_list[VVC_MAX_VPS_COUNT]; // TODO: since not needed, not implemented yet
++    //AVBufferRef *pps_list[VVC_MAX_PPS_COUNT]; // TODO: since not needed, not implemented yet
++
++    /* currently active parameter sets */
++    const H266SPS *sps;
++    //const H266VPS *vps; // TODO: since not needed, not implemented yet
++    //const H266PPS *pps; // TODO: since not needed, not implemented yet
++} H266ParamSets;
++
++/**
++ * Parse the SPS from the bitstream into the provided HEVCSPS struct.
++ *
++ * @param sps_id the SPS id will be written here
++ * @param apply_defdispwin if set 1, the default display window from the VUI
++ *                         will be applied to the video dimensions
++ */
++int ff_h266_parse_sps(H266SPS *sps, GetBitContext *gb, unsigned int *sps_id,
++                      int apply_defdispwin, AVCodecContext *avctx);
++
++int ff_h266_decode_nal_sps(GetBitContext *gb, AVCodecContext *avctx,
++                          H266ParamSets *ps, int apply_defdispwin);
++
++// TODO: since not needed, not implemented yet
++//int ff_h266_decode_nal_vps(GetBitContext *gb, AVCodecContext *avctx,
++//                          H266ParamSets *ps);
++//int ff_h266_decode_nal_pps(GetBitContext *gb, AVCodecContext *avctx,
++//                          H266ParamSets *ps);
++
++void ff_h266_ps_uninit(H266ParamSets *ps);
++
++#endif /* AVCODEC_H266_PARAMSET_H */
+diff --git a/libavcodec/vvc_parse_extradata.c b/libavcodec/vvc_parse_extradata.c
+new file mode 100644
+index 0000000000..85f60ab871
+--- /dev/null
++++ b/libavcodec/vvc_parse_extradata.c
+@@ -0,0 +1,246 @@
++/*
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++#include "bytestream.h"
++#include "h2645_parse.h"
++#include "vvc.h"
++#include "vvc_parse_extradata.h"
++
++static int h266_decode_nal_units(const uint8_t *buf, int buf_size,
++                                H266ParamSets *ps, int is_nalff,
++                                int nal_length_size, int err_recognition,
++                                int apply_defdispwin, void *logctx)
++{
++    int i;
++    int ret = 0;
++    H2645Packet pkt = { 0 };
++
++    ret = ff_h2645_packet_split(&pkt, buf, buf_size, logctx, is_nalff,
++                                nal_length_size, AV_CODEC_ID_VVC, 1, 0);
++    if (ret < 0) {
++        goto done;
++    }
++
++    for (i = 0; i < pkt.nb_nals; i++) {
++        H2645NAL *nal = &pkt.nals[i];
++        if (nal->nuh_layer_id > 0)
++            continue;
++
++        /* ignore everything except parameter sets and VCL NALUs */
++        switch (nal->type) {
++        case VVC_VPS_NUT:
++            // TODO: since not needed yet, not implemented
++            //ret = ff_h266_decode_nal_vps(&nal->gb, logctx, ps);
++            //if (ret < 0)
++            //    goto done;
++            break;
++        case VVC_SPS_NUT:
++            ret = ff_h266_decode_nal_sps(&nal->gb, logctx, ps, apply_defdispwin);
++            if (ret < 0)
++                goto done;
++            break;
++        case VVC_PPS_NUT:
++            // TODO: since not needed yet, not implemented
++            //ret = ff_h266_decode_nal_pps(&nal->gb, logctx, ps);
++            //if (ret < 0)
++            //    goto done;
++            break;
++        case VVC_PREFIX_SEI_NUT:
++        case VVC_SUFFIX_SEI_NUT:
++            // TODO: SEI decoding not implemented yet
++            break;
++        default:
++            av_log(logctx, AV_LOG_VERBOSE,
++                   "Ignoring NAL type %d in extradata\n", nal->type);
++            break;
++        }
++    }
++
++  done:
++    ff_h2645_packet_uninit(&pkt);
++    if (err_recognition & AV_EF_EXPLODE)
++        return ret;
++
++    return 0;
++}
++
++int ff_h266_decode_extradata(const uint8_t *data, int size, H266ParamSets *ps,
++                            int *is_nalff, int *nal_length_size,
++                            int err_recognition, int apply_defdispwin,
++                            void *logctx)
++{
++    int ret = 0;
++    GetByteContext gb;
++
++    bytestream2_init(&gb, data, size);
++
++    if (size > 3 && (data[0] || data[1] || data[2] > 1)) {
++        /* extradata is encoded as vvcC format. */
++        int i, j, b, num_arrays, nal_len_size, has_ptl;
++
++        b = bytestream2_get_byte(&gb);
++        nal_len_size  = ((b >> 1) & 3) + 1;
++        has_ptl = b & 1;
++
++        if (has_ptl) {
++            int max_picture_width = 0;
++            int max_picture_height = 0;
++            int avg_frame_rate = 0;
++
++            int num_sublayers;
++            int num_bytes_constraint_info;
++            int general_profile_idc;
++            int general_tier_flag;
++            int general_level_idc;
++            int ptl_frame_only_constraint_flag;
++            int ptl_multi_layer_enabled_flag;
++            int ptl_num_sub_profiles;
++            int ols_idx;
++            int constant_frame_rate;
++            int chroma_format_idc;
++            int bit_depth_minus8;
++
++            b = bytestream2_get_be16(&gb);
++            ols_idx = (b >> 7) & 0x1ff;
++            num_sublayers = (b >> 4) & 7;
++            constant_frame_rate = (b >> 2) & 3;
++            chroma_format_idc = b & 0x3;
++            bit_depth_minus8 = (bytestream2_get_byte(&gb) >> 5) & 7;
++            av_log(logctx, AV_LOG_TRACE,
++                   "bit_depth_minus8 %d chroma_format_idc %d\n",
++                   bit_depth_minus8, chroma_format_idc);
++            av_log(logctx, AV_LOG_TRACE,
++                   "constant_frame_rate %d, ols_idx %d\n",
++                   constant_frame_rate, ols_idx);
++            // VvcPTLRecord(num_sublayers) native_ptl
++            b = bytestream2_get_byte(&gb);
++            num_bytes_constraint_info = (b) & 0x3f;
++            b = bytestream2_get_byte(&gb);
++            general_profile_idc = (b >> 1) & 0x7f;
++            general_tier_flag = b & 1;
++            general_level_idc = bytestream2_get_byte(&gb);
++            av_log(logctx, AV_LOG_TRACE,
++                   "general_profile_idc %d, general_tier_flag %d, "
++                   "general_level_idc %d, num_sublayers %d num_bytes_constraint_info %d\n",
++                   general_profile_idc, general_tier_flag, general_level_idc,
++                   num_sublayers, num_bytes_constraint_info);
++
++            b = bytestream2_get_byte(&gb);
++            ptl_frame_only_constraint_flag = (b >> 7) & 1;
++            ptl_multi_layer_enabled_flag = (b >> 6) & 1;
++            for (i = 0; i < num_bytes_constraint_info - 1; i++) {
++                // unsigned int(8*num_bytes_constraint_info - 2) general_constraint_info;
++                bytestream2_get_byte(&gb);
++            }
++
++            av_log(logctx, AV_LOG_TRACE,
++                   "ptl_multi_layer_enabled_flag %d, ptl_frame_only_constraint_flag %d\n",
++                   ptl_multi_layer_enabled_flag,
++                   ptl_frame_only_constraint_flag);
++
++            if (num_sublayers > 1) {
++                int temp6 = bytestream2_get_byte(&gb);
++                uint8_t ptl_sublayer_level_present_flag[8] = { 0 };
++                //uint8_t sublayer_level_idc[8] = {0};
++                for (i = num_sublayers - 2; i >= 0; i--) {
++                    ptl_sublayer_level_present_flag[i] =
++                        (temp6 >> (7 - (num_sublayers - 2 - i))) & 0x01;
++                }
++                for (i = num_sublayers - 2; i >= 0; i--) {
++                    if (ptl_sublayer_level_present_flag[i]) {
++                        bytestream2_get_byte(&gb);      // sublayer_level_idc[8]
++                    }
++                }
++            }
++
++            ptl_num_sub_profiles = bytestream2_get_byte(&gb);
++            for (j = 0; j < ptl_num_sub_profiles; j++) {
++                // unsigned int(32) general_sub_profile_idc[j];
++                bytestream2_get_be16(&gb);
++                bytestream2_get_be16(&gb);
++            }
++
++            max_picture_width  = bytestream2_get_be16(&gb);
++            max_picture_height = bytestream2_get_be16(&gb);
++            avg_frame_rate     = bytestream2_get_be16(&gb);
++            av_log(logctx, AV_LOG_TRACE,
++                   "max_picture_width %d, max_picture_height %d, avg_frame_rate %d\n",
++                   max_picture_width, max_picture_height, avg_frame_rate);
++        }
++
++        *is_nalff = 1;
++
++        /* nal units in the vvcC always have length coded with 2 bytes,
++         * so set nal_length_size = 2 while parsing them */
++        *nal_length_size = 2;
++
++        num_arrays = bytestream2_get_byte(&gb);
++        for (i = 0; i < num_arrays; i++) {
++            int cnt;
++            int type = bytestream2_get_byte(&gb) & 0x1f;
++
++            if (type == VVC_OPI_NUT || type == VVC_DCI_NUT)
++                cnt = 1;
++            else
++                cnt = bytestream2_get_be16(&gb);
++
++            av_log(logctx, AV_LOG_DEBUG, "nalu_type %d cnt %d\n", type, cnt);
++
++            if (!(type == VVC_OPI_NUT || type == VVC_DCI_NUT ||
++                  type == VVC_VPS_NUT || type == VVC_SPS_NUT
++                  || type == VVC_PPS_NUT || type == VVC_PREFIX_SEI_NUT
++                  || type == VVC_SUFFIX_SEI_NUT)) {
++                av_log(logctx, AV_LOG_ERROR,
++                       "Invalid NAL unit type in extradata: %d\n", type);
++                ret = AVERROR_INVALIDDATA;
++                return ret;
++            }
++
++            for (j = 0; j < cnt; j++) {
++                // +2 for the nal size field
++                int nalsize = bytestream2_peek_be16(&gb) + 2;
++                if (bytestream2_get_bytes_left(&gb) < nalsize) {
++                    av_log(logctx, AV_LOG_ERROR,
++                           "Invalid NAL unit size in extradata.\n");
++                    return AVERROR_INVALIDDATA;
++                }
++
++                ret = h266_decode_nal_units(gb.buffer, nalsize, ps, *is_nalff,
++                                           *nal_length_size, err_recognition,
++                                           apply_defdispwin, logctx);
++                if (ret < 0) {
++                    av_log(logctx, AV_LOG_ERROR,
++                           "Decoding nal unit %d %d from vvcC failed\n", type, i);
++                    return ret;
++                }
++                bytestream2_skip(&gb, nalsize);
++            }
++        }
++
++        /* store nal length size, that will be used to parse all other nals */
++        *nal_length_size = nal_len_size;
++    } else {
++        *is_nalff = 0;
++        ret = h266_decode_nal_units(data, size, ps, *is_nalff, *nal_length_size,
++                                   err_recognition, apply_defdispwin, logctx);
++        if (ret < 0)
++            return ret;
++    }
++
++    return ret;
++}
+diff --git a/libavcodec/vvc_parse_extradata.h b/libavcodec/vvc_parse_extradata.h
+new file mode 100644
+index 0000000000..859a4b0c16
+--- /dev/null
++++ b/libavcodec/vvc_parse_extradata.h
+@@ -0,0 +1,36 @@
++/*
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++/**
++ * @file
++ * H.266 parser code
++ */
++
++#ifndef AVCODEC_H266_PARSE_EXTRADATA_H
++#define AVCODEC_H266_PARSE_EXTRADATA_H
++
++#include <stdint.h>
++
++#include "vvc_paramset.h"
++
++
++int ff_h266_decode_extradata(const uint8_t *data, int size, H266ParamSets *ps,
++                             int *is_nalff, int *nal_length_size,
++                             int err_recognition, int apply_defdispwin, void *logctx);
++
++#endif /* AVCODEC_266_PARSE_EXTRADATA_H */
