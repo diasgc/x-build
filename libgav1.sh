@@ -6,10 +6,10 @@ dsc='Main profile (0) & High profile (1) compliant AV1 decoder'
 lic='BSD'
 src='https://chromium.googlesource.com/codecs/libgav1.git'
 cfg='cmake'
-eta='181'
+eta='18'
 
 dev_bra='main'
-dev_vrs='1.17.0'
+dev_vrs='0.19.0'
 stb_bra=''
 stb_vrs=''
 
@@ -21,9 +21,7 @@ lst_pc='libgav1.pc'
 
 . xbuild
 
-source_config(){
-	git_clone https://github.com/abseil/abseil-cpp.git third_party/abseil-cpp
-}
+cmake_config='-DLIBGAV1_ENABLE_EXAMPLES=OFF -DLIBGAV1_ENABLE_TESTS=OFF'
 
 start
 

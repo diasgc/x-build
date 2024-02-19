@@ -21,7 +21,7 @@ lst_lib=''
 lst_bin=''
 lst_lic='LICENSE PATENTS AUTHORS'
 lst_pc=''
-dev_vrs='0.9.2'
+dev_vrs='0.10.0'
 
 . xbuild
 

@@ -394,7 +394,7 @@ start(){
 		do_log "${bra}" git checkout ${bra}
 	fi
 
-	case $src in *git*) echo -ne "${CT0}[$(git describe --tags)]${CD} ";; esac
+	case $src in *git*) echo -ne "${CT0}[$(git describe --tags 2>/dev/null)]${CD} ";; esac
 	
 	case ${target_trip[3]} in
 		android) fn_defined 'on_config_ndk'   && fn_log '' on_config_ndk;;
@@ -446,11 +446,19 @@ start(){
 	fi
 
 	if $req_src_patch; then
-		# check whether to auto patch source
+		# check if has auto patch embeded in source
 		check_xbautopatch
-		# check whether to custom patch source
+		# check if has patch function in source
 		if fn_defined 'source_patch'; then
-		fn_log 'patch' source_patch
+			fn_log 'patch' source_patch
+		fi
+		if [ -n "${cmakelists_ext}" ]; then
+			local fcmake="${dir_root}/cmake/$cmakelists_ext"
+			if [ -f "${fcmake}" ]; then
+				local fcmake_dst="${dir_src}/CMakeLists.txt"
+				cp -f "${fcmake}" "${fcmake_dst}" || doErr "Unable to copy ${fcmake} to ${fcmake_dst}"
+				unset cmakelists_ext
+			fi
 		fi
 	fi
 
@@ -2035,6 +2043,7 @@ showBanner(){
 	fi
 }
 
+# usage libname.sh --patch a [sources/libname/]path/to/newfile [sources/libname/]path/to/oldfile
 patch_append(){
 	local newfile=${1}
 	local oldfile
@@ -2450,6 +2459,7 @@ while [ $1 ];do
 
 		--patch)    shift;
 					case $1 in
+						# usage libname.sh --patch a [sources/libname/]path/to/newfile [sources/libname/]path/to/oldfile
 						a|add|append)       shift; patch_append $@; exit 0;;
 						m|make|e|embed)     shift; patch_embed $1; exit 0;;
 						g|get|show)         patch_get; exit 0;;

@@ -13,9 +13,8 @@ cmake_static="XEVD_APP_STATIC_BUILD"
 
 . xbuild
 
-source_patch(){
-    $host_arm && git checkout xeve_itx_neon_dev
-}
+cmake_config="-DARM=1 -DSET_PROF=BASE"
+WFLAGS+="-Wno-unknown-warning-option -Wno-typedef-redefinition"
 
 #$host_arm && doErr "${lib} does not support cross-build for arm (${arch})."
 
