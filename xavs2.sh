@@ -4,7 +4,7 @@ lib='xavs2'
 dsc='An open-source encoder of AVS2-P2/IEEE1857.4 video coding standard'
 lic='GPL-2.0'
 src='https://github.com/diasgc/xavs2.git'
-cfg='ac'
+cfg='cmake'
 eta='40'
 
 dev_vrs='1.3.232'
@@ -21,8 +21,9 @@ ac_config="--enable-lto --enable-pic --enable-strip --disable-cli"
 
 $host_arm && ac_config+=" --disable-asm"
 
-dir_config="${dir_src}/build/linux"
-dir_build="${dir_src}/build/linux"
+
+#dir_config="${dir_src}/build/linux"
+#dir_build="${dir_src}/build/linux"
 
 mkf="STRIP="
 

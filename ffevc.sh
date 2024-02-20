@@ -10,19 +10,6 @@ lic='BSD-2c'
 src='https://github.com/mpeg5/ffevc.git'
 cfg='cmake'
 
-cmake_static="XEVE_APP_STATIC_BUILD"
+. xbuild
 
-on_config_arm(){
-    doErr "${lib} does not support cross-build for arm (${arch})."
-}
-
-. xbuild && start
-
-# Filelist
-# --------
-# include/xeve/xeve.h
-# include/xeve/xeve_exports.h
-# lib/pkgconfig/xeve.pc
-# lib/xeve/libxeve.a
-# lib/libxeve.so
-# bin/xeve_app
+start
