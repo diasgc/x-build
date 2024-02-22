@@ -16,13 +16,9 @@ lst_bin='xavs2'
 lst_lic='LICENSE AUTHORS'
 lst_pc='xavs2.pc'
 
-cmake_config='-DSUPRESS_WARNINGS=ON'
+cmake_config='-DDISABLE_WARNINGS=ON'
 
 . xbuild
-
-source_config(){
-    ${dir_src}/version.sh
-}
 
 start
 
