@@ -1,0 +1,10 @@
+--- src/CMakeLists.txt	2024-02-24 23:07:44.492203503 +0000
++++ src/CMakeLists.txt	2024-02-24 23:06:56.575811280 +0000
+@@ -71,6 +71,7 @@
+        BUILD_COMMAND ${CMAKE_COMMAND} --build . --target generate_codebook
+        INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/codec2_native/src/generate_codebook ${CMAKE_CURRENT_BINARY_DIR}
+        BUILD_BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/generate_codebook
++       CMAKE_ARGS -DCMAKE_C_COMPILER=gcc
+     )
+     add_executable(generate_codebook IMPORTED)
+     set_target_properties(generate_codebook PROPERTIES
