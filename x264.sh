@@ -26,18 +26,9 @@ eta='60'
 
 . xbuild
 
-$host_x64 && AS=nasm || ac_config+=" --disable-asm"
+$host_ndk && AS=$CC
 
 start
-
-<<'XB64_PATCH'
-LS0tIGNvbW1vbi9jcHUuY28JMjAyMi0wMS0xMSAxOTowMzo1NC4xNTkyNzU2MDAgKzAwMDAKKysr
-IGNvbW1vbi9jcHUuYwkyMDIyLTAxLTExIDE5OjAzOjI3Ljk5OTI3NTYwMCArMDAwMApAQCAtNDM4
-LDYgKzQzOCw3IEBACiAKICNlbGlmIFNZU19MSU5VWAogI2lmZGVmIF9fQU5EUk9JRF9fCisjaW5j
-bHVkZSA8c3lzL3N5c2NvbmYuaD4KICAgICAvLyBBbmRyb2lkIE5ESyBkb2VzIG5vdCBleHBvc2Ug
-c2NoZWRfZ2V0YWZmaW5pdHkKICAgICByZXR1cm4gc3lzY29uZiggX1NDX05QUk9DRVNTT1JTX0NP
-TkYgKTsKICNlbHNlCg==
-XB64_PATCH
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++ +++  .  clang
