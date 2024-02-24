@@ -13,7 +13,8 @@ function trap_sigint {
 # first load .common functions and error trap
 if [ -z ${vsh+x} ];then
 	source .common
-	source ./utils/.options
+	source ./utils/.utils
+	source ./utils/.cmake
 	set -o pipefail
 	if [ "${1}" == "--debug" ];then
 		shift
@@ -116,38 +117,7 @@ export SRCDIR=${dir_src}
 
 [ -d "${dir_sources}" ] || mkdir -p ${dir_sources}
 
-# variables defined in .config file
-# config_lastupdate
-# ROOTDIR path
-# build_arch (x86_64-linux-gnu)
-# ANDROID_NDK_HOME path
-# xv_ndk (23.1.7779620)
-# xv_ndk_major (23)
-# MAKE_EXECUTABLE path
-# CMAKE_EXECUTABLE path
-# NASM_EXECUTABLE path
-# PKG_CONFIG path
-# HOST_NPROC (4)
-# LLVM_MINGW_HOME path
-# LLVM_MINGW_REL (20211002)
-# xv_llvm_mingw (13.0.0)
-# llvm_mingw_rel (20211002)
-# xv_aarch64_gnu (11)
-# xv_armeabi_gnu (10)
-# xv_x86_gnu (10)
-# xv_x64_gnu (10)
-# xv_x64_mingw (10)
-# 
 xv_x86_mingw="10"
-
-aptInstallBr(){
-while [ -n "$1" ];do
-	echo -ne "${CD}${ind}${CT0}install $1${C0} "
-	$sudo apt -qq install $1 -y >/dev/null 2>&1
-	echo -e "${C0}ok ${CT1}done${C0} $(apt-cache show $1 | grep Version)"
-	shift
-done
-}
 
 init(){
 	[ -f ".config" ] && . .config
@@ -162,127 +132,40 @@ init(){
 
 main(){
 
-# exit if missing vars lib arch or src
-if [ -z "${lib}" ]; then
-	echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
-	return 0
-fi
-
-if [ -n "${dir_install}" ] && [ -z "${src}" ]; then
-	doErr 'This script does not have a source. Aborting.'
-fi
-
-inc_tab
-
-if [ -z "${lic}" ] || [ -z "${dsc}" ];then
-	gitjson=$(git_api_tojson $src)
-	if [ -n "${gitjson}" ];then
-		#echo -ne "${CY1}${b}${C0}"
-		: "${lic:=$(echo "$gitjson" | jq .licence)}"
-		: "${dsc:=$(echo "$gitjson" | jq .description)}"
-	fi
-fi
-
-# show package info
-export log_file="${dir_install}/${lib}.log"
-
-if [ -z "$(check_install pc)" ]; then
-	package_showinfo
-elif $update || $retry; then
-	package_showinfo
-else
-	end_script    
-fi
-}
-
-package_showinfo(){
-	$banner || return 0
-	local dp=
-	local vs=
-	local longdesc=$(package_longdesc)
-	[ -z "$(echo $longdesc | xargs 2>/dev/null)" ] && unset longdesc
-
-	# Main Description
-	[ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}\e[1m${lib^^} - ${C0}${dsc}\e[0m"
-	[ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
-
-	# log file link
-	echo -e "${CD}${ind}${CD}see log at \e[4m${log_file}\e[24m${C0}"
-	# Licence
-	echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "
-
-	# Build Tools
-	if [ -n "${tls}" ]; then
-		echo -ne "${CT0}build deps: "
-		tput sc; echo -ne "${CD}$tls "; tput rc
-		for t in ${tls}; do
-		if [ -z $(command -v ${t}) ];then
-			aptInstall ${t} || {
-			echo -ne "${CR1}${t} ${C0}" && doErr "Unable to install ${t}, aborting..."
-			}
-			echo -ne "${CW}${t} "
-		fi
-		shift
-		done
+	# exit if missing vars lib arch or src
+	if [ -z "${lib}" ]; then
+		echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
+		return 0
 	fi
 
-	# Build Deps
-	[ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}$dep"
+	if [ -n "${dir_install}" ] && [ -z "${src}" ]; then
+		doErr 'This script does not have a source. Aborting.'
+	fi
 
-	if str_contains $src "git"; then
-		local vgit=$(git_version_remote $src | head -n1)
-		if [ -d ${dir_src} ];then
-		local vrep=$(git_version_local ${dir_src} | head -n1)
-		vs="${CT0}vrs: ${C0}$vrep "
-		if str_contains $vgit $vrs; then
-			vs+=" updated"
-		else
-			vs+=" ${CT0}latest: ${CT1}${vgit}${C0}"
-		fi
-		else
-		vs="${CT0}vrs: ${C0}${vgit}"
+	inc_tab
+
+	if [ -z "${lic}" ] || [ -z "${dsc}" ];then
+		gitjson=$(git_api_tojson $src)
+		if [ -n "${gitjson}" ];then
+			#echo -ne "${CY1}${b}${C0}"
+			: "${lic:=$(echo "$gitjson" | jq .licence)}"
+			: "${dsc:=$(echo "$gitjson" | jq .description)}"
 		fi
 	fi
-	echo -e " ${vs} ${C0}"
-	return 0
-}
 
-package_longdesc(){
-	if [ -n "${apt}" ]; then
-		echo -e $(apt-cache show ${apt} 2>/dev/null | \
-		grep -E "Description-..^|^ " | \
-		sed $'s/\*/\u2605/g' | \
-		sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/'"${ind}"'/g'
-	fi
-	return 0
-}
+	# show package info
+	export log_file="${dir_install}/${lib}.log"
 
-guess_cfg(){
-if [ -f "${dir_config}/meson.build" ]; then
-	build_system="meson"
-	cfg="meson"
-elif [ -f "${dir_config}/CMakeLists.txt" ]; then
-	build_system="cmake"
-	cfg="cmake"
-elif [ -n "$(ls ${dir_config}/configure.* 2>/dev/null)" ]; then
-	build_system="automake"
-	cfg='ac'
-	if [ -f "${dir_config}/autogen.sh" ]; then
-	cfg_cmd="${dir_config}/autogen.sh"
-	elif [ -f "${dir_config}/bootstrap.sh" ]; then
-	cfg_cmd="${dir_config}/bootstrap.sh"
-	elif [ -f "${dir_config}/bootstrap" ]; then
-	cfg_cmd="${dir_config}/bootstrap"
-	elif [ ! -f "${dir_config}/configure" ]; then
-	cfg_cmd="autoreconf -fiv ${dir_config}/bootstrap"
+	if [ -z "$(check_install pc)" ]; then
+		package_showinfo
+	elif $update || $retry; then
+		package_showinfo
 	else
-	return 1
+		end_script    
 	fi
-else
-	return 1
-fi
-return 0
 }
+
+
 
 # Variables
 # mki: rule for install 'make $mkinstall' (default: install)
@@ -416,7 +299,7 @@ start(){
 	cd ${dir_config}
 
 	if [ -z "${cfg}" ]; then
-		guess_cfg
+		config_guess
 	fi
 
 	if $req_src_config; then
@@ -623,7 +506,7 @@ start(){
 			fn_log 'pack' on_pack
 			elif $build_package; then
 			if [ -f "${dir_build}/install_manifest.txt" ]; then
-				do_log 'cpack' build_package_cmake
+				do_log 'cpack' cmake_build_package
 			else
 				do_log 'pack' build_packages_bin
 			fi
@@ -850,39 +733,6 @@ check_install(){
 	return 0
 }
 
-check_xbautopatch(){
-	pushdir ${dir_root}
-	local matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
-	if [ ${#matches[@]} -gt 0 ]; then
-		for match in ${matches[@]}; do
-			echo -ne "${CC2}${match} ${C0}"
-			local block=$(awk '/^<<.'${match}'./{flag=1; next} /^'{$match}'/{flag=0} flag' $0)
-			case $match in
-				XB_CREATE_CMAKELISTS|CMakeLists.txt)
-					echo "${block}" >${dir_src}/CMakeLists.txt
-					echo -e "\ncreate CMakeLists.txt: \n$block" >>${log_file}
-					;;
-				XB_PATCH) pushdir ${dir_src}
-					patch -p0 <<<$(echo "${block}") 2>&1 >${log_file}
-					echo -e "\npatch found: \n$block" >>${log_file}
-					popdir
-					;;
-				XB64_PATCH) pushdir ${dir_src}
-					patch -p0 <<<$(echo "${block}" | base64 -d) 2>&1 >${log_file}
-					popdir
-					;;
-				LZS_PATCH) pushdir ${dir_src}
-					patch -p0 <<<$(echo "${block}" | ${dir_root}/utils/lz-string -d -) 2>&1 >${log_file}
-					popdir
-					;;
-				*) echo -e "\nUnknown block name ${match} with this contents (ignoring):\n$block" >>${log_file}
-					;;
-			esac
-		done
-	fi
-	popdir
-	return 0
-}
 
 # usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
 create_pkgconfig_file(){
@@ -934,73 +784,6 @@ build_packages_filelist(){
 	fi
 }
 
-build_package_cmake(){
-	local brk=false
-	local flist=
-
-	until $brk; do
-		read l || brk=true
-		flist="$(echo $l | sed 's|'${dir_install}'/||') $flist"
-	done < ${dir_build}/install_manifest.txt
-
-	# add manual pc files
-	if [ -n "${pc_llib}" ]; then
-		flist="lib/pkgconfig/${pc_llib//-l/lib}.pc ${flist}"
-	elif [ -n "${pc_llibs}" ]; then
-		for ll in $pc_llibs; do
-			flist="lib/pkgconfig/${ll//-l/lib}.pc ${flist}"
-		done
-	fi
-
-	# check licence files
-	if [ -n "${lst_lic}" ]; then
-		[ -d "${dir_install}/share/doc/${lib}" ] || mkdir -p "${dir_install}/share/doc/${lib}"
-		for f in ${lst_lic}; do
-			if [ ! -f "${dir_install}/share/doc/${lib}/${f}" ]; then
-				cp ${dir_src}/${f} "${dir_install}/share/doc/${lib}/"
-				flist="share/doc/${lib}/${f} ${flist}"
-			fi
-		done
-	fi
-
-	# no flist, return
-	[ -z "${flist}" ] && return 0
-
-	# sort flist
-	flist=$(echo ${flist} | xargs -n1 | sort | xargs)
-
-	pushdir ${dir_install}
-
-	local v=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
-	v=$(version_parse $v)
-	local sfx=
-	$build_shared || sfx='-static'
-	$build_static || sfx='-shared'
-	local fn="${lib}${sfx}_${v}_${arch}"
-
-	case ${pkg_fmt} in
-		tbz)
-		fn="${fn}.tar.bz2"
-		tar -cvjSf "${fn}" ${flist}
-		;;
-		zip)
-		fn="${fn}.zip"
-		zip -r "${fn}" ${flist}
-		;;
-		*)
-		fn="${fn}.tar.gz"
-		tar -czvf "${fn}" ${flist}
-		;;
-	esac
-	[ -d "${dir_pkgdist}" ] || mkdir -p ${dir_pkgdist}
-	mv "${fn}" ${dir_pkgdist}/${fn}
-
-	if [ -z "$(cat ${dir_root}/${lib}.sh | grep '# Filelist')" ]; then
-		echo -e "\n\n# Filelist\n# --------" >> ${dir_root}/${lib}.sh
-		echo "# ${flist}" | sed 's| |\n# |g' >> ${dir_root}/${lib}.sh
-	fi
-	popdir
-}
 
 build_packages_bin(){
 	set -x
@@ -1139,48 +922,10 @@ meson_create_toolchain(){
 	cat ${1} >>${log_file} 2>&1
 }
 
-cmake_include_directories(){
-	printf "include_directories($@)" >>${cmake_toolchain_file}
-}
-
-
 # usage cmake_create_toolchain <dir>
 cmake_create_toolchain(){
 	#export cmake_toolchain_file="${ROOTDIR}/xbuilder.cmake"
 	cmake_create_toolchainfile
-}
-
-cmake_addcpack(){
-	[ -z "${vnd}" ] && str_contains $src 'git' && vnd=$(git_vendor $src) || vnd=$lib
-	local u_email=$(git config --list | grep -oP '(?<=^user.email=).*$')
-	local u_name=$(git config --list | grep -oP '(?<=^user.name=).*$')
-	local f_lic=$(echo "$lst_lic" | awk '{print $1}')
-	[ -z "${vrs}" ] && vrs=$(git describe --git-dir=${dir_src}/.git --abbrev=0 --tags 2>/dev/null)
-	[ -z "${vrs}" ] && vrs='0.0.0'
-	export CPACK="-DCPACK_RESOURCE_FILE_LICENSE=${dir_src}/${f_lic} -DCPACK_PACKAGE_VERSION=\${CMAKE_PROJECT_VERSION} -DCPACK_PACKAGE_FILE_NAME=\${CMAKE_PROJECT_NAME}_\${CMAKE_PROJECT_VERSION}_${arch}"
-	cat <<-EOF >>${cmake_toolchain_file}
-		set(CPACK_PACKAGE_NAME "${lib}")
-		set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${dsc}")
-		set(CPACK_PACKAGE_VENDOR "${vnd}")
-		set(CPACK_VERBATIM_VARIABLES YES)
-		set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CPACK_PACKAGE_NAME})
-		set(CPACK_OUTPUT_FILE_PREFIX "${dir_pkgdist}")
-		set(CPACK_PACKAGING_INSTALL_PREFIX "${dir_install}")
-		set(CPACK_PACKAGE_CONTACT "${u_email}")
-		set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${u_name}")
-		#set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-		# package name for deb
-		# if set, then instead of some-application-0.9.2-Linux.deb
-		# you'll get some-application_0.9.2_amd64.deb (note the underscores too)
-		set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
-		# if you want every group to have its own package,
-		# although the same happens if this is not sent (so it defaults to ONE_PER_GROUP)
-		# and CPACK_DEB_COMPONENT_INSTALL is set to YES
-		set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)#ONE_PER_GROUP)
-		# without this you won't be able to pack only specified component
-		set(CPACK_DEB_COMPONENT_INSTALL YES)
-		include(CPack)
-		EOF
 }
 
 cmake_create_toolchainfile(){
@@ -1440,7 +1185,7 @@ logver() {
 	fi
 }
 
-inlineCcmake(){
+inline_ccmake(){
 	tput sc; ccmake $@; tput rc
 }
 
