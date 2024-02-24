@@ -1,5 +1,5 @@
---- threadpool.c	2024-02-18 22:29:45.847903314 +0000
-+++ threadpool.c	2024-02-21 20:17:10.537049923 +0000
+--- source/common/threadpool.c	2024-02-24 18:48:42.451907603 +0000
++++ source/common/threadpool.c	2024-02-24 18:49:28.358941470 +0000
 @@ -98,7 +98,7 @@
  static INLINE
  int  xavs2_thread_set_cpu(int idx_core)
@@ -18,8 +18,8 @@
      cpu_set_t get;
  
      CPU_ZERO(&get);
---- encoder.c	2024-02-21 20:07:31.041383513 +0000
-+++ encoder.c	2024-02-21 20:07:49.580605127 +0000
+--- source/encoder/encoder.c	2024-02-21 20:07:31.041383513 +0000
++++ source/encoder/encoder.c	2024-02-21 20:07:49.580605127 +0000
 @@ -2038,7 +2038,7 @@
  
      /* start AEC frame coding */
