@@ -30,7 +30,8 @@ if [ "$cfg" = "ac" ]; then
     dir_config="${dir_src}/build/linux"
     dir_build="${dir_src}/build/linux"
 fi
-NPROC=1
+cmake_config+=" -DENABLE_ASM=ON -DX264_SOURCE_DIR=${dir_sources}/x264"
+
 start
 
 # cpu av8 av7 x86 x64
