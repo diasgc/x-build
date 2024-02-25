@@ -125,6 +125,55 @@ cmake_build_package(){
 	popdir
 }
 
+cmake_configure(){
+	: "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
+	[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}
+	[ -f "${cmake_toolchain_file}" ] && CTC="-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}"
+
+	if [ -n "${cmake_static}" ]; then
+		arr=(${cmake_static//|/ })
+		case ${#arr[@]} in
+			1) $build_static && CSH="-D${arr[0]}=ON" || CSH="-D${arr[0]}=OFF";;
+			2) $build_static && CSH="-D${arr[0]}" || CSH="-D${arr[1]}";;
+		esac
+	fi
+
+	if [ -z "${cmake_shared}" ]; then
+		$build_shared && CSH+=' -DBUILD_SHARED_LIBS=ON' || CSH+=' -DBUILD_SHARED_LIBS=OFF'
+	else
+		arr=(${cmake_shared//|/ })
+		case ${#arr[@]} in
+			1) $build_shared && CSH+=" -D${arr[0]}=ON" || CSH+=" -D${arr[0]}=OFF";;
+			2) $build_shared && CSH+=" -D${arr[1]}" || CSH+=" -D${arr[0]}";;
+		esac
+	fi
+
+	if [ -n "${cmake_bin}" ]; then
+		arr=(${cmake_bin//|/ })
+		case ${#arr[@]} in
+			1) $build_bin && CBN="-D${arr[0]}=ON" || CBN="-D${arr[0]}=OFF";;
+			2) $build_bin && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
+		esac
+	fi
+
+	[ -n "${cmake_config}" ] && CFG="${cmake_config} ${CFG}"
+	#MAKE_EXECUTABLE=cmake
+	#mkf='--build . --target install --config Release'
+}
+
+#1=cmake_key 2=$build_key_bool 
+cmake_readkey(){
+	local arr
+	local ret
+	if [ -n "${!1}" ]; then
+		arr=(${!cfg_static//|/ })
+		case ${#arr[@]} in
+			1) ${!2} && ret="-D${arr[0]}=ON" || ret="-D${arr[0]}=OFF";;
+			2) ${!2} && ret="-D${arr[0]}" || ret="-D${arr[1]}";;
+		esac
+	fi
+	echo "${ret}"
+}
 
 cmake_include_directories(){
 	printf "include_directories($@)" >>${cmake_toolchain_file}

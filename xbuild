@@ -103,7 +103,11 @@ logtime_end=0
 #export ROOTDIR=$(pwd)
 export CPPFLAGS=
 export target_trip=
-export dir_sources="${dir_root}/sources"
+
+export dir_sources="${dir_root}/sources" \
+       dir_cmake="${dir_root}/cmake" \
+       dir_patches="${dir_root}/patches"
+
 if [ -z "${src_dir}" ];then
 	export dir_src=${dir_sources}/${lib}
 else
@@ -264,12 +268,17 @@ start(){
 				esac
 			fi
 		fi
+
 		req_src_config=true
 
 		$break_on_git && end_script
 
-		fn_defined 'patch_source' && fn_log '' patch_source
-		
+		if fn_defined 'patch_source'; then
+			fn_log 'patch' patch_source
+		else
+			fn_log 'patch' patch_check_patchdir
+		fi
+
 	fi
 
 	cd ${dir_src}
@@ -330,7 +339,7 @@ start(){
 
 	if $req_src_patch; then
 		# check if has auto patch embeded in source
-		check_xbautopatch
+		patch_check_xbpatch
 		# check if has patch function in source
 		if fn_defined 'source_patch'; then
 			fn_log 'patch' source_patch
@@ -389,9 +398,7 @@ start(){
 			: "${cmake_bdir:=${dir_config}}"
 			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}" "-Wno-dev")
 			do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
-			#do_log 'cmake' ${exec_config} ${dir_config} -DCMAKE_INSTALL_PREFIX=${dir_install} -DCMAKE_BUILD_TYPE=${cmake_build_type} ${CTC} ${CFG} ${CSH} ${CBN} ${CPACK}
 			case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
-			
 			;;
 
 		automake) # use autotools and configure executable to create makefile
@@ -442,6 +449,7 @@ start(){
 		# $build_static && [[ "$LDFLAGS" != *"-all-static"* ]] && LDFLAGS="-all-static $LDFLAGS"
 		$host_clang && static_ldflag="-all${static_ldflag}"
 	fi
+
 	$build_static && LDFLAGS="${static_ldflag} $LDFLAGS"
 
 	log_vars CFLAGS CXXFLAGS WFLAGS CPPFLAGS LDFLAGS LIBS
@@ -503,13 +511,13 @@ start(){
 	if $build_cpack; then
 		if [ -z "${CPACK}" ]; then
 			if fn_defined 'on_pack'; then
-			fn_log 'pack' on_pack
+				fn_log 'pack' on_pack
 			elif $build_package; then
-			if [ -f "${dir_build}/install_manifest.txt" ]; then
-				do_log 'cpack' cmake_build_package
-			else
-				do_log 'pack' build_packages_bin
-			fi
+				if [ -f "${dir_build}/install_manifest.txt" ]; then
+					do_log 'cpack' cmake_build_package
+				else
+					do_log 'pack' build_packages_bin
+				fi
 			fi
 		else
 			cd ${dir_build}
@@ -570,19 +578,25 @@ ac_configure() {
 
 	if [ -n "${ac_opts}" ]; then
 		for opt in $(echo ${ac_opts}); do
-		case $opt in
-			--update-config_sub)
-			local fpath=$(find ${dir_src} -name 'config.sub')
-			[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.sub ${fpath}
-			;;
-			--update-config_guess)
-			local fpath=$(find ${dir_src} -name 'config.guess')
-			[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.guess ${fpath}
-			;;
-			--no-sysroot)          ac_nosysroot=true;;
-			--no-pic)              ac_nopic=true;;
-			--no-host)             ac_nohost=true;;
-		esac
+			case $opt in
+				--update-config_sub)
+					local fpath=$(find ${dir_src} -name 'config.sub')
+					[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.sub ${fpath}
+					;;
+				--update-config_guess)
+					local fpath=$(find ${dir_src} -name 'config.guess')
+					[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.guess ${fpath}
+					;;
+				--no-sysroot)
+					ac_nosysroot=true
+					;;
+				--no-pic)
+					ac_nopic=true
+					;;
+				--no-host)
+					ac_nohost=true
+					;;
+			esac
 		done
 	fi
 
@@ -604,56 +618,6 @@ ac_configure() {
 	MAKE_EXECUTABLE=make
 }
 
-cmake_configure(){
-	: "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
-	[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}
-	[ -f "${cmake_toolchain_file}" ] && CTC="-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}"
-
-	if [ -n "${cmake_static}" ]; then
-		arr=(${cmake_static//|/ })
-		case ${#arr[@]} in
-			1) $build_static && CSH="-D${arr[0]}=ON" || CSH="-D${arr[0]}=OFF";;
-			2) $build_static && CSH="-D${arr[0]}" || CSH="-D${arr[1]}";;
-		esac
-	fi
-
-	if [ -z "${cmake_shared}" ]; then
-		$build_shared && CSH+=' -DBUILD_SHARED_LIBS=ON' || CSH+=' -DBUILD_SHARED_LIBS=OFF'
-	else
-		arr=(${cmake_shared//|/ })
-		case ${#arr[@]} in
-			1) $build_shared && CSH+=" -D${arr[0]}=ON" || CSH+=" -D${arr[0]}=OFF";;
-			2) $build_shared && CSH+=" -D${arr[1]}" || CSH+=" -D${arr[0]}";;
-		esac
-	fi
-
-	if [ -n "${cmake_bin}" ]; then
-		arr=(${cmake_bin//|/ })
-		case ${#arr[@]} in
-			1) $build_bin && CBN="-D${arr[0]}=ON" || CBN="-D${arr[0]}=OFF";;
-			2) $build_bin && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
-		esac
-	fi
-
-	[ -n "${cmake_config}" ] && CFG="${cmake_config} ${CFG}"
-	#MAKE_EXECUTABLE=cmake
-	#mkf='--build . --target install --config Release'
-}
-
-#1=cmake_key 2=$build_key_bool 
-cmake_readkey(){
-	local arr
-	local ret
-	if [ -n "${!1}" ]; then
-		arr=(${!cfg_static//|/ })
-		case ${#arr[@]} in
-			1) ${!2} && ret="-D${arr[0]}=ON" || ret="-D${arr[0]}=OFF";;
-			2) ${!2} && ret="-D${arr[0]}" || ret="-D${arr[1]}";;
-		esac
-	fi
-	echo "${ret}"
-}
-
 doStrip(){
 	local libdir
 	for dd in $(find ${dir_build} \( -name "*.a" -o -name "*.so" \));do
@@ -667,13 +631,11 @@ end_script(){
 	local parent=$(ps -o comm= $PPID)
 	[ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done${C0}\n"
 	$debug && set +x
-	unset dir_config dir_build dir_src \
+	unset	dir_config dir_build dir_src \
 			CSH CBN exec_config vrs vnd \
 			ac_nohost ac_nopic ac_nosysroot ac_opts ac_reconf \
 			req_pcforlibs mkc mki mingw_posix \
-			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS \
-			
-			
+			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
 	dec_tab
 	echo
 	exit 0
@@ -733,112 +695,6 @@ check_install(){
 	return 0
 }
 
-
-# usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
-create_pkgconfig_file(){
-	[ -z "${1}" ] && pc_file=${lib} || pc_file=${1}
-	[ -z "${2}" ] && pc_llib="-l${pc_file}" || pc_llib=${2}
-	[ -z "${3}" ] && pc_prefix=${dir_install} || pc_prefix=${3}
-	[ "${pc_llib}" == "null" ] && pc_llib=''
-	[ -z "$pc_libdir" ] && pc_libdir="/lib"
-	[ -z "$pc_incdir" ] && pc_incdir="/include"
-	[ -z "$pc_cflags" ] && pc_cflags="-I\${includedir}"
-	[ -z "$pc_libs" ] && pc_libs="-L\${libdir}"
-	[ -z "$pc_url" ] && pc_url=$(dirname $src)
-	fn_defined 'get_version' && get_version && pc_vrs=$vrs
-	[ -z "$pc_vrs" ] && {
-	[ -d "${dir_src}/.git" ] && pc_vrs=$(git_getversion ${dir_src}) || pc_vrs=$vrs
-	}
-	cat <<-EOF >${dir_install_pc}/${pc_file}.pc
-		prefix=${pc_prefix}
-		exec_prefix=\${prefix}
-		libdir=\${exec_prefix}${pc_libdir}
-		includedir=\${prefix}${pc_incdir}
-
-		Name: ${lib}
-		Description: ${dsc}
-		URL: ${pc_url}
-		Version: ${pc_vrs}
-		Requires: ${pc_requires}
-		Requires.private: ${pc_requiresprivate}
-		Libs: ${pc_libs} ${pc_llib}
-		Libs.private: ${pc_libsprivate}
-		Cflags: ${pc_cflags}
-
-		EOF
-	pc_filelist="${pc_file}.pc ${pc_filelist}"
-	unset pc_libdir pc_incdir pc_cflags pc_libs pc_url
-}
-
-build_packages_getdistdir(){
-	[ -f "${dir_install_pc}/${pkg}.pc" ] && vrs=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
-	[ -z "$vrs" ] && set_git_version
-	echo "${dir_root}/packages/${lib}_${vrs}_${arch}"
-}
-
-build_packages_filelist(){
-	local scfile="${dir_root}/${lib}.sh"
-	if [ -z "$(cat $scfile | grep '# Filelist')" ]; then
-		echo -e "\n\n# Filelist\n# --------" >> $scfile
-		find ./ -type f | sed 's|^./|# |g' >> $scfile
-	fi
-}
-
-
-build_packages_bin(){
-	set -x
-	local xb_distdir=$(build_packages_getdistdir)
-	if fn_defined 'create_package'; then
-		fn_log 'pack' create_package ${xb_distdir}
-	else
-		if fn_defined 'build_make_package'; then
-			fn_log 'pack' build_make_package ${xb_distdir}
-		elif [ "$MAKE_EXECUTABLE" = "ninja" ];then
-			DESTDIR=${xb_distdir} ninja -C ${dir_build} install
-		else
-			[ -z "$mkd" ] && mkd="DESTDIR=${xb_distdir} install"
-			${MAKE_EXECUTABLE} $mkd
-			fi
-			[ -z "$mkd_suffix" ] && mkd_suffix=${dir_install}
-			pushdir "${xb_distdir}${mkd_suffix}"
-
-			# dont forget licence files
-			if [ -n "${lst_lic}" ]; then
-			[ -d "share/doc/${lib}" ] || mkdir -p "share/doc/${lib}"
-			for f in ${lst_lic}; do
-				[ -f "share/doc/${lib}/$f" ] || cp ${dir_src}/${f} "share/doc/${lib}/"
-			done
-		fi
-		
-		# also include .pc manually-built file
-		if fn_defined 'build_pkgconfig_file' || [ -n "$pc_llib" ]; then
-			local xb_pkgd=$(pwd)/lib/pkgconfig
-			[ ! -d "${xb_pkgd}" ] && mkdir -p $xb_pkgd
-			if [ -n "${pc_filelist}" ]; then
-				for pp in ${pc_filelist}; do
-					cp ${dir_install_pc}/${pp} ${xb_pkgd}/
-				done
-			else
-				cp ${dir_install_pc}/${pkg}.pc ${xb_pkgd}/
-			fi
-			fn_undef build_pkgconfig_file
-		fi
-
-		if fn_defined 'on_editpack'; then
-			fn_log 'edit' on_editpack
-		fi
-
-		build_packages_filelist
-		case $pkg_fmt in
-			tgz) tar -czvf "${xb_distdir}.tar.gz" *;;
-			tbz) tar -cvjSf "${xb_distdir}.tar.bz2" *;;
-			zip) zip -r "${xb_distdir}.zip" *;;
-		esac
-		rm -rf ${xb_distdir}
-		popdir
-	fi
-	set +x
-}
 
 build_dependencies(){
 	local pkgfile=
@@ -925,64 +781,7 @@ meson_create_toolchain(){
 # usage cmake_create_toolchain <dir>
 cmake_create_toolchain(){
 	#export cmake_toolchain_file="${ROOTDIR}/xbuilder.cmake"
-	cmake_create_toolchainfile
-}
-
-cmake_create_toolchainfile(){
-	export cmake_toolchain_file="${dir_build}/${arch}.cmake"
-	cat <<-EOF >${cmake_toolchain_file}
-		set(CMAKE_SYSTEM_NAME "${PLATFORM}")
-		set(CMAKE_SYSTEM_PROCESSOR "${cmake_system_processor}")
-		set(CMAKE_C_COMPILER ${CC})
-		set(CMAKE_CXX_COMPILER ${CXX})
-		set(CMAKE_AR ${AR} CACHE FILEPATH Archiver)
-		set(CMAKE_RANLIB ${RANLIB} CACHE FILEPATH Indexer)
-		set(CMAKE_C_COMPILER_AR "${AR}")
-		set(CMAKE_CXX_COMPILER_AR "${AR}")
-		set(CMAKE_C_COMPILER_RANLIB "${RANLIB}")
-		set(CMAKE_CXX_COMPILER_RANLIB "${RANLIB}")
-		set(CMAKE_OBJDUMP "${OBJDUMP}")
-		set(CMAKE_OBJCOPY "${OBJCOPY}")
-		set(CMAKE_READELF "${READELF}")
-		set(CMAKE_STRIP "${STRIP}")
-		set(CMAKE_ADDR2LINE "${ADDR2LINE}")
-		set(CMAKE_LINKER "${LD}")
-		set(CMAKE_NM "${NM}")
-		set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-		set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
-		set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-		set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
-		set(CMAKE_POSITION_INDEPENDENT_CODE 1)
-		EOF
-	[ -n "${WFLAGS}" ] && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
-	$host_x86 && cat <<-EOF >>${cmake_toolchain_file}
-		set(CMAKE_C_COMPILER_ARG1 "-m32")
-		set(CMAKE_CXX_COMPILER_ARG1 "-m32")
-			EOF
-	$host_ndk && cat <<-EOF >>${cmake_toolchain_file}
-		set(ANDROID_ABI ${ABI})
-		set(ANDROID_PLATFORM ${API})
-		set(ANDROID_NDK ${ANDROID_NDK_HOME})
-		set(ZLIB_INCLUDE_DIRS ${SYSROOT}/usr/include)
-		set(ZLIB_LIBRARIES ${SYSROOT}/usr/lib/${arch})
-		set(ZLIB_VERSION_STRING 1.2.11)
-		include(${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake)
-		EOF
-	#mingw_stdlibs='-lwsock32 -lws2_32 -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32'
-	mingw_stdlibs='-static-libgcc -static-libstdc++ -lwsock32 -lws2_32'
-	mingw_exelink='-Wl,-Bstatic'
-	#mingw_exelink='-static-libgcc -static-libstdc++ -Wl,-pdb='
-	$host_mingw && cat <<-EOF >>${cmake_toolchain_file}
-		set(CMAKE_COMPILER_IS_MINGW ON)
-		set(CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES "${LLVM_MINGW_HOME}/${arch}/include/c++/v1;${LLVM_MINGW_HOME}/lib/clang/*/include;${LLVM_MINGW_HOME}/${arch}/include")
-		set(CMAKE_RC_COMPILER ${CROSS_PREFIX}windres)
-		set(CMAKE_MC_COMPILER ${CROSS_PREFIX}windmc)
-		set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libgcc -static-libstdc++ ${mingw_stdlibs} \${CMAKE_CXX_STANDARD_LIBRARIES}")
-		set(CMAKE_EXE_LINKER_FLAGS "\${CMAKE_EXE_LINKER_FLAGS} ${mingw_exelink}")
-		set(CMAKE_FIND_LIBRARY_PREFIXES "lib" "")
-		set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" ".dll.a" ".lib" ".a")
-		EOF
-	#cmake_addcpack
+	cmake_build_toolchainfile
 }
 
 cargo_create_toolchain(){
@@ -1012,7 +811,7 @@ check_tool_dependency(){
 	if [ -n "$1" ];then
 		nm=$1
 		[ -n "$2" ] && pk=$2 || pk=$1
-		[ -z $(command -v $nm) ] && aptInstall $pk
+		[ -z $(command -v $nm) ] && apt_install $pk
 		nm=$(command -v $nm)
 	fi
 	echo $nm
@@ -1024,19 +823,19 @@ check_tools(){
 		toolname=$1
 		toolpkg=$1
 		case $1 in
-		rust ) installRust && continue;;
-		libtool ) toolname=libtoolize;;
-		texinfo ) toolname=makeinfo;;
-		autotools )  chkAutotools && continue;;
+			rust ) installRust && continue;;
+			libtool ) toolname=libtoolize;;
+			texinfo ) toolname=makeinfo;;
+			autotools )  autotools_check && continue;;
 		* ) ;;
 		esac
-		[ -z $(command -v $toolname) ] && aptInstall $toolpkg
+		[ -z $(command -v $toolname) ] && apt_install $toolpkg
 		shift
 	done
 }
 
 # usage: chkTools tools...
-chkAutotools(){
+autotools_check(){
 	if [ -z $(command -v automake) ];then
 		tput sc
 		$sudo apt -qq install automake autogen autoconf m4 libtool-bin -y >/dev/null 2>&1 
@@ -1045,11 +844,11 @@ chkAutotools(){
 }
 
 # make args...
-doMake(){
+do_make(){
 	make $@ 2>&1 | tee -a ${log_file} | grep -Eo "\[.+%\]" 
 }
 
-errCall(){
+err_call(){
 	echo -e "$(
 		cat <<-EOM
 			\n$CWtcutils $vrs
@@ -1288,7 +1087,7 @@ git_clone(){
 }
 
 do_svn(){
-	[ $(command -v svn) ] || aptInstall subversion || err
+	[ $(command -v svn) ] || apt_install subversion || err
 	local var="svn"
 	echo -ne "${CD}${var}"
 	svn checkout $1 $2 >/dev/null || err
@@ -1296,7 +1095,7 @@ do_svn(){
 }
 
 do_hg(){
-	[ $(command -v hg) ] || aptInstall mercurial || err
+	[ $(command -v hg) ] || apt_install mercurial || err
 	do_log 'clone' hg clone $1 $2
 }
 
@@ -1337,7 +1136,7 @@ wget_tarxx(){
 
 	case $src in
 		*.tar.lz) 
-		test -z $(command -v lzip) && aptInstall lzip
+		test -z $(command -v lzip) && apt_install lzip
 		args="--lzip -xv"
 		;;
 		*.tar.gz|*.tgz) args="-xvz";;
@@ -1393,7 +1192,7 @@ wget_tar(){
 	echo "$(date): $@" >> "${log_file}"
 	case $sty in
 		tlz|tar_lz) 
-		test -z $(command -v lzip) && aptInstall lzip
+		test -z $(command -v lzip) && apt_install lzip
 		ags="--lzip -xv"
 		;;
 		tgz|tar_gz) args="-xvz";;
@@ -1406,7 +1205,7 @@ wget_tar(){
 }
 
 getZip(){
-	[ -z $(command -v unzip) ] && aptInstall unzip
+	[ -z $(command -v unzip) ] && apt_install unzip
 	log download
 	wget $1 -O tmp.zip || err
 	log extract unzip tmp.zip
@@ -1505,7 +1304,7 @@ download(){
 	# bsdtar from stdin doesnt extract file +x permission
 	# wget -qO- $1 | bsdtar -xvf- >/dev/null 2>&1
 	echo -ne " ${CD}checking tools"
-	test -z $(command -v unzip) && aptInstallBr unzip
+	test -z $(command -v unzip) && apt_installBr unzip
 	echo -ne " ${CS0}downloading..."
 	tput sc && echo -ne "\e[$(tput lines);0H${CY1}"
 	wget --progress=dot $1 -O tmp.zip 2>&1 | grep --line-buffered "%" | sed -u -e "s,\.,,g" | awk '{printf("\r%4s %s eta:%s  ",$2,$1,$4)}'
@@ -1514,7 +1313,7 @@ download(){
 	unzip tmp.zip >/dev/null 2>&1 && rm tmp.zip || err
 }
 
-aptInstall(){
+apt_install(){
 	while [ "$1" != "" ];do
 		#echo -ne "  ${CT0}install $1${C0}"
 		#echo -n " "

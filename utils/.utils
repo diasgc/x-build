@@ -36,6 +36,112 @@ config_guess(){
   return 0
 }
 
+# usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
+create_pkgconfig_file(){
+	[ -z "${1}" ] && pc_file=${lib} || pc_file=${1}
+	[ -z "${2}" ] && pc_llib="-l${pc_file}" || pc_llib=${2}
+	[ -z "${3}" ] && pc_prefix=${dir_install} || pc_prefix=${3}
+	[ "${pc_llib}" == "null" ] && pc_llib=''
+	[ -z "$pc_libdir" ] && pc_libdir="/lib"
+	[ -z "$pc_incdir" ] && pc_incdir="/include"
+	[ -z "$pc_cflags" ] && pc_cflags="-I\${includedir}"
+	[ -z "$pc_libs" ] && pc_libs="-L\${libdir}"
+	[ -z "$pc_url" ] && pc_url=$(dirname $src)
+	fn_defined 'get_version' && get_version && pc_vrs=$vrs
+	[ -z "$pc_vrs" ] && {
+	[ -d "${dir_src}/.git" ] && pc_vrs=$(git_getversion ${dir_src}) || pc_vrs=$vrs
+	}
+	cat <<-EOF >${dir_install_pc}/${pc_file}.pc
+		prefix=${pc_prefix}
+		exec_prefix=\${prefix}
+		libdir=\${exec_prefix}${pc_libdir}
+		includedir=\${prefix}${pc_incdir}
+
+		Name: ${lib}
+		Description: ${dsc}
+		URL: ${pc_url}
+		Version: ${pc_vrs}
+		Requires: ${pc_requires}
+		Requires.private: ${pc_requiresprivate}
+		Libs: ${pc_libs} ${pc_llib}
+		Libs.private: ${pc_libsprivate}
+		Cflags: ${pc_cflags}
+
+		EOF
+	pc_filelist="${pc_file}.pc ${pc_filelist}"
+	unset pc_libdir pc_incdir pc_cflags pc_libs pc_url
+}
+
+build_packages_getdistdir(){
+	[ -f "${dir_install_pc}/${pkg}.pc" ] && vrs=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
+	[ -z "$vrs" ] && set_git_version
+	echo "${dir_root}/packages/${lib}_${vrs}_${arch}"
+}
+
+build_packages_filelist(){
+	local scfile="${dir_root}/${lib}.sh"
+	if [ -z "$(cat $scfile | grep '# Filelist')" ]; then
+		echo -e "\n\n# Filelist\n# --------" >> $scfile
+		find ./ -type f | sed 's|^./|# |g' >> $scfile
+	fi
+}
+
+
+build_packages_bin(){
+	set -x
+	local xb_distdir=$(build_packages_getdistdir)
+	if fn_defined 'create_package'; then
+		fn_log 'pack' create_package ${xb_distdir}
+	else
+		if fn_defined 'build_make_package'; then
+			fn_log 'pack' build_make_package ${xb_distdir}
+		elif [ "$MAKE_EXECUTABLE" = "ninja" ];then
+			DESTDIR=${xb_distdir} ninja -C ${dir_build} install
+		else
+			[ -z "$mkd" ] && mkd="DESTDIR=${xb_distdir} install"
+			${MAKE_EXECUTABLE} $mkd
+			fi
+			[ -z "$mkd_suffix" ] && mkd_suffix=${dir_install}
+			pushdir "${xb_distdir}${mkd_suffix}"
+
+			# dont forget licence files
+			if [ -n "${lst_lic}" ]; then
+			[ -d "share/doc/${lib}" ] || mkdir -p "share/doc/${lib}"
+			for f in ${lst_lic}; do
+				[ -f "share/doc/${lib}/$f" ] || cp ${dir_src}/${f} "share/doc/${lib}/"
+			done
+		fi
+		
+		# also include .pc manually-built file
+		if fn_defined 'build_pkgconfig_file' || [ -n "$pc_llib" ]; then
+			local xb_pkgd=$(pwd)/lib/pkgconfig
+			[ ! -d "${xb_pkgd}" ] && mkdir -p $xb_pkgd
+			if [ -n "${pc_filelist}" ]; then
+				for pp in ${pc_filelist}; do
+					cp ${dir_install_pc}/${pp} ${xb_pkgd}/
+				done
+			else
+				cp ${dir_install_pc}/${pkg}.pc ${xb_pkgd}/
+			fi
+			fn_undef build_pkgconfig_file
+		fi
+
+		if fn_defined 'on_editpack'; then
+			fn_log 'edit' on_editpack
+		fi
+
+		build_packages_filelist
+		case $pkg_fmt in
+			tgz) tar -czvf "${xb_distdir}.tar.gz" *;;
+			tbz) tar -cvjSf "${xb_distdir}.tar.bz2" *;;
+			zip) zip -r "${xb_distdir}.zip" *;;
+		esac
+		rm -rf ${xb_distdir}
+		popdir
+	fi
+	set +x
+}
+
 package_showinfo(){
 	$banner || return 0
 	local dp=
@@ -98,8 +204,20 @@ package_longdesc(){
 	return 0
 }
 
+patch_check_patchdir(){
+  test $patch_skip && return 0
+  local patch_list=( $(ls -1 "${dir_patches}/${lib}*.patch 2>/dev/null)" ) )
+  if [ -n "${patch_list[@]}" ]; then
+    pushd ${dir_src} 2>&1 >/dev/null
+    for p in ${patch_list[@]}; do
+      patch -p0 <${p} 2>&1 >${log_file}
+    done
+    popd 2>&1 >/dev/null
+  fi
+  return 0
+}
 
-check_xbautopatch(){
+patch_check_xbpatch(){
 	pushdir ${dir_root}
 	local matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
 	if [ ${#matches[@]} -gt 0 ]; then

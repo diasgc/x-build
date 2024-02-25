@@ -10,9 +10,9 @@
 #include <getopt.h>
 
 #ifdef __unix__
-# define LF "\n"
+#define LF "\n"
 #else
-# define LF "\r\n"
+#define LF "\r\n"
 #endif
 
 namespace lzstring { 
