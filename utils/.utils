@@ -142,6 +142,46 @@ build_packages_bin(){
 	set +x
 }
 
+generate_script(){
+	test -z "$1" && return 0
+	local srcname=$1
+	local libname="${srcname##*/}"
+	libname="${libname,,}"
+	local scriptname="${dir_root}/${libname}.sh"
+	cp "${dir_root}/utils/script.template" ${scriptname}
+	chmod +x "${scriptname}"
+	sed -i 's,@src@,'${srcname}',g;s,@lib@,'${libname}',g' ${scriptname}
+	local json=$(github_json $1)
+	local libdesc=$(cat ${json} | jq .description | xargs)
+	local lic=$(cat ${json} | jq .license.name | xargs)
+	test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
+	test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname}
+}
+
+github_json(){
+	local paths=( ${1//\// } )
+	local url=
+	case ${paths[1]} in 
+		github.com) url="https://api.github.com/repos/${paths[2]}/${paths[3]}";;
+		*) echo;;
+	esac
+	local json=${dir_root}/builds/${libname}.info
+	test -f ${json} || wget -q $url -O ${json}
+	echo ${json}
+}
+
+github_description(){
+	local paths=( ${1//\// } )
+	local url=
+	case ${paths[1]} in 
+		github.com) url="https://api.github.com/repos/${paths[2]}/${paths[3]}";;
+		*) return 0
+	esac
+	local json=${dir_root}/builds/${libname}.info
+	 test -f ${json} || wget -q $url -O ${json}
+	 echo $(cat ${json} | jq .description | xargs)
+}
+
 package_showinfo(){
 	$banner || return 0
 	local dp=

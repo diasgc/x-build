@@ -1985,6 +1985,7 @@ while [ $1 ];do
 		--cpus)     loadToolchain; $CC --print-supported-cpus; exit 0;;
 		--mcpu)		shift; export CPPFLAGS+=" -mcpu=${1}";;
 		--mtune)	shift; export CPPFLAGS+=" -mtune=${1}";;
+		--new)      shift; generate_script $@; exit 0;;
 
 		$optDnl)	build_pkgdl=true;;
 
