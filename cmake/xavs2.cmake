@@ -179,7 +179,7 @@ endif(Threads_FOUND)
 
 macro(checkLibrary LPREFIX libname)
   #message("Checking ${libname}")
-  pkg_check_modules(${LPREFIX} ${libname})  
+  pkg_check_modules(${LPREFIX} ${libname})
   if(${LPREFIX}_FOUND)
     #message("${LPREFIX}_FOUND")  
     option(XAVS2_${LPREFIX} "Use ${libname}" OFF)
