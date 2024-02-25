@@ -19,7 +19,7 @@ bls='lizard'
 . xbuild
 
 config_dir='cmake_unofficial'
-LDFLAGS="$LDFLAGS $(./libzstd.sh --get ldstatic)"
+#LDFLAGS="$LDFLAGS $(./libzstd.sh --get ldstatic)"
 # or find_package(Zstd REQUIRED) in CMakeLists
 start
 
