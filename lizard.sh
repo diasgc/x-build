@@ -10,7 +10,7 @@ dsc='Lizard (formerly LZ5) is an efficient compressor with very fast decompressi
 lic='MLP-2.0'
 src='https://github.com/inikep/lizard.git'
 cfg='cmake'
-dep='libsztd'
+dep='libzstd'
 eta='60'
 ils='lizard_frame.h lizard_common.h lizard_compress.h'
 lls='liblizard'
@@ -19,6 +19,7 @@ bls='lizard'
 . xbuild
 
 config_dir='cmake_unofficial'
+LDFLAGS+=" -lzstd"
 #LDFLAGS="$LDFLAGS $(./libzstd.sh --get ldstatic)"
 # or find_package(Zstd REQUIRED) in CMakeLists
 start
