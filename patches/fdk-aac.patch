@@ -1,0 +1,16 @@
+--- libSBRdec/include/log/log.h	1970-01-01 01:00:00.000000000 +0100
++++ libSBRdec/include/log/log.h	2022-03-07 21:19:19.573025300 +0000
+@@ -0,0 +1,12 @@
++#pragma once
++/* This file provides empty implementation of android_errorWriteLog, which is
++ * not required on linux. It should be on include path only for linux build. */
++#if defined(__ANDROID__)
++#include <cstdint>
++inline int android_errorWriteLog(int, const char*) { return 0; };
++inline int android_errorWriteWithInfoLog(int tag, const char* subTag,
++                                         int32_t uid, const char* data,
++                                         uint32_t dataLen) {
++  return 0;
++};
++#endif
+

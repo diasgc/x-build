@@ -5,9 +5,9 @@ apt='fdkaac'
 dsc='A standalone library of the Fraunhofer FDK AAC code from Android'
 lic='Other'
 src='https://github.com/mstorsjo/fdk-aac.git'
-cfg='ag'
+cfg='cmake'
 eta='180'
-ac_bin=" |--enable-example"
+
 cmake_bin='BUILD_PROGRAMS'
 
 lst_inc='fdk-aac/*.h'
@@ -16,7 +16,7 @@ lst_bin='aac-enc'
 lst_lic='MODULE_LICENSE_FRAUNHOFER OWNERS NOTICE'
 lst_pc='fdk-aac.pc'
 
-dev_vrs='2.0.2'
+dev_vrs='2.0.3'
 
 . xbuild
 
@@ -27,6 +27,7 @@ start
 # GNU  .  +++  .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
+# patch for android missing header log/log.h with reference android_errorWriteLog 
 <<'LZS_PATCH'
 LQgEBsEsCMGUCEBKATApgYwPSQHbvAK5qbgD2A5iRQHQAWAkAIwCcA7AAzDuNeOjcAuduyHtqwiZNABqbsIBQ0pRBg
 IUGbHkLEylXXXoAmdocNcAzF1ahDjAS3vNqAVlbmTz9+xmT5AAT9QLgAab2lGYMZDUADFAGIABwAnAENyAFsU0FI8V
