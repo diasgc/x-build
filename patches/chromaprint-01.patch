@@ -1,0 +1,71 @@
+--- src/CMakeLists.tx_	2022-01-22 00:47:08.165377700 +0000
++++ src/CMakeLists.txt	2022-01-22 00:44:05.975377700 +0000
+@@ -73,6 +73,7 @@
+ 	set_target_properties(chromaprint_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+ endif()
+ 
++set(chromaprint_TARGETS chromaprint)
+ add_library(chromaprint ${chromaprint_PUBLIC_SOURCES} ${chromaprint_PUBLIC_HEADERS} $<TARGET_OBJECTS:chromaprint_objs>)
+ set_target_properties(chromaprint PROPERTIES
+ 	DEFINE_SYMBOL CHROMAPRINT_API_EXPORTS
+@@ -80,12 +81,23 @@
+     VERSION ${chromaprint_VERSION}
+     SOVERSION ${chromaprint_SOVERSION}
+ )
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++	add_library(chromaprint_static STATIC ${chromaprint_PUBLIC_SOURCES} ${chromaprint_PUBLIC_HEADERS} $<TARGET_OBJECTS:chromaprint_objs>)
++	set_target_properties(chromaprint_static PROPERTIES
++		DEFINE_SYMBOL CHROMAPRINT_API_EXPORTS
++		PUBLIC_HEADER ${chromaprint_PUBLIC_HEADERS}
++		VERSION ${chromaprint_VERSION}
++		SOVERSION ${chromaprint_SOVERSION}
++	)
++	set_target_properties(chromaprint_static PROPERTIES OUTPUT_NAME chromaprint)
++	set(chromaprint_TARGETS chromaprint chromaprint_static)
++endif()
+ if(BUILD_FRAMEWORK)
+ 	set_target_properties(chromaprint PROPERTIES FRAMEWORK TRUE)
+ endif()
+ target_link_libraries(chromaprint ${chromaprint_LINK_LIBS})
+ 
+-install(TARGETS chromaprint
++install(TARGETS ${chromaprint_TARGETS}
+ 	FRAMEWORK DESTINATION ${FRAMEWORK_INSTALL_DIR}
+ 	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+ 	RUNTIME DESTINATION ${BIN_INSTALL_DIR}
+--- CMakeLists.tx_	2022-01-22 01:06:35.339000000 +0000
++++ CMakeLists.txt	2022-01-22 01:11:43.945377700 +0000
+@@ -193,7 +193,7 @@
+ endif()
+ 
+ if(NOT BUILD_FRAMEWORK)
+-	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libchromaprint.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/libchromaprint.pc)
++	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/libchromaprint.pc.cmake" "${CMAKE_CURRENT_BINARY_DIR}/libchromaprint.pc" @ONLY)
+ 	install(
+         FILES ${CMAKE_CURRENT_BINARY_DIR}/libchromaprint.pc
+         DESTINATION ${LIB_INSTALL_DIR}/pkgconfig
+
+--- libchromaprint.pc.cmak_	2022-01-22 00:58:44.555377700 +0000
++++ libchromaprint.pc.cmake	2022-01-22 01:13:16.675377700 +0000
+@@ -1,11 +1,12 @@
+-prefix=${CMAKE_INSTALL_PREFIX}
+-exec_prefix=${EXEC_INSTALL_PREFIX}
+-libdir=${LIB_INSTALL_DIR}
+-includedir=${INCLUDE_INSTALL_DIR}
++prefix=@CMAKE_INSTALL_PREFIX@
++exec_prefix=@EXEC_INSTALL_PREFIX@
++libdir=${prefix}/lib
++includedir=${prefix}/include
+ 
+-Name: ${PROJECT_NAME}
++Name: @PROJECT_NAME@
+ Description: Audio fingerprint library
+ URL: http://acoustid.org/chromaprint
+-Version: ${PROJECT_VERSION}
+-Libs: -L${LIB_INSTALL_DIR} -lchromaprint
+-Cflags: -I${INCLUDE_INSTALL_DIR}
++Version: @PROJECT_VERSION@
++Libs: -L${libdir} -lchromaprint
++Cflags: -I${includedir}
++
+

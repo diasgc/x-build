@@ -1,0 +1,80 @@
+--- CMakeLists.txt	2022-04-15 22:53:40.534891916 +0100
++++ CMakeLists.txt	2022-04-15 22:53:05.654492565 +0100
+@@ -87,7 +87,7 @@
+     set(BUILD_SHARED_LIBS TRUE)
+ endif()
+ 
+-add_library(ogg ${OGG_HEADERS} ${OGG_SOURCES})
++add_library(ogg OBJECT ${OGG_HEADERS} ${OGG_SOURCES})
+ add_library(Ogg::ogg ALIAS ogg)
+ target_include_directories(ogg PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+@@ -95,35 +95,43 @@
+     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+ )
+ 
+-set_target_properties(
+-    ogg PROPERTIES
+-    SOVERSION ${LIB_SOVERSION}
+-    VERSION ${LIB_VERSION}
+-    PUBLIC_HEADER "${OGG_HEADERS}"
+-)
++macro(add_lib sfx lnk)
++    add_library(ogg${sfx} ${lnk} $<TARGET_OBJECTS:ogg>)
++    set_target_properties(
++        ogg${sfx} PROPERTIES
++        SOVERSION ${LIB_SOVERSION}
++        VERSION ${LIB_VERSION}
++        PUBLIC_HEADER "${OGG_HEADERS}"
++        OUTPUT_NAME ogg
++    )
+ 
+-if(BUILD_FRAMEWORK)
+-    set_target_properties(ogg PROPERTIES
+-        FRAMEWORK TRUE
+-        FRAMEWORK_VERSION ${PROJECT_VERSION}
+-        MACOSX_FRAMEWORK_IDENTIFIER org.xiph.ogg
+-        MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${PROJECT_VERSION}
+-        MACOSX_FRAMEWORK_BUNDLE_VERSION ${PROJECT_VERSION}
+-        XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
+-        OUTPUT_NAME Ogg
++    if(BUILD_FRAMEWORK)
++        set_target_properties(ogg${sfx} PROPERTIES
++            FRAMEWORK TRUE
++            FRAMEWORK_VERSION ${PROJECT_VERSION}
++            MACOSX_FRAMEWORK_IDENTIFIER org.xiph.ogg
++            MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${PROJECT_VERSION}
++            MACOSX_FRAMEWORK_BUNDLE_VERSION ${PROJECT_VERSION}
++            XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
++            OUTPUT_NAME Ogg
++        )
++    endif()
++    install(TARGETS ogg${sfx}
++        EXPORT OggTargets
++        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        FRAMEWORK DESTINATION ${CMAKE_INSTALL_PREFIX}
++        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ogg
+     )
+-endif()
++endmacro()
+ 
+ configure_pkg_config_file(ogg.pc.in)
+ 
+-install(TARGETS ogg
+-    EXPORT OggTargets
+-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+-    FRAMEWORK DESTINATION ${CMAKE_INSTALL_PREFIX}
+-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ogg
+-)
++add_lib("-def" "")
++if(BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
++    add_lib("-static" STATIC)
++endif()
+ 
+ export(EXPORT OggTargets NAMESPACE Ogg:: FILE OggTargets.cmake)
+ 
+

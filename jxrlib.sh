@@ -10,10 +10,7 @@ src='https://github.com/4creators/jxrlib.git'
 cfg='cmake'
 cmake_bin='BUILD_EXECUTABLES'
 cmake_static='BUILD_STATIC_LIBS'
-cmakelists_ext='jxrlib-02.cmake'
-
-
-#pc_llibs='-ljpegxr -jxrglue'
+cmake_cmakelists='jxrlib-02.cmake'
 
 lst_inc='libjxr/glue/*.h libjxr/image/*.h libjxr/common/*.h libjxr/test/*.h'
 lst_lib='libjpegxr libjxrglue'
@@ -24,7 +21,6 @@ lst_pc='jpegxr.pc jxrglue.pc'
 . xbuild
 
 start
-
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

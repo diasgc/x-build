@@ -1,0 +1,36 @@
+--- pcrecpp.cc	2021-11-01 20:50:35.459000000 +0000
++++ pcrecpp.cc	2021-11-01 21:33:23.172387200 +0000
+@@ -48,6 +48,9 @@
+ #include "pcrecpp.h"
+ #include "pcre_stringpiece.h"
+ 
++#if defined(__ANDROID__)
++#undef HAVE_STRTOQ
++#endif
+ 
+ namespace pcrecpp {
+
+--- CMakeLists.old	2021-11-01 21:38:45.675000000 +0000
++++ CMakeLists.txt	2021-11-01 21:41:04.482387200 +0000
+@@ -127,7 +127,7 @@
+ 
+ SET(BUILD_SHARED_LIBS OFF CACHE BOOL
+     "Build shared libraries instead of static ones.")
+-
++OPTION(INSTALL_DOCS "INSTALL DOCS AND MAN" OFF)
+ OPTION(PCRE_BUILD_PCRE8 "Build 8 bit PCRE library" ON)
+ 
+ OPTION(PCRE_BUILD_PCRE16 "Build 16 bit PCRE library" OFF)
+@@ -958,10 +958,11 @@
+         ENDFOREACH(man ${man3})
+         SET(man3 ${man3_new})
+ ENDIF(PCRE_BUILD_PCRECPP)
+-
++IF(INSTALL_DOCS)
+ INSTALL(FILES ${man1} DESTINATION man/man1)
+ INSTALL(FILES ${man3} DESTINATION man/man3)
+ INSTALL(FILES ${html} DESTINATION share/doc/pcre/html)
++ENDIF()
+ INSTALL(FILES ${pc} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+ INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/pcre-config"
+         DESTINATION bin

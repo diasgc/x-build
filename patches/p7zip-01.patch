@@ -1,0 +1,38 @@
+--- C/hashes/hash.h	2022-02-08 23:13:28.044000000 +0000
++++ C/hashes/hash.h	2022-02-08 23:13:32.659000000 +0000
+@@ -47,12 +47,10 @@
+ #define _UINT32_T_DECLARED
+ #endif
+ 
+-#ifndef __ANDROID__
+ #ifndef _UINT64_T_DECLARED
+ typedef UInt64 uint64_t;
+ #define _UINT64_T_DECLARED
+ #endif
+-#endif
+ 
+ //#include <stdint.h>
+ 
+
+--- makefile.android	1970-01-01 01:00:00.000000000 +0100
++++ makefile.android	2022-02-08 23:16:32.859018500 +0000
+@@ -0,0 +1,19 @@
++ANDROID_FLAGS= -MMD -MP -MF -fpic -O3 -flto -DANDROID -DANDROID_NDK -DNDEBUG
++
++ANDROID_LINK= -Wl,--gc-sections -Wl,-z,nocopyreloc -Wl,--no-undefined -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -lc -lm -L/usr/aarch64-linux-android/local/lib -liconv
++
++OPTFLAGS=-O3 -flto -s
++
++ALLFLAGS=${OPTFLAGS} -pipe -DNDEBUG -D_REENTRANT -DENV_UNIX $(ANDROID_FLAGS) $(LOCAL_FLAGS)
++
++CXX+= -fexceptions -frtti
++CC_EXE= -fPIE
++LINK_EXE=-fPIE -pie  # -fPIE -pie : only for executable
++CC_SHARED= -fpic
++LINK_SHARED=-fpic -shared
++
++LOCAL_LIBS=$(ANDROID_LINK)
++LOCAL_LIBS_DLL=$(LOCAL_LIBS) # -ldl
++
++OBJ_CRC32=$(OBJ_CRC32_C)
++OBJ_AES=

@@ -1,0 +1,146 @@
+--- CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
++++ CMakeLists.txt	2022-02-07 21:57:31.505958600 +0000
+@@ -0,0 +1,143 @@
++cmake_minimum_required(VERSION 3.10)
++
++project(liba52 
++  LANGUAGES C
++  VERSION "0.7.4"
++  HOMEPAGE_URL "https://liba52.sourceforge.io/"
++  DESCRIPTION "Liba52 is a free library for decoding ATSC A/52 streams"
++  )
++
++#configure_file(include/config.h.in ${CMAKE_SOURCE_DIR}/include/config.h)
++add_custom_target(run ALL COMMAND touch ${CMAKE_SOURCE_DIR}/include/config.h)
++
++option(BUILD_STATIC_LIBS "Build static libs" ON)
++option(BUILD_EXECUTABLES "Build executables" ON)
++option(BUILD_MANPAGES "Build man pages" ON)
++option(LIBA52_DJBFFT "liba52 djbfft support" OFF)
++option(LIBA52_DOUBLE "a52 sample precision" ON)
++option(LIBAO_AL "libao al support" OFF)
++option(LIBAO_OSS "libao OSS support" OFF)
++option(LIBAO_SOLARIS "libao solaris support" OFF)
++option(LIBAO_WIN "libao win support" OFF)
++
++add_definitions("-Wno-shift-negative-value")
++foreach(aa LIBA52_DJBFFT LIBA52_DOUBLE LIBAO_AL LIBAO_OSS LIBAO_SOLARIS LIBAO_WIN)
++  if(${aa})
++    add_definitions(-D${aa})
++  endif()
++endforeach()
++
++include (CheckIncludeFiles)
++CHECK_INCLUDE_FILES (dlfcn.h HAVE_DLFCN_H)
++CHECK_INCLUDE_FILES (inttypes.h HAVE_INTTYPES_H)
++CHECK_INCLUDE_FILES (io.h HAVE_IO_H)
++CHECK_INCLUDE_FILES (memory.h HAVE_MEMORY_H)
++CHECK_INCLUDE_FILES (stdint.h HAVE_STDINT_H)
++CHECK_INCLUDE_FILES (stdlib.h HAVE_STDLIB_H)
++CHECK_INCLUDE_FILES (strings.h HAVE_STRINGS_H)
++CHECK_INCLUDE_FILES (string.h HAVE_STRING_H)
++CHECK_INCLUDE_FILES (sys/stat.h HAVE_SYS_STAT_H)
++CHECK_INCLUDE_FILES (sys/timeb.h HAVE_SYS_TIMEB_H)
++CHECK_INCLUDE_FILES (sys/time.h HAVE_SYS_TIME_H)
++CHECK_INCLUDE_FILES (sys/types.h HAVE_SYS_TYPES_H)
++CHECK_INCLUDE_FILES (unistd.h HAVE_UNISTD_H)
++
++include(CheckFunctionExists)
++CHECK_FUNCTION_EXISTS (ftime HAVE_FTIME)
++CHECK_FUNCTION_EXISTS (gettimeofday HAVE_GETTIMEOFDAY)
++CHECK_FUNCTION_EXISTS (memalign HAVE_MEMALIGN)
++
++foreach(a HAVE_FTIME HAVE_GETTIMEOFDAY HAVE_MEMALIGN
++  HAVE_DLFCN_H
++  HAVE_INTTYPES_H
++  HAVE_IO_H
++  HAVE_MEMORY_H
++  HAVE_STDINT_H
++  HAVE_STDLIB_H
++  HAVE_STRINGS_H
++  HAVE_STRING_H
++  HAVE_SYS_STAT_H
++  HAVE_SYS_TIMEB_H
++  HAVE_SYS_TIME_H
++  HAVE_SYS_TYPES_H
++  HAVE_UNISTD_H)
++  if(${a})
++    add_compile_definitions(${a}=1)
++  else()
++    remove_definitions(${a})
++  endif()
++endforeach()
++
++
++
++
++# maximum supported data alignment
++add_definitions(-DATTRIBUTE_ALIGNED_MAX=64
++  -DLT_OBJDIR=".libs/"
++  -DPACKAGE="a52dec"
++  -DVERSION="${PROJECT_VERSION}"
++  -DPACKAGE_BUGREPORT=""
++  -DPACKAGE_NAME=""
++  -DPACKAGE_STRING=""
++  -DPACKAGE_TARNAME=""
++  -DPACKAGE_URL="${PROJECT_HOMEPAGE_URL}"
++  -DPACKAGE_VERSION=${PROJECT_VERSION}
++  -DRETSIGTYPE=void
++  -DSTDC_HEADERS=1
++  )
++
++include(CheckTypeSize)
++CHECK_TYPE_SIZE(char SIZEOF_CHAR)
++CHECK_TYPE_SIZE(int SIZEOF_INT)
++CHECK_TYPE_SIZE(short SIZEOF_SHORT)
++add_definitions(-DSIZEOF_CHAR=${SIZEOF_CHAR} -DSIZEOF_INT=${SIZEOF_INT} -DSIZEOF_SHORT=${SIZEOF_SHORT})
++
++#configure_file(include/config.h.in ${CMAKE_SOURCE_DIR}/include/config.h)
++
++include_directories(${CMAKE_SOURCE_DIR} include liba52 src libao)
++
++file(GLOB src_liba52 liba52/*.c)
++file(GLOB hdr_liba52 liba52/*.h)
++file(GLOB src_liba52dec src/*.c)
++file(GLOB hdr_liba52dec src/*.h)
++
++set(src_libao libao/audio_out.c libao/audio_out_aif.c libao/audio_out_float.c libao/audio_out_null.c libao/audio_out_peak.c libao/audio_out_wav.c libao/audio_out_internal.h libao/float2s16.c)
++set(src_a52dec src/a52dec.c src/getopt.c src/gettimeofday.c)
++set(src_extract_a52 src/extract_a52.c src/getopt.c)
++
++#add_definitions(-DLIBAO_OSS -DLIBAO_SOLARIS -DLIBAO_WIN)
++add_library(ao STATIC ${src_libao})
++
++add_library(a52 ${src_liba52})
++
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  add_library(a52_static STATIC ${src_liba52})
++  set_target_properties(a52_static PROPERTIES OUTPUT_NAME a52)
++endif()
++
++if(BUILD_EXECUTABLES)
++    add_executable(a52dec src/a52dec.c src/getopt.c src/gettimeofday.c)
++    target_link_libraries(a52dec ao a52)
++    add_executable(extract_a52 src/extract_a52.c src/getopt.c)
++endif()
++
++install(TARGETS a52
++  RUNTIME DESTINATION bin
++  ARCHIVE DESTINATION lib${LIB_SUFFIX}
++  LIBRARY DESTINATION lib${LIB_SUFFIX})
++
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  install(TARGETS a52_static ARCHIVE DESTINATION lib${LIB_SUFFIX})
++endif()
++
++install(FILES include/a52.h DESTINATION include)
++
++if(BUILD_EXECUTABLES)
++  install(TARGETS a52dec RUNTIME DESTINATION bin)
++endif()
++
++if(BUILD_MANPAGES)
++  install(FILES src/a52dec.1 src/extract_a52.1 DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man)
++endif()
++
++install(FILES COPYING AUTHORS doc/liba52.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/share/docs/liba52)

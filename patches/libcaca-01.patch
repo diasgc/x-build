@@ -1,0 +1,18 @@
+--- caca/driver/win32.c	2021-10-28 21:35:44.508000000 +0100
++++ caca/driver/win32.c	2021-10-28 21:35:47.115000000 +0100
+@@ -23,7 +23,7 @@
+ #define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+-#ifdef __MINGW32__
++#if defined(__MINGW32__) && !defined(__clang__)
+ /* This is missing from the MinGW headers. */
+ #   if (_WIN32_WINNT >= 0x0500)
+ BOOL WINAPI GetCurrentConsoleFont(HANDLE hConsoleOutput, BOOL bMaximumWindow,
+@@ -33,7 +33,6 @@
+ #ifndef MOUSE_HWHEELED
+ #   define MOUSE_HWHEELED 0x0008
+ #endif
+-
+ #include <stdlib.h>
+ #include <stdio.h>

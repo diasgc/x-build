@@ -1,0 +1,74 @@
+--- CMakeLists.old	2022-01-22 22:30:44.633000000 +0000
++++ CMakeLists.txt	2022-01-22 22:35:41.496402300 +0000
+@@ -128,6 +128,7 @@
+ if(NOT PROCESSOR_IS_X86 AND UNIX)
+   list(APPEND CPU_FEATURES_SRCS $<TARGET_OBJECTS:unix_based_hardware_detection>)
+ endif()
++set(cpu_features_Target cpu_features)
+ add_library(cpu_features ${CPU_FEATURES_HDRS} ${CPU_FEATURES_SRCS})
+ set_target_properties(cpu_features PROPERTIES PUBLIC_HEADER "${CPU_FEATURES_HDRS}")
+ setup_include_and_definitions(cpu_features)
+@@ -141,7 +142,22 @@
+   endif()
+ endif()
+ add_library(CpuFeature::cpu_features ALIAS cpu_features)
+-
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  set(cpu_features_Target cpu_features cpu_features_static)
++  add_library(cpu_features_static STATIC ${CPU_FEATURES_HDRS} ${CPU_FEATURES_SRCS})
++  set_target_properties(cpu_features_static PROPERTIES PUBLIC_HEADER "${CPU_FEATURES_HDRS}")
++  set_target_properties(cpu_features_static PROPERTIES OUTPUT_NAME cpu_features)
++  setup_include_and_definitions(cpu_features_static)
++  target_link_libraries(cpu_features_static PUBLIC ${CMAKE_DL_LIBS})
++  target_include_directories(cpu_features_static
++    PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/cpu_features>
++  )
++  if(PROCESSOR_IS_X86)
++    if(APPLE)
++      target_compile_definitions(cpu_features PRIVATE HAVE_SYSCTLBYNAME)
++    endif(APPLE)
++  endif(PROCESSOR_IS_X86)
++endif(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
+ #
+ # program : list_cpu_features
+ #
+@@ -216,7 +232,7 @@
+ #
+ 
+ include(GNUInstallDirs)
+-install(TARGETS cpu_features list_cpu_features
++install(TARGETS ${cpu_features_Target} list_cpu_features
+   EXPORT CpuFeaturesTargets
+   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpu_features
+   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+
+--- ndk_compat/CMakeLists.old	2022-01-22 22:43:14.084000000 +0000
++++ ndk_compat/CMakeLists.txt	2022-01-22 22:49:21.116402300 +0000
+@@ -12,16 +12,24 @@
+ # Note that following `add_cpu_features_headers_and_sources` will use
+ # NDK_COMPAT_SRCS in lieu of NDK_COMPAT_HDRS because we don't want cpu_features
+ # headers to be installed alongside ndk_compat.
++set(ndk_compat_Targets ndk_compat)
+ add_cpu_features_headers_and_sources(NDK_COMPAT_SRCS NDK_COMPAT_SRCS)
+ add_library(ndk_compat ${NDK_COMPAT_HDRS} ${NDK_COMPAT_SRCS})
+ setup_include_and_definitions(ndk_compat)
+ target_include_directories(ndk_compat PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+ target_link_libraries(ndk_compat PUBLIC ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+ set_target_properties(ndk_compat PROPERTIES PUBLIC_HEADER "${NDK_COMPAT_HDRS}")
+-
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  add_library(ndk_compat_static STATIC ${NDK_COMPAT_HDRS} ${NDK_COMPAT_SRCS})
++  setup_include_and_definitions(ndk_compat_static)
++  target_include_directories(ndk_compat_static PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
++  target_link_libraries(ndk_compat_static PUBLIC ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
++  set_target_properties(ndk_compat_static PROPERTIES PUBLIC_HEADER "${NDK_COMPAT_HDRS}")
++  set_target_properties(ndk_compat_static PROPERTIES OUTPUT_NAME ndk_compat)
++  set(ndk_compat_Targets ndk_compat ndk_compat_static)
++endif()
+ include(GNUInstallDirs)
+-install(TARGETS ndk_compat
+-  EXPORT CpuFeaturesNdkCompatTargets
++install(TARGETS ${ndk_compat_Targets} EXPORT CpuFeaturesNdkCompatTargets
+   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ndk_compat
+   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

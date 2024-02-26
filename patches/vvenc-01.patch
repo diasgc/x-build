@@ -1,0 +1,138 @@
+--- CMakeLists.txt	2021-10-08 16:12:02.198000000 +0100
++++ CMakeLists.txt	2021-10-08 16:12:41.200000000 +0100
+@@ -12,8 +12,8 @@
+ # project name
+ project( vvenc VERSION 1.1.0 )
+ 
+-set( VVENC_ENABLE_X86_SIMD TRUE )
+-set( VVENC_ENABLE_ARM_SIMD FALSE )
++option( VVENC_ENABLE_X86_SIMD "enable x86 intrinsics" TRUE)
++option( VVENC_ENABLE_ARM_SIMD "enable arm intrinsics" FALSE )
+ 
+ if( APPLE )
+   if( DEFINED CMAKE_OSX_ARCHITECTURES )
+
+--- source/Lib/apputils/CMakeLists.txt	2022-02-25 18:23:10.606291400 +0000
++++ source/Lib/apputils/CMakeLists.txt	2022-02-25 18:38:39.276291400 +0000
+@@ -51,8 +51,8 @@
+ target_compile_definitions( ${LIB_NAME} PUBLIC $<$<AND:$<PLATFORM_ID:Windows>,$<STREQUAL:$<TARGET_PROPERTY:${LIB_NAME},TYPE>,SHARED_LIBRARY>>:${LIB_NAME_UC}_DYN_LINK> )
+ 
+ 
+-target_compile_options( ${LIB_NAME} PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wall -Werror >
+-                                             $<$<CXX_COMPILER_ID:GNU>:-Wall -Werror >
++target_compile_options( ${LIB_NAME} PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wall -Wno-error >
++                                             $<$<CXX_COMPILER_ID:GNU>:-Wall -Wno-error >
+                                              $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /wd4100 /wd4127 /wd4244 /wd4245 /wd4251 /wd4310 /wd4389 /wd4456 /wd4457 /wd4458 /wd4459 /wd4505 /wd4701 /wd4702 /wd4703 /wd4996 >)
+ 
+ 
+--- source/Lib/vvenc/CMakeLists.txt	2022-02-25 18:21:16.786291400 +0000
++++ source/Lib/vvenc/CMakeLists.txt	2022-02-25 18:42:15.306291400 +0000
+@@ -83,35 +83,42 @@
+ if( MSVC )
+   set( RESOURCE_FILE ${LIB_NAME}.rc )
+ endif()
++function(add_lib sfx lnk)
++add_library( ${LIB_NAME}${sfx} ${lnk} ${SRC_FILES} ${INC_FILES} ${NATVIS_FILES} ${RESOURCE_FILE} )
+ 
+-add_library( ${LIB_NAME} ${SRC_FILES} ${INC_FILES} ${NATVIS_FILES} ${RESOURCE_FILE} )
++target_compile_definitions( ${LIB_NAME}${sfx} PRIVATE ${LIB_NAME_UC}_SOURCE )
++target_compile_definitions( ${LIB_NAME}${sfx} PUBLIC $<$<AND:$<PLATFORM_ID:Windows>,$<STREQUAL:$<TARGET_PROPERTY:${LIB_NAME},TYPE>,SHARED_LIBRARY>>:${LIB_NAME_UC}_DYN_LINK> )
+ 
+-target_compile_definitions( ${LIB_NAME} PRIVATE ${LIB_NAME_UC}_SOURCE )
+-target_compile_definitions( ${LIB_NAME} PUBLIC $<$<AND:$<PLATFORM_ID:Windows>,$<STREQUAL:$<TARGET_PROPERTY:${LIB_NAME},TYPE>,SHARED_LIBRARY>>:${LIB_NAME_UC}_DYN_LINK> )
+-
+-target_compile_options( ${LIB_NAME} PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wall -Werror -Wno-deprecated-register -Wno-unused-const-variable -Wno-unknown-attributes>
+-                                            $<$<CXX_COMPILER_ID:GNU>:-Wall -Werror -Wno-unused-function  -Wno-unused-variable  -Wno-sign-compare  -fdiagnostics-show-option -Wno-ignored-attributes>
++target_compile_options( ${LIB_NAME}${sfx} PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wall -Wno-error -Wno-deprecated-register -Wno-unused-const-variable -Wno-unknown-attributes>
++                                            $<$<CXX_COMPILER_ID:GNU>:-Wall -Wno-error -Wno-unused-function  -Wno-unused-variable  -Wno-sign-compare  -fdiagnostics-show-option -Wno-ignored-attributes>
+                                             $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /wd4100 /wd4127 /wd4244 /wd4245 /wd4251 /wd4310 /wd4389 /wd4456 /wd4457 /wd4458 /wd4459 /wd4505 /wd4701 /wd4702 /wd4703 /wd4996 >)
+ 
+ if( CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0 )
+-  target_compile_options( ${LIB_NAME} PRIVATE $<$<CXX_COMPILER_ID:GNU>: -Wno-array-bounds> )
++  target_compile_options( ${LIB_NAME}${sfx} PRIVATE $<$<CXX_COMPILER_ID:GNU>: -Wno-array-bounds> )
+ endif()
+ 
+-target_include_directories( ${LIB_NAME} PRIVATE           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
++target_include_directories( ${LIB_NAME}${sfx} PRIVATE           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+                                         SYSTEM INTERFACE  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}> )
+-target_include_directories( ${LIB_NAME} PRIVATE . .. ../DecoderLib ../EncoderLib ../CommonLib ../CommonLib/x86 )
++target_include_directories( ${LIB_NAME}${sfx} PRIVATE . .. ../DecoderLib ../EncoderLib ../CommonLib ../CommonLib/x86 )
+ 
+ if( VVENC_ENABLE_THIRDPARTY_JSON )
+   set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVVENC_ENABLE_THIRDPARTY_JSON" )
+   set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVVENC_ENABLE_THIRDPARTY_JSON" )
+-  target_include_directories( ${LIB_NAME} PRIVATE ../../../thirdparty/nlohmann_json/single_include )
++  target_include_directories( ${LIB_NAME}${sfx} PRIVATE ../../../thirdparty/nlohmann_json/single_include )
+ endif()
+ 
+ if( TARGET INTEL_ITT)
+-  target_link_libraries( ${LIB_NAME} PRIVATE INTEL_ITT Threads::Threads apputils )
++  target_link_libraries( ${LIB_NAME}${sfx} PRIVATE INTEL_ITT Threads::Threads apputils )
+ else()
+-  target_link_libraries( ${LIB_NAME} PRIVATE Threads::Threads apputils )
++  target_link_libraries( ${LIB_NAME}${sfx} PRIVATE Threads::Threads apputils )
+ endif()
+ 
+ # set the folder where to place the projects
+-set_target_properties( ${LIB_NAME} PROPERTIES FOLDER lib )
++set_target_properties( ${LIB_NAME}${sfx} PROPERTIES FOLDER lib OUTPUT_NAME ${LIB_NAME})
++endfunction()
++
++add_lib("" "")
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  add_lib("-static" STATIC)
++  install(TARGETS ${LIB_NAME}-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
++endif()
+
+--- cmake/modules/vvencInstall.cmake	2022-02-25 18:28:16.126291400 +0000
++++ cmake/modules/vvencInstall.cmake	2022-02-25 19:01:42.516291400 +0000
+@@ -74,17 +74,20 @@
+ install( FILES cmake/install/vvencConfig.cmake                       DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvenc )
+ install( FILES ${CMAKE_CURRENT_BINARY_DIR}/vvencConfigVersion.cmake  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvenc )
+ 
++function(install_configs CONFIG_POSTFIX)
++  # create target cmake files
++  install( EXPORT vvencTargets-release        NAMESPACE vvenc:: FILE vvencTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS Release        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvenc )
++  install( EXPORT vvencTargets-debug          NAMESPACE vvenc:: FILE vvencTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS Debug          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvenc )
++  install( EXPORT vvencTargets-relwithdebinfo NAMESPACE vvenc:: FILE vvencTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS RelWithDebInfo DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvenc )
++endfunction()
++
+ # set config postfix
+ if( BUILD_SHARED_LIBS )
+-  set( CONFIG_POSTFIX shared )
+-else()
+-  set( CONFIG_POSTFIX static )
++  install_configs(shared)
++endif()
++if( BUILD_STATIC_LIBS )
++  install_configs(static)
+ endif()
+-
+-# create target cmake files
+-install( EXPORT vvencTargets-release        NAMESPACE vvenc:: FILE vvencTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS Release        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvenc )
+-install( EXPORT vvencTargets-debug          NAMESPACE vvenc:: FILE vvencTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS Debug          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvenc )
+-install( EXPORT vvencTargets-relwithdebinfo NAMESPACE vvenc:: FILE vvencTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS RelWithDebInfo DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvenc )
+ 
+ configure_file( pkgconfig/libvvenc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/pkgconfig/libvvenc.pc @ONLY )
+ install( FILES ${CMAKE_CURRENT_BINARY_DIR}/pkgconfig/libvvenc.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig )
+
+--- source/Lib/vvenc/vvencimpl.old	2021-10-08 16:14:22.700000000 +0100
++++ source/Lib/vvenc/vvencimpl.cpp	2021-10-08 16:19:42.480000000 +0100
+@@ -235,7 +235,7 @@
+ #endif
+   }
+ 
+-#if defined( __linux__ )
++#if defined( __linux__ ) && !defined(__ANDROID__)
+   malloc_trim(0);   // free unused heap memory
+ #endif
+ 
+@@ -403,7 +403,7 @@
+     iRet = xCopyAu( *pcAccessUnit, cAu  );
+   }
+ 
+-#if defined( __linux__ )
++#if defined( __linux__ ) && !defined(__ANDROID__)
+   malloc_trim(0);   // free unused heap memory
+ #endif
+

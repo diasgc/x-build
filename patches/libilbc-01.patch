@@ -1,0 +1,26 @@
+--- CMakeLists.bak	2022-01-15 17:00:47.602000000 +0000
++++ CMakeLists.txt	2022-01-15 17:21:32.686452600 +0000
+@@ -305,6 +305,14 @@
+ #############################################################################
+ ## Configure output files
+ #############################################################################
++set(ilbc_static "")
++if (BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++    add_library(ilbc-static STATIC ${ilbc_source_files})
++    set_target_properties(ilbc-static PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 3)
++    set_target_properties(ilbc-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
++    set_target_properties(ilbc-static PROPERTIES OUTPUT_NAME ilbc)
++    set(ilbc_static "ilbc-static")
++endif()
+ 
+ add_library(ilbc ${ilbc_source_files})
+ generate_export_header(ilbc)
+@@ -332,7 +340,7 @@
+         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+ install(FILES CONTRIBUTING.md NEWS.md README.md
+         DESTINATION ${CMAKE_INSTALL_DOCDIR})
+-install(TARGETS ilbc ilbc_test
++install(TARGETS ilbc ${ilbc_static} ilbc_test
+         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})

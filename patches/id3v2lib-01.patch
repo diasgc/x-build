@@ -1,0 +1,52 @@
+--- src/CMakeLists.txt	2022-03-08 18:33:17.552462343 +0000
++++ src/CMakeLists.txt	2022-03-08 18:32:10.015131393 +0000
+@@ -2,9 +2,14 @@
+ 
+ SET(id3v2_src frame.c header.c id3v2lib.c types.c utils.c)
+ SET(id3v2_headers_directory ${id3v2lib_SOURCE_DIR}/include/id3v2lib)
+-
+-ADD_LIBRARY(id3v2 STATIC ${id3v2_src})
+-
+-INSTALL(TARGETS id3v2 DESTINATION lib)
++FUNCTION(ADD_LIB sfx lnk)
++    ADD_LIBRARY(id3v2${sfx} ${lnk} ${id3v2_src})
++    SET_TARGET_PROPERTIES(id3v2${sfx} PROPERTIES OUTPUT_NAME id3v2)
++    INSTALL(TARGETS id3v2${sfx} DESTINATION lib)
++ENDFUNCTION()
++ADD_LIB("" "")
++IF(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++    ADD_LIB("-static" STATIC)
++ENDIF()
+ INSTALL(DIRECTORY ${id3v2_headers_directory} DESTINATION include)
+ INSTALL(FILES ${id3v2lib_SOURCE_DIR}/include/id3v2lib.h DESTINATION include)
+
+--- id3v2lib.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ id3v2lib.pc.in	2022-03-08 18:30:05.288663563 +0000
+@@ -0,0 +1,15 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++exec_prefix=${prefix}
++libdir=${exec_prefix}/lib
++includedir=${prefix}/include
++
++Name: id3v2lib
++Description: id3v2lib is a library written in C to read and edit id3 tags from mp3 files
++URL: https://github.com/larsbs
++Version: @VERSION_MAJOR@.@VERSION_MINOR@
++Requires: 
++Requires.private: 
++Libs: -L${libdir} -lid3v2
++Libs.private: 
++Cflags: -I${includedir}
++  
+
+--- CMakeLists.txt	2022-03-08 19:06:32.179639108 +0000
++++ CMakeLists.txt	2022-03-08 19:03:50.847499953 +0000
+@@ -6,5 +6,6 @@
+ 
+ SET(VERSION_MAJOR 1)
+ SET(VERSION_MINOR 0)
+-
++CONFIGURE_FILE(id3v2lib.pc.in id3v2lib.pc @ONLY)
++INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/id3v2lib.pc DESTINATION lib/pkgconfig)
+ ADD_SUBDIRECTORY(src)
+

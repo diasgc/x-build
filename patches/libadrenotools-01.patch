@@ -1,0 +1,41 @@
+--- CMakeLists.txt	2022-03-08 01:29:25.763025300 +0000
++++ CMakeLists.txt	2022-03-08 01:40:07.553025300 +0000
+@@ -9,16 +9,27 @@
+ add_subdirectory(lib/linkernsbypass)
+ 
+ set(LIB_SOURCES src/bcenabler.cpp
+-                src/driver.cpp
+-                include/adrenotools/bcenabler.h
++                src/driver.cpp)
++set(LIB_HEADERS include/adrenotools/bcenabler.h
+                 include/adrenotools/driver.h
+                 include/adrenotools/priv.h)
+-
+-add_library(adrenotools ${LIB_SOURCES})
+-
+-target_include_directories(adrenotools PUBLIC include)
+-target_include_directories(adrenotools PRIVATE .)
+-target_compile_options(adrenotools PRIVATE -Wall -Wextra)
+-target_link_libraries(adrenotools vulkan android linkernsbypass)
+-
++function(add_lib sfx lnk)
++    add_library(adrenotools${sfx} ${lnk} ${LIB_SOURCES} ${LIB_HEADERS})
++    target_include_directories(adrenotools${sfx} PUBLIC include)
++    target_include_directories(adrenotools${sfx} PRIVATE .)
++    target_compile_options(adrenotools${sfx} PRIVATE -Wall -Wextra)
++    target_link_libraries(adrenotools${sfx} vulkan android linkernsbypass)
++    set_target_properties(adrenotools${sfx} PROPERTIES OUTPUT_NAME adrenotools)
++    install(TARGETS adrenotools${sfx}
++        EXPORT ${PROJECT_NAME}${sfx}-config
++        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
++        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
++        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
++        )
++endfunction()
++add_lib("" "")
++if(BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
++    add_lib("-static" STATIC)
++endif()
+ add_subdirectory(src/hook)
++install(FILES ${LIB_HEADERS} DESTINATION include/adrenotools)
+

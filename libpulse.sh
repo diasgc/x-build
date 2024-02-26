@@ -56,17 +56,6 @@ on_editpack(){
 
 start
 
-# patch 01 src/utils/padsp.c to resolve android stat64 issue
-<<'XB64_PATCH'
-LS0tIHNyYy91dGlscy9wYWRzcC5fCTIwMjItMDEtMzAgMTc6Mzc6MDguMzM5MDAwMDAwICswMDAw
-CisrKyBzcmMvdXRpbHMvcGFkc3AuYwkyMDIyLTAxLTMwIDE3OjQyOjA4Ljk5NDA1ODUwMCArMDAw
-MApAQCAtMjUzNiw3ICsyNTM2LDcgQEAKIH0KICNpZmRlZiBIQVZFX09QRU42NAogI3VuZGVmIHN0
-YXQ2NAotI2lmZGVmIF9fR0xJQkNfXworI2lmIGRlZmluZWQgX19HTElCQ19fIHx8IGRlZmluZWQg
-X19BTkRST0lEX18KIGludCBzdGF0NjQoY29uc3QgY2hhciAqcGF0aG5hbWUsIHN0cnVjdCBzdGF0
-NjQgKmJ1ZikgewogI2Vsc2UKIGludCBzdGF0NjQoY29uc3QgY2hhciAqcGF0aG5hbWUsIHN0cnVj
-dCBzdGF0ICpidWYpIHsK
-XB64_PATCH
-
 # cpu av8 av7 x86 x64
 # NDK -++  .   .   .  clang
 # GNU  .   .   .   .  gcc

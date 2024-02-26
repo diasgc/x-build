@@ -1,0 +1,122 @@
+--- gme/CMakeLists.txt	2022-02-13 08:43:19.931088900 +0000
++++ gme/CMakeLists.txt	2022-02-13 09:25:25.211088900 +0000
+@@ -162,55 +162,64 @@
+ # For the gme_types.h
+ include_directories(${CMAKE_CURRENT_BINARY_DIR})
+ 
+-# Add library to be compiled.
+-add_library(gme ${libgme_SRCS})
+-
+-if(ZLIB_FOUND)
+-    message(" ** ZLib library located, compressed file formats will be supported")
+-    target_compile_definitions(gme PRIVATE -DHAVE_ZLIB_H)
+-    target_include_directories(gme PRIVATE ${ZLIB_INCLUDE_DIRS})
+-    target_link_libraries(gme ${ZLIB_LIBRARIES})
+-    # Is not to be installed though
+-
+-    set(PKG_CONFIG_ZLIB -lz) # evaluated in libgme.pc.in
+-else()
+-    message("ZLib library not found, disabling support for compressed formats such as VGZ")
+-endif()
+-
+-if(USE_GME_SPC)
+-    if(UNRAR_FOUND)
+-        message(" ** unRAR library located, the RSN file format will be supported")
+-        target_compile_definitions(gme PRIVATE -DRARDLL)
+-        target_include_directories(gme PRIVATE ${UNRAR_INCLUDE_DIRS})
+-        target_link_libraries(gme ${UNRAR_LIBRARIES})
++function(fn_addlib lib type)
++    # Add library to be compiled.
++    add_library(${lib} ${type} ${libgme_SRCS})
++    if(ZLIB_FOUND)
++        message(" ** ZLib library located, compressed file formats will be supported")
++        target_compile_definitions(${lib} PRIVATE -DHAVE_ZLIB_H)
++        target_include_directories(${lib} PRIVATE ${ZLIB_INCLUDE_DIRS})
++        target_link_libraries(${lib} ${ZLIB_LIBRARIES})
+         # Is not to be installed though
+ 
+-        set(PKG_CONFIG_UNRAR -lunrar) # evaluated in libgme.pc.in
++        set(PKG_CONFIG_ZLIB -lz) # evaluated in libgme.pc.in
+     else()
+-        message("unRAR library not found, disabling support for the RSN file format")
++        message("ZLib library not found, disabling support for compressed formats such as VGZ")
+     endif()
+-endif()
+-# The version is the release.  The "soversion" is the API version.  As long
+-# as only build fixes are performed (i.e. no backwards-incompatible changes
+-# to the API), the SOVERSION should be the same even when bumping up VERSION.
+-# The way gme.h is designed, SOVERSION should very rarely be bumped, if ever.
+-# Hopefully the API can stay compatible with old versions.
+-set_target_properties(gme
+-    PROPERTIES VERSION ${GME_VERSION}
+-               SOVERSION 1)
+-
+-# macOS framework build
+-if(BUILD_FRAMEWORK)
+-    set_target_properties(gme
+-        PROPERTIES FRAMEWORK TRUE
+-                   FRAMEWORK_VERSION A
+-                   MACOSX_FRAMEWORK_IDENTIFIER net.mpyne.gme
+-                   VERSION ${GME_VERSION}
+-                   SOVERSION 0
+-                   PUBLIC_HEADER "${EXPORTED_HEADERS}")
++
++    if(USE_GME_SPC)
++        if(UNRAR_FOUND)
++            message(" ** unRAR library located, the RSN file format will be supported")
++            target_compile_definitions(${lib} PRIVATE -DRARDLL)
++            target_include_directories(${lib} PRIVATE ${UNRAR_INCLUDE_DIRS})
++            target_link_libraries(${lib} ${UNRAR_LIBRARIES})
++            # Is not to be installed though
++
++            set(PKG_CONFIG_UNRAR -lunrar) # evaluated in libgme.pc.in
++        else()
++            message("unRAR library not found, disabling support for the RSN file format")
++        endif()
++    endif()
++    # The version is the release.  The "soversion" is the API version.  As long
++    # as only build fixes are performed (i.e. no backwards-incompatible changes
++    # to the API), the SOVERSION should be the same even when bumping up VERSION.
++    # The way gme.h is designed, SOVERSION should very rarely be bumped, if ever.
++    # Hopefully the API can stay compatible with old versions.
++    set_target_properties(${lib}
++        PROPERTIES VERSION ${GME_VERSION}
++                SOVERSION 1
++                OUTPUT_NAME gme)
++
++    # macOS framework build
++    if(BUILD_FRAMEWORK)
++        set_target_properties(${lib}
++            PROPERTIES FRAMEWORK TRUE
++                    FRAMEWORK_VERSION A
++                    MACOSX_FRAMEWORK_IDENTIFIER net.mpyne.gme
++                    VERSION ${GME_VERSION}
++                    SOVERSION 0
++                    PUBLIC_HEADER "${EXPORTED_HEADERS}")
++    endif()
++endfunction()
++
++set(targets gme)
++fn_addlib(gme "")
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++    fn_addlib(gme-static STATIC)
++    list(APPEND targets gme-static)
+ endif()
+ 
+-install(TARGETS gme LIBRARY DESTINATION lib${LIB_SUFFIX}
++install(TARGETS ${targets} LIBRARY DESTINATION lib${LIB_SUFFIX}
+                     RUNTIME DESTINATION bin # DLL platforms
+                     ARCHIVE DESTINATION lib # DLL platforms
+                     FRAMEWORK DESTINATION /Library/Frameworks) # macOS framework
+
+--- CMakeLists.txt	2022-02-13 08:40:44.991088900 +0000
++++ CMakeLists.txt	2022-02-13 08:55:27.441088900 +0000
+@@ -62,7 +62,7 @@
+     SET(USE_GME_NSF 1 CACHE BOOL "Enable NES NSF music emulation" FORCE)
+ endif()
+ 
+-option(BUILD_SHARED_LIBS "Build shared library (set to OFF for static library)" ON)
++option(BUILD_STATIC_LIBS "Build static library" ON)
+ 
+ option(ENABLE_UBSAN "Enable Undefined Behavior Sanitizer error-checking" ON)
+ 

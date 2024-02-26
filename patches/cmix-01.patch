@@ -1,0 +1,165 @@
+--- CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
++++ CMakeLists.txt	2022-03-29 12:39:22.993614300 +0100
+@@ -0,0 +1,144 @@
++cmake_minimum_required(VERSION 3.5)
++
++project(cmix 
++    LANGUAGES CXX 
++    VERSION 19
++    DESCRIPTION "lossless data compression aimed at optimizing compression ratio at the cost of high CPU/memory usage"
++    HOMEPAGE_URL "http://www.byronknoll.com/cmix.html"
++)
++
++option(BUILD_STATIC_LIBS "Build static libs" ON)
++option(BUILD_SHARED_LIBS "Build shared libs" ON)
++option(BUILD_EXECUTABLES "Build executables" ON)
++option(INSTALL_DOCS      "Install Manpages"  ON)
++
++include(GNUInstallDirs)
++message(STATUS "Cmix version ${PROJECT_VERSION}
++    Build static libs ${BUILD_STATIC_LIBS}
++    Build shared libs ${BUILD_SHARED_LIBS}
++    Build executables ${BUILD_EXECUTABLES}
++    Install manuals   ${INSTALL_DOCS}"
++)
++
++set(CMAKE_CXX_STANDARD 11)
++set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
++
++set(cmix_hdrs
++    src/coder/decoder.h
++    src/coder/encoder.h
++    src/context-manager.h
++    src/contexts/bit-context.h
++    src/contexts/bracket-context.h
++    src/contexts/combined-context.h
++    src/contexts/context-hash.h
++    src/contexts/context.h
++    src/contexts/indirect-hash.h
++    src/contexts/interval-hash.h
++    src/contexts/interval.h
++    src/contexts/sparse.h
++    src/mixer/byte-mixer.h
++    src/mixer/lstm-layer.h
++    src/mixer/lstm.h
++    src/mixer/mixer-input.h
++    src/mixer/mixer.h
++    src/mixer/sigmoid.h
++    src/mixer/sse.h
++    src/models/bracket.h
++    src/models/byte-model.h
++    src/models/direct-hash.h
++    src/models/direct.h
++    src/models/indirect.h
++    src/models/match.h
++    src/models/model.h
++    src/models/paq8.h
++    src/models/paq8hp.h
++    src/models/ppmd.h
++    src/predictor.h
++    src/preprocess/dictionary.h
++    src/preprocess/preprocessor.h
++    src/states/nonstationary.h
++    src/states/run-map.h
++    src/states/state.h
++)
++set(cmix_src
++    src/coder/decoder.cpp
++    src/coder/encoder.cpp
++    src/context-manager.cpp
++    src/contexts/bit-context.cpp
++    src/contexts/bracket-context.cpp
++    src/contexts/combined-context.cpp
++    src/contexts/context-hash.cpp
++    src/contexts/indirect-hash.cpp
++    src/contexts/interval-hash.cpp
++    src/contexts/interval.cpp
++    src/contexts/sparse.cpp
++    src/mixer/byte-mixer.cpp
++    src/mixer/lstm-layer.cpp
++    src/mixer/lstm.cpp
++    src/mixer/mixer-input.cpp
++    src/mixer/mixer.cpp
++    src/mixer/sigmoid.cpp
++    src/mixer/sse.cpp
++    src/models/bracket.cpp
++    src/models/byte-model.cpp
++    src/models/direct-hash.cpp
++    src/models/direct.cpp
++    src/models/indirect.cpp
++    src/models/match.cpp
++    src/models/paq8.cpp
++    src/models/paq8hp.cpp
++    src/models/ppmd.cpp
++    src/predictor.cpp
++    src/preprocess/dictionary.cpp
++    src/preprocess/preprocessor.cpp
++    src/runner.cpp
++    src/states/nonstationary.cpp
++    src/states/run-map.cpp
++)
++
++# Libraries
++add_library(cmix_o OBJECT ${cmix_src})
++target_compile_options(cmix_o PUBLIC "-Wno-macro-redefined")
++
++macro(add_lib sfx lnk)
++    add_library(cmix${sfx} ${lnk} $<TARGET_OBJECTS:cmix_o>)
++    set_target_properties(cmix${sfx} PROPERTIES
++        VERSION ${PROJECT_VERSION}
++        SOVERSION ${PROJECT_VERSION_MAJOR}
++        OUTPUT_NAME cmix
++    )
++    install(TARGETS cmix${sfx}
++        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
++    )
++endmacro()
++
++add_lib("" "")
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++    add_lib(-static STATIC)
++endif()
++
++# Executables
++if(BUILD_EXECUTABLES)
++    add_executable(enwik9-preproc 
++        src/enwik9-preproc/article_reorder.h
++        src/enwik9-preproc/main.cpp
++        src/enwik9-preproc/misc.h
++        src/enwik9-preproc/phda9_preprocess.h
++    )
++    target_link_libraries(enwik9-preproc cmix)
++    install(TARGETS enwik9-preproc
++        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++    )
++endif()
++
++# PkgConfig file
++configure_file(cmix.pc.in cmix.pc @ONLY)
++install(FILES ${CMAKE_BINARY_DIR}/cmix.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
++
++# Headers
++install(FILES ${cmix_hdrs} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cmix)
++
++# Licence, Docs and Manuals
++install(FILES COPYING README DESTINATION ${CMAKE_INSTALL_DOCDIR})
+--- cmix.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ cmix.pc.in	2022-03-29 12:31:24.153614300 +0100
+@@ -0,0 +1,14 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++exec_prefix=${prefix}
++libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
++includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
++
++Name: @PROJECT_NAME@
++Description: @CMAKE_PROJECT_DESCRIPTION@
++URL: @CMAKE_PROJECT_HOMEPAGE_URL@
++Version: @PROJECT_VERSION@
++Requires: 
++Requires.private: 
++Libs: -L${libdir} -l@PROJECT_NAME@
++Libs.private: 
++Cflags: -I${includedir}
+

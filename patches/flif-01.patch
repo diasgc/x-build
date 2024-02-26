@@ -1,0 +1,38 @@
+--- CMakeLists.txt	2021-10-09 14:39:20.783000000 +0100
++++ CMakeLists.txt	2021-10-09 14:41:14.801780300 +0100
+@@ -5,6 +5,7 @@
+ include(FindPkgConfig)
+ find_package(PNG REQUIRED)
+ include_directories(${PNG_INCLUDE_DIRS})
++option(USE_SDL "Use SDL" OFF)
+ option(BUILD_SHARED_LIBS "Build shared FLIF encoder/decoder libraries" ON)
+ option(BUILD_STATIC_LIBS "Build static FLIF encoder/decoder libraries" ON)
+ 
+@@ -12,6 +13,7 @@
+ # find SDL2
+ 
+ find_package(PkgConfig QUIET)
++if (USE_SDL)
+ pkg_check_modules(PKG_SDL2 QUIET sdl2)
+ 
+ find_path(SDL2_INCLUDE_DIR
+@@ -38,6 +40,8 @@
+   PATH_SUFFIXES x64 x86
+ )
+ 
++endif(USE_SDL)
++
+ include(FindPackageHandleStandardArgs)
+ find_package_handle_standard_args(SDL2
+                                   REQUIRED_VARS SDL2_INCLUDE_DIR SDL2_LIBRARY SDL2MAIN_LIBRARY)
+--- image/crc32k.hpp	2021-10-09 15:35:37.121780300 +0100
++++ image/crc32k.hpp	2021-10-09 20:01:28.768086800 +0100
+@@ -3,7 +3,7 @@
+ #include <stdlib.h>
+ 
+ // define endianess and some integer data types
+-#if defined(_MSC_VER) || defined(__MINGW32__)
++#if defined(_MSC_VER) || defined(__MINGW32__) && defined(__amd64__)
+   typedef unsigned __int8  uint8_t;
+   typedef unsigned __int16 uint16_t;
+   typedef unsigned __int32 uint32_t;

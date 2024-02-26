@@ -1,0 +1,147 @@
+--- Project/CMake/CMakeLists.txt	2022-02-03 21:15:47.159000000 +0000
++++ Project/CMake/CMakeLists.txt	2022-02-03 21:29:26.012474400 +0000
+@@ -104,60 +104,73 @@
+   ${ZenLib_SOURCES_PATH}/ZenLib/Format/Http/Http_Request.cpp
+   ${ZenLib_SOURCES_PATH}/ZenLib/Format/Http/Http_Utils.cpp
+   )
+-
+-add_library(zen ${ZenLib_SRCS} ${ZenLib_HDRS} ${ZenLib_format_html_HDRS} ${ZenLib_format_http_HDRS})
+-if(ENABLE_UNICODE)
+-  set(ZenLib_Unicode "yes")
+-  set(ZenLib_CXXFLAGS -DUNICODE) # For pkg-config template
+-  target_compile_definitions(zen PUBLIC UNICODE _UNICODE)
+-else()
+-  set(ZenLib_Unicode "no")
+-endif()
+-
+-FIND_PACKAGE(Threads)
+-if(CMAKE_THREAD_LIBS_INIT)
+-  target_link_libraries(zen PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+-endif()
+-
+-if(LARGE_FILES)
+-  include(TestLargeFiles)
+-
+-  test_large_files(_LARGEFILES)
+-  target_compile_definitions(zen PUBLIC ${LARGE_FILES_DEFINITIONS})
+-endif()
+-
+-include(CheckTypeSize)
+-check_type_size(size_t SIZE_T_SIZE)
+-check_type_size(long LONG_SIZE)
+-if((LONG_SIZE GREATER 4) AND (SIZE_T_SIZE EQUAL LONG_SIZE))
+-  target_compile_definitions(zen PUBLIC SIZE_T_IS_LONG)
+-endif()
+-
+-include(CheckSymbolExists)
+-check_symbol_exists(gmtime_r time.h HAVE_GMTIME_R)
+-if(HAVE_GMTIME_R)
+-  target_compile_definitions(zen PUBLIC HAVE_GMTIME_R)
+-endif()
+-check_symbol_exists(localtime_r time.h HAVE_LOCALTIME_R)
+-if(HAVE_LOCALTIME_R)
+-  target_compile_definitions(zen PUBLIC HAVE_LOCALTIME_R)
+-endif()
+-
+-target_include_directories(zen PUBLIC
+-  $<BUILD_INTERFACE:${ZenLib_SOURCES_PATH}>
+-  $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>)
+-
+-set_target_properties(zen PROPERTIES
+-  VERSION ${ZenLib_VERSION}
+-  SOVERSION ${ZenLib_MAJOR_VERSION}
+-  PUBLIC_HEADER "${ZenLib_HDRS}"
+-  )
+-
+-install(TARGETS zen EXPORT zen-export
+-  PUBLIC_HEADER DESTINATION ${INCLUDE_INSTALL_DIR}/ZenLib
+-  RUNTIME DESTINATION ${BIN_INSTALL_DIR}
+-  ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
+-  LIBRARY DESTINATION ${LIB_INSTALL_DIR})
++set(libs zen)
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  list(APPEND libs zen-static)
++endif()
++foreach(zenlib ${libs})
++  if(${zenlib} MATCHES "static$")
++    set(libtype STATIC)
++    set(libaccs PRIVATE)
++  else()
++    set(libtype "")
++    set(libaccs PUBLIC)
++  endif()
++  add_library(${zenlib} ${libtype} ${ZenLib_SRCS} ${ZenLib_HDRS} ${ZenLib_format_html_HDRS} ${ZenLib_format_http_HDRS})
++  if(ENABLE_UNICODE)
++    set(ZenLib_Unicode "yes")
++    set(ZenLib_CXXFLAGS -DUNICODE) # For pkg-config template
++    target_compile_definitions(${zenlib} ${libaccs} UNICODE _UNICODE)
++  else()
++    set(ZenLib_Unicode "no")
++  endif()
++
++  FIND_PACKAGE(Threads)
++  if(CMAKE_THREAD_LIBS_INIT)
++    target_link_libraries(${zenlib} ${libaccs} ${CMAKE_THREAD_LIBS_INIT})
++  endif()
++
++  if(LARGE_FILES)
++    include(TestLargeFiles)
++
++    test_large_files(_LARGEFILES)
++    target_compile_definitions(${zenlib} ${libaccs} ${LARGE_FILES_DEFINITIONS})
++  endif()
++
++  include(CheckTypeSize)
++  check_type_size(size_t SIZE_T_SIZE)
++  check_type_size(long LONG_SIZE)
++  if((LONG_SIZE GREATER 4) AND (SIZE_T_SIZE EQUAL LONG_SIZE))
++    target_compile_definitions(${zenlib} ${libaccs} SIZE_T_IS_LONG)
++  endif()
++
++  include(CheckSymbolExists)
++  check_symbol_exists(gmtime_r time.h HAVE_GMTIME_R)
++  if(HAVE_GMTIME_R)
++    target_compile_definitions(${zenlib} ${libaccs} HAVE_GMTIME_R)
++  endif()
++  check_symbol_exists(localtime_r time.h HAVE_LOCALTIME_R)
++  if(HAVE_LOCALTIME_R)
++    target_compile_definitions(${zenlib} PUBLIC HAVE_LOCALTIME_R)
++  endif()
++
++  target_include_directories(${zenlib} ${libaccs}
++    $<BUILD_INTERFACE:${ZenLib_SOURCES_PATH}>
++    $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>)
++
++  set_target_properties(${zenlib} PROPERTIES
++    VERSION ${ZenLib_VERSION}
++    SOVERSION ${ZenLib_MAJOR_VERSION}
++    PUBLIC_HEADER "${ZenLib_HDRS}"
++    OUTPUT_NAME zen
++    )
++
++  install(TARGETS ${zenlib} EXPORT zen-export
++    PUBLIC_HEADER DESTINATION ${INCLUDE_INSTALL_DIR}/ZenLib
++    RUNTIME DESTINATION ${BIN_INSTALL_DIR}
++    ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
++    LIBRARY DESTINATION ${LIB_INSTALL_DIR})
++endforeach()
+ 
+ install(FILES ${ZenLib_format_html_HDRS} DESTINATION ${INCLUDE_INSTALL_DIR}/ZenLib/Format/Html)
+ install(FILES ${ZenLib_format_http_HDRS} DESTINATION ${INCLUDE_INSTALL_DIR}/ZenLib/Format/Http)
+
+--- Project/CMake/libzen.pc.in	2022-02-03 21:24:23.547000000 +0000
++++ Project/CMake/libzen.pc.in	2022-02-03 21:25:14.942474400 +0000
+@@ -1,9 +1,9 @@
+ prefix=@CMAKE_INSTALL_PREFIX@
+ exec_prefix=${prefix}
+-libdir=@LIB_INSTALL_DIR@
+-includedir=@INCLUDE_INSTALL_DIR@
++libdir=${prefix}/lib
++includedir=${prefix}/include
+ Unicode=@ZenLib_Unicode@
+-Libs_Static=@LIB_INSTALL_DIR@/libzen.a -lpthread
++Libs_Static=${prefix}/lib/libzen.a -lpthread
+ 
+ Name: libzen
+ Version: @ZenLib_VERSION@
+

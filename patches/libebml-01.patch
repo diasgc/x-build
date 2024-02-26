@@ -1,0 +1,82 @@
+--- CMakeLists.txt	2022-03-27 17:40:58.732843600 +0100
++++ CMakeLists.txt	2022-03-27 19:23:46.892843600 +0100
+@@ -5,6 +5,7 @@
+ option(DISABLE_PKGCONFIG "Disable PkgConfig module generation" OFF)
+ option(DISABLE_CMAKE_CONFIG "Disable CMake package config module generation" OFF)
+ option(ENABLE_WIN32_IO "Build the Windows I/O helper class" OFF)
++option(BUILD_STATIC_LIBS "Build static libs" ON)
+ 
+ include(GNUInstallDirs)
+ 
+@@ -71,48 +72,55 @@
+   ebml/StdIOCallback.h)
+ 
+ set(libebml_C_PUBLIC_HEADERS ebml/c/libebml_t.h)
++include(CheckIncludeFile)
++check_include_file(winapifamily.h HAVE_WINAPIFAMILY_H)
+ 
+-add_library(ebml ${libebml_SOURCES} ${libebml_PUBLIC_HEADERS} ${libebml_C_PUBLIC_HEADERS})
+-if(WIN32)
+-  include(CheckIncludeFile)
+-  check_include_file(winapifamily.h HAVE_WINAPIFAMILY_H)
++function(add_lib sfx lnk )
++add_library(ebml${sfx} ${lnk} ${libebml_SOURCES} ${libebml_PUBLIC_HEADERS} ${libebml_C_PUBLIC_HEADERS})
++if(WIN32)  
+   if(HAVE_WINAPIFAMILY_H)
+-    target_compile_definitions(ebml PUBLIC HAVE_WINAPIFAMILY_H)
++    target_compile_definitions(ebml${sfx} PUBLIC HAVE_WINAPIFAMILY_H)
+   endif()
+ endif()
+-set_target_properties(ebml PROPERTIES
++set_target_properties(ebml${sfx} PROPERTIES
+   VERSION 5.0.0
+   SOVERSION 5
+   CXX_VISIBILITY_PRESET hidden
+   VISIBILITY_INLINES_HIDDEN ON
++  OUTPUT_NAME ebml
+ )
+-target_include_directories(ebml
++target_include_directories(ebml${sfx}
+   PRIVATE
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+   PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+ if(MSVC)
+-  target_compile_definitions(ebml PRIVATE _CRT_SECURE_NO_WARNINGS)
++  target_compile_definitions(ebml${sfx} PRIVATE _CRT_SECURE_NO_WARNINGS)
+ endif()
+ 
+ include(GenerateExportHeader)
+-generate_export_header(ebml EXPORT_MACRO_NAME EBML_DLL_API)
+-target_sources(ebml
++generate_export_header(ebml${sfx} EXPORT_MACRO_NAME EBML_DLL_API)
++target_sources(ebml${sfx}
+   PRIVATE
+     ${CMAKE_CURRENT_BINARY_DIR}/ebml_export.h
+ )
+-
+-if(NOT BUILD_SHARED_LIBS)
+-  target_compile_definitions(ebml PUBLIC EBML_STATIC_DEFINE)
++if(NOT BUILD_SHARED_LIBS OR "${sfx}" STREQUAL "STATIC")
++  target_compile_definitions(ebml${sfx} PUBLIC EBML_STATIC_DEFINE)
+ endif()
+-
+-install(TARGETS ebml
++install(TARGETS ebml${sfx}
+   EXPORT EBMLTargets
+   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+ 
++endfunction()
++
++add_lib("" "")
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  add_lib(-static STATIC)
++endif()
++
+ install(FILES ${libebml_PUBLIC_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ebml)
+ install(FILES ${libebml_C_PUBLIC_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ebml/c)
+ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ebml_export.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ebml)
+

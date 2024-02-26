@@ -1,0 +1,39 @@
+--- CMakeLists.txt	2021-10-10 18:24:33.433314400 +0100
++++ CMakeLists.txt	2021-10-10 18:25:13.623314400 +0100
+@@ -16,7 +16,7 @@
+ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+   set(CMAKE_BUILD_TYPE "Release")
+ endif()
+-
++option(BUILD_STATIC_LIBS "build static libs" ON)
+ option(BUILD_SHARED_LIBS "build shared libraries instead of static libraries"
+        ON)
+ 
+@@ -81,13 +81,25 @@
+ set(PKG_EXTRA_LIBS "${PKG_EXTRA_LIBS} ${OpenMP_C_FLAGS}")
+ endif()
+ 
+-
++set(targets vidstab)
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++add_library (vidstab_static STATIC ${SOURCES})
++set_target_properties(vidstab_static PROPERTIES OUTPUT_NAME vidstab)
++target_link_libraries(vidstab_static m)
++list(APPEND targets vidstab_static)
++if(ORC_FOUND)
++target_link_libraries(vidstab_static ${ORC_LIBRARIES})
++endif()
++if(USE_OMP AND OPENMP_FOUND)
++target_link_libraries(vidstab_static OpenMP::OpenMP_C)
++endif()
++endif()
+ #if(!NOHEADERS)
+ FILE(GLOB HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
+ INSTALL(FILES ${HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vid.stab)
+ #endif()
+ 
+-INSTALL(TARGETS vidstab
++INSTALL(TARGETS ${targets}
+   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

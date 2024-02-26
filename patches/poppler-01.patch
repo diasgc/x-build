@@ -1,0 +1,47 @@
+--- CMakeLists.txt	2022-02-26 21:27:19.916150600 +0000
++++ CMakeLists.txt	2022-02-26 22:29:53.276150600 +0000
+@@ -586,7 +586,13 @@
+ endif()
+ target_link_libraries(poppler LINK_PRIVATE ${poppler_LIBS})
+ install(TARGETS poppler RUNTIME DESTINATION bin LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+-
++if(BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
++  add_library(poppler-static STATIC ${poppler_SRCS})
++  #generate_export_header(poppler-static BASE_NAME poppler-private EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/poppler_private_export.h")
++  set_target_properties(poppler-static PROPERTIES VERSION 118.0.0 SOVERSION 118 OUTPUT_NAME poppler)
++  target_link_libraries(poppler-static LINK_PRIVATE ${poppler_LIBS})
++  install(TARGETS poppler-static RUNTIME DESTINATION bin LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
++endif()
+ if(ENABLE_UNSTABLE_API_ABI_HEADERS)
+   install(FILES
+     poppler/Annot.h
+
+--- cpp/CMakeLists.txt	2022-02-26 23:11:01.156150600 +0000
++++ cpp/CMakeLists.txt	2022-02-26 23:10:58.636150600 +0000
+@@ -33,7 +33,12 @@
+ endif()
+ target_link_libraries(poppler-cpp poppler ${ICONV_LIBRARIES})
+ install(TARGETS poppler-cpp RUNTIME DESTINATION bin LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+-
++if(BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
++  add_library(poppler-cpp-static ${poppler_cpp_SRCS})
++  set_target_properties(poppler-cpp-static PROPERTIES VERSION 0.9.0 SOVERSION 0 OUTPUT_NAME poppler-cpp)
++  target_link_libraries(poppler-cpp-static poppler ${ICONV_LIBRARIES})
++  install(TARGETS poppler-cpp-static RUNTIME DESTINATION bin LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
++endif()
+ install(FILES
+   poppler-destination.h
+   poppler-document.h
+
+--- utils/CMakeLists.txt	2022-02-26 22:05:19.256150600 +0000
++++ utils/CMakeLists.txt	2022-02-26 22:05:06.656150600 +0000
+@@ -12,6 +12,8 @@
+   pdftoppm.cc
+   sanitychecks.cc
+ )
++
++include_directories(${CMAKE_INSTALL_PREFIX}/include)
+ add_executable(pdftoppm ${pdftoppm_SOURCES})
+ target_link_libraries(pdftoppm ${common_libs})
+ if(LCMS2_FOUND)
+

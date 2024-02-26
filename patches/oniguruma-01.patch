@@ -1,0 +1,34 @@
+--- CMakeLists.txt	2022-01-30 22:29:51.002000000 +0000
++++ CMakeLists.txt	2022-01-30 22:33:27.381951000 +0000
+@@ -72,6 +72,7 @@
+   add_definitions("-DUSE_BINARY_COMPATIBLE_POSIX_API")
+ endif()
+ 
++set(target_libs onig)
+ add_library(onig ${_SRCS})
+ target_include_directories(onig PUBLIC
+   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+@@ -93,6 +94,14 @@
+       VERSION "${ONIG_SOVERSION}.${LTAGE}.${LTREVISION}")
+ endif()
+ 
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  add_library(onig-static STATIC ${_SRCS})
++  target_include_directories(onig-static PUBLIC
++    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
++    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
++  set_target_properties(onig-static PROPERTIES OUTPUT_NAME onig)
++  list(APPEND target_libs onig-static)
++endif()
+ if(MSVC)
+   target_compile_options(onig PRIVATE
+ 	#/W4
+@@ -165,7 +174,7 @@
+ #   * header location after install: <prefix>/include/
+ #   * headers can be included by C code `#include <oniguruma.h>`
+ install(
+-    TARGETS onig
++    TARGETS ${target_libs}
+     EXPORT "${TARGETS_EXPORT_NAME}"
+     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"

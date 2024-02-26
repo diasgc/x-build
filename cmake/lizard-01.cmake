@@ -1,8 +1,17 @@
 cmake_minimum_required(VERSION 3.5)
 
+file(READ lib/lizard_compress.h VERSION_F)
+string(REGEX MATCH "LIZARD_VERSION_MAJOR[ ]+([0-9]*)" _ ${VERSION_F})
+set(PROJECT_VERSION_MAJOR ${CMAKE_MATCH_1})
+string(REGEX MATCH "LIZARD_VERSION_MINOR[ ]+([0-9]*)" _ ${VERSION_F})
+set(PROJECT_VERSION_MINOR ${CMAKE_MATCH_1})
+string(REGEX MATCH "LIZARD_VERSION_RELEASE[ ]+([0-9]*)" _ ${VERSION_F})
+set(PROJECT_VERSION_PATCH ${CMAKE_MATCH_1})
+set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+
 project(lizard 
     LANGUAGES C
-    VERSION 2.0.0
+    VERSION ${PROJECT_VERSION}
     DESCRIPTION "Lizard compression library"
     HOMEPAGE_URL "https://github.com/inikep/lizard.git"
 )
@@ -17,10 +26,17 @@ else()
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_definitions(-std=gnu99 -Wall -DLIZARD_VERSION=\"${PROJECT_VERSION}\")
     set(GNU_COMPATIBLE_COMPILER 1)
 endif()
 
-set(lizard_LIC LICENCE)
+pkg_check_modules(ZSTD libzstd)
+if(ZSTD_FOUND)
+    list(APPEND lizard_LIBS ${ZSTD__LIBRARIES})
+    link_directories(${ZSTD_LIBRARY_DIRS})
+endif()
+
+set(lizard_LIC lib/LICENSE)
 file(GLOB lizard_DOC doc/*.md)
 file(GLOB lizard_H lib/*.h lib/entropy/*.h lib/xxhash/*.h)
 file(GLOB lizard_C lib/*.c lib/entropy/*.c lib/xxhash/*.c)
@@ -50,13 +66,14 @@ if(NOT WFLAGS STREQUAL "")
 endif()
 
 macro(add_lib sfx lnk)
-    add_library(liblizard${sfx} ${lnk} $<TARGET_OBJECTS:liblizard_obj>)
-    set_target_properties(liblizard${sfx} PROPERTIES
+    add_library(lizard${sfx} ${lnk} $<TARGET_OBJECTS:liblizard_obj>)
+    set_target_properties(lizard${sfx} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
-        OUTPUT_NAME liblizard
+        OUTPUT_NAME lizard
+        LINK_FLAGS_RELEASE -s
     )
-    install(TARGETS liblizard${sfx}
+    install(TARGETS lizard${sfx}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -70,9 +87,14 @@ endif()
 
 # Executables
 if(BUILD_EXECUTABLES)
-    add_executable(lizard ${lizard_CLI} ${lizard_H})
-    target_link_libraries(lizard liblizard)
-    install(TARGETS lizard RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    set(lizard_LIC ${lizard_LIC} programs/COPYING)
+    add_executable(lizard-app ${lizard_CLI} ${lizard_H})
+    target_link_libraries(lizard-app lizard)
+    set_target_properties(lizard-app PROPERTIES
+        LINK_FLAGS_RELEASE -s
+        OUTPUT_NAME lizard
+    )
+    install(TARGETS lizard-app RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 # PkgConfig file
@@ -81,6 +103,7 @@ set(LIBDIR "\${prefix}/lib")
 set(INCLUDEDIR "\${prefix}/include")
 set(VERSION ${PROJECT_VERSION})
 configure_file(lib/liblizard.pc.in liblizard.pc @ONLY)
+
 install(FILES ${CMAKE_BINARY_DIR}/liblizard.pc
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
@@ -91,12 +114,12 @@ install(FILES lib/lizard_compress.h lib/lizard_common.h lib/lizard_frame.h
 )
 
 # Licence, Docs and Manuals
-install(FILES ${${PROJECT_NAME}_lic} DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES ${lizard_LIC} DESTINATION ${CMAKE_INSTALL_DOCDIR})
 if(INSTALL_DOCS)
-    if(NOT ${PROJECT_NAME}_doc STREQUAL "")
-        install(FILES ${${PROJECT_NAME}_doc} DESTINATION ${CMAKE_INSTALL_DOCDIR})
+    if(NOT lizard_DOC STREQUAL "")
+        install(FILES ${lizard_DOC} DESTINATION ${CMAKE_INSTALL_DOCDIR})
     endif()
-    if(NOT ${PROJECT_NAME}_man STREQUAL "")
-        install(FILES ${${PROJECT_NAME}_man} DESTINATION ${CMAKE_INSTALL_MANDIR})
+    if(NOT ${lizard_MAN} STREQUAL "")
+        install(FILES ${lizard_MAN} DESTINATION ${CMAKE_INSTALL_MANDIR})
     endif()
 endif()

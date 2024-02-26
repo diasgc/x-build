@@ -1,0 +1,73 @@
+--- CMakeLists.txt	2022-03-27 18:31:13.572843600 +0100
++++ CMakeLists.txt	2022-03-27 19:31:26.472843600 +0100
+@@ -4,6 +4,7 @@
+ 
+ option(DISABLE_PKGCONFIG "Disable PkgConfig module generation" OFF)
+ option(DISABLE_CMAKE_CONFIG "Disable CMake package config module generation" OFF)
++option(BUILD_STATIC_LIBS "Build static libs" ON)
+ 
+ find_package(EBML 1.4.2 REQUIRED)
+ 
+@@ -61,41 +62,48 @@
+ set (libmatroska_C_PUBLIC_HEADERS
+   matroska/c/libmatroska.h
+   matroska/c/libmatroska_t.h)
+-
+-add_library(matroska ${libmatroska_SOURCES} ${libmatroska_PUBLIC_HEADERS} ${libmatroska_C_PUBLIC_HEADERS})
+-target_link_libraries(matroska PUBLIC EBML::ebml)
+-set_target_properties(matroska PROPERTIES
++include(GenerateExportHeader)
++function(add_lib sfx lnk)
++add_library(matroska${sfx} ${lnk} ${libmatroska_SOURCES} ${libmatroska_PUBLIC_HEADERS} ${libmatroska_C_PUBLIC_HEADERS})
++target_link_libraries(matroska${sfx} PUBLIC EBML::ebml)
++set_target_properties(matroska${sfx} PROPERTIES
+   VERSION 7.0.0
+   SOVERSION 7
+   CXX_VISIBILITY_PRESET hidden
+   VISIBILITY_INLINES_HIDDEN ON
++  OUTPUT_NAME matroska
+ )
+-target_include_directories(matroska
++target_include_directories(matroska${sfx}
+   PRIVATE
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+ 	PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+ if(MSVC)
+-  target_compile_definitions(matroska PRIVATE _CRT_SECURE_NO_WARNINGS)
++  target_compile_definitions(matroska${sfx} PRIVATE _CRT_SECURE_NO_WARNINGS)
+ endif()
+ 
+-include(GenerateExportHeader)
+-generate_export_header(matroska EXPORT_MACRO_NAME MATROSKA_DLL_API)
+-target_sources(matroska
++generate_export_header(matroska${sfx} EXPORT_MACRO_NAME MATROSKA_DLL_API)
++target_sources(matroska${sfx}
+   PRIVATE
+     ${CMAKE_CURRENT_BINARY_DIR}/matroska_export.h
+ )
+ 
+-if(NOT BUILD_SHARED_LIBS)
+-  target_compile_definitions(matroska PUBLIC MATROSKA_STATIC_DEFINE)
++if(NOT BUILD_SHARED_LIBS OR "${sfx}" STREQUAL "STATIC")
++  target_compile_definitions(matroska${sfx} PUBLIC MATROSKA_STATIC_DEFINE)
+ endif()
+ 
+-install(TARGETS matroska
+-  EXPORT MatroskaTargets
++install(TARGETS matroska${sfx}
++  EXPORT MatroskaTargets${sfx}
+   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
++endfunction()
++
++add_lib("" "")
++if(BUILD_STATIC_LIBS OR NOT BUILD_SHARED_LIBS)
++  add_lib(-static STATIC)
++endif()
+ 
+ install(FILES ${libmatroska_PUBLIC_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/matroska)
+ install(FILES ${libmatroska_C_PUBLIC_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/matroska/c)
+

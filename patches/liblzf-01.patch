@@ -1,0 +1,94 @@
+--- CMakeLists.txt	2022-01-18 17:29:01.776799500 +0000
++++ CMakeLists.txt	2022-01-18 17:27:42.326799500 +0000
+@@ -0,0 +1,55 @@
++cmake_minimum_required(VERSION 2.8.12)
++
++project(lzf C)
++
++option(BUILD_STATIC_LIBS "Build static libs" ON)
++option(BUILD_UTILITIES "Build utilities" OFF)
++option(INSTALL_DOCS "Install docs" ON)
++
++set(LIBMAJOR 3)
++set(LIBMINOR 6)
++set(LIBPOINT 0)
++set(LIBVER "${LIBMAJOR}.${LIBMINOR}.${LIBPOINT}")
++
++set(src_lib lzf_c.c lzf_d.c lzfP.h)
++set(src lzf_c.c lzf_d.c lzf.c)
++set(hdr lzf.h lzfP.h crc32.h)
++set(docs README LICENCE Changes)
++
++add_library(lzf ${src_lib})
++set_target_properties(lzf PROPERTIES VERSION ${LIBVER} SOVERSION ${LIBMAJOR})
++add_compile_options("-Wno-expansion-to-defined")
++
++if(WIN32)
++  set_target_properties(lzf PROPERTIES SUFFIX "-${LIBMAJOR}${CMAKE_SHARED_LIBRARY_SUFFIX}")
++endif(WIN32)
++
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  add_library(lzf_static STATIC ${src_lib})
++  set_target_properties(lzf_static PROPERTIES OUTPUT_NAME lzf)
++endif()
++
++if(BUILD_UTILITIES)
++  add_executable(lzf_bin lzf.c lzf.h)
++  target_link_libraries(lzf_bin lzf)
++  set_target_properties(lzf_bin PROPERTIES OUTPUT_NAME lzf)
++endif()
++
++install(TARGETS lzf
++    RUNTIME DESTINATION bin
++    ARCHIVE DESTINATION lib${LIB_SUFFIX}
++    LIBRARY DESTINATION lib${LIB_SUFFIX})
++
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  install(TARGETS lzf_static ARCHIVE DESTINATION lib${LIB_SUFFIX})
++endif()
++
++if(BUILD_UTILITIES)
++    install(TARGETS lzf_bin DESTINATION bin)
++endif()
++
++install(FILES lzf.h DESTINATION include)
++
++if(INSTALL_DOC)
++  install(FILES ${docs} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/lfz)
++endif()
+
+--- config.h	2022-01-18 17:32:37.016799500 +0000
++++ config.h	2022-01-18 17:34:58.006799500 +0000
+@@ -0,0 +1,17 @@
++/* config.h.  Generated from config.h.in by configure.  */
++/* config.h.in.  Generated automatically from configure.in by autoheader 2.13.  */
++
++/* Define to empty if the keyword does not work.  */
++/* #undef const */
++
++/* Define if you have the ANSI C header files.  */
++#define STDC_HEADERS 1
++
++/* The number of bytes in a int.  */
++#define SIZEOF_INT 4
++
++/* The number of bytes in a long.  */
++#define SIZEOF_LONG 8
++
++/* The number of bytes in a short.  */
++#define SIZEOF_SHORT 2
+--- lzfP.h	2022-01-19 00:29:14.826000000 +0000
++++ lzfP.h	2022-01-19 00:30:06.199247300 +0000
+@@ -79,7 +79,11 @@
+  * Unconditionally aligning does not cost very much, so do it if unsure
+  */
+ #ifndef STRICT_ALIGN
+-# define STRICT_ALIGN !(defined(__i386) || defined (__amd64))
++#if !(defined(__i386) || defined (__amd64))
++# define STRICT_ALIGN 1
++#else
++# define STRICT_ALIGN 0
++#endif
+ #endif
+ 
+ /*

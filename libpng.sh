@@ -29,16 +29,6 @@ eta='20'
 
 start
 
-# patch 01 on arm/filter_neon.S to fix llvm,_asm issue and allowing hw optimizations
-<<'XB64_PATCH'
-LS0tIGFybS9maWx0ZXJfbmVvbi5TCTIwMjItMDItMjYgMTk6MjI6MzcuNzU2MTUwNjAwICswMDAwCisrKyBhcm0vZm
-lsdGVyX25lb24uUwkyMDIyLTAyLTI2IDE5OjIzOjI4LjkzNjE1MDYwMCArMDAwMApAQCAtMjAsMTAgKzIwLDYgQEAK
-IC5zZWN0aW9uIC5ub3RlLkdOVS1zdGFjaywiIiwlcHJvZ2JpdHMgLyogbWFyayBzdGFjayBhcyBub24tZXhlY3V0YW
-JsZSAqLwogI2VuZGlmCiAKLSNpZmRlZiBfX2NsYW5nX18KLS5zZWN0aW9uIF9fTExWTSxfX2FzbQotI2VuZGlmCi0K
-ICNpZmRlZiBQTkdfUkVBRF9TVVBQT1JURUQKIAogLyogQXNzZW1ibGVyIE5FT04gc3VwcG9ydCAtIG9ubHkgd29ya3
-MgZm9yIDMyLWJpdCBBUk0gKGkuZS4gaXQgZG9lcyBub3Qgd29yayBmb3IK
-XB64_PATCH
-
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang
 # GNU  .   .   .   .  gcc

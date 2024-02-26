@@ -1,0 +1,44 @@
+--- CMakeLists.txt	2022-01-31 21:23:36.702245800 +0000
++++ CMakeLists.txt	2022-01-31 21:22:28.042245800 +0000
+@@ -0,0 +1,41 @@
++cmake_minimum_required(VERSION 3.10)
++
++project(density C)
++
++option(BUILD_STATIC_LIBS "Build static libs" ON)
++option(BUILD_BENCHMARK "Build benchmark" OFF)
++
++add_compile_options("-Wno-format")
++
++file(GLOB_RECURSE SRC src/*.c)
++file(GLOB_RECURSE HDR src/*.h)
++
++set(density_targets density)
++add_library(density ${SRC})
++
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  add_library(density_static STATIC ${SRC})
++  set_target_properties(density_static PROPERTIES OUTPUT_NAME density)
++  list(APPEND density_targets density_static)
++endif()
++
++if(BUILD_BENCHMARK)
++  file(GLOB_RECURSE src_cputime benchmark/libs/cputime/src/*.c)
++  add_library(cputime STATIC ${src_cputime})
++  file(GLOB_RECURSE src_spookyhash benchmark/libs/spookyhash/src/*.c)
++  add_library(spookyhash STATIC ${src_spookyhash})
++  add_executable(benchmark benchmark/src/benchmark.c)
++  target_link_libraries(benchmark density cputime spookyhash)
++endif()
++
++install(TARGETS ${density_targets}
++  RUNTIME DESTINATION bin
++  ARCHIVE DESTINATION lib${LIB_SUFFIX}
++  LIBRARY DESTINATION lib${LIB_SUFFIX})
++
++install(FILES ${HDR} DESTINATION include/density)
++
++if(BUILD_BENCHMARK)
++  install(TARGETS benchmark RUNTIME DESTINATION bin)
++endif()
++

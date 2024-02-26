@@ -1,0 +1,75 @@
+--- CMakeLists.txt	2022-01-28 18:19:01.931792000 +0000
++++ CMakeLists.txt	2022-01-28 18:17:07.771792000 +0000
+@@ -0,0 +1,72 @@
++cmake_minimum_required(VERSION 2.8.12)
++
++project(gsm C)
++
++option(BUILD_STATIC_LIBS "Build static libs" ON)
++option(BUILD_TOOLS "Build tools" ON)
++option(BUILD_TESTS "Build tests" OFF)
++option(INSTALL_MAN "Install man" OFF)
++
++if (NOT BUILD_SHARED_LIBS AND NOT BUILD_STATIC_LIBS)
++  set(BUILD_STATIC_LIBS ON)
++endif()
++
++set(LIBMAJOR 1)
++set(LIBMINOR 0)
++set(LIBPOINT 19)
++set(LIBVER "${LIBMAJOR}.${LIBMINOR}.${LIBPOINT}")
++
++file(GLOB gsm_MAN man/*.1 man/*.3)
++set(gsm_src src/add.c src/code.c src/decode.c src/gsm_create.c src/gsm_decode.c src/gsm_destroy.c src/gsm_encode.c src/gsm_option.c src/long_term.c src/lpc.c src/preprocess.c src/rpe.c src/short_term.c src/table.c)
++
++add_definitions(-ansi -pedantic -c -O3 -DNeedFunctionPrototypes=1 -DSASR -DWAV49)
++add_definitions(-Wall -Wno-comment -Wno-unused-const-variable)
++
++include_directories(${CMAKE_SOURCE_DIR}/inc)
++
++if (BUILD_SHARED_LIBS)
++  add_library(gsm SHARED ${gsm_src})
++  set(lib_targets gsm)
++  set(gsm_link PUBLIC gsm)
++else()
++  set(gsm_link PRIVATE gsm-static)
++endif()
++
++if (BUILD_STATIC_LIBS)
++  add_library(gsm-static STATIC ${gsm_src})
++  set_target_properties(gsm-static PROPERTIES OUTPUT_NAME gsm)
++  list(APPEND lib_targets gsm-static)
++endif()
++
++install(TARGETS ${lib_targets}
++  RUNTIME DESTINATION bin
++  ARCHIVE DESTINATION lib${LIB_SUFFIX}
++  LIBRARY DESTINATION lib${LIB_SUFFIX})
++
++install(FILES inc/gsm.h DESTINATION include)
++install(FILES COPYRIGHT DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/libgsm)
++
++if(BUILD_TOOLS)
++  add_executable(toast src/toast.c src/toast_lin.c src/toast_ulaw.c src/toast_alaw.c src/toast_audio.c)
++  target_link_libraries(toast ${gsm_link})
++  install(TARGETS toast DESTINATION bin)
++  if(UNIX)
++    add_custom_target(untoast ALL ${CMAKE_COMMAND} -E create_symlink toast untoast DEPENDS gsm COMMENT "Creating untoast symlink")
++    add_custom_target(tcat ALL ${CMAKE_COMMAND} -E create_symlink toast tcat DEPENDS gsm COMMENT "Creating tcat symlink")
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/untoast DESTINATION bin)
++    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/tcat DESTINATION bin)
++  endif()
++endif()
++
++if(BUILD_TESTS)
++  set(gsm_tests cod2lin cod2txt gsm2cod lin2cod lin2txt)
++  foreach(gsm_test ${gsm_tests})
++    add_executable(${gsm_test} tst/${gsm_test}.c)
++    target_link_libraries(${gsm_test} ${gsm_link})
++  endforeach()
++  install(TARGETS ${gsm_tests} DESTINATION bin)
++endif()
++
++if(INSTALL_MAN)
++  install(FILES ${gsm_MAN} DESTINATION ${CMAKE_INSTALL_PREFIX}/man)
++endif()

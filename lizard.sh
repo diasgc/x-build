@@ -12,10 +12,15 @@ src='https://github.com/inikep/lizard.git'
 cfg='cmake'
 dep=''
 eta='60'
-ils='lizard_frame.h lizard_common.h lizard_compress.h'
-lls='liblizard'
-bls='lizard'
-cmake_file='lizard-01.cmake'
+
+lst_inc='lizard_frame.h lizard_common.h lizard_compress.h'
+lst_lib='liblizard'
+lst_bin='lizard'
+lst_lic='LICENSE.MIT README.md'
+lst_pc='fastlz.pc'
+dev_vrs='1.0.0'
+
+cmake_cmakelists='lizard-01.cmake'
 
 . xbuild
 

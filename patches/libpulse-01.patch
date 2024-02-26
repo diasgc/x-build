@@ -1,0 +1,11 @@
+--- src/utils/padsp._	2022-01-30 17:37:08.339000000 +0000
++++ src/utils/padsp.c	2022-01-30 17:42:08.994058500 +0000
+@@ -2536,7 +2536,7 @@
+ }
+ #ifdef HAVE_OPEN64
+ #undef stat64
+-#ifdef __GLIBC__
++#if defined __GLIBC__ || defined __ANDROID__
+ int stat64(const char *pathname, struct stat64 *buf) {
+ #else
+ int stat64(const char *pathname, struct stat *buf) {

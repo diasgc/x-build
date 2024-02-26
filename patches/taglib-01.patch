@@ -1,0 +1,130 @@
+--- taglib/CMakeLists.txt	2022-03-17 21:31:09.880375300 +0000
++++ taglib/CMakeLists.txt	2022-03-17 22:17:08.000375300 +0000
+@@ -333,36 +333,39 @@
+   audioproperties.cpp
+   tagutils.cpp
+ )
+-
+-add_library(tag ${tag_LIB_SRCS} ${tag_HDRS})
+-set_property(TARGET tag PROPERTY CXX_STANDARD 98)
++function(add_tag sfx lnk)
++add_library(tag${sfx} ${lnk} ${tag_LIB_SRCS} ${tag_HDRS})
++set_property(TARGET tag${sfx} PROPERTY CXX_STANDARD 98)
+ 
+ if(HAVE_ZLIB AND NOT HAVE_ZLIB_SOURCE)
+-  target_link_libraries(tag ${ZLIB_LIBRARIES})
++  target_link_libraries(tag${sfx} ${ZLIB_LIBRARIES})
+ endif()
+ 
+-set_target_properties(tag PROPERTIES
++set_target_properties(tag${sfx} PROPERTIES
+   VERSION ${TAGLIB_SOVERSION_MAJOR}.${TAGLIB_SOVERSION_MINOR}.${TAGLIB_SOVERSION_PATCH}
+   SOVERSION ${TAGLIB_SOVERSION_MAJOR}
+   INSTALL_NAME_DIR ${CMAKE_INSTALL_LIBDIR}
+   DEFINE_SYMBOL MAKE_TAGLIB_LIB
+   LINK_INTERFACE_LIBRARIES ""
+   PUBLIC_HEADER "${tag_HDRS}"
++  OUTPUT_NAME tag
+ )
+ if(VISIBILITY_HIDDEN)
+-  set_target_properties(tag PROPERTIES C_VISIBILITY_PRESET hidden)
++  set_target_properties(tag${sfx} PROPERTIES C_VISIBILITY_PRESET hidden)
+ endif()
+ 
+ if(BUILD_FRAMEWORK)
+   unset(INSTALL_NAME_DIR)
+-  set_target_properties(tag PROPERTIES 
++  set_target_properties(tag${sfx} PROPERTIES 
+       FRAMEWORK TRUE
+       MACOSX_RPATH 1
+       VERSION "A"
+       SOVERSION "A"
+       )
+ endif()
++endfunction()
+ 
++add_tag("" "")
+ install(TARGETS tag
+   FRAMEWORK DESTINATION ${FRAMEWORK_INSTALL_DIR}
+   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+@@ -370,3 +373,12 @@
+   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/taglib
+ )
++if(BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
++  add_tag(-static STATIC)
++  install(TARGETS tag-static
++    FRAMEWORK DESTINATION ${FRAMEWORK_INSTALL_DIR}
++    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
++  )
++endif()
+--- bindings/c/CMakeLists.txt	2022-03-17 22:18:05.120375300 +0000
++++ bindings/c/CMakeLists.txt	2022-03-17 22:30:05.320375300 +0000
+@@ -17,20 +17,20 @@
+ )
+ 
+ set(tag_c_HDRS tag_c.h)
++function(add_tagc sfx lnk)
++add_library(tag_c${sfx} ${lnk} tag_c.cpp ${tag_c_HDRS})
+ 
+-add_library(tag_c tag_c.cpp ${tag_c_HDRS})
+-
+-target_link_libraries(tag_c tag)
+-set_target_properties(tag_c PROPERTIES
++target_link_libraries(tag_c${sfx} tag)
++set_target_properties(tag_c${sfx} PROPERTIES
+   PUBLIC_HEADER "${tag_c_HDRS}"
+   DEFINE_SYMBOL MAKE_TAGLIB_LIB
+ )
+ if(VISIBILITY_HIDDEN)
+-	set_target_properties(tag_c PROPERTIES C_VISIBILITY_PRESET hidden
++	set_target_properties(tag_c${sfx} PROPERTIES C_VISIBILITY_PRESET hidden
+ 	)
+ endif()
+ if(BUILD_FRAMEWORK)
+-  set_target_properties(tag_c PROPERTIES FRAMEWORK TRUE)
++  set_target_properties(tag_c${sfx} PROPERTIES FRAMEWORK TRUE)
+ endif()
+ 
+ # On Solaris we need to explicitly add the C++ standard and runtime
+@@ -51,15 +51,19 @@
+   if(NOT ROGUEWAVE_STDCXX_LIBRARY)
+     message(FATAL_ERROR "Did not find supported STL library (tried stdcxx4 and stdcxx)")
+   endif()
+-  target_link_libraries(tag_c ${ROGUEWAVE_STDCXX_LIBRARY} Crun)
++  target_link_libraries(tag_c${sfx} ${ROGUEWAVE_STDCXX_LIBRARY} Crun)
+ endif()
+ 
+-set_target_properties(tag_c PROPERTIES
++set_target_properties(tag_c${sfx} PROPERTIES
+   VERSION 0.0.0
+   SOVERSION 0
+   DEFINE_SYMBOL MAKE_TAGLIB_C_LIB
+   INSTALL_NAME_DIR ${CMAKE_INSTALL_LIBDIR}
++  OUTPUT_NAME tag_c
+ )
++endfunction()
++
++add_tagc("" "")
+ install(TARGETS tag_c
+ 	FRAMEWORK DESTINATION ${FRAMEWORK_INSTALL_DIR}
+ 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+@@ -67,6 +71,15 @@
+ 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+ 	PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/taglib
+ )
++if(BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
++  add_tagc(-static STATIC)
++  install(TARGETS tag_c-static
++    FRAMEWORK DESTINATION ${FRAMEWORK_INSTALL_DIR}
++    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
++  )
++endif()
+ 
+ if(NOT BUILD_FRAMEWORK)
+ 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/taglib_c.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/taglib_c.pc)
+

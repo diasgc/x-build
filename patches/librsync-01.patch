@@ -1,0 +1,107 @@
+--- CMakeLists.txt	2022-03-11 23:15:25.748233700 +0000
++++ CMakeLists.txt	2022-03-11 23:51:46.308233700 +0000
+@@ -411,41 +411,46 @@
+     src/version.c
+     src/whole.c
+     ${blake2_SRCS})
+-
+-add_library(rsync ${rsync_LIB_SRCS})
++function(add_lib sfx lnk)
++add_library(rsync${sfx} ${lnk} ${rsync_LIB_SRCS})
+ # TODO: Enable this when GenerateExportHeader works more widely.
+ # include(GenerateExportHeader)
+ # generate_export_header(rsync BASE_NAME librsync
+ #     EXPORT_FILE_NAME ${CMAKE_SOURCE_DIR}/src/librsync_export.h)
+-target_link_libraries(rsync ${blake2_LIBS})
++target_link_libraries(rsync${sfx} ${blake2_LIBS})
+ 
+ # Optionally link zlib and bzip2 if
+ # - compression is enabled
+ # - and libraries are found
+ if (ENABLE_COMPRESSION)
+   if (ZLIB_FOUND AND BZIP2_FOUND)
+-    target_link_libraries(rsync ${ZLIB_LIBRARIES} ${BZIP2_LIBRARIES})
++    target_link_libraries(rsync${sfx} ${ZLIB_LIBRARIES} ${BZIP2_LIBRARIES})
+   else (ZLIB_FOUND AND BZIP2_FOUND)
+     message (WARNING "zlib and bzip2 librares are required to enable compression")
+   endif (ZLIB_FOUND AND BZIP2_FOUND)
+ endif (ENABLE_COMPRESSION)
+ 
+ # Set properties/options for shared vs static library.
+-if (BUILD_SHARED_LIBS)
+-  set_target_properties(rsync PROPERTIES C_VISIBILITY_PRESET hidden)
+-else (BUILD_SHARED_LIBS)
+-  target_compile_options(rsync PUBLIC -DLIBRSYNC_STATIC_DEFINE)
+-endif (BUILD_SHARED_LIBS)
++if (BUILD_SHARED_LIBS AND sfx STREQUAL "")
++  set_target_properties(rsync${sfx} PROPERTIES C_VISIBILITY_PRESET hidden)
++else ()
++  target_compile_options(rsync${sfx} PUBLIC -DLIBRSYNC_STATIC_DEFINE)
++endif ()
+ 
+-set_target_properties(rsync PROPERTIES
++set_target_properties(rsync${sfx} PROPERTIES
+     VERSION ${LIBRSYNC_VERSION}
+-    SOVERSION ${LIBRSYNC_MAJOR_VERSION})
+-install(TARGETS rsync ${INSTALL_TARGETS_DEFAULT_ARGS}
++    SOVERSION ${LIBRSYNC_MAJOR_VERSION}
++    OUTPUT_NAME rsync)
++install(TARGETS rsync${sfx} ${INSTALL_TARGETS_DEFAULT_ARGS}
+         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+ )
+-
++endfunction()
++add_lib("" "")
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  add_lib("-static" STATIC)
++endif()
+ 
+ ########### next target ###############
+ 
+@@ -468,21 +473,21 @@
+   )
+ endif (BUILD_RDIFF)
+ 
+-
++configure_file(librsync.pc.in librsync.pc @ONLY)
+ ########### install files ###############
+-
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/librsync.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+ install(FILES
+     src/librsync.h
+     src/librsync_export.h
+     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+ 
+ message (STATUS "CMAKE_C_FLAGS  = ${CMAKE_C_FLAGS}")
+-
++if(INSTALL_MANFILES)
+ install(FILES
+     doc/librsync.3
+     DESTINATION ${CMAKE_INSTALL_MANDIR}/man3)
+ install(FILES
+     doc/rdiff.1
+     DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+-
++endif()
+ # vim: shiftwidth=4 expandtab
+--- librsync.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ librsync.pc.in	2022-03-11 23:36:49.528233700 +0000
+@@ -0,0 +1,15 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++exec_prefix=${prefix}
++libdir=${exec_prefix}/lib
++includedir=${prefix}/include
++
++Name: librsync
++Description: Remote delta-compression library
++URL: http://librsync.sourcefrog.net
++Version: @LIBRSYNC_VERSION@
++Requires: 
++Requires.private:
++Libs: -L${libdir} -lrsync
++Libs.private: 
++Cflags: -I${includedir}
++  
+

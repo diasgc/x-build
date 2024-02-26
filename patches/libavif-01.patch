@@ -1,0 +1,50 @@
+--- CMakeLists.txt	2022-03-07 22:33:12.163025300 +0000
++++ CMakeLists.txt	2022-03-07 22:40:06.983025300 +0000
+@@ -428,23 +428,30 @@
+ if(NOT AVIF_CODEC_AOM AND NOT AVIF_CODEC_DAV1D AND NOT AVIF_CODEC_LIBGAV1)
+     message(WARNING "libavif: No decoding library is enabled.")
+ endif()
+-
+-add_library(avif ${AVIF_SRCS})
+-set_target_properties(avif
++function(add_lib sfx lnk)
++    add_library(avif${sfx} ${lnk} ${AVIF_SRCS})
++    set_target_properties(avif${sfx}
+                       PROPERTIES
+                           VERSION ${LIBRARY_VERSION}
+                           SOVERSION ${LIBRARY_SOVERSION}
+-                          C_VISIBILITY_PRESET hidden)
+-target_compile_definitions(avif
++                          C_VISIBILITY_PRESET hidden
++                          OUTPUT_NAME avif)
++    target_compile_definitions(avif${sfx}
+                            PRIVATE ${AVIF_PLATFORM_DEFINITIONS} ${AVIF_CODEC_DEFINITIONS})
+-target_link_libraries(avif
++    target_link_libraries(avif${sfx}
+                       PRIVATE ${AVIF_CODEC_LIBRARIES} ${AVIF_PLATFORM_LIBRARIES})
+-target_include_directories(avif
++    target_include_directories(avif${sfx}
+                            PUBLIC $<BUILD_INTERFACE:${libavif_SOURCE_DIR}/include>
+                                   $<INSTALL_INTERFACE:include>
+                            PRIVATE ${AVIF_PLATFORM_INCLUDES} ${AVIF_CODEC_INCLUDES})
++endfunction()
++add_lib("" "")
+ set(AVIF_PKG_CONFIG_EXTRA_CFLAGS "")
+ if(BUILD_SHARED_LIBS)
++    if(BUILD_STATIC_LIBS)
++        add_lib("-static" STATIC)
++        set(avif_static "avif-static")
++    endif()
+     target_compile_definitions(avif PUBLIC AVIF_DLL
+                                     PRIVATE AVIF_BUILDING_SHARED_LIBS)
+     set(AVIF_PKG_CONFIG_EXTRA_CFLAGS " -DAVIF_DLL")
+@@ -605,7 +612,7 @@
+ endif()
+ 
+ if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
+-    install(TARGETS avif
++    install(TARGETS avif ${avif_static}
+         EXPORT ${PROJECT_NAME}-config
+         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+

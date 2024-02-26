@@ -1,0 +1,144 @@
+--- CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
++++ CMakeLists.txt	2022-03-29 00:53:57.682309600 +0100
+@@ -0,0 +1,122 @@
++cmake_minimum_required(VERSION 3.5)
++
++file(STRINGS "VERSION" VERSION)
++project(bpg 
++    LANGUAGES C CXX 
++    VERSION ${VERSION}
++    DESCRIPTION "Better Portable Graphics Image Format"
++    HOMEPAGE_URL "https://bellard.org/bpg/"
++)
++
++option(USE_X265 "Use x265" ON)
++option(USE_JCTVC "Use JCTVC" ON)
++option(BUILD_STATIC_LIBS "Build static libs" ON)
++option(BUILD_SHARED_LIBS "Build shared libs" ON)
++option(BUILD_EXECUTABLES "Build executables" ON)
++option(INSTALL_DOCS      "Install Manpages"  ON)
++
++include(GNUInstallDirs)
++message(STATUS "Libbpg version ${PROJECT_VERSION}
++    Build static libs ${BUILD_STATIC_LIBS}
++    Build shared libs ${BUILD_SHARED_LIBS}
++    Build executables ${BUILD_EXECUTABLES}
++    Install manuals   ${INSTALL_DOCS}"
++)
++
++add_definitions(
++    #-MMD
++    -DNDEBUG
++    -std=c99
++    -fno-asynchronous-unwind-tables
++    -fdata-sections
++    -ffunction-sections
++    -fno-math-errno
++    -fno-signed-zeros
++    -fno-tree-vectorize
++    -fomit-frame-pointer
++    -D_FILE_OFFSET_BITS=64
++    -D_LARGEFILE_SOURCE
++    -D_REENTRANT
++    -DCONFIG_BPG_VERSION=\"${PROJECT_VERSION}\"
++    # warning flags
++    -Wno-dangling-else
++    -Wno-logical-not-parentheses
++    -Wno-switch
++    -Wno-pointer-sign
++    -Wno-macro-redefined
++)
++
++include_directories(libavcodec libavutil .)
++
++set(bpg_src
++    libavcodec/hevc_cabac.c
++    libavcodec/hevc_filter.c
++    libavcodec/hevc.c
++    libavcodec/hevcpred.c 
++    libavcodec/hevc_refs.c 
++    libavcodec/hevcdsp.c 
++    libavcodec/hevc_mvs.c 
++    libavcodec/hevc_ps.c 
++    libavcodec/hevc_sei.c 
++    libavcodec/utils.c 
++    libavcodec/cabac.c 
++    libavcodec/golomb.c 
++    libavcodec/videodsp.c
++    libavutil/mem.c 
++    libavutil/buffer.c 
++    libavutil/log2_tab.c 
++    libavutil/frame.c 
++    libavutil/pixdesc.c 
++    libavutil/md5.c
++    libbpg.c
++)
++
++add_library(bpg_o OBJECT ${bpg_src})
++target_compile_definitions(bpg_o PUBLIC
++    -D_ISOC99_SOURCE
++    -D_POSIX_C_SOURCE=200112
++    -D_XOPEN_SOURCE=600
++    -DHAVE_AV_CONFIG_H
++    -D_GNU_SOURCE=1
++    -DUSE_VAR_BIT_DEPTH
++    -DUSE_PRED
++)
++
++macro(add_lib sfx lnk)
++    add_library(bpg${sfx} ${lnk} $<TARGET_OBJECTS:bpg_o>)
++    set_target_properties(bpg${sfx} PROPERTIES
++        VERSION ${PROJECT_VERSION}
++        SOVERSION ${PROJECT_VERSION_MAJOR}
++        OUTPUT_NAME bpg
++    )
++    install(TARGETS bpg${sfx}
++        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
++    )
++endmacro()
++
++add_lib("" "")
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++    add_lib(-static STATIC)
++endif()
++
++configure_file(libbpg.pc.in libbpg.pc @ONLY)
++install(FILES ${CMAKE_BINARY_DIR}/libbpg.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
++install(FILES libbpg.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
++
++if(BUILD_EXECUTABLES)
++
++    if(USE_X265)
++        # todo
++    endif(USE_X265)
++
++    if(USE_JCTVC)
++        #todo
++    endif(USE_JCTVC)
++
++endif(BUILD_EXECUTABLES)
++
++if(INSTALL_DOCS)
++    #todo
++endif(INSTALL_DOCS)
+--- libbpg.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ libbpg.pc.in	2022-03-29 00:51:45.992309600 +0100
+@@ -0,0 +1,15 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++exec_prefix=${prefix}
++libdir=${exec_prefix}/lib
++includedir=${prefix}/include
++
++Name: libbpg
++Description: @CMAKE_PROJECT_DESCRIPTION@
++URL: @CMAKE_PROJECT_HOMEPAGE_URL@
++Version: @PROJECT_VERSION@
++Requires: 
++Requires.private: 
++Libs: -L${libdir} -lbpg
++Libs.private: 
++Cflags: -I${includedir}
++
+

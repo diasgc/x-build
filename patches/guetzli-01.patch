@@ -1,0 +1,50 @@
+--- CMakeLists.txt	2022-01-24 21:15:34.201000700 +0000
++++ CMakeLists.txt	2022-01-24 20:53:27.591000700 +0000
+@@ -0,0 +1,47 @@
++cmake_minimum_required(VERSION 2.8.12)
++
++project(guetzli CXX)
++option(BUILD_STATIC_LIBS "Build static libs" ON)
++option(BUILD_TOOLS "Build tools" ON)
++
++add_definitions("-Wno-format")
++
++find_package(ZLIB)
++find_package(PNG)
++find_package(JPEG)
++
++include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/third_party/butteraugli ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${JPEG_INCLUDE_DIRS})
++
++file(GLOB_RECURSE src_guetzli guetzli/*.cc)
++list(APPEND src_guetzli ${CMAKE_SOURCE_DIR}/third_party/butteraugli/butteraugli/butteraugli.cc)
++file(GLOB_RECURSE hdr_guetzli guetzli/*.h)
++list(APPEND hdr_guetzli ${CMAKE_SOURCE_DIR}/third_party/butteraugli/butteraugli/butteraugli.h)
++
++set(guetzli_targets guetzli)
++add_library(guetzli ${src_guetzli})
++target_link_libraries(guetzli PUBLIC ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++    add_library(guetzli_static STATIC ${src_guetzli})
++    target_link_libraries(guetzli_static PRIVATE ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++    set_target_properties(guetzli_static PROPERTIES OUTPUT_NAME guetzli)
++    list(APPEND guetzli_targets guetzli_static)
++endif()
++
++if(BUILD_TOOLS)
++    add_executable(butteraugli third_party/butteraugli/butteraugli/butteraugli_main.cc
++         third_party/butteraugli/butteraugli/butteraugli.cc
++         third_party/butteraugli/butteraugli/butteraugli.h)
++    target_link_libraries(butteraugli guetzli)
++endif()
++
++install(TARGETS ${guetzli_targets}
++    RUNTIME DESTINATION bin
++    ARCHIVE DESTINATION lib${LIB_SUFFIX}
++    LIBRARY DESTINATION lib${LIB_SUFFIX})
++
++install(FILES ${hdr_guetzli} DESTINATION include/guetzli)
++
++if(BUILD_TOOLS)
++  install(TARGETS butteraugli RUNTIME DESTINATION bin)
++endif()

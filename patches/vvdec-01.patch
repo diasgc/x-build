@@ -1,0 +1,100 @@
+--- source/Lib/vvdec/CMakeLists.txt	2022-02-25 17:46:12.056291400 +0000
++++ source/Lib/vvdec/CMakeLists.txt	2022-02-25 17:43:58.806291400 +0000
+@@ -105,25 +105,30 @@
+ if( MSVC )
+   set( RESOURCE_FILE ${LIB_NAME}.rc )
+ endif()
++function(add_lib sfx link)
++  add_library( ${LIB_NAME}${sfx} ${link} ${SRC_FILES} ${INC_FILES} ${NATVIS_FILES} ${RESOURCE_FILE} )
+ 
+-add_library( ${LIB_NAME} ${SRC_FILES} ${INC_FILES} ${NATVIS_FILES} ${RESOURCE_FILE} )
+-
+-target_compile_definitions( ${LIB_NAME} PRIVATE ${LIB_NAME_UC}_SOURCE )
+-target_compile_definitions( ${LIB_NAME} PUBLIC $<$<AND:$<PLATFORM_ID:Windows>,$<STREQUAL:$<TARGET_PROPERTY:${LIB_NAME},TYPE>,SHARED_LIBRARY>>:${LIB_NAME_UC}_DYN_LINK> )
+-
+-target_compile_options( ${LIB_NAME} PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wall -Werror -Wno-unused-function -Wno-enum-compare-switch -Wno-unknown-attributes>
+-                                            $<$<CXX_COMPILER_ID:GNU>:-Wall -Werror -Wno-unused-function -Wno-sign-compare -fdiagnostics-show-option -Wno-ignored-attributes>
+-                                            $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /wd4100 /wd4127 /wd4244 /wd4245 /wd4389 /wd4456 /wd4457 /wd4458 /wd4459 /wd4505 /wd4701 /wd4702 /wd4703 >)
+-
+-target_include_directories( ${LIB_NAME} PRIVATE           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+-                                        SYSTEM INTERFACE  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}> )
+-target_include_directories( ${LIB_NAME} PRIVATE . .. ../DecoderLib ../CommonLib ../CommonLib/x86 ../libmd5 )
+-
+-target_include_directories( ${LIB_NAME} SYSTEM PRIVATE ../../../thirdparty )
+-
+-target_link_libraries( ${LIB_NAME} ${INTEL_ITT_LINK_TARGET} Threads::Threads )
+-
+-# set the folder where to place the projects
+-set_target_properties( ${LIB_NAME} PROPERTIES FOLDER lib )
+-
+-
++  target_compile_definitions( ${LIB_NAME}${sfx} PRIVATE ${LIB_NAME_UC}_SOURCE )
++  target_compile_definitions( ${LIB_NAME}${sfx} PUBLIC $<$<AND:$<PLATFORM_ID:Windows>,$<STREQUAL:$<TARGET_PROPERTY:${LIB_NAME},TYPE>,SHARED_LIBRARY>>:${LIB_NAME_UC}_DYN_LINK> )
++  set_target_properties( ${LIB_NAME}${sfx} PROPERTIES OUTPUT_NAME ${LIB_NAME})
++  target_compile_options( ${LIB_NAME}${sfx} PRIVATE $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wall -Wno-error -Wno-unused-function -Wno-enum-compare-switch -Wno-unknown-attributes>
++                                              $<$<CXX_COMPILER_ID:GNU>:-Wall -Wno-error -Wno-unused-function -Wno-sign-compare -fdiagnostics-show-option -Wno-ignored-attributes>
++                                              $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /wd4100 /wd4127 /wd4244 /wd4245 /wd4389 /wd4456 /wd4457 /wd4458 /wd4459 /wd4505 /wd4701 /wd4702 /wd4703 >)
++
++  target_include_directories( ${LIB_NAME}${sfx} PRIVATE           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
++                                          SYSTEM INTERFACE  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}> )
++  target_include_directories( ${LIB_NAME}${sfx} PRIVATE . .. ../DecoderLib ../CommonLib ../CommonLib/x86 ../libmd5 )
++
++  target_include_directories( ${LIB_NAME}${sfx} SYSTEM PRIVATE ../../../thirdparty )
++
++  target_link_libraries( ${LIB_NAME}${sfx} ${INTEL_ITT_LINK_TARGET} Threads::Threads )
++
++  # set the folder where to place the projects
++  set_target_properties( ${LIB_NAME}${sfx} PROPERTIES FOLDER lib )  
++endfunction()
++
++add_lib("" "")
++if(BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
++  add_lib("-static" STATIC)
++  install(TARGETS ${LIB_NAME}-static DESTINATION ${CMAKE_INSTALL_LIBDIR})
++endif()
+
+--- cmake/modules/vvdecInstall.cmake	2022-02-25 17:35:01.446291400 +0000
++++ cmake/modules/vvdecInstall.cmake	2022-02-25 17:07:37.386291400 +0000
+@@ -64,21 +64,18 @@
+ install( FILES cmake/install/vvdecConfig.cmake                       DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvdec )
+ install( FILES ${CMAKE_CURRENT_BINARY_DIR}/vvdecConfigVersion.cmake  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvdec )
+ 
+-function(install_config CONFIG_POSTFIX)
+-  # create target cmake files
+-  install( EXPORT vvdecTargets-release        NAMESPACE vvdec:: FILE vvdecTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS Release        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvdec )
+-  install( EXPORT vvdecTargets-debug          NAMESPACE vvdec:: FILE vvdecTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS Debug          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvdec )
+-  install( EXPORT vvdecTargets-relwithdebinfo NAMESPACE vvdec:: FILE vvdecTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS RelWithDebInfo DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvdec )  
+-endfunction(install_config)
+-
+ # set config postfix
+-if(NOT BUILD_SHARED_LIBS OR BUILD_STATIC_LIBS)
+-  install_config(static)
+-endif()
+-if(BUILD_SHARED_LIBS)
+-  install_config(shared)
++if( BUILD_SHARED_LIBS )
++  set( CONFIG_POSTFIX shared )
++else()
++  set( CONFIG_POSTFIX static )
+ endif()
+ 
++# create target cmake files
++install( EXPORT vvdecTargets-release        NAMESPACE vvdec:: FILE vvdecTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS Release        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvdec )
++install( EXPORT vvdecTargets-debug          NAMESPACE vvdec:: FILE vvdecTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS Debug          DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvdec )
++install( EXPORT vvdecTargets-relwithdebinfo NAMESPACE vvdec:: FILE vvdecTargets-${CONFIG_POSTFIX}.cmake CONFIGURATIONS RelWithDebInfo DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/vvdec )
++
+ configure_file( pkgconfig/libvvdec.pc.in ${CMAKE_CURRENT_BINARY_DIR}/pkgconfig/libvvdec.pc @ONLY )
+ install( FILES ${CMAKE_CURRENT_BINARY_DIR}/pkgconfig/libvvdec.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig )
+ 
+
+--- source/Lib/vvdec/vvdecimpl.cpp	2021-10-08 15:50:58.542000000 +0100
++++ source/Lib/vvdec/vvdecimpl.cpp	2021-10-08 15:51:28.190000000 +0100
+@@ -190,7 +190,7 @@
+   delete m_cDecLib;
+   destroyROM();
+ 
+-#if defined( __linux__ )
++#if defined( __linux__ ) && !defined(__ANDROID__)
+   malloc_trim(0);
+ #endif
+

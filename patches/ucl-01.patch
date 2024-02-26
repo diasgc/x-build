@@ -1,0 +1,58 @@
+--- CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
++++ CMakeLists.txt	2022-03-23 18:27:01.752199600 +0000
+@@ -0,0 +1,35 @@
++cmake_minimum_required(VERSION 3.5)
++project(ucl LANGUAGES C)
++set(VERSION 1.01)
++option(BUILD_STATIC_LIBS "build static libs along with shared" ON)
++option(BUILD_PROGRAM "build program executable" ON)
++
++file(GLOB src_libucl src/*.h src/*.c src/*.ch)
++file(GLOB src_headers include/ucl/*.h)
++
++include_directories(include)
++function(add_libucl sfx lnk)
++    add_library(${PROJECT_NAME}${sfx} ${lnk} ${src_libucl})
++    set_target_properties(${PROJECT_NAME}${sfx} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
++    install(TARGETS ${PROJECT_NAME}${sfx}
++        LIBRARY DESTINATION lib
++        ARCHIVE DESTINATION lib
++        RUNTIME DESTINATION bin
++    )
++endfunction()
++
++add_libucl("" "")
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++    add_libucl(-static STATIC)
++endif()
++
++if(BUILD_PROGRAM)
++    add_executable(uclpack examples/uclpack.c examples/lutil.h)
++    target_link_libraries(uclpack ucl)
++    install(TARGETS uclpack RUNTIME DESTINATION bin)
++endif()
++
++configure_file(${PROJECT_NAME}.pc.in ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY)
++install(FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
++install(FILES COPYING README DESTINATION share/doc/${PROJECT_NAME})
++install(FILES ${src_headers} DESTINATION include/${PROJECT_NAME})
+\ No newline at end of file
+--- ucl.pc.in	1970-01-01 01:00:00.000000000 +0100
++++ ucl.pc.in	2022-03-23 18:16:01.782199600 +0000
+@@ -0,0 +1,15 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++exec_prefix=${prefix}
++libdir=${exec_prefix}/lib
++includedir=${prefix}/include
++
++Name: ucl
++Description: UCL is a portable lossless data compression library written in ANSI C
++URL: https://github.com/korczis
++Version: @VERSION@
++Requires: 
++Requires.private: 
++Libs: -L${libdir} -lucl
++Libs.private: 
++Cflags: -I${includedir}
++  
+

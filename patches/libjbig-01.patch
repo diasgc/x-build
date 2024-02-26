@@ -1,0 +1,77 @@
+--- CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
++++ CMakeLists.txt	2022-03-17 18:52:48.331887200 +0000
+@@ -0,0 +1,73 @@
++cmake_minimum_required(VERSION 3.6)
++
++project(jbigkit)
++
++add_definitions(-Wno-macro-redefined)
++option(BUILD_STATIC_LIBS "Also build static libs" ON)
++option(BUILD_EXECUTABLES "Build executables" ON)
++option(INSTALL_MAN "Install man pages" OFF)
++
++set(JBIG_SRC libjbig/jbig.c libjbig/jbig_ar.c)
++set(JBIG85_SRC libjbig/jbig85.c libjbig/jbig_ar.c libjbig/jbig_ar.h)
++set(JBIG_HDR libjbig/jbig_ar.h libjbig/jbig.h libjbig/jbig85.h)
++
++function(add_lib lib sfx lnk src)
++    add_library(${lib}${sfx} ${lnk} ${src})
++    set_target_properties(${lib}${sfx} PROPERTIES
++        OUTPUT_NAME "${lib}"
++    )
++    install(TARGETS ${lib}${sfx}
++       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
++    )
++endfunction()
++
++include_directories(libjbig)
++
++add_lib(jbig "" "" "${JBIG_SRC}")
++add_lib(jbig85 "" "" "${JBIG85_SRC}")
++
++if (BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
++    add_lib(jbig -static STATIC "${JBIG_SRC}" "libjbig/jbig_ar.h;libjbig/jbig.h")
++    add_lib(jbig85 -static STATIC "${JBIG85_SRC}" "libjbig/jbig_ar.h;libjbig/jbig85.h")
++endif()
++
++set(sfx "")
++if(NOT BUILD_SHARED_LIBS)
++    set(sfx "-static")
++endif()
++
++if(BUILD_EXECUTABLES)
++    set(JBIG_TARGETS "")
++    add_executable(pbmtojbg pbmtools/pbmtojbg.c)
++    add_executable(pbmtojbg85 pbmtools/pbmtojbg85.c)
++    add_executable(jbgtopbm pbmtools/pbmtojbg.c)
++    add_executable(jbgtopbm85 pbmtools/pbmtojbg85.c)
++
++    target_include_directories(pbmtojbg PRIVATE jbig)
++    target_include_directories(pbmtojbg85 PRIVATE jbig85)
++    target_include_directories(jbgtopbm PRIVATE jbig)
++    target_include_directories(jbgtopbm85 PRIVATE jbig85)
++
++    target_link_libraries(pbmtojbg jbig${sfx})
++    target_link_libraries(pbmtojbg85 jbig85${sfx})
++    target_link_libraries(jbgtopbm jbig${sfx})
++    target_link_libraries(jbgtopbm85 jbig85${sfx})
++    
++    list(APPEND JBIG_TARGETS pbmtojbg pbmtojbg85 jbgtopbm jbgtopbm85)
++endif()
++
++install(TARGETS ${JBIG_TARGETS}
++    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
++)
++install(FILES ${JBIG_HDR}
++    DESTINATION include
++)
++if(INSTALL_MAN)
++	install(FILES pbmtools/jbgtopbm.1 pbmtools/pbmtojbg.1 DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1)
++	install(FILES pbmtools/pbm.5 pbmtools/pgm.5 DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man5)
++endif()
++install(FILES COPYING INSTALL TODO DESTINATION ${CMAKE_INSTALL_PREFIX}/share/docs/libjbig)
+

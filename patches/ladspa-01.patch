@@ -1,0 +1,68 @@
+--- CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
++++ CMakeLists.txt	2022-02-02 20:21:18.218441822 +0000
+@@ -0,0 +1,65 @@
++cmake_minimum_required(VERSION 3.21)
++
++project(ladspa
++        DESCRIPTION "Linux Audio Developers Simple Plugin API"
++        HOMEPAGE_URL "http://www.ladspa.org"
++        VERSION 1.17.0) # Keep in sync with Lerc_c_api.h
++
++
++# Make an option, defaulting to shared libs, but allow -DBUILD_SHARED_LIBS=OFF
++option (BUILD_PLUGINS "Build plugins" ON)
++option (BUILD_PROGRAMS "Build programs" ON)
++
++find_library(LIB_SNDFILE sndfile)
++if(NOT LIB_SNDFILE)
++    message(FATAL_ERROR "Lib sndfile not found, aborting")
++endif()
++find_path(HDR_SNDFILE sndfile.h)
++message("LIB_SNDFILE found ${LIB_SNDFILE}")
++message("Header is ${HDR_SNDFILE}")
++
++include_directories(${CMAKE_SOURCE_DIR}/src ${HDR_SNDFILE})
++
++if(BUILD_PLUGINS)
++    add_compile_options(-O3
++        -flto
++        -fvisibility=hidden
++        -fvisibility-inlines-hidden)
++    foreach(plugin amp delay filter noise sine)
++        if(${plugin} STREQUAL sine)
++            set(src_ext cpp)
++        else()
++            set(src_ext c)
++        endif()
++        add_library(${plugin} src/plugins/${plugin}.${src_ext} src/ladspa.h src/gcc_exports.map) 
++        set_target_properties(${plugin} PROPERTIES OUTPUT_NAME ${plugin})
++        target_link_libraries(${plugin} PRIVATE dl m ${LIB_SNDFILE})
++        list(APPEND target_plugins ${plugin})
++        if(BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
++            add_library(${plugin}-static STATIC src/plugins/${plugin}.${src_ext} src/ladspa.h src/gcc_exports.map)
++            set_target_properties(${plugin}-static PROPERTIES OUTPUT_NAME ${plugin})
++            target_link_libraries(${plugin}-static PRIVATE dl m ${LIB_SNDFILE})
++            list(APPEND target_plugins ${plugin}-static)
++        endif()
++    endforeach()
++
++    install(
++        TARGETS ${target_plugins}
++        LIBRARY DESTINATION libs/ladspa_plugins
++        RUNTIME DESTINATION bin
++        ARCHIVE DESTINATION libs/ladspa_plugins)
++endif()
++
++if(BUILD_PROGRAMS)
++    add_executable(analyseplugin src/analyseplugin.c src/load.c src/default.c)
++    target_link_libraries(analyseplugin dl m sndfile)
++    add_executable(applyplugin src/applyplugin.c src/load.c src/default.c)
++    target_link_libraries(applyplugin dl m sndfile)
++    add_executable(listplugins src/listplugins.c src/search.c)
++    target_link_libraries(listplugins dl m sndfile)
++    install(TARGETS analyseplugin applyplugin listplugins RUNTIME DESTINATION bin)
++endif()
++# Configure and install pkgconfig file
++#configure_file(Lerc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/Lerc.pc @ONLY)
++install(FILES src/ladspa.h DESTINATION include)
++

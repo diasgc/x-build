@@ -27,19 +27,6 @@ start
 # GNU  .  +++  .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
-# patch for android missing header log/log.h with reference android_errorWriteLog 
-<<'LZS_PATCH'
-LQgEBsEsCMGUCEBKATApgYwPSQHbvAK5qbgD2A5iRQHQAWAkAIwCcA7AAzDuNeOjcAuduyHtqwiZNABqbsIBQ0pRBg
-IUGbHkLEylXXXoAmdocNcAzF1ahDjAS3vNqAVlbmTz9+xmT5AAT9QLgAab2lGYMZDUADFAGIABwAnAENyAFsU0FI8V
-EVMACpQABVaSABnUAAzSHBUUGTSADdINErUdISAFwBPUEhOuvTUHC6Ursgc7KrQFJxkJNJWgH1UJMWkgHUkyC7UABk
-KYNAAdzL0Wn7yxVAinFIu0CTUAEcCSGfkbJwVHAIAD2ooAAko9yrRSARwF9oPUprh8ER6glxpccuA+lVSElfgDQNB3
-tCgQVMPFIDM0DUcKhkAAKZbLACCADkACKIADywNZDIAlGStEjQAAedDlLrIXBdAB8ilwUGp/VGs3mixWaw2212Bwot
-Klx3QOXFoAuKSSBV5oAA3k9UF0CEkfuwANygAC+zrlOAV9SlKoWS2Qq3W2K1e02u1owJwWMO5D1yrG5ANRsepvNoHK
-BGgxTSwRuoELReLJdLZfLxal5kMy0e72QKZwxvTRWQ4xS+ekFe7PZ771G1droDbY32I0tVoLz3tjv4nukHviI0lVXk
-QA
-LZS_PATCH
-
-
 # Filelist
 # --------
 # share/doc/fdk-aac/OWNERS

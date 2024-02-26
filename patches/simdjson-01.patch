@@ -1,0 +1,57 @@
+--- CMakeLists.txt	2022-03-03 23:06:18.660748700 +0000
++++ CMakeLists.txt	2022-03-03 23:25:21.900748700 +0000
+@@ -65,16 +65,25 @@
+ 
+ # ---- simdjson library ----
+ 
+-add_library(simdjson src/simdjson.cpp)
++function(add_lib sfx lnk)
++  add_library(simdjson${sfx} ${lnk} src/simdjson.cpp)
++
++  set_target_properties(
++      simdjson${sfx} PROPERTIES
++      VERSION "${SIMDJSON_LIB_VERSION}"
++      SOVERSION "${SIMDJSON_LIB_SOVERSION}"
++      # FIXME: symbols should be hidden by default
++      WINDOWS_EXPORT_ALL_SYMBOLS YES
++      OUTPUT_NAME simdjson
++  )
++endfunction()
++
++add_lib("" "")
+ add_library(simdjson::simdjson ALIAS simdjson)
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++  add_lib("-static" STATIC)
++endif()
+ 
+-set_target_properties(
+-    simdjson PROPERTIES
+-    VERSION "${SIMDJSON_LIB_VERSION}"
+-    SOVERSION "${SIMDJSON_LIB_SOVERSION}"
+-    # FIXME: symbols should be hidden by default
+-    WINDOWS_EXPORT_ALL_SYMBOLS YES
+-)
+ 
+ # FIXME: Use proper CMake integration for exports
+ if(MSVC AND BUILD_SHARED_LIBS)
+@@ -111,6 +120,10 @@
+ endif()
+ 
+ simdjson_apply_props(simdjson)
++if(BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS)
++  simdjson_apply_props(simdjson-static)
++  set(install_static simdjson-static)
++endif()
+ 
+ # ---- Install rules ----
+ 
+@@ -124,7 +137,7 @@
+ )
+ 
+ install(
+-    TARGETS simdjson
++    TARGETS simdjson ${install_static}
+     EXPORT simdjsonTargets
+     RUNTIME COMPONENT simdjson_Runtime
+     LIBRARY COMPONENT simdjson_Runtime
+

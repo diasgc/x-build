@@ -125,6 +125,13 @@ cmake_build_package(){
 	popdir
 }
 
+cmake_check_cmakefiles(){
+	if [ -n "${cmake_cmakelists}" ]; then
+		cp ${dir_root}/cmake/${cmake_cmakelists} ${dir_src}/CMakeLists.txt
+	fi
+	return 0
+}
+
 cmake_configure(){
 	: "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
 	[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}

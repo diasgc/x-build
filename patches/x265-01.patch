@@ -1,0 +1,49 @@
+--- source/CMakeLists.txt	2022-02-09 23:05:49.518405000 +0000
++++ source/CMakeLists.txt	2022-02-09 23:11:09.268405000 +0000
+@@ -228,9 +228,10 @@
+     else()
+         add_definitions(-std=gnu++98)
+     endif()
+-    if(ENABLE_PIC)
++    if(NOT WIN32 AND ENABLE_PIC)
+          add_definitions(-fPIC)
+-    endif(ENABLE_PIC)
++         set(fpic -fPIC)
++    endif()
+     if(NATIVE_BUILD)
+         if(INTEL_CXX)
+             add_definitions(-xhost)
+@@ -249,18 +250,18 @@
+     endif()
+     if(ARM AND CROSS_COMPILE_ARM)
+         message(STATUS "cross compile arm")
+-		set(ARM_ARGS -march=armv6 -mfloat-abi=soft -mfpu=vfp -marm -fPIC)
++		set(ARM_ARGS -march=armv6 -mfloat-abi=soft -mfpu=vfp -marm ${fpic})
+     elseif(ARM)
+         find_package(Neon)
+         if(CPU_HAS_NEON)
+-            set(ARM_ARGS -mcpu=native -mfloat-abi=hard -mfpu=neon -marm -fPIC)
++            set(ARM_ARGS -mcpu=native -mfloat-abi=hard -mfpu=neon -marm ${fpic})
+             add_definitions(-DHAVE_NEON)
+         else()
+             set(ARM_ARGS -mcpu=native -mfloat-abi=hard -mfpu=vfp -marm)
+         endif()
+     endif()
+ 	if(ARM64 OR CROSS_COMPILE_ARM64)
+-	    set(ARM_ARGS -fPIC -flax-vector-conversions)
++	    set(ARM_ARGS ${fpic} -flax-vector-conversions)
+         find_package(Neon)
+         if(CPU_HAS_NEON)
+             add_definitions(-DHAVE_NEON)
+
+--- source/encoder/CMakeLists.txt	2022-02-23 01:04:47.543182800 +0000
++++ source/encoder/CMakeLists.txt	2022-02-23 01:03:36.123182800 +0000
+@@ -10,7 +10,7 @@
+ if(MSVC)
+    add_definitions(/wd4701) # potentially uninitialized local variable 'foo' used
+ endif()
+-
++add_definitions(-Wno-absolute-value -Wno-unused-but-set-variable -Wno-shadow)
+ if(EXTRA_LIB)
+     if(LINKED_8BIT)
+         list(APPEND APIFLAGS "-DLINKED_8BIT=1")

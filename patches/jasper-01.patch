@@ -1,0 +1,144 @@
+--- src/libjasper/CMakeLists.txt	2022-02-02 17:23:47.333000000 +0000
++++ src/libjasper/CMakeLists.txt	2022-02-02 17:38:34.880710253 +0000
+@@ -148,66 +148,72 @@
+ 	set(libjasper_ras_sources "")
+ endif()
+ 
+-if(JAS_ENABLE_SHARED)
+-	set(libjasper_type SHARED)
+-else()
+-	set(libjasper_type STATIC)
+-endif()
+-
+-add_library(libjasper ${libjasper_type}
+-	${libjasper_headers}
+-	${libjasper_base_sources}
+-	${libjasper_bmp_sources}
+-	${libjasper_jp2_sources}
+-	${libjasper_jpc_sources}
+-	${libjasper_jpg_sources}
+-	${libjasper_heic_sources}
+-	${libjasper_mif_sources}
+-	${libjasper_pgx_sources}
+-	${libjasper_pnm_sources}
+-	${libjasper_ras_sources}
+-)
+-
+-# The JasPer include directories in the source and build tree must be included
+-# before any other directories that may contain the include directory for an
+-# already installed version of the JasPer library.
+-# The PRIVATE specifier has been used here to force the library user to have
+-# to explicitly specify the include directories from the source and build tree
+-# so that the BEFORE specifier can also be employed by the library user.
+-target_include_directories(libjasper BEFORE PRIVATE
+-  "${CMAKE_CURRENT_BINARY_DIR}/include"
+-  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+-)
+-
+-set_target_properties(libjasper PROPERTIES
+-  OUTPUT_NAME jasper LINKER_LANGUAGE C)
+-
+-if(MSVC)
+-	target_compile_definitions(libjasper PRIVATE _CRT_SECURE_NO_WARNINGS)
+-	target_compile_definitions(libjasper PRIVATE _CRT_SECURE_NO_DEPRECATE)
+-	target_compile_definitions(libjasper PRIVATE _CRT_NONSTDC_NO_DEPRECATE)
+-endif()
+-
+-if(UNIX)
+-	set_target_properties(libjasper PROPERTIES
+-	  VERSION ${JAS_SO_NAME} SOVERSION ${JAS_SO_VERSION})
+-endif()
+-
+-if(JAS_ENABLE_SHARED)
+-	target_compile_definitions(libjasper PUBLIC JAS_BUILDING_DLL)
+-endif()
+-
+-if(JAS_ENABLE_FUZZER)
+-	message("Enabling libFuzzer")
+-	target_compile_options(libjasper PUBLIC "-fsanitize=fuzzer")
+-endif()
+-
+-# I am not sure why the following line is needed for building a library, but
+-# MacOSX does cannot build a shared library without this line.
+-# I think that this might be needed in order for a shared library to
+-# be marked as having a dependency on another shared library.
+-target_link_libraries(libjasper PUBLIC ${JAS_LIBJPEG_TARGET} ${HEIF_LIBRARIES}
+-  ${MATH_LIBRARY} ${THREAD_LIBRARY})
++set(target_libs libjasper)
++if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
++	list(APPEND target_libs libjasper-static)
++endif()
++
++foreach(lib ${target_libs})
++	if(${lib} MATCHES "static$")
++		set(libjasper_type STATIC)
++	else()
++		set(libjasper_type "")
++	endif()
++	add_library(${lib} ${libjasper_type}
++		${libjasper_headers}
++		${libjasper_base_sources}
++		${libjasper_bmp_sources}
++		${libjasper_jp2_sources}
++		${libjasper_jpc_sources}
++		${libjasper_jpg_sources}
++		${libjasper_heic_sources}
++		${libjasper_mif_sources}
++		${libjasper_pgx_sources}
++		${libjasper_pnm_sources}
++		${libjasper_ras_sources}
++	)
++
++	# The JasPer include directories in the source and build tree must be included
++	# before any other directories that may contain the include directory for an
++	# already installed version of the JasPer library.
++	# The PRIVATE specifier has been used here to force the library user to have
++	# to explicitly specify the include directories from the source and build tree
++	# so that the BEFORE specifier can also be employed by the library user.
++	target_include_directories(${lib} BEFORE PRIVATE
++		"${CMAKE_CURRENT_BINARY_DIR}/include"
++		"${CMAKE_CURRENT_SOURCE_DIR}/include"
++		)
++
++	set_target_properties(${lib} PROPERTIES
++		OUTPUT_NAME jasper LINKER_LANGUAGE C)
++
++	if(MSVC)
++		target_compile_definitions(${lib} PRIVATE _CRT_SECURE_NO_WARNINGS)
++		target_compile_definitions(${lib} PRIVATE _CRT_SECURE_NO_DEPRECATE)
++		target_compile_definitions(${lib} PRIVATE _CRT_NONSTDC_NO_DEPRECATE)
++	endif()
++
++	if(UNIX)
++		set_target_properties(${lib} PROPERTIES
++			VERSION ${JAS_SO_NAME} SOVERSION ${JAS_SO_VERSION})
++	endif()
++
++	if(libjasper_type STREQUAL "")
++		target_compile_definitions(${lib} PUBLIC JAS_BUILDING_DLL)
++	endif()
++
++	if(JAS_ENABLE_FUZZER)
++		message("Enabling libFuzzer")
++		target_compile_options(${lib} PUBLIC "-fsanitize=fuzzer")
++	endif()
++
++	# I am not sure why the following line is needed for building a library, but
++	# MacOSX does cannot build a shared library without this line.
++	# I think that this might be needed in order for a shared library to
++	# be marked as having a dependency on another shared library.
++	target_link_libraries(${lib} PUBLIC ${JAS_LIBJPEG_TARGET} ${HEIF_LIBRARIES}
++	${MATH_LIBRARY} ${THREAD_LIBRARY})
++endforeach()
+ 
+ generate_export_header(libjasper
+   EXPORT_FILE_NAME include/jasper/jas_export_cmake.h
+@@ -216,7 +222,7 @@
+   NO_EXPORT_MACRO_NAME JAS_LOCAL
+ )
+ 
+-install(TARGETS libjasper
++install(TARGETS ${target_libs}
+   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

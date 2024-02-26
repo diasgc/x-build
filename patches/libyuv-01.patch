@@ -1,0 +1,21 @@
+--- CMakeLists.txt	2021-10-28 11:21:35.767000000 +0100
++++ CMakeLists.txt	2021-10-28 14:38:50.359546200 +0100
+@@ -75,7 +75,7 @@
+ 
+ 
+ # install the conversion tool, .so, .a, and all the header files
+-INSTALL ( PROGRAMS ${CMAKE_BINARY_DIR}/yuvconvert			DESTINATION bin )
++INSTALL ( PROGRAMS ${CMAKE_BINARY_DIR}/yuvconvert${CMAKE_EXECUTABLE_SUFFIX}			DESTINATION bin )
+ INSTALL ( TARGETS ${ly_lib_static}						DESTINATION lib )
+ INSTALL ( TARGETS ${ly_lib_shared} LIBRARY				DESTINATION lib RUNTIME DESTINATION bin )
+ INSTALL ( DIRECTORY ${PROJECT_SOURCE_DIR}/include/		DESTINATION include )
+--- include/libyuv/version.h	2022-03-07 22:50:48.113025300 +0000
++++ include/libyuv/version.h	2022-03-07 22:50:59.073025300 +0000
+@@ -13,4 +13,4 @@
+ 
+ #define LIBYUV_VERSION 1812
+ 
+-#endif  // INCLUDE_LIBYUV_VERSION_H_
+\ No newline at end of file
++#endif  // INCLUDE_LIBYUV_VERSION_H_
+
