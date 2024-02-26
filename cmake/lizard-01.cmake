@@ -20,12 +20,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(GNU_COMPATIBLE_COMPILER 1)
 endif()
 
-pkg_check_modules(ZSTD libzstd)
-if(ZSTD_FOUND)
-    list(APPEND lizard_LIBS ${ZSTD__LIBRARIES})
-    link_directories(${ZSTD_LIBRARY_DIRS})
-endif()
-
 set(lizard_LIC LICENCE)
 file(GLOB lizard_DOC doc/*.md)
 file(GLOB lizard_H lib/*.h lib/entropy/*.h lib/xxhash/*.h)
@@ -77,7 +71,7 @@ endif()
 # Executables
 if(BUILD_EXECUTABLES)
     add_executable(lizard ${lizard_CLI} ${lizard_H})
-    target_link_libraries(lizard liblizard ${lizard_LIBS})
+    target_link_libraries(lizard liblizard)
     install(TARGETS lizard RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 

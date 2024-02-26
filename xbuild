@@ -273,6 +273,10 @@ start(){
 
 		$break_on_git && end_script
 
+		if [ "x${cfg}" == "xcmake" ] && [ -n "${cmake_file}" ]; then
+			fn_log 'ext' cp "${dir_root}/cmake/${cmake_file}" ${dir_src}/CMakeLists.txt
+		fi
+
 		if fn_defined 'patch_source'; then
 			fn_log 'patch' patch_source
 		else
