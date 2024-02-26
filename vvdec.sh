@@ -21,6 +21,8 @@ dev_vrs='2.2.0'
 
 . xbuild
 
+cmake_cxx_flags_release=(-Oz -flto -g -DNDEBUG)
+
 start
 
 # cpu av8 av7 x86 x64

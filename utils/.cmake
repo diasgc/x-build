@@ -26,6 +26,10 @@ cmake_build_toolchainfile(){
 		set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
 		set(CMAKE_POSITION_INDEPENDENT_CODE 1)
 		EOF
+	[ -n "${cmake_definitions}" ] && echo "add_definitions("${cmake_definitions[@]}")" >>${cmake_toolchain_file}
+	[ -n "${cmake_cxx_flags_release}" ] && echo "set(CMAKE_CXX_FLAGS_RELEASE \""${cmake_cxx_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
+	[ -n "${cmake_c_flags_release}" ] && echo "set(CMAKE_C_FLAGS_RELEASE \""${cmake_c_flags_release}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
+	[ -n "${cmake_include_directories}" ] && echo "cmake_include_directories("${cmake_include_directories[@]}")" >>${cmake_toolchain_file}
 	[ -n "${WFLAGS}" ] && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
 	$host_x86 && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_C_COMPILER_ARG1 "-m32")
