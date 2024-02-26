@@ -20,12 +20,9 @@ lst_bin=''
 
 . xbuild
 
-if [ $host_ndk ]; then
-    CFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include"
-    start
-else
-    start
-fi
+$host_ndk && CFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include"
+
+start
 
 # Filelist
 # --------
