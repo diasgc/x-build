@@ -4,14 +4,9 @@ lib='wavpack'
 dsc='WavPack encode/decode library, command-line programs, and several plugins'
 lic='BSD 3-clause'
 src='https://github.com/dbry/WavPack.git'
-cfg='ar'
-dep='libiconv'
+cfg='cmake'
+#dep='libiconv'
 eta='30'
-
-ac_bin='--disable-apps|--enable-apps'
-ac_config="--enable-maintainer-mode"
-
-dev_vrs='5.4.0'
 
 lst_inc='wavpack/wavpack.h'
 lst_lib='libwavpack'
@@ -19,18 +14,9 @@ lst_bin='wavpack wvgain wvtag wvunpack'
 lst_lic='COPYING AUTHORS'
 lst_pc='wavpack.pc'
 
-mki='install'
+dev_vrs='5.6.6'
 
 . xbuild
-
-# cli has glob header that requires api28 for ndk
-$build_bin && $host_ndk && [ $API -lt 28 ] && set_ndk_api 28
-$host_arm && ac_config+=" --disable-asm"
-
-source_config(){
-    test -f config.rpath || cp /usr/share/gettext/config.rpath . 2>/dev/null || touch config.rpath || exit 1
-    doAutoreconf .
-}
 
 start
 

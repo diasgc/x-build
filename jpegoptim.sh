@@ -7,13 +7,11 @@ apt='jpegoptim'
 dsc='Utility to optimize/compress JPEG files'
 lic='GPL-2'
 src='https://github.com/tjko/jpegoptim.git'
-sty='git'
-cfg='ac'
+cfg='cmake'
 dep='libjpeg'
 eta='60'
 
 . xbuild
-
 
 start
 

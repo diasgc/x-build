@@ -9,6 +9,8 @@ cfg='cmake'
 eta='45'
 cmake_bin='BUILD_EXAMPLES'
 cmake_config='-DBUILD_TESTS=OFF'
+cmake_cxx_flags_release=(-Oz -flto -g -DNDEBUG)
+cmake_definitions=(-Wno-c99-extensions)
 
 lst_inc='soxr.h soxr-lsr.h'
 lst_lib='libsoxr.a libsoxr-lsr.a'
@@ -16,9 +18,7 @@ lst_bin=''
 lst_lic='share/doc/libsoxr/LICENCE'
 
 dev_bra='master'
-dev_vrs='1.2.0'
-stb_bra=''
-stb_vrs=''
+dev_vrs='0.1.3'
 
 . xbuild
 

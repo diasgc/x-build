@@ -4,12 +4,9 @@ lib='libklvanc'
 apt=''
 dsc='VANC Processing Framework'
 lic='LGPL-2.1'
-vrs='0' # no version
 src='https://github.com/stoth68000/libklvanc.git'
-cfg='ac'
+cfg='meson'
 eta='60'
-
-CFG="--disable-tests --enable-rpath --disable-dsd --enable-legacy --with-pic=1"
 
 pc_llib="-lklvanc"
 
@@ -21,10 +18,6 @@ lst_bin='klvanc_eia708 klvanc_genscte104
 lst_pc='libklvanc.pc'
 
 . xbuild
-
-source_patch(){
-    ./autogen.sh --build
-}
 
 start
 

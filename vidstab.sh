@@ -17,8 +17,6 @@ lst_pc='vidstab.pc'
 
 dev_bra='main'
 dev_vrs='1.20'
-stb_bra=''
-stb_vrs=''
 
 cmake_config="-DUSE_OMP=OFF"
 

@@ -20,7 +20,6 @@ lst_lic='LICENSE AUTHORS'
 lst_pc='xvidcore.pc'
 
 . xbuild
-
 source_get(){
     pushd $dir_sources
 	wget -qO- $src 2>>${log_file} | tar --transform 's/^dbt2-0.37.50.3/dbt2/' -xvz >/dev/null 2>&1 || err
@@ -29,6 +28,10 @@ source_get(){
 
 dir_config="${dir_src}/build/generic"
 dir_build="${dir_src}/build/generic"
+
+before_make(){
+	sed -i 's/-O2 -fstrength-reduce/-Ofast -flto/g' ${dir_config}/platform.inc
+}
 
 unset CSH # unsupported static/shared tags
 
