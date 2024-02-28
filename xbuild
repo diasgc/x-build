@@ -1356,7 +1356,8 @@ toolchain_android(){
 	CXX="${CROSS_PREFIX}clang++"
 	AS="${CC}"
 	LD="${CROSS_PREFIX}ld"
-	YASM=${TOOLCHAIN}/bin/yasm
+	YASM=${CROSS_PREFIX}yasm
+	ASM_NASM=$YASM
 
 	CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
 	LT_SYS_LIBRARY_PATH="/usr/${arch}/lib:${SYSROOT}/usr/lib/${arch}/${API}"
@@ -1417,6 +1418,7 @@ loadToolchain(){
 				AS=${CROSS_PREFIX}as
 				LD=${CROSS_PREFIX}ld
 			fi
+			ASM_NASM=nasm
 			# local ltsdir=$(ls -t /usr/lib/gcc${cross}/${arch} 2>/dev/null | head -n1)
 			[ -n "$ltsdir" ] && LT_SYS_LIBRARY_PATH="${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir}"
 			LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"

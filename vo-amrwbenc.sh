@@ -6,11 +6,12 @@ dsc='VisualOn Adaptive Multi-Rate Wideband speech codec library'
 lic='Apache-2.0'
 src='https://github.com/mstorsjo/vo-amrwbenc.git'
 cfg='cmake'
+cmake_cmakelists='vo-amrwbenc.cmake'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='EXAMPLE'
 
-ac_bin='--disable-example|--enable-example'
-ac_config='--disable-maintainer-mode'
+#ac_bin='--disable-example|--enable-example'
+#ac_config='--disable-maintainer-mode'
 
 lst_inc='vo-amrwbenc/enc_if.h'
 lst_lib='libvo-amrwbenc'
@@ -24,8 +25,10 @@ eta='17'
 
 . xbuild
 
-[ "$arch" == "arm-linux-androideabi" ] && ac_config+=" --enable-armv7neon=yes"
-HOST_NPROC=1
+cmake_config='-DENABLE_ASM=ON'
+
+#[ "$arch" == "arm-linux-androideabi" ] && ac_config+=" --enable-armv7neon=yes"
+#HOST_NPROC=1
 start
 
 # cpu av8 av7 x86 x64
