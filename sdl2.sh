@@ -13,6 +13,7 @@ lic='BSD'
 src='https://github.com/libsdl-org/SDL.git'
 cfg='cmake'
 eta='60'
+pkg='sdl3'
 cmake_static='SDL_STATIC'
 cmake_config="-DRPATH=OFF -DASAN=ON -DASSEMBLY=ON"
 
@@ -20,18 +21,16 @@ lst_inc='SDL2/*.h'
 lst_lib='libSDL2main libSDL2 libhidapi'
 lst_bin='sdl2-config'
 lst_lic='LICENSE AUTHORS'
-lst_pc=''
+lst_pc='sdl3.pc'
 
 dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='3.0.0'
 
 . xbuild
 
-$host_ndk && CFG+=" -DANDROID=ON"
-$host_arm && CFG+=" -DARMNEON=ON -DARMSIMD=ON -DMMX=OFF"
-$host_mingw && CFG+=" -DCMAKE_COMPILER_IS_MINGW=TRUE" || CFG+=" -DSDL_STATIC_PIC=ON"
+#$host_ndk && CFG+=" -DANDROID=ON"
+#$host_arm && CFG+=" -DARMNEON=ON -DARMSIMD=ON -DMMX=OFF"
+#$host_mingw && CFG+=" -DCMAKE_COMPILER_IS_MINGW=TRUE" || CFG+=" -DSDL_STATIC_PIC=ON"
 
 _source_get(){
     pushdir $SOURCES

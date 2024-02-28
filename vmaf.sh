@@ -6,8 +6,7 @@ dsc='Perceptual video quality assessment based on multi-method fusion'
 lic='BSD-2c Patent'
 src='https://github.com/Netflix/vmaf.git'
 eta='52'
-config_dir="libvmaf"
-meson_cfg='-Denable_docs=false -Denable_tests=false'
+cfg='meson'
 
 lst_inc='libvmaf/*.h'
 lst_lib='libvmaf'
@@ -15,10 +14,14 @@ lst_bin='vmaf'
 lst_lic='LICENSE'
 lst_pc='libvmaf.pc'
 
-dev_vrs='2.3.0'
+dev_vrs='3.0.0'
 
 . xbuild
 
+config_dir="libvmaf"
+build_dir='libvmaf'
+
+meson_cfg='-Denable_docs=false -Denable_tests=false'
 $host_arm || meson_cfg+=' -Denable_avx512=true'
 
 start
