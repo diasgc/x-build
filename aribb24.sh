@@ -9,12 +9,13 @@ cfg='cmake'
 dep='libpng bzip2'
 eta='10'
 build_strip=false
+
 cmake_bin='BUILD_EXECUTABLES'
+cmake_cmakelists='aribb24.cmake'
+cmake_config='-DINSTALL_DOCS=OFF'
 
 dev_bra='master'
 dev_vrs='1.0.3'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='aribb24/*.h'
 lst_lib='libaribb24'
@@ -24,14 +25,8 @@ lst_pc='aribb24.pc'
 
 . xbuild
 
-cmake_config='-DINSTALL_DOCS=OFF'
-WFLAGS="-Wno-pointer-to-int-cast -Wno-unused-command-line-argument"
 
-_before_make(){
-    # to build shared libs on mingw
-    $host_mingw && sed -i 's/\$(AM_LDFLAGS) \$(LDFLAGS)/& -no-undefined/g' Makefile
-    return 0
-}
+WFLAGS="-Wno-pointer-to-int-cast -Wno-unused-command-line-argument"
 
 start
 

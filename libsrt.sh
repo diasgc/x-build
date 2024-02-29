@@ -11,9 +11,7 @@ dep='openssl'
 eta='60'
 
 dev_bra='master'
-dev_vrs='1.4.4'
-stb_bra='tags/v1.4.4'
-stb_vrs='1.4.4'
+dev_vrs='1.5.3'
 
 lst_inc='srt/*.h'
 lst_lib='libsrt'
@@ -22,6 +20,11 @@ lst_lic='LICENSE'
 lst_pc='srt.pc haisrt.pc'
 
 . xbuild
+
+$build_static || cmake_config+=' -DENABLE_STATIC=OFF'
+$build_shared || cmake_config+=' -DENABLE_SHARED=OFF'
+
+WFLAGS='-Wno-deprecated-declarations'
 
 start
 

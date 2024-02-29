@@ -1,5 +1,21 @@
 #!/bin/bash
 
+# script env variables
+
+# cmake_toolchain_file
+
+# cmake_static
+# cmake_shared
+# cmake_nin
+
+# cmake_definitions[]
+# cmake_cxx_flags_release[]
+# cmake_c_flags_release[]
+# cmake_include_directories[]
+# WFLAGS
+
+
+
 cmake_build_toolchainfile(){
 	export cmake_toolchain_file="${dir_build}/${arch}.cmake"
 	cat <<-EOF >${cmake_toolchain_file}
@@ -29,7 +45,7 @@ cmake_build_toolchainfile(){
 		EOF
 	[ -n "${cmake_definitions}" ] && echo "add_definitions("${cmake_definitions[@]}")" >>${cmake_toolchain_file}
 	[ -n "${cmake_cxx_flags_release}" ] && echo "set(CMAKE_CXX_FLAGS_RELEASE \""${cmake_cxx_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
-	[ -n "${cmake_c_flags_release}" ] && echo "set(CMAKE_C_FLAGS_RELEASE \""${cmake_c_flags_release}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
+	[ -n "${cmake_c_flags_release}" ] && echo "set(CMAKE_C_FLAGS_RELEASE \""${cmake_c_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
 	[ -n "${cmake_include_directories}" ] && echo "cmake_include_directories("${cmake_include_directories[@]}")" >>${cmake_toolchain_file}
 	[ -n "${WFLAGS}" ] && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
 	$host_x86 && cat <<-EOF >>${cmake_toolchain_file}
@@ -62,7 +78,27 @@ cmake_build_toolchainfile(){
 	#cmake_addcpack
 }
 
+cmake_generate_pkgconfig_pc_in(){
+	cat <<-EOF >"${dir_src}/${lib}.pc.in"
+		prefix=@CMAKE_INSTALL_PREFIX@
+		exec_prefix=${prefix}
+		libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
+		includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+		
+		Name: @PROJECT_NAME@
+		Description: @CMAKE_PROJECT_DESCRIPTION@
+		URL: @CMAKE_PROJECT_HOMEPAGE_URL@
+		Version: @PROJECT_VERSION@
+		Requires: 
+		Requires.private: @REQ_PRIVATE@
+		Libs: -L${libdir} -l@PROJECT_NAME@
+		Libs.private: @LIBS_PRIVATE@
+		Cflags: -I${includedir}
+		EOF
+}
+
 cmake_build_package(){
+
 	local brk=false
 	local flist=
 

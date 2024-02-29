@@ -8,16 +8,19 @@ lib='librtmp'
 dsc='rtmpdump is a toolkit for RTMP streams. All forms of RTMP are supported, including rtmp://, rtmpt://, rtmpe://, rtmpte://, and rtmps://.'
 lic='GLP-2.0'
 src='git://git.ffmpeg.org/rtmpdump' sty='git'
-cfg='cmake'
 dep='zlib openssl'
 eta='0'
 
+cfg='cmake'
+cmake_cmakelists='librtmp.cmake'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='BUILD_EXECUTABLES'
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
+
+dev_vrs='2.4.0'
 
 . xbuild
 

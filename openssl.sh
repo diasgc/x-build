@@ -4,21 +4,14 @@
 #  +   .   .   .   .   .   .   .   .   .   .  shared
 #  +   .   .   .   .   .   .   .   .   .   .  bin
 
-# TODO
-# . remove docs and html pages
-
-
 lib='openssl'
 dsc='TLS/SSL and crypto library'
 lic='Apache-2.0'
 src='https://github.com/openssl/openssl.git'
 cfg='other'
 tls='nasm perl'
-dep='cryptopp'
+#dep='cryptopp'
 eta='360'
-mki="install"
-#csh0="-static no-shared pic"
-#csh1="-static shared pic"
 
 lst_inc='openssl/*.h'
 lst_lib='libssl libcrypto ossl-modules/legacy.so engines-3/*.so '
@@ -26,7 +19,10 @@ lst_bin='c_rehash openssl'
 lst_lic='LICENSE.txt AUTHORS.md'
 lst_pc='libssl.pc libcrypto.pc openssl.pc'
 
-dev_vrs='3.1.0'
+dev_vrs='3.3.0'
+
+# install no docs
+mki="install_sw"
 
 . xbuild
 
@@ -34,26 +30,21 @@ dir_build="${dir_src}/build_${arch}"
 
 PATH=$TOOLCHAIN/bin:$PATH
 
+$host_ndk && CFG="android-${target_trip[0]} -D__ANDROID_API__=$API no-tests" && CFG="${CFG/aarch64/arm64}"
+
 case $arch in
   x86_64-w64-mingw32 )    CFG="no-idea no-mdc2 no-rc5 mingw64 --cross-compile-prefix=x86_64-w64-mingw32-";;
   i686-w64-mingw32 )      CFG="no-idea no-mdc2 no-rc5 mingw --cross-compile-prefix=i686-w64-mingw32-";;
-  aarch64-linux-android ) CFG="android-arm64" CC=clang;;
-  arm-linux-androideabi ) CFG="android-arm -D__ANDROID_API__=$API" CC=clang;;
-  i686-linux-android )    CFG="android-x86 -D__ANDROID_API__=$API" CC=clang;;
-  x86_64-linux-android )  CFG="android-x86_64 -D__ANDROID_API__=$API" CC=clang;;
 esac
-#AS=$YASM
+
+$build_shared || CFG+=" no-shared"
+
 export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
 
 CFLAGS='-Wno-macro-redefined'
 
 build_config(){
-  do_log 'config' $dir_src/Configure ${CFG} ${CSH} --prefix=${dir_install}
-}
-
-on_make(){
-  sed -i "0,/^install:(.*)install_docs$/{s/ install_docs//}" $dir_src/Makefile
-  $MAKE_EXECUTABLE depend && $MAKE_EXECUTABLE -j${HOST_NPROC}
+  do_log 'config' $dir_src/Configure ${CFG} --prefix=${dir_install}
 }
 
 start
