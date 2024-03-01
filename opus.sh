@@ -5,10 +5,12 @@ lib='opus'
 dsc='Opus is a codec for interactive speech and audio transmission over the Internet'
 lic='BSD'
 src='https://github.com/xiph/opus.git'
-cfg='meson'
+cfg='cmake'
 dep='ogg'
 eta='60'
 ac_nopic=true
+
+cmake_bin='OPUS_BUILD_PROGRAMS'
 
 lst_inc='opus/*.h'
 lst_lib='libopus'
@@ -16,12 +18,13 @@ lst_bin=''
 lst_lic='LICENSE_PLEASE_READ.txt COPYING AUTHORS'
 lst_pc='opus.pc'
 
-ac_config="--disable-doc"
-meson_cfg='-Dtests=disabled -Ddocs=disabled'
+dev_vrs='1.4'
 
 . xbuild
 
-$build_bin && ac_config+=' --enable-extra-programs' && meson_cfg+=' -Dextra-programs=enabled'
+#$build_bin && ac_config+=' --enable-extra-programs' && meson_cfg+=' -Dextra-programs=enabled'
+#ac_config="--disable-doc"
+#meson_cfg='-Dtests=disabled -Ddocs=disabled'
 
 start
 

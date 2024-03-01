@@ -18,6 +18,8 @@ lst_bin=''
 lst_lic='COPYING.LIB AUTHORS'
 lst_pc=''
 
+dev_vrs='2.0.5'
+
 . xbuild
 
 start

@@ -8,7 +8,7 @@ src='https://github.com/xiph/ogg.git'
 cfg='cmake'
 eta='3'
 
-ac_bin="--disable-extra-programs|--enable-extra-programs"
+#ac_bin="--disable-extra-programs|--enable-extra-programs"
 
 lst_inc='ogg/*.h'
 lst_lib='libogg'

@@ -7,7 +7,7 @@ src='https://gitlab.freedesktop.org/mesa/drm.git'
 cfg='meson'
 eta='0'
 
-dev_vrs='2.4.110'
+dev_vrs='2.4.120'
 
 lst_inc='xf86drm.h xf86drmMode.h libsync.h libdrm/*.h'
 lst_lib='libdrm libdrm_freedreno libdrm_amdgpu libdrm_radeon'
@@ -15,12 +15,11 @@ lst_bin=''
 lst_lic='README.rst'
 lst_pc='libdrm.pc libdrm_vc4.pc libdrm_amdgpu.pc libdrm_radeon.pc libdrm_freedreno.pc'
 
-on_config_ndk(){
-    meson_cfg+=' -Dnouveau=false'
-    WFLAGS='-Wno-format'
-}
 
 . xbuild
+
+meson_cfg+=' -Dman-pages=disabled -Dnouveau=disabled -Dtests=false'
+
 start
 
 # cpu av8 av7 x86 x64
