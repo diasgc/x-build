@@ -29,6 +29,8 @@ ffblock="FFDATA"
 tested_ndk_libs=( aribb24 avisynth frei0r kvazaar lcms2 libwebp lensfun openjpeg svtav1 theora vidstab vpx vulkan vvdec vvenc x264 x265 zimg opencl openh264 libplacebo)
 failed_ndk_libs=(  )
 
+
+
 applyOptions(){
     IFS='|' read -r -a keys <<<"$1"
     for k in "${keys[@]}"; do

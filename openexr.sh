@@ -8,8 +8,10 @@ lic='BSD-2c'
 src='https://github.com/AcademySoftwareFoundation/openexr.git' #src_opt='--recurse-submodules'
 cfg='cmake'
 eta='10'
-cbk='OPENEXR_BUILD_TOOLS'
-CFG="-DBUILD_TESTING=OFF -DOPENEXR_INSTALL_EXAMPLES=OFF"
+cmake_bin='OPENEXR_BUILD_TOOLS'
+# to make opencv otherwise will fail with libdeflate::libdeflate_static (or _shared) missing
+cmake_config="-DOPENEXR_FORCE_INTERNAL_DEFLATE=ON"
+cmake_config+=" -DBUILD_TESTING=OFF -DOPENEXR_INSTALL_EXAMPLES=OFF -DOPENEXR_TEST_LIBRARIES=OFF -DOPENEXR_TEST_PYTHON=OFF =OPENEXR_TEST_TOOLS=OFF"
 
 lst_inc='OpenEXR/*.h'
 lst_lib='libOpenEXRCore-3_1 libIex-3_1 libOpenEXRUtil-3_1 libOpenEXR-3_1 libIlmThread-3_1'

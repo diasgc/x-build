@@ -7,7 +7,6 @@ lic='Apache-2.0'
 src='https://github.com/llvm-mirror/openmp.git'
 cfg='cmake'
 eta='0'
-API=26 # min ndk api required
 
 lst_inc='ompt.h omp.h omp-tools.h'
 lst_lib='libomp libomptarget'

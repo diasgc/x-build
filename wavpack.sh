@@ -14,7 +14,7 @@ lst_bin='wavpack wvgain wvtag wvunpack'
 lst_lic='COPYING AUTHORS'
 lst_pc='wavpack.pc'
 
-dev_vrs='5.6.6'
+dev_vrs='5.7.0'
 
 . xbuild
 

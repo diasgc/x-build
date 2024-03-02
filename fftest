@@ -1,0 +1,15 @@
+#!/bin/bash
+
+cd sources/ffmpeg
+start=false
+while read -r line; do
+    if [[ "$line" = *"External library"* ]]; then
+        start=true
+    elif $start; then
+        if [[ ! "$line" = *"[autodetect]"* ]] && [[ "$line" = "--enable"* ]]; then
+            echo -e "$line"
+        fi
+    elif [[ "$line" = *"hardware acceleration"* ]]; then
+        break
+    fi
+done < <(./configure --help)

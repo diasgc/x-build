@@ -1,5 +1,24 @@
 #!/bin/bash
 
+apt_install(){
+	while [ "$1" != "" ];do
+		#echo -ne "  ${CT0}install $1${C0}"
+		#echo -n " "
+		stty size | {
+		read y x
+		echo -ne "${CY1}"
+		tput sc
+		tput cup "$((y - 1))" 0
+		$sudo apt -qq install $1 -y >/dev/null 2>&1
+		echo -ne "${C0}"
+		tput rc
+		}
+		#echo -ne "${C0} ok"
+		shift
+	done
+}
+
+# unused
 aptInstallBr(){
   while [ -n "$1" ];do
     echo -ne "${CD}${ind}${CT0}install $1${C0} "
@@ -205,7 +224,7 @@ package_showinfo(){
 		tput sc; echo -ne "${CD}$tls "; tput rc
 		for t in ${tls}; do
 		if [ -z $(command -v ${t}) ];then
-			aptInstall ${t} || {
+			apt_install ${t} || {
 			echo -ne "${CR1}${t} ${C0}" && doErr "Unable to install ${t}, aborting..."
 			}
 			echo -ne "${CW}${t} "
@@ -247,7 +266,7 @@ package_longdesc(){
 
 patch_check_patchdir(){
   test $patch_skip && return 0
-  local patch_list=( $(ls -1 "${dir_patches}/${lib}*.patch 2>/dev/null)" ) )
+  local patch_list=( $(ls -1 ${dir_patches}/${lib}*.patch 2>/dev/null) )
   if [ -n "${patch_list[@]}" ]; then
     pushd ${dir_src} 2>&1 >/dev/null
     for p in ${patch_list[@]}; do
@@ -290,4 +309,35 @@ patch_check_xbpatch(){
 	fi
 	popdir
 	return 0
+}
+
+
+
+
+
+
+# unused
+
+ndk_assert_h_sys_soundcard(){
+	[ "$host_os" == "android" ] && \
+		[ ! -f "$SYSROOT/usr/include/sys/soundcard.h" ] && \
+		echo "#include <linux/soundcard.h>" >"$SYSROOT/usr/include/sys/soundcard.h" 
+	return 0
+}
+set_ndk_api(){
+	API=${1}
+	loadToolchain
+}
+downloadP(){
+	tput sc && echo -ne "\e[$(tput lines);0H${CY1}"
+	# wget --progress=dot $url 2>&1 | grep --line-buffered "%" | sed -u -e "s,\.,,g" | awk '{printf("\b\b\b\b%4s", $2)}'
+	wget --progress=dot $1 2>&1 | grep --line-buffered "%" | sed -u -e "s,\.,,g" | awk '{printf("\r%4s %s eta:%s  ",$2,$1,$4)}'
+	tput rc
+	echo "${C0} ok "
+}
+checkUrl(){
+	wget -S --spider $1 2>&1 | grep -q "HTTP/1.[0-9] 200 OK" && echo SUCCESS || echo FAIL
+}
+checkCmd(){
+	[ -z "$(command -v $1)"] $sudo apt -qq install $1 -y >/dev/null 2>&1
 }

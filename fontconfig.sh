@@ -4,9 +4,9 @@ lib='fontconfig'
 dsc='Font customization and configuration library'
 lic='Other'
 src='https://gitlab.freedesktop.org/fontconfig/fontconfig.git'
-cfg='ag'
+cfg='meson'
 tls='gperf gettext autopoint'
-dep='libiconv freetype expat json-c libpng'
+dep='libiconv freetype expat json-c libpng bzip2'
 eta='231'
 
 lst_inc='fontconfig/*.h'
@@ -20,15 +20,15 @@ dev_vrs='2.13.94'
 
 . xbuild
 
-ac_config='--disable-docs'
-
-_on_config_x86x(){
-    ac_nosysroot=true
-    ac_config+=' --enable-iconv=no --enable-libxml2'
-}
-
-#not recomended
 meson_cfg='-Db_pie=true -Db_lto=true -Ddoc=disabled -Dtests=disabled'
+
+# build with meson requires tools desabled for static build (cannot find -lbz2)
+build_tools='disabled'
+$build_bin && $build_static && \
+    test ! -f ${dir_install_lib}/libbz2.a && \
+    ln -s ${dir_install_lib}/libbz2_static.a ${dir_install_lib}/libbz2.a && \
+    build_tools='enabled'
+meson_cfg+=" -Dtools=${build_tools}"
 
 start
 

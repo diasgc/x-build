@@ -3,7 +3,7 @@
 lib='libiconv'
 dsc='Character set conversion library'
 lic='LGPL2.1'
-vrs='1.16' src="https://ftp.gnu.org/gnu/libiconv/libiconv-${vrs}.tar.gz"
+vrs='1.17' src="https://ftp.gnu.org/gnu/libiconv/libiconv-${vrs}.tar.gz"
 #src='https://git.savannah.gnu.org/git/libiconv.git'
 eta='90'
 cfg='ac'
@@ -22,12 +22,13 @@ lst_pc='libiconv.pc'
 
 dev_vrs='1.16'
 
+iconv_latest_vrs(){
+	local out="$(curl https://ftp.gnu.org/gnu/libiconv/ 2>/dev/null)"
+	echo "$out" | grep -oP 'libiconv-[0-9\.]+.tar.gz' | tail -n 1 | grep -oP '[0-9]+.[0-9]+'
+}
+
 . xbuild
 
-_before_make(){
-	#no docs
-	sed -i '/cd man && $(MAKE)/d' $dir_src/Makefile
-}
 
 start
 

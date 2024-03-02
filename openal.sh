@@ -12,9 +12,7 @@ cfg='cmake'
 eta='0'
 
 dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='1.13'
 
 lst_inc='AL/*.h'
 lst_lib='libopenal'
@@ -22,9 +20,14 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='openal.pc'
 
-CFG="-DALSOFT_INSTALL_EXAMPLES=OFF -DALSOFT_EXAMPLES=OFF"
+cmake_config="-DALSOFT_INSTALL_EXAMPLES=OFF -DALSOFT_EXAMPLES=OFF"
 
 . xbuild
+
+$build_static && cmake_config+=' -DLIBTYPE=STATIC'
+unset CSH
+
+WFLAGS+=" -Wno-deprecated-declarations -Wno-unused-function"
 
 start
 

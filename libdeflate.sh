@@ -7,7 +7,9 @@ lic='MIT'
 src="https://github.com/ebiggers/libdeflate.git"
 dep='zlib'
 cfg='cmake'
-cmake_static='BUILD_STATIC_LIBS'
+cmake_static='LIBDEFLATE_BUILD_STATIC_LIB'
+cmake_shared='LIBDEFLATE_BUILD_SHARED_LIB'
+cmake_config='-DLIBDEFLATE_USE_SHARED_LIB=OFF'c
 eta='10'
 
 pc_llib='-ldeflate'

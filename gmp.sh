@@ -14,7 +14,7 @@ eta='272'
 
 ac_config="CC_FOR_BUILD=cc"
 
-dev_vrs='6.2.99'
+dev_vrs='6.3.0'
 
 lst_inc='gmp.h'
 lst_lib='libgmp'

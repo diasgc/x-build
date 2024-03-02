@@ -6,12 +6,6 @@ lic=''
 src='https://github.com/libexpat/libexpat.git'
 cfg='cmake'
 eta='10'
-config_dir="expat"
-
-ac_cfg='./buildconf.sh'
-ac_bin='--without-examples|--with-examples'
-ac_config='--without-tests --without-docbook --without-xmlwf --disable-fast-install'
-
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='EXPAT_BUILD_TOOLS'
 cmake_config='-DEXPAT_BUILD_EXAMPLES=OFF -DEXPAT_BUILD_TESTS=OFF'
@@ -23,7 +17,9 @@ lst_lic='expat/COPYING expat/AUTHORS'
 lst_pc='expat.pc'
 
 dev_bra='master'
-dev_vrs='2.6.0'
+dev_vrs='2.6.1'
+
+config_dir="expat"
 
 . xbuild
 

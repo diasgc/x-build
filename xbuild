@@ -1286,22 +1286,6 @@ doAutoreconf(){
 	logok $var
 }
 
-checkUrl(){
-	wget -S --spider $1 2>&1 | grep -q "HTTP/1.[0-9] 200 OK" && echo SUCCESS || echo FAIL
-}
-
-checkCmd(){
-	[ -z "$(command -v $1)"] $sudo apt -qq install $1 -y >/dev/null 2>&1
-}
-
-downloadP(){
-	tput sc && echo -ne "\e[$(tput lines);0H${CY1}"
-	# wget --progress=dot $url 2>&1 | grep --line-buffered "%" | sed -u -e "s,\.,,g" | awk '{printf("\b\b\b\b%4s", $2)}'
-	wget --progress=dot $1 2>&1 | grep --line-buffered "%" | sed -u -e "s,\.,,g" | awk '{printf("\r%4s %s eta:%s  ",$2,$1,$4)}'
-	tput rc
-	echo "${C0} ok "
-}
-
 download(){
 	# bsdtar from stdin doesnt extract file +x permission
 	# wget -qO- $1 | bsdtar -xvf- >/dev/null 2>&1
@@ -1313,36 +1297,6 @@ download(){
 	tput rc
 	echo -ne "${CS0} decompressing... ${C0}"
 	unzip tmp.zip >/dev/null 2>&1 && rm tmp.zip || err
-}
-
-apt_install(){
-	while [ "$1" != "" ];do
-		#echo -ne "  ${CT0}install $1${C0}"
-		#echo -n " "
-		stty size | {
-		read y x
-		echo -ne "${CY1}"
-		tput sc
-		tput cup "$((y - 1))" 0
-		$sudo apt -qq install $1 -y >/dev/null 2>&1
-		echo -ne "${C0}"
-		tput rc
-		}
-		#echo -ne "${C0} ok"
-		shift
-	done
-}
-
-set_ndk_api(){
-	API=${1}
-	loadToolchain
-}
-
-ndk_assert_h_sys_soundcard(){
-	[ "$host_os" == "android" ] && \
-		[ ! -f "$SYSROOT/usr/include/sys/soundcard.h" ] && \
-		echo "#include <linux/soundcard.h>" >"$SYSROOT/usr/include/sys/soundcard.h" 
-	return 0
 }
 
 toolchain_android(){
