@@ -78,6 +78,12 @@ cmake_build_toolchainfile(){
 	#cmake_addcpack
 }
 
+cmake_shouldreplace_cmakelists(){
+	test ! "x${cfg}" == "xcmake" && return 0
+	test -f "${dir_config}/CMakeLists.txt" && test -z "${cmake_cmakelists}" && return 0
+	test -f "${dir_root}/cmake/${lib}.cmake" && return 1
+}
+
 cmake_generate_pkgconfig_pc_in(){
 	cat <<-EOF >"${dir_src}/${lib}.pc.in"
 		prefix=@CMAKE_INSTALL_PREFIX@

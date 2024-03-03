@@ -340,14 +340,15 @@ start(){
 	fi
 
 	if $req_src_patch; then
-		# check if has auto patch embeded in source
+		# check if has auto patch embeded in source: depracated
 		patch_check_xbpatch
 		# check if has patch function in source
 		if fn_defined 'source_patch'; then
 			fn_log 'patch' source_patch
 		fi
-		if [ -n "${cmakelists_ext}" ]; then
-			local fcmake="${dir_root}/cmake/$cmakelists_ext"
+		fi
+		if [ -n "${cmake_cmakelists}" ]; then
+			local fcmake="${dir_root}/cmake/$cmake_cmakelists"
 			if [ -f "${fcmake}" ]; then
 				local fcmake_dst="${dir_src}/CMakeLists.txt"
 				cp -f "${fcmake}" "${fcmake_dst}" || doErr "Unable to copy ${fcmake} to ${fcmake_dst}"
