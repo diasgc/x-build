@@ -10,7 +10,7 @@ src='https://github.com/4creators/jxrlib.git'
 cfg='cmake'
 cmake_bin='BUILD_EXECUTABLES'
 cmake_static='BUILD_STATIC_LIBS'
-cmake_cmakelists='jxrlib-02.cmake'
+cmake_cmakelists='jxrlib.cmake'
 
 lst_inc='libjxr/glue/*.h libjxr/image/*.h libjxr/common/*.h libjxr/test/*.h'
 lst_lib='libjpegxr libjxrglue'

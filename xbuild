@@ -115,10 +115,6 @@ else
 fi
 export dir_pkgdist="${dir_root}/packages"
 
-# decaprated, backward compat only
-export SRCDIR=${dir_src}
-# to remove after 
-
 [ -d "${dir_sources}" ] || mkdir -p ${dir_sources}
 
 xv_x86_mingw="10"
@@ -345,7 +341,6 @@ start(){
 		# check if has patch function in source
 		if fn_defined 'source_patch'; then
 			fn_log 'patch' source_patch
-		fi
 		fi
 		if [ -n "${cmake_cmakelists}" ]; then
 			local fcmake="${dir_root}/cmake/$cmake_cmakelists"

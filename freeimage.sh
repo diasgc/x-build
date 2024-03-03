@@ -25,11 +25,10 @@ lst_pc='freeimage.pc'
 
 . xbuild
 
-source_patch(){
+_source_patch(){
     cd ${dir_src}
     cp Source/FreeImage.h Dist
     s0=$(cat Makefile.srcs | sed -e 's| Source| ./Source|g; s| \./|\n\t|g')
-    #s1=$(cat ${SRCDIR}/fipMakefile.srcs | sed -e 's| Source| ./Sources|g; s| \./|\n\t|g')
     local srcs=$(echo "$s0" | sed -n '/SRCS/,/INCLS/p' | sed '1d; $d')
     #local sfip=$(echo "$s1" | sed -n '/SRCS/,/INCLUDE = /p' | sed '1d; $d')
     local hdrs=$(echo "$s0" | sed -n '/INCLS/,/\n\n/p' | sed '1d; $d')

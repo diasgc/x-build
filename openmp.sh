@@ -6,6 +6,7 @@ dsc='LLVM-OpenMP library'
 lic='Apache-2.0'
 src='https://github.com/llvm-mirror/openmp.git'
 cfg='cmake'
+cmake_shared='LIBOMP_ENABLE_SHARED'
 eta='0'
 
 lst_inc='ompt.h omp.h omp-tools.h'
@@ -17,10 +18,10 @@ pc_llibs="-lomp -lomptarget"
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
 
 . xbuild
+
+$clang && WFLAGS='-Wno-unused-variable -Wno-nonnull'
 
 start
 
