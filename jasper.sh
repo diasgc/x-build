@@ -9,10 +9,11 @@ lic='JasPer'
 src='https://github.com/mdadams/jasper.git'
 cfg='cmake'
 eta='26'
+patch_skip=true
 
 cmake_static="BUILD_STATIC_LIBS"
 cmake_bin="JAS_ENABLE_PROGRAMS"
-cmake_config="-DBUILD_TESTING=OFF -DJAS_ENABLE_DOC=OFF -DJAS_STDC_VERSION=20220220"
+cmake_config="-DBUILD_TESTING=OFF -DJAS_ENABLE_DOC=OFF -DJAS_STDC_VERSION=20220220 -DALLOW_IN_SOURCE_BUILD=ON"
 
 dev_bra='master'
 dev_vrs='3.0.3'
@@ -27,7 +28,11 @@ on_config_mingw(){
     cmake_config="-DWITH_STACK_PROTECTOR=OFF"
 }
 
-. xbuild && start
+. xbuild
+
+$clang && WFLAGS='-Wno-pedantic -Wno-strict-prototypes'
+
+start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

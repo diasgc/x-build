@@ -10,11 +10,10 @@ dsc='Library for manipulating GIF files'
 lic='other'
 src='https://git.code.sf.net/p/giflib/code.git'
 cfg='cmake'
+cmake_cmakelists='giflib.cmake'
 eta='18'
 
 dev_vrs='5.2.1'
-
-pc_llib='-lgif'
 
 lst_inc='gif_lib.h'
 lst_lib='libgiflib'
