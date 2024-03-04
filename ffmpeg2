@@ -5,6 +5,7 @@
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
+set -x
 lib='ffmpeg'
 dsc='FFmpeg is the leading multimedia framework'
 lic='GLP-2.0'
@@ -53,9 +54,10 @@ zenTagList(){
 
 selectExtras(){
     local tag=$1
-    local block=$(awk '/^<<.'"$ffblock"'./{flag=1; next} /^'"$ffblock"'/{flag=0} flag' $0 | grep -P "\t${tag}\t" | sed 's/\t/\n/g')
+    local block=$(awk '/^<<'"$ffblock"'/{flag=1; next} /^'"$ffblock"'/{flag=0} flag' $0 | grep -P "\t${tag}\t" | sed 's/\t/\n/g')
     local cfgzen=()
     while IFS=$'\n' read -r -a entry; do
+        test "${entry}" = *"\${"* && entry=$(sed "s/'//g" <<<"${entry}")
         cfgzen+=( "${entry}" );
     done <<<"${block}"
     local test_zen=$(IFS=$'\n' zenity --list --checklist --text="Features" \
@@ -197,6 +199,7 @@ esac
 
 test -n "${argList[0]}" && set -- "${argList[@]}"
 
+set +x
 source xbuild
 
 extopts="--pkg-config-flags=--static \
@@ -221,7 +224,7 @@ for d in $dep; do
         $vs3_libs) v3=true;;&
         vv??c)     patch_vvc=true;;
         kvazaar)   lm="-lm";;
-        openh264|libplacebo|lensfun) lcpp="-lc++_static -lc++abi";;&
+        openh264|libplacebo|lensfun) $host_ndk && lcpp="-lc++_static -lc++abi";;&
         lensfun)   liconv="-liconv";;
      esac
 done
@@ -311,10 +314,7 @@ A1sh1ZCso63WwZLjIAO6dAGTFdcAAfOhEKOj7BO/na0QGySizyYPBEMhUNAz1eHy+yB+sD+b1w0DOq0u
 1AEkAMqKgAyMoAmgBZbUAJT1AA0QdKndCVgAvZBEVrdErlKo1eqNJrjMZTBZAA
 LZS_PATCH
 
-${A1}
-${V1}
-
-<<'FFDATA'
+<<FFDATA
 ${V1}	aom	video	'aom;--enable-libaom'	'Alliance for Open Media AV1 codec'
 ${V2}	aribb24	video	'aribb24;--enable-libaribb24'	'A library for ARIB STD-B24, decoding JIS 8 bit characters and parsing MPEG-TS stream'
 ${V2}	avisynth	video	'avisynth;--enable-avisynth'	'A powerful nonlinear scripting language for video'
