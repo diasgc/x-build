@@ -5,7 +5,6 @@
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
-set -x
 lib='ffmpeg'
 dsc='FFmpeg is the leading multimedia framework'
 lic='GLP-2.0'
@@ -199,7 +198,6 @@ esac
 
 test -n "${argList[0]}" && set -- "${argList[@]}"
 
-set +x
 source xbuild
 
 extopts="--pkg-config-flags=--static \
