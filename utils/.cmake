@@ -173,7 +173,10 @@ cmake_build_package(){
 }
 
 cmake_check_cmakefiles(){
-	if [ -n "${cmake_cmakelists}" ]; then
+	if [ -f "${dir_root}/cmake/${lib}.cmake" ]; then
+		test -f "${dir_src}/CMakeLists.txt" && mv ${dir_src}/CMakeLists.txt ${dir_src}/CMakeLists.orig
+		cp ${dir_root}/cmake/${lib}.cmake ${dir_src}/CMakeLists.txt
+	elif [ -n "${cmake_cmakelists}" ]; then
 		cp ${dir_root}/cmake/${cmake_cmakelists} ${dir_src}/CMakeLists.txt
 	fi
 	return 0

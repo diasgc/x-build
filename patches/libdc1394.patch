@@ -1,0 +1,74 @@
+--- dc1394/juju/capture.b	2020-04-04 06:28:12.000000000 +0100
++++ dc1394/juju/capture.c	2024-03-05 22:56:12.744664584 +0000
+@@ -321,7 +321,7 @@
+ 
+     struct {
+         struct fw_cdev_event_iso_interrupt i;
+-		__u32 headers[craw->packets_per_frame*2 + 16]; // HPK 20161209
++		__u32 *headers;
+     } iso;
+ 
+     if ( (policy<DC1394_CAPTURE_POLICY_MIN) || (policy>DC1394_CAPTURE_POLICY_MAX) )
+@@ -332,21 +332,24 @@
+ 
+     fds[0].fd = craw->iso_fd;
+     fds[0].events = POLLIN;
+-
++    iso.headers = malloc(craw->packets_per_frame*2 + 16); // HPK 20161209
+     while (1) {
+         err = poll(fds, 1, (policy == DC1394_CAPTURE_POLICY_POLL) ? 0 : -1);
+         if (err < 0) {
+             if (errno == EINTR)
+                 continue;
+             dc1394_log_error("poll() failed for device %s.", craw->filename);
++            free(iso.headers);
+             return DC1394_FAILURE;
+         } else if (err == 0) {
++            free(iso.headers);
+             return DC1394_SUCCESS;
+         }
+ 
+         len = read (craw->iso_fd, &iso, sizeof iso);
+         if (len < 0) {
+             dc1394_log_error("Juju: dequeue failed to read a response: %m");
++            free(iso.headers);
+             return DC1394_FAILURE;
+         }
+ 
+@@ -393,7 +396,7 @@
+     }
+ 
+     *frame_return = &f->frame;
+-
++    free(iso.headers);
+     return DC1394_SUCCESS;
+ }
+ 
+--- dc1394/juju/control.c     2019-04-28 02:40:21.000000000 +0200
++++ dc1394/juju/control.c     2023-05-24 16:47:57.705718376 +0200
+@@ -283,7 +283,7 @@
+     union {
+         struct {
+             struct fw_cdev_event_response r;
+-            __u32 buffer[cam->max_response_quads];
++            __u32 *buffer;
+         } response;
+         struct fw_cdev_event_bus_reset reset;
+         struct fw_cdev_event_iso_resource resource;
+@@ -292,6 +292,8 @@
+     juju_response_info *resp_info;
+     juju_iso_info *iso_info;
+ 
++    u.response.buffer = malloc(cam->max_response_quads);
++
+     len = read (cam->fd, &u, sizeof u);
+     if (len < 0) {
+         dc1394_log_error("juju: Read failed: %m");
+@@ -371,6 +373,7 @@
+         break;
+     }
+ 
++    free(u.response.buffer);
+     return 0;
+ }
+ 

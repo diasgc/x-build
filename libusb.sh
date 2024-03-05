@@ -7,7 +7,7 @@
 
 lib='libusb'
 apt='libpscs-dev'
-vrs='v1.0.24'
+pkg='libusb-1.0'
 dsc='A cross-platform library to access USB devices'
 lic='LGPL-2.1'
 src='https://github.com/libusb/libusb.git'
@@ -19,5 +19,7 @@ lst_inc=''
 lst_lib=''
 
 . xbuild
+
+$host_ndk && CFG+="--disable-udev"
 
 start
