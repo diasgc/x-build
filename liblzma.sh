@@ -6,12 +6,12 @@ dsc='General purpose data compression library'
 lic='GPL-3 LGPL-2.1'
 #vrs='v5.2.5' #stable, otherwise 5.3.2alpha will be used
 src='https://git.tukaani.org/xz.git'
-cfg='ac'
+cfg='cmake'
 eta='110'
-mki='install'
-cfg_cmd='./autogen.sh --no-po4a'
+#mki='install'
+#cfg_cmd='./autogen.sh --no-po4a'
 
-dev_vrs='5.2.5'
+dev_vrs='5.7.0'
 lst_inc='lzma.h lzma/*.h'
 lst_lib='liblzma'
 lst_bin='xzmore xzdec xzgrep xz lzmainfo xzless lzmadec xzdiff'
@@ -20,7 +20,7 @@ lst_pc='liblzma.pc'
 
 . xbuild
 
-ac_config="--disable-doc"
+#ac_config="--disable-doc"
 WFLAGS="-Wno-macro-redefined"
 
 start

@@ -12,7 +12,6 @@ cmake_static="ZSTD_BUILD_STATIC"
 cmake_shared="ZSTD_BUILD_SHARED"
 cmake_bin="ZSTD_BUILD_PROGRAMS"
 
-nodev=false
 config_dir='build/cmake'
 
 dev_vrs='1.5.2'

@@ -8,7 +8,7 @@
 lib='ffmpeg'
 dsc='FFmpeg is the leading multimedia framework'
 lic='GLP-2.0'
-vrs='n6.2-dev^{}'
+#vrs='n6.2-dev^{}'
 src='https://github.com/FFmpeg/FFmpeg.git'
 cfg='ac'
 eta='777'

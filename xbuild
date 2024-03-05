@@ -1132,15 +1132,20 @@ wget_tarxx(){
 	echo -ne "${CD}${tag}${C0}"
 	echo "$(date): $@" >> "${log_file}"
 
-	case $src in
-		*.tar.lz) 
-		test -z $(command -v lzip) && apt_install lzip
-		args="--lzip -xv"
+	case $sty in
+		tgz) args="-xvz";;
+		*)
+		case $src in
+			*.tar.lz) 
+			test -z $(command -v lzip) && apt_install lzip
+			args="--lzip -xv"
+			;;
+			*.tar.gz|*.tgz) args="-xvz";;
+			*.tar.xz) args="-xvJ";;
+			*.tar.bz2) args="-xvj";;
+			*) doErr "unknown compressed file format for $(basename ${src})";;
+		esac
 		;;
-		*.tar.gz|*.tgz) args="-xvz";;
-		*.tar.xz) args="-xvJ";;
-		*.tar.bz2) args="-xvj";;
-		*) doErr "unknown compressed file format for $(basename ${src})";;
 	esac
 
 	[ -d "tmp" ] && rm -rf tmp

@@ -8,7 +8,7 @@
 lib='ffmpeg'
 dsc='FFmpeg is the leading multimedia framework'
 lic='GLP-2.0'
-vrs='n6.2-dev^{}'
+#vrs='n6.2-dev^{}'
 src='https://github.com/FFmpeg/FFmpeg.git'
 cfg='ac'
 eta='777'
@@ -18,7 +18,6 @@ pkg='libavcodec'
 
 patch_skip=true
 ac_nohost=true
-
 
 lst_inc=''
 lst_lib=''
@@ -56,7 +55,7 @@ selectExtras(){
     local block=$(awk '/^<<'"$ffblock"'/{flag=1; next} /^'"$ffblock"'/{flag=0} flag' $0 | grep -P "\t${tag}\t" | sed 's/\t/\n/g')
     local cfgzen=()
     while IFS=$'\n' read -r -a entry; do
-        test "${entry}" = *"\${"* && entry=$(sed "s/'//g" <<<"${entry}")
+        case ${entry} in *'${'*) entry=$(eval echo ${entry});; esac
         cfgzen+=( "${entry}" );
     done <<<"${block}"
     local test_zen=$(IFS=$'\n' zenity --list --checklist --text="Features" \
@@ -86,7 +85,7 @@ ffmpegConfig(){
         false   android-x64     "aa64"
         false   linux-arm64     "la8"
         false   linux-armv7     "la7"
-        false   linux-x64       "la7"
+        false   linux-x64       "lx64"
         false   windows-arm64   "wa8"
         false   windows-x64     "wx64"
     )
