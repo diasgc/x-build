@@ -163,19 +163,26 @@ build_packages_bin(){
 
 #usage xbuild --new <github_url>
 generate_script(){
+	#set -x
 	test -z "$1" && return 0
-	local srcname=$1
+	local giturl=$1
+	local srcname=${giturl/\.git/}
 	local libname="${srcname##*/}"
 	libname="${libname,,}"
+	case ${libname} in *.git) libname=${libname/\.git/};; esac
 	local scriptname="${dir_root}/${libname}.sh"
 	cp "${dir_root}/utils/script.template" ${scriptname}
 	chmod +x "${scriptname}"
-	sed -i 's,@src@,'${srcname}',g;s,@lib@,'${libname}',g' ${scriptname}
-	local json=$(github_json $1)
-	local libdesc=$(cat ${json} | jq .description | xargs)
-	local lic=$(cat ${json} | jq .license.name | xargs)
-	test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
-	test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname}
+	sed -i 's,@src@,'${giturl}',g;s,@lib@,'${libname}',g' ${scriptname}
+	case $giturl in
+		*github*)
+			local json=$(github_json $srcname)
+			local libdesc=$(cat ${json} | jq .description | xargs)
+			local lic=$(cat ${json} | jq .license.name | xargs)
+			test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
+			test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname};;
+	esac
+	#set +x
 }
 
 github_json(){
@@ -186,7 +193,7 @@ github_json(){
 		*) echo;;
 	esac
 	local json=${dir_root}/builds/${libname}.info
-	test -f ${json} || wget -q $url -O ${json}
+	wget -q $url -O ${json}
 	echo ${json}
 }
 
@@ -198,7 +205,7 @@ github_description(){
 		*) return 0
 	esac
 	local json=${dir_root}/builds/${libname}.info
-	 test -f ${json} || wget -q $url -O ${json}
+	test -f ${json} || wget -q $url -O ${json}
 	 echo $(cat ${json} | jq .description | xargs)
 }
 

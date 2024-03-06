@@ -72,7 +72,7 @@ check_function_exists(mmap HAVE_MMAP)
 find_package(IOKit QUIET)
 set(HAVE_FRAMEWORK_IOKIT ${IOKit_FOUND})
 
-set(CMAKE_C_FLAGS_RELEASE "-Ofast -flto")
+set(CMAKE_C_FLAGS_RELEASE "-Ofast -flto -g -DNDEBUG")
 
 if(CMAKE_C_COMPILER_ID MATCHES Clang)
     add_definitions(-pedantic -Wno-enum-conversion -Wno-strict-prototypes -Wno-deprecated-non-prototype)
