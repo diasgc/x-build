@@ -19,7 +19,7 @@ option(INSTALL_DOCS "Install docs" ON)
 
 set(CMAKE_C_FLAGS_RELEASE "-Ofast -flto -g -DNDEBUG")
 if(UNIX)
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fPIC -fPIE")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fPIC -fPIE")
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/lib)
