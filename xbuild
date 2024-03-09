@@ -488,6 +488,9 @@ start(){
 
 	# check whether to create pkg-config .pc file
 	if ! $skip_pc; then
+		if fn_defined 'get_version'; then
+			vrs=$(get_version)
+		fi
 		if fn_defined 'on_create_pc'; then
 			fn_log 'pkgconfig' on_create_pc
 		elif [ -n "$pc_llib" ]; then

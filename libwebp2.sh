@@ -13,37 +13,12 @@ dsc='WebP 2 is the successor of the WebP image format'
 lic='TEST'
 src='https://chromium.googlesource.com/codecs/libwebp2.git'
 cfg='cmake'
+#dep='aom libavif libjpeg'
 cmake_path='lib/wp2/cmake'
-. xbuild
-CFG="-DWP2_BUILD_TESTS=OFF"
 
-# Default CMake Options:
-# -DAOM_BUILD_PATH
-# -DAOM_SRC_PATH
-# -DAVIF_BUILD_PATH
-# -DAVIF_SRC_PATH
-# -DLIBGAV1_BUILD_PATH
-# -DLIBGAV1_SRC_PATH
-# -DSJPEG_INSTALL_PATH
-# -DWP2_BUILD_EXAMPLES               ON
-# -DWP2_BUILD_EXTRAS                 ON
-# -DWP2_BUILD_SWIG_PY                OFF
-# -DWP2_BUILD_TESTS                  ON
-# -DWP2_BUILD_WITH_CLANG_TIDY        OFF
-# -DWP2_BUILD_WP2_JS                 OFF
-# -DWP2_ENABLE_ANS_CHECK             OFF
-# -DWP2_ENABLE_ANS_DEEP_CHECK        OFF
-# -DWP2_ENABLE_BITTRACE              OFF
-# -DWP2_ENABLE_CONTEXT_SWITCH        AUTO
-# -DWP2_ENABLE_SIMD                  ON
-# -DWP2_ENABLE_TESTS                 ON
-# -DWP2_ENABLE_TEST_HTTP_SERVER      OFF
-# -DWP2_ENABLE_TRACE                 OFF
-# -DWP2_HAVE_AOM_DBG                 OFF
-# -DWP2_REDUCED                      OFF
-export WFLAGS='-Wno-error,-Wunused-but-set-variable'
-unset CSH
-$host_ndk && CFG="-DWP2_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"
+. xbuild
+
+cmake_config="-DWP2_BUILD_EXAMPLES=OFF -DWP2_ENABLE_TESTS=OFF -DWP2_BUILD_EXTRAS=OFF"
 
 start
 

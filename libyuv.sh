@@ -8,7 +8,7 @@ cfg='cmake'
 dep='libjpeg'
 eta='90'
 
-dev_vrs='0.0.1812'
+dev_vrs='1887'
 pc_llib='-lyuv'
 pc_libsprivate='-lpthread -ljpeg'
 
@@ -22,9 +22,8 @@ lst_pc='libyuv.pc'
 
 LDFLAGS+=" -ljpeg"
 
-before_make(){
-    vrs=$(cat ${log_file} | grep 'Building ver.: .*' | sed 's|Building ver.: ||')
-    return 0
+get_version(){
+    echo $(cat ${dir_src}/include/libyuv/version.h | grep -oP 'LIBYUV_VERSION \K[0-9]+')
 }
 
 start
