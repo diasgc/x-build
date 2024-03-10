@@ -318,7 +318,12 @@ patch_check_xbpatch(){
 	return 0
 }
 
-
+request_cmd(){
+	local c1=$1
+	local c2=$2
+	test -z "${c2}" && c2=${c1}
+	test -z $(command -v ${c1}) && apt_install ${c2}
+}
 
 
 
@@ -347,4 +352,14 @@ checkUrl(){
 }
 checkCmd(){
 	[ -z "$(command -v $1)"] $sudo apt -qq install $1 -y >/dev/null 2>&1
+}
+err_call(){
+	echo -e "$(
+		cat <<-EOM
+			\n${CW}tcutils $vrs
+			${C0}Cannot be called directly. Missing vars lib arch or src
+			\n
+			EOM
+	)"
+	exit 1  
 }

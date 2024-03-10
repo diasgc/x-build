@@ -425,7 +425,7 @@ start(){
 			;;
 		*)	if [ -n "${cfg_cmd}" ]; then
 				do_log 'config' ${cfg_cmd} ${cfg_args[@]}
-			else doErr ""
+			else
 				doErr "cfg ${cfg} unknown or cfg_cmd not defined. Use build_config to custom configure makefile"
 			fi
 			;;
@@ -433,7 +433,6 @@ start(){
 	fi
 
 	$break_on_config && end_script
-
 
 	if fn_defined 'before_make'; then
 		fn_log 'preparing' before_make
@@ -473,9 +472,9 @@ start(){
 	# strip libs
 	if ! $host_mingw; then
 		if fn_defined 'on_strip'; then
-		fn_log 'strip' on_strip
+			fn_log 'strip' on_strip
 		elif $build_strip; then
-		do_log 'strip' doStrip
+			do_log 'strip' doStrip
 		fi
 	fi
 
@@ -538,13 +537,13 @@ start(){
 
 meson_configure(){
 	export cfg_file="${dir_config}/${arch}.meson"
-	[ -f "${cfg_file}" ] && rm ${cfg_file}
+	test -f "${cfg_file}"  && rm ${cfg_file}
 	$host_clang || LD="bfd"
 	if [ -n "${meson_bin}" ]; then
 		arr=(${meson_bin//|/ })
 		case ${#arr[@]} in
-		1) $build_bin && CBN="-D${arr[0]}=true" || CBN="-D${arr[0]}=false";;
-		2) $build_bin && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
+			1) $build_bin && CBN="-D${arr[0]}=true" || CBN="-D${arr[0]}=false";;
+			2) $build_bin && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
 		esac
 	fi
 	meson_create_toolchain ${cfg_file}
@@ -572,8 +571,8 @@ ac_configure() {
 	if [ -n "${ac_bin}" ]; then
 		arr=(${ac_bin//|/ })
 		case ${#arr[@]} in
-		1) $build_bin && CBN="${arr[0]}=1" || CBN="${arr[0]}=0";;
-		2) $build_bin && CBN="${arr[1]}" || CBN="${arr[0]}";;
+			1) $build_bin && CBN="${arr[0]}=1" || CBN="${arr[0]}=0";;
+			2) $build_bin && CBN="${arr[1]}" || CBN="${arr[0]}";;
 		esac
 	fi
 
@@ -582,11 +581,11 @@ ac_configure() {
 			case $opt in
 				--update-config_sub)
 					local fpath=$(find ${dir_src} -name 'config.sub')
-					[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.sub ${fpath}
+					test -f "${fpath}" && cp -f /usr/share/automake*/config.sub ${fpath}
 					;;
 				--update-config_guess)
 					local fpath=$(find ${dir_src} -name 'config.guess')
-					[ -f "${fpath}" ] && cp -f /usr/share/automake*/config.guess ${fpath}
+					test -f "${fpath}" && cp -f /usr/share/automake*/config.guess ${fpath}
 					;;
 				--no-sysroot)
 					ac_nosysroot=true
@@ -607,9 +606,9 @@ ac_configure() {
 
 	if ! $ac_nosysroot; then
 		if [ -n "$(echo "${opt_list}" | grep '\-\-with-sysroot')" ]; then
-		CFG+=" --with-sysroot=${SYSROOT}"
+			CFG+=" --with-sysroot=${SYSROOT}"
 		elif [ -n "$(echo "${opt_list}" | grep '\-\-sysroot')" ]; then
-		CFG+=" --sysroot=${SYSROOT}"
+			CFG+=" --sysroot=${SYSROOT}"
 		fi
 	fi
 
@@ -657,7 +656,7 @@ check_install(){
 		# check includes
 		inc*)
 			for h in $lst_inc; do 
-				[ -z "$(ls ${dir_install}/include/$h 2>/dev/null)" ] && echo && return 0
+				test -z "$(ls ${dir_install}/include/$h 2>/dev/null)" && echo && return 0
 			done
 			echo 1
 			return 0
@@ -669,7 +668,7 @@ check_install(){
 		# check bin
 		bin)
 			for h in $lst_bin; do 
-				[ -z "$(ls "${dir_install}/bin/${h}" 2>/dev/null)" ] && echo && return 0
+				test -z "$(ls "${dir_install}/bin/${h}" 2>/dev/null)" && echo && return 0
 			done
 			echo 1
 			return 0
@@ -678,7 +677,7 @@ check_install(){
 		pc|pkgconfig)
 			[ -z "${lst_pc}" ] && echo && return 0
 			for h in $lst_pc; do 
-				[ -z "$(ls "${dir_install}/lib/pkgconfig/${h}" 2>/dev/null)" ] && echo && return 0
+				test -z "$(ls "${dir_install}/lib/pkgconfig/${h}" 2>/dev/null)" && echo && return 0
 			done
 			echo 1
 			return 0
@@ -687,7 +686,7 @@ check_install(){
 	if [ -n "${ext}" ];then
 		for h in $lst_lib; do
 		echo "listing ${dir_install}/lib/${h}${ext}"
-		[ -z "$(ls ${dir_install}/lib/${h}.* | grep ''${ext}'' 2>/dev/null)" ] && echo && return 0
+		test -z "$(ls ${dir_install}/lib/${h}.* | grep ''${ext}'' 2>/dev/null)" && echo && return 0
 		done
 		echo 1
 		return 0
@@ -824,13 +823,13 @@ check_tools(){
 		toolname=$1
 		toolpkg=$1
 		case $1 in
-			rust ) installRust && continue;;
-			libtool ) toolname=libtoolize;;
-			texinfo ) toolname=makeinfo;;
-			autotools )  autotools_check && continue;;
+			rust )      installRust && continue;;
+			libtool )   toolname=libtoolize;;
+			texinfo )   toolname=makeinfo;;
+			autotools ) autotools_check && continue;;
 		* ) ;;
 		esac
-		[ -z $(command -v $toolname) ] && apt_install $toolpkg
+		request_cmd ${toolname} ${toolpkg}
 		shift
 	done
 }
@@ -849,17 +848,6 @@ do_make(){
 	make $@ 2>&1 | tee -a ${log_file} | grep -Eo "\[.+%\]" 
 }
 
-err_call(){
-	echo -e "$(
-		cat <<-EOM
-			\n$CWtcutils $vrs
-			${C0}Cannot be called directly. Missing vars lib arch or src
-			\n
-			EOM
-	)"
-	exit 1  
-}
-
 secs2time(){
 	[ $(($1/60%60)) -eq 0 ] && printf '%ds' $(($1%60)) || printf '%dm %ds' $(($1/60%60)) $(($1%60))
 }
@@ -876,16 +864,16 @@ log_start(){
 }
 
 log_end(){
-if ! $inline && [ -n "${logtime_start}" ]; then
-	logtime_end=$(date +%s)
-	#local pkgsize=$(du -sk ${dir_install} | cut -f1)
-	#local libsize=$(du -sk ${dir_install}/lib | cut -f1)
-	local secs=$(($logtime_end-$logtime_start))
-	local msg="${CT1} done ${CD}in $(secs2time ${secs})"
-	[ $secs -gt 60 ] && msg="$msg (${secs}s)"
-	#echo -e "$msg pkg/lib: ${pkgsize}/${libsize}kb${C0}"
-	echo -e "$msg"
-fi
+	if ! $inline && [ -n "${logtime_start}" ]; then
+		logtime_end=$(date +%s)
+		#local pkgsize=$(du -sk ${dir_install} | cut -f1)
+		#local libsize=$(du -sk ${dir_install}/lib | cut -f1)
+		local secs=$(($logtime_end-$logtime_start))
+		local msg="${CT1} done ${CD}in $(secs2time ${secs})"
+		[ $secs -gt 60 ] && msg="$msg (${secs}s)"
+		#echo -e "$msg pkg/lib: ${pkgsize}/${libsize}kb${C0}"
+		echo -e "$msg"
+	fi
 }
 
 log(){
@@ -1135,21 +1123,23 @@ wget_tarxx(){
 	echo -ne "${CD}${tag}${C0}"
 	echo "$(date): $@" >> "${log_file}"
 
-	case $sty in
-		tgz) args="-xvz";;
-		*)
+	if [ -z "${sty}" ]; then
 		case $src in
-			*.tar.lz) 
-			test -z $(command -v lzip) && apt_install lzip
-			args="--lzip -xv"
-			;;
-			*.tar.gz|*.tgz) args="-xvz";;
-			*.tar.xz) args="-xvJ";;
-			*.tar.bz2) args="-xvj";;
-			*) doErr "unknown compressed file format for $(basename ${src})";;
+			*.tar.lz)        request_cmd 'lzip' && args='--lzip -xv';;
+			*.tar.gz|*.tgz)  args="-xvz";;
+			*.tar.xz)        args="-xvJ";;
+			*.tar.bz2)       args="-xvj";;
 		esac
-		;;
-	esac
+	else
+		case $sty in
+			tgz)       args="-xvz";;
+			txz)       args="-xvJ";;
+			tbz|tbz2)  args="-xvj";;
+			tlz)       args="--lzip -xv";;
+		esac
+	fi
+	
+	test -z "$args" && doErr "unknown compressed file format for $(basename ${src})"
 
 	[ -d "tmp" ] && rm -rf tmp
 	mkdir tmp
