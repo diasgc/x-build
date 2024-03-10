@@ -1062,7 +1062,7 @@ git_clone(){
 	logf git clone --progress --verbose $src $lib $src_opt
 	git clone --progress --verbose $src $lib $src_opt |& tr '\r' '\n' | prt_git_progress
 	logok $var
-	[ -d "$lib" ] && cd $lib || err
+	test -d "$lib" && cd $lib || err
 	if [ -n "${bra}" ]; then
 		do_log ${bra} git checkout ${bra}
 		unset bra
@@ -1076,15 +1076,14 @@ git_clone(){
 }
 
 do_svn(){
-	[ $(command -v svn) ] || apt_install subversion || err
-	local var="svn"
-	echo -ne "${CD}${var}"
-	svn checkout $1 $2 >/dev/null || err
-	logok $var
+	request_cmd svn subversion || err
+	#[ $(command -v svn) ] || apt_install subversion || err
+	do_log 'svn' svn checkout $1 $2
 }
 
 do_hg(){
-	[ $(command -v hg) ] || apt_install mercurial || err
+	request_cmd hg mercurial || err
+	#[ $(command -v hg) ] || apt_install mercurial || err
 	do_log 'clone' hg clone $1 $2
 }
 
@@ -1098,19 +1097,19 @@ set_git_version(){
 github_latest_tgz(){
 	case $src in
 		*github.*)
-		local dst=$(echo $src | sed -e 's|\.git||g')
-		local url=$(curl -ILs -o /dev/null -w %{url_effective} "${dst}/releases/latest")
-		local file=$(curl -s $url | grep -Po '(?<=>)[^<]*' | grep -Po '.*tar.gz$')
-		echo "${url}/${file}"
+			local dst=$(echo $src | sed -e 's|\.git||g')
+			local url=$(curl -ILs -o /dev/null -w %{url_effective} "${dst}/releases/latest")
+			local file=$(curl -s $url | grep -Po '(?<=>)[^<]*' | grep -Po '.*tar.gz$')
+			echo "${url}/${file}"
 		;;
 		*gitlab.*|*code.videolan.org*)
-		local dst=$(echo $src | sed -e 's|\.git||g')
-		local v=$(git_remote_version $src)
-		echo "$dst/-/archive/${v}/${lib}-${v}.tar.gz"
+			local dst=$(echo $src | sed -e 's|\.git||g')
+			local v=$(git_remote_version $src)
+			echo "$dst/-/archive/${v}/${lib}-${v}.tar.gz"
 		;;
 		*.googlesource.*)
-		local tag=$(git -c 'versionsort.suffix=-' ls-remote --refs --sort='v:refname' $src | tail -n1 | cut -f1)
-		echo "$src/+archive/${tag}.tar.gz"
+			local tag=$(git -c 'versionsort.suffix=-' ls-remote --refs --sort='v:refname' $src | tail -n1 | cut -f1)
+			echo "$src/+archive/${tag}.tar.gz"
 		;;
 	esac
 }
@@ -1694,6 +1693,7 @@ menu_get(){
 		libname)    echo "${lib}";;
 		aptname)    echo "${apt}";;
 		var)        shift; echo "${!1}";;
+		vrs_latest) echo $(github_latest_tgz); exit 0;;
 		vrs_remote) fn_defined 'vremote' && version_parse "$(vremote)" || git_version_remote $src;;
 		vrs_taglist)git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
 		vrs_tags)   git ls-remote --tags --sort="v:refname" $src | grep -oP 'tags/.*\d+\.\d+\.\d+.*';;
