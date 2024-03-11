@@ -7,7 +7,7 @@ lic='LGPL-2.1'
 #vrs='15.0'
 src='https://gitlab.freedesktop.org/pulseaudio/pulseaudio.git'
 cfg='meson'
-dep='glib2 libtool sndfile' # fftwf samplerate soxr speex sndfile
+#dep='glib2 libtool sndfile' # fftwf samplerate soxr speex sndfile
 pkg='libpulse'
 eta='120'
 API=28 # required pthread_mutexattr_setprotocol
@@ -20,8 +20,9 @@ lst_pc='libpulse.pc libpulse-simple.pc libpulse-mainloop-glib.pc'
 
 . xbuild
 
-meson_cfg="-Ddaemon=false -Ddoxygen=false -Dman=false -Dtests=false -Ddatabase=simple -Dalsa=disabled -Dglib=enabled \
-    -D stream-restore-clear-old-devices=true \
+meson_cfg="-Ddaemon=false -Ddoxygen=false -Dman=false -Dtests=false -Dglib=disabled" # -Ddatabase=simple -Dalsa=disabled" 
+
+n_cfg+=" -D stream-restore-clear-old-devices=true \
     -D zshcompletiondir=no \
     -D asyncns=disabled \
     -D avahi=disabled \

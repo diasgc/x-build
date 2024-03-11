@@ -1311,7 +1311,7 @@ toolchain_android(){
 	PKG_CONFIG_DIR="/usr/${arch}/local/lib/pkgconfig"
 	CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/include -I${SYSROOT}/usr/local/include"
 	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-	test $build_static && LDFLAGS+=" -static-libstdc++ -lc++_static"
+	#test $build_static && LDFLAGS+=" -static-libstdc++ -lc++_static"
 
 	cmake_system_processor="${target_trip[0]}${target_trip[1]}"
 	$host_arm32 && cmake_system_processor="armv7-a"

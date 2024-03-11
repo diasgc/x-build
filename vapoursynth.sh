@@ -17,7 +17,7 @@ lst_lic='COPYING.LESSER'
 lst_pc='vapoursynth.pc'
 
 dev_bra='main'
-dev_vrs='58'
+dev_vrs='66'
 stb_bra=''
 stb_vrs='R66-RC1-4'
 
@@ -35,6 +35,7 @@ build_strip=false
 ac_config="--enable-python-module=no --enable-vspipe=no --enable-vsscript=no"
 $host_arm && ac_config+=" --enable-x86-asm=no"
 $host_arm && $host_clang && CPPFLAGS+=' -mno-outline-atomics'
+WFLAGS='-Wno-macro-redefined -Wno-sign-compare -Wno-typedef-redefinition'
 
 get_version
 
