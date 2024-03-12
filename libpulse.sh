@@ -20,7 +20,8 @@ lst_pc='libpulse.pc libpulse-simple.pc libpulse-mainloop-glib.pc'
 
 . xbuild
 
-meson_cfg="-Ddaemon=false -Ddoxygen=false -Dman=false -Dtests=false -Dglib=disabled" # -Ddatabase=simple -Dalsa=disabled" 
+meson_cfg="-Ddaemon=false -Ddoxygen=false -Dman=false -Dtests=false -Dglib=enabled -Ddatabase=simple"
+$host_ndk && meson_cfg+=" -Dalsa=disabled -Dx11=disabled -Dgtk=disabled -Dopenssl=disabled -Dgsettings=disabled" && LIBS="-landroid-glob -landroid-execinfo"
 
 n_cfg+=" -D stream-restore-clear-old-devices=true \
     -D zshcompletiondir=no \
