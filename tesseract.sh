@@ -17,9 +17,8 @@ lst_pc='tesseract.pc'
 
 dev_vrs='5.1.0'
 
-cmake_config='-DBUILD_TRAINING_TOOLS=OFF -DOPENMP_BUILD=OFF -DENABLE_LTO=ON -DDISABLE_TIFF=ON
-    -DGRAPHICS_DISABLED=ON -DSW_BUILD=OFF
-    -DCOMPILER_SUPPORTS_MARCH_NATIVE=OFF'
+cmake_static='BUILD_SHARED_LIBS=OFF'
+cmake_config='-DGRAPHICS_DISABLED=ON'
 
 ac_config='--disable-debug
     --disable-graphics
