@@ -17,15 +17,14 @@ lst_pc='tesseract.pc'
 
 dev_vrs='5.1.0'
 
-cmake_config='-DUSE_SYSTEM_ICU=on
--DOPENMP_BUILD=ON
--DLEPT_TIFF_RESULT=0'
+cmake_config='-DBUILD_TRAINING_TOOLS=OFF -DOPENMP_BUILD=OFF -DENABLE_LTO=ON -DDISABLE_TIFF=ON
+    -DGRAPHICS_DISABLED=ON -DSW_BUILD=OFF
+    -DCOMPILER_SUPPORTS_MARCH_NATIVE=OFF'
 
 ac_config='--disable-debug
     --disable-graphics
     --disable-tessdata-prefix
     --disable-largefile'
-LIBS+=' -lz'
 
 . xbuild
 
