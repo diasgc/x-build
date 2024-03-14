@@ -24,7 +24,7 @@ lst_pc='lept_Release.pc'
 dev_vrs='1.84.0'
 
 cmake_bin="BUILD_PROG"
-cmake_config="-DSW_BUILD=OFF"
+#cmake_config="-DSW_BUILD=OFF"
 #ac_config="--disable-fast-install"
 #ac_bin="--enable-programs|--disable-programs"
 

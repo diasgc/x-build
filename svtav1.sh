@@ -14,7 +14,8 @@ eta='145'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin="BUILD_APPS"
 
-dev_vrs='1.8.0'
+dev_vrs='2.0.0'
+
 lst_inc='svt-av1/*.h'
 lst_lib='libSvtAv1Dec libSvtAv1Enc'
 lst_bin='SvtAv1DecApp SvtAv1EncApp'
