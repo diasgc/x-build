@@ -5,7 +5,7 @@ apt='libtesseract-dev'
 dsc='An OCR Engine that was developed at HP Labs between 1985 and 1995... and now at Google'
 lic='Apache-2.0'
 src='https://github.com/tesseract-ocr/tesseract.git'
-cfg='cmake'
+cfg='ag'
 dep='leptonica'
 pkg='tesseract'
 
@@ -15,17 +15,18 @@ lst_bin='tesseract'
 lst_lic='LICENSE'
 lst_pc='tesseract.pc'
 
-dev_vrs='5.1.0'
+dev_vrs='5.3.4'
 
-cmake_static='BUILD_SHARED_LIBS=OFF'
-cmake_config='-DGRAPHICS_DISABLED=ON'
+#cmake_static='BUILD_SHARED_LIBS=OFF'
+#cmake_config='-DGRAPHICS_DISABLED=ON -DUSE_SYSTEM_ICU=ON -DDISABLE_TIFF=ON'
 
-ac_config='--disable-debug
-    --disable-graphics
-    --disable-tessdata-prefix
-    --disable-largefile'
+ac_config='--disable-debug --disable-doc --disable-graphics'
 
 . xbuild
+
+LIBS+=' -lpng16 -lz'
+
+# note: leptonica built with cmake_config="-DBUILD_TESTS=OFF -DENABLE_GIF=OFF -DENABLE_ZLIB=OFF -DENABLE_PNG=OFF -DENABLE_JPEG=OFF -DENABLE_TIFF=OFF -DENABLE_WEBP=OFF -DENABLE_OPENJPEG=OFF"
 
 #$host_mingw && cmake_config+=' -DSW_BUILD=OFF' || cmake_config+=' -DOPENMP_BUILD=ON -DENABLE_LTO=ON'
 

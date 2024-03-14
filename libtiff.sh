@@ -9,16 +9,14 @@ src='https://gitlab.com/libtiff/libtiff.git'
 cfg='cmake'
 pkg='libtiff-4'
 eta='150'
-dep='liblzma libjpeg libzstd libdeflate lerc'
 mingw_posix=true
 bin="tiff-tools"
-
+dep=
 cmake_static='BUILD_STATIC_LIBS'
 #mkc='distclean'
 #mki='install/strip'
 
 cmake_config="-Dtiff-tests=OFF -Dtiff-tools=OFF -Dtiff-docs=OFF -Dtiff-contrib=OFF"
-cmake_config+=" -Dlzma=ON -Djpeg=ON -Dzstd=ON -Dlerc=ON -Dlibdeflate=ON -Dwebp=ON"
 
 dev_vrs='4.6.0'
 
@@ -30,7 +28,10 @@ lst_pc='libtiff-4.pc'
 
 extraOpts(){
     case $1 in
-        --min) unset dep cmake_config;;
+        --full)
+            dep='liblzma libjpeg libzstd libdeflate lerc'
+            cmake_config+=" -Dlzma=ON -Djpeg=ON -Dzstd=ON -Dlerc=ON -Dlibdeflate=ON -Dwebp=ON"
+            ;;
     esac
 }
 

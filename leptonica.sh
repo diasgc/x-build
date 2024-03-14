@@ -7,9 +7,9 @@ dsc='An open source C library for efficient image processing and image analysis 
 lic='copyleft'
 src='https://github.com/DanBloomberg/leptonica.git'
 cfg='cmake'
-dep='zlib libjpeg libpng libwebp libtiff giflib openjpeg'
-#mki='install'
-#make_install='install-strip'
+#dep='zlib libjpeg libpng libwebp libtiff giflib openjpeg'
+mki='install'
+make_install='install-strip'
 eta='180'
 ac_nosysroot=true
 
@@ -24,17 +24,34 @@ lst_pc='lept_Release.pc'
 dev_vrs='1.84.0'
 
 cmake_bin="BUILD_PROG"
-#cmake_config="-DSW_BUILD=OFF"
-#ac_config="--disable-fast-install"
-#ac_bin="--enable-programs|--disable-programs"
+cmake_config="-DBUILD_TESTS=OFF -DENABLE_GIF=OFF -DENABLE_ZLIB=OFF \
+  -DENABLE_PNG=OFF -DENABLE_JPEG=OFF -DENABLE_TIFF=OFF \
+  -DENABLE_WEBP=OFF -DENABLE_OPENJPEG=OFF"
 
 extraOpts(){
-      case $1 in --min) unset dep;; esac
+  case $1 in --full)
+    dep='zlib libjpeg libpng libwebp libtiff giflib openjpeg'
+    cmake_config='-DBUILD_TESTS=OFF';;
+  esac
 }
+
+on_end(){
+  test ! -f ${dir_install_pc}/lept.pc && \
+    test -f ${dir_install_pc}/lept_Release.pc && \
+    ln -s ${dir_install_pc}/lept_Release.pc ${dir_install_pc}/lept.pc
+}
+
+ac_config+=" --disable-programs \
+    --without-giflib \
+    --without-libwebp \
+    --without-zlib \
+    --without-libopenjpeg"
 
 WFLAGS+=" -Wno-address-of-packed-member"
 
 . xbuild
+
+
 
 start
 

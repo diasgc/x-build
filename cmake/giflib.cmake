@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
+include(GNUInstallDirs)
 
 file(READ gif_lib.h VERSION_F)
 string(REGEX MATCH "GIFLIB_MAJOR[ ]+([0-9]*)" _ ${VERSION_F})
@@ -15,7 +16,6 @@ project(giflib
     VERSION ${PROJECT_VERSION}
     DESCRIPTION "GIFLIB, a library for manipulating GIF files"
     HOMEPAGE_URL "http://sourceforge.net/projects/giflib"
-    LIBS_PUBLIC "-lgif"
 )
 
 #list(APPEND LIBS_PUBLIC "-lm")
@@ -88,11 +88,26 @@ if(BUILD_UTILITIES)
   endforeach()
 endif()
 
-if(EXISTS ${CMAKE_SOURCE_DIR}/../../cmake/pkg-config.pc.in)
-  configure_file(${CMAKE_SOURCE_DIR}/../../cmake/pkg-config.pc.in giflib.pc @ONLY)
+if(NOT EXISTS giflib.pc.in)
+    file(WRITE giflib.pc.in
+        "prefix=@CMAKE_INSTALL_PREFIX@\n"
+        "exec_prefix=${prefix}\n"
+        "libdir=${exec_prefix}/lib\n"
+        "includedir=${prefix}/include\n"
+        "\n"
+        "Name: @PROJECT_NAME@\n"
+        "Description: @CMAKE_PROJECT_DESCRIPTION@\n"
+        "URL: @CMAKE_PROJECT_HOMEPAGE_URL@\n"
+        "Version: @PROJECT_VERSION@\n"
+        "Libs: -L${libdir} -lgif\n"
+        "Cflags: -I${includedir}\n"
+    )
 endif()
 
-install(FILES gif_lib.h DESTINATION include)
+configure_file(${CMAKE_SOURCE_DIR}/giflib.pc.in giflib.pc @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/giflib.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+install(FILES gif_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(FILES COPYING DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/giflib)
 
