@@ -5,7 +5,7 @@ dsc='An open source database of photographic lenses and their characteristics'
 lic='LGPL-3.0'
 src='https://github.com/lensfun/lensfun.git'
 cfg='cmake'
-dep='libpng glib2'
+dep='glib2'
 eta='60'
 
 cmake_bin='BUILD_LENSTOOL'
@@ -21,6 +21,8 @@ lst_lic='LICENSE AUTHORS'
 lst_pc='lensfun.pc'
 
 . xbuild
+
+$build_static && dep+=' libpng'
 
 start
 

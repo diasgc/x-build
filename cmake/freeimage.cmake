@@ -145,6 +145,26 @@ install(TARGETS ${TARGETS}
   ARCHIVE DESTINATION lib${LIB_SUFFIX}
 )
 
+set(PKGCONFIG_FILE ${PROJECT_NAME}.pc)
+if(NOT EXISTS ${PKGCONFIG_FILE}.in)
+    file(WRITE ${PKGCONFIG_FILE}.in
+        "prefix=@CMAKE_INSTALL_PREFIX@\n"
+        "exec_prefix=${prefix}\n"
+        "libdir=${exec_prefix}/lib\n"
+        "includedir=${prefix}/include\n"
+        "\n"
+        "Name: @PROJECT_NAME@\n"
+        "Description: @CMAKE_PROJECT_DESCRIPTION@\n"
+        "URL: @CMAKE_PROJECT_HOMEPAGE_URL@\n"
+        "Version: @PROJECT_VERSION@\n"
+        "Libs: -L${libdir} -l@PROJECT_NAME@\n"
+        "Cflags: -I${includedir}\n"
+    )
+endif()
+
+configure_file(${CMAKE_SOURCE_DIR}/${PKGCONFIG_FILE}.in ${PKGCONFIG_FILE} @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/${PKGCONFIG_FILE} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
 install(FILES Source/FreeImage.h DESTINATION include)
 install(FILES Wrapper/FreeImagePlus/FreeImagePlus.h DESTINATION include)
 install(FILES license-fi.txt license-gplv2.txt license-gplv3.txt DESTINATION share/docs/FreeImage)

@@ -323,6 +323,7 @@ request_cmd(){
 	local c2=$2
 	test -z "${c2}" && c2=${c1}
 	test -z $(command -v ${c1}) && apt_install ${c2}
+	return 0
 }
 
 

@@ -16,9 +16,9 @@ project(fastlz
     VERSION ${PROJECT_VERSION}
     DESCRIPTION "Small & portable byte-aligned LZ77 compression"
     HOMEPAGE_URL "https://github.com/ariya/FastLZ.git"
-    LIBS_PUBLIC "-lfastlz"
 )
 
+set(PKGCONFIG_FILE ${PROJECT_NAME}.pc)
 option(BUILD_STATIC_LIBS "Build static libs" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_TESTS "Build tests" OFF)
@@ -66,12 +66,25 @@ if(BUILD_EXAMPLES)
     target_link_libraries(6unpack fastlz)
 endif()
 
-if(EXISTS PKGCONFIG_TEMPLATE)
-  configure_file(${PKGCONFIG_TEMPLATE} fastlz.pc @ONLY)
-  install(FILES ${CMAKE_BINARY_DIR}/fastlz.pc
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
-  )
+if(NOT EXISTS ${PKGCONFIG_FILE}.in)
+    file(WRITE ${PKGCONFIG_FILE}.in
+        "prefix=@CMAKE_INSTALL_PREFIX@\n"
+        "exec_prefix=${prefix}\n"
+        "libdir=${exec_prefix}/lib\n"
+        "includedir=${prefix}/include\n"
+        "\n"
+        "Name: @PROJECT_NAME@\n"
+        "Description: @CMAKE_PROJECT_DESCRIPTION@\n"
+        "URL: @CMAKE_PROJECT_HOMEPAGE_URL@\n"
+        "Version: @PROJECT_VERSION@\n"
+        "Libs: -L${libdir} -l@PROJECT_NAME@\n"
+        "Cflags: -I${includedir}\n"
+    )
 endif()
+
+configure_file(${CMAKE_SOURCE_DIR}/${PKGCONFIG_FILE}.in ${PKGCONFIG_FILE} @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/${PKGCONFIG_FILE} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
 
 if(BUILD_EXAMPLES)
   install(TARGETS 6pack 6unpack RUNTIME DESTINATION bin)

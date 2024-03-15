@@ -10,7 +10,7 @@ dsc='A free, open source, CMM engine. It provides fast transforms between ICC pr
 lic='BSD-2c'
 src='https://github.com/mm2/Little-CMS.git'
 cfg='meson'
-dep='libjpeg libtiff'
+#
 eta='90'
 
 lst_inc='lcms2_plugin.h lcms2.h'
@@ -20,9 +20,25 @@ lst_lic='COPYING AUTHORS'
 lst_pc='lcms2.pc'
 
 dev_bra='master'
-dev_vrs='2.13'
+dev_vrs='2.13.1'
+
+meson_cfg='-Djpeg=disabled -Dtiff=disabled'
+
+extraOpts(){
+    case $1 in
+        --full)
+            dep='libjpeg libtiff'
+            meson_cfg='-Djpeg=enabled -Dtiff=enabled'
+            ;;
+        --gpl3)
+            meson_cfg+=' -Dfastfloat=true -Dthreaded=true'
+            ;;
+    esac
+}
 
 . xbuild
+
+$build_bin && meson_cfg+=' -Dutils=true'
 
 start
 

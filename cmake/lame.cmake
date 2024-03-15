@@ -16,7 +16,6 @@ project(mp3lame
     VERSION ${PROJECT_VERSION}
     DESCRIPTION "LAME is a high quality MPEG Audio Layer III (MP3) encoder"
     HOMEPAGE_URL "https://lame.sourceforge.io"
-    LIBS_PUBLIC "-lmp3lame"
 )
 
 set(GREP_ARGS -oP "^PACKAGE_VERSION='\\K\\d+\\.\\d+" ${CMAKE_CURRENT_SOURCE_DIR}/configure)
@@ -44,16 +43,17 @@ add_definitions(-DDECODE_ON_THE_FLY)
 add_definitions(-DUSE_FAST_LOG)
 add_definitions(-DTAKEHIRO_IEEE754_HACK)
 
-if(${CMAKE_C_COMPILER_ID} STREQUAL Clang)
+if(CMAKE_C_COMPILER_ID STREQUAL Clang)
     add_definitions(-Wno-shift-negative-value 
         -Wno-tautological-pointer-compare 
+        -Wno-incompatible-pointer-types
         -Wno-absolute-value 
         -Wno-implicit-const-int-float-conversion
         -Wno-bitfield-constant-conversion
         -Wno-unused-value)
 endif()
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+if(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
     add_definitions(-DUSE_LAYER_2)
     add_definitions(-DHAVE_CONFIG_H)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -109,24 +109,49 @@ if(INSTALL_PROGRAMS)
         frontend/lametime.c 
         frontend/parse.c 
         frontend/timestatus.c)
+    add_definitions(-Wno-implicit-function-declaration)
     add_executable(lame frontend/lame_main.c ${SOURCE_EXEC})
-    target_link_libraries(lame ${PROJECT_NAME})
+    target_link_libraries(lame ${PROJECT_NAME} m)
     add_executable(mp3rtp frontend/mp3rtp.c frontend/rtp.c ${SOURCE_EXEC})
-    target_link_libraries(mp3rtp ${PROJECT_NAME})
+    target_link_libraries(mp3rtp ${PROJECT_NAME} m)
     install(TARGETS lame mp3rtp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
     if(GTK_FOUND)
         include_directories(${GTK_INCLUDE_DIRS})
         add_executable(mp3x frontend/mp3x.c frontend/gtkanal.c frontend/gpkplotting.c ${SOURCE_EXEC})
-        target_link_libraries(mp3x ${PROJECT_NAME} ${GTK_LIBRARIES}) 
+        target_link_libraries(mp3x ${PROJECT_NAME} m ${GTK_LIBRARIES}) 
         install(TARGETS mp3x RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()
 endif()
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/lame.h DESTINATION include/lame)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/lame.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/lame)
 
-configure_file(lame.pc.in lame.pc @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lame.pc DESTINATION lib/pkgconfig)
+install(FILES COPYING LICENSE
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/${PROJECT_NAME})
+
+set(PKGCONFIG_FILE lame.pc)
+if(NOT EXISTS ${PKGCONFIG_FILE}.in)
+    file(WRITE ${PKGCONFIG_FILE}.in
+        "prefix=@CMAKE_INSTALL_PREFIX@\n"
+        "exec_prefix=${prefix}\n"
+        "libdir=${exec_prefix}/lib\n"
+        "includedir=${prefix}/include\n"
+        "\n"
+        "Name: @PROJECT_NAME@\n"
+        "Description: @CMAKE_PROJECT_DESCRIPTION@\n"
+        "URL: @CMAKE_PROJECT_HOMEPAGE_URL@\n"
+        "Version: @PROJECT_VERSION@\n"
+        "Libs: -L${libdir} -l@PROJECT_NAME@\n"
+        "Cflags: -I${includedir}\n"
+    )
+endif()
+
+configure_file(${CMAKE_SOURCE_DIR}/${PKGCONFIG_FILE}.in ${PKGCONFIG_FILE} @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/${PKGCONFIG_FILE}
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+
 
 if(INSTALL_MANPAGES)
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/doc/man/lame.1

@@ -25,19 +25,6 @@ lst_pc='freeimage.pc'
 
 . xbuild
 
-_source_patch(){
-    cd ${dir_src}
-    cp Source/FreeImage.h Dist
-    s0=$(cat Makefile.srcs | sed -e 's| Source| ./Source|g; s| \./|\n\t|g')
-    local srcs=$(echo "$s0" | sed -n '/SRCS/,/INCLS/p' | sed '1d; $d')
-    #local sfip=$(echo "$s1" | sed -n '/SRCS/,/INCLUDE = /p' | sed '1d; $d')
-    local hdrs=$(echo "$s0" | sed -n '/INCLS/,/\n\n/p' | sed '1d; $d')
-    local incl=$(echo "$s0" | sed -n '/INCLUDE = /,/$/p' | sed ' s/ -I/\n\t/g' | sed '1,2d')
-    echo "$(awk -v r="$srcs" '{gsub(/@sourcelist@/,r)}1' CMakeLists.txt)" > CMakeLists.txt
-    echo "$(awk -v r="$hdrs" '{gsub(/@headerlist@/,r)}1' CMakeLists.txt)" > CMakeLists.txt
-    echo "$(awk -v r="$incl" '{gsub(/@incldir_list@/,r)}1' CMakeLists.txt)" > CMakeLists.txt
-}
-
 start
 
 # Filelist

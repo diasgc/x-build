@@ -17,7 +17,7 @@ dev_vrs='3.101'
 
 lst_inc='lame/lame.h'
 lst_lib='libmp3lame'
-lst_bin='lame'
+lst_bin='lame mp3rtp'
 lst_lic='LICENSE COPYING'
 lst_pc='lame.pc'
 

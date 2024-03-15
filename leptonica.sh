@@ -7,11 +7,9 @@ dsc='An open source C library for efficient image processing and image analysis 
 lic='copyleft'
 src='https://github.com/DanBloomberg/leptonica.git'
 cfg='cmake'
-#dep='zlib libjpeg libpng libwebp libtiff giflib openjpeg'
 mki='install'
 make_install='install-strip'
 eta='180'
-ac_nosysroot=true
 
 lst_inc='leptonica/*.h'
 lst_lib='liblept'
@@ -28,6 +26,13 @@ cmake_config="-DBUILD_TESTS=OFF -DENABLE_GIF=OFF -DENABLE_ZLIB=OFF \
   -DENABLE_PNG=OFF -DENABLE_JPEG=OFF -DENABLE_TIFF=OFF \
   -DENABLE_WEBP=OFF -DENABLE_OPENJPEG=OFF"
 
+ac_nosysroot=true
+ac_config+=" --disable-programs \
+    --without-giflib \
+    --without-libwebp \
+    --without-zlib \
+    --without-libopenjpeg"
+
 extraOpts(){
   case $1 in --full)
     dep='zlib libjpeg libpng libwebp libtiff giflib openjpeg'
@@ -41,11 +46,6 @@ on_end(){
     ln -s ${dir_install_pc}/lept_Release.pc ${dir_install_pc}/lept.pc
 }
 
-ac_config+=" --disable-programs \
-    --without-giflib \
-    --without-libwebp \
-    --without-zlib \
-    --without-libopenjpeg"
 
 WFLAGS+=" -Wno-address-of-packed-member"
 

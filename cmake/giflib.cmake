@@ -88,8 +88,9 @@ if(BUILD_UTILITIES)
   endforeach()
 endif()
 
-if(NOT EXISTS giflib.pc.in)
-    file(WRITE giflib.pc.in
+set(PKGCONFIG_FILE ${PROJECT_NAME}.pc)
+if(NOT EXISTS ${PKGCONFIG_FILE}.in)
+    file(WRITE ${PKGCONFIG_FILE}.in
         "prefix=@CMAKE_INSTALL_PREFIX@\n"
         "exec_prefix=${prefix}\n"
         "libdir=${exec_prefix}/lib\n"
@@ -99,13 +100,13 @@ if(NOT EXISTS giflib.pc.in)
         "Description: @CMAKE_PROJECT_DESCRIPTION@\n"
         "URL: @CMAKE_PROJECT_HOMEPAGE_URL@\n"
         "Version: @PROJECT_VERSION@\n"
-        "Libs: -L${libdir} -lgif\n"
+        "Libs: -L${libdir} -l@PROJECT_NAME@\n"
         "Cflags: -I${includedir}\n"
     )
 endif()
 
-configure_file(${CMAKE_SOURCE_DIR}/giflib.pc.in giflib.pc @ONLY)
-install(FILES ${CMAKE_BINARY_DIR}/giflib.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+configure_file(${CMAKE_SOURCE_DIR}/${PKGCONFIG_FILE}.in ${PKGCONFIG_FILE} @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/${PKGCONFIG_FILE} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 install(FILES gif_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 

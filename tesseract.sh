@@ -24,7 +24,7 @@ ac_config='--disable-debug --disable-doc --disable-graphics'
 
 . xbuild
 
-LIBS+=' -lpng16 -lz'
+LIBS+=' -lpng16 -lz' # by order: -lpng16 -lz -ljpeg -lgif -ltiff -lwebp -lopenjp2
 
 # note: leptonica built with cmake_config="-DBUILD_TESTS=OFF -DENABLE_GIF=OFF -DENABLE_ZLIB=OFF -DENABLE_PNG=OFF -DENABLE_JPEG=OFF -DENABLE_TIFF=OFF -DENABLE_WEBP=OFF -DENABLE_OPENJPEG=OFF"
 
