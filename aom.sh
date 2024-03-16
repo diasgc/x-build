@@ -10,7 +10,7 @@ tls='perl'
 eta='240'
 
 dev_bra='main'
-dev_vrs='3.3.0'
+dev_vrs='3.8.2'
 
 lst_inc='aom/*.h'
 lst_lib='libaom'
@@ -31,11 +31,11 @@ cmake_config='-DENABLE_TESTS=OFF
      -DENABLE_TESTDATA=OFF
      -DENABLE_DOCS=OFF'
 
-$host_arm && cmake_config+=" -DCONFIG_RUNTIME_CPU_DETECT=0 -DAS_EXECUTABLE=${AS}"
-$host_arm64 && cmake_config+=" -DAOM_NEON_INTRIN_FLAG="
-$host_arm32 && cmake_config+=" -DAOM_NEON_INTRIN_FLAG=-mfpu=neon"
-$host_x86 && cmake_config+=' -DCMAKE_C_COMPILER_ARG1=-m32 -DCMAKE_CXX_COMPILER_ARG1=-m32'
-$host_mingw && cmake_config+=" -DCONFIG_PIC=1"
+#$host_arm && cmake_config+=" -DCONFIG_RUNTIME_CPU_DETECT=0 -DAS_EXECUTABLE=${AS}"
+#$host_arm64 && cmake_config+=" -DAOM_NEON_INTRIN_FLAG="
+#$host_arm32 && cmake_config+=" -DAOM_NEON_INTRIN_FLAG=-mfpu=neon"
+#$host_x86 && cmake_config+=' -DCMAKE_C_COMPILER_ARG1=-m32 -DCMAKE_CXX_COMPILER_ARG1=-m32'
+#$host_mingw && cmake_config+=" -DCONFIG_PIC=1"
 
 start
 

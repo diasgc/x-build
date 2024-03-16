@@ -21,7 +21,7 @@ dev_vrs='2.2.0'
 
 . xbuild
 
-cmake_cxx_flags_release=(-Oz -flto -g -DNDEBUG)
+#cmake_cxx_flags_release=(-Ofast -flto -g -DNDEBUG)
 
 start
 

@@ -532,6 +532,9 @@ start(){
 
 	fn_defined 'on_end' && fn_log 'end' on_end
 
+	#local pcvrs=$(pkg-config --modversion ${pcfile})
+	#test -n "${pcvrs}" && sed -i "s/dev_vrs='.*'/dev_vrs='"${pcvrs}"'/g" $(realpath "$0")
+
 	end_script
 }
 
