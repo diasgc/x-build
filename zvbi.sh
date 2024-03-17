@@ -10,7 +10,6 @@ src='https://github.com/OpenDMM/zvbi.git'
 dep='libiconv'
 cfg='ar'
 eta='60'
-API=28
 
 lst_inc=''
 lst_lib=''
@@ -25,9 +24,11 @@ dev_vrs=''
 
 #$host_ndk && dep+=" libbthread"
 
-ac_config="--disable-dvb --disable-bktr --disable-nls --disable-proxy --without-doxygen --with-x=no"
+ac_config="--disable-dependency-tracking --disable-dvb --disable-bktr --disable-nls --disable-proxy --without-doxygen"
 
-CPPFLAGS="-Wno-string-plus-int -Wno-invalid-source-encoding -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-unused-command-line-argument"
+CPPFLAGS="-Wno-enum-conversion -Wno-string-plus-int -Wno-invalid-source-encoding -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-unused-command-line-argument -Wno-pointer-bool-conversion"
+
+$host_ndk && ac_config+=" --disable-v4l --without-x"
 
 start
 

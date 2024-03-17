@@ -17,7 +17,7 @@ lst_lic='expat/COPYING expat/AUTHORS'
 lst_pc='expat.pc'
 
 dev_bra='master'
-dev_vrs='2.6.1'
+dev_vrs='2.6.2'
 
 config_dir="expat"
 

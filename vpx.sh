@@ -21,7 +21,7 @@ lst_bin='vpxenc vpxdec'
 lst_lic='LICENSE PATENTS AUTHORS'
 lst_pc='vpx.pc'
 
-dev_vrs='1.11.0'
+dev_vrs='1.14.0'
 
 . xbuild
 

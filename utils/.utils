@@ -364,3 +364,19 @@ err_call(){
 	)"
 	exit 1  
 }
+prtPrc(){
+	local v=$(grep "%")
+}
+cmakeClean(){
+	pushdir $1
+	rm -rf CMakeFiles CMakeCache.txt
+	popdir
+}
+makeClean(){
+	pushdir $1
+	make clean
+	popdir
+}
+setCMake(){
+	printf "SET($2 $3)\n\n" >> $1
+}

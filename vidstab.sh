@@ -18,11 +18,11 @@ lst_pc='vidstab.pc'
 dev_bra='main'
 dev_vrs='1.20'
 
-cmake_config="-DUSE_OMP=OFF"
+#cmake_config="-DUSE_OMP=OFF"
 
 . xbuild
 
-$host_arm && cmake_config+=" -DSSE2_FOUND=OFF"
+#$host_arm && cmake_config+=" -DSSE2_FOUND=OFF"
 
 start
 

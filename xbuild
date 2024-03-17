@@ -274,7 +274,7 @@ start(){
 		if fn_defined 'patch_source'; then
 			fn_log 'patch' patch_source
 		else
-			fn_log 'patch' patch_check_patchdir
+			fn_log '' patch_check_patchdir
 		fi
 
 	fi
@@ -532,8 +532,9 @@ start(){
 
 	fn_defined 'on_end' && fn_log 'end' on_end
 
-	#local pcvrs=$(pkg-config --modversion ${pcfile})
-	#test -n "${pcvrs}" && sed -i "s/dev_vrs='.*'/dev_vrs='"${pcvrs}"'/g" $(realpath "$0")
+	local pcvrs=$(pkg-config --modversion ${pcfile})
+	local scrpt=${dir_root}/$(basename "$0")
+	test -n "${pcvrs}" && sed -i "s/dev_vrs='.*'/dev_vrs='"${pcvrs}"'/g" ${scrpt}
 
 	end_script
 }
@@ -1211,16 +1212,8 @@ getZip(){
 	logok
 }
 
-prtPrc(){
-	local v=$(grep "%")
-}
 
 
-makeClean(){
-	pushdir $1
-	make clean
-	popdir
-}
 
 clean(){
 	echo -ne "${CT0}\n\tcleaning...\n"
@@ -1232,11 +1225,7 @@ clean(){
 	clear
 }
 
-cmakeClean(){
-	pushdir $1
-	rm -rf CMakeFiles CMakeCache.txt
-	popdir
-}
+
 
 showOpts(){
 	if [ -d "$1" ];then
@@ -1251,9 +1240,7 @@ showOpts(){
 	fi
 }
 
-setCMake(){
-	printf "SET($2 $3)\n\n" >> $1
-}
+
 
 doAutogen(){
 	[ $1 ] || doErr "missing arg in doAutogen: usage doAutogen <AUTOGEN_DIR>"
@@ -1307,7 +1294,7 @@ toolchain_android(){
 	AS="${CC}"
 	LD="${CROSS_PREFIX}ld"
 	YASM=${CROSS_PREFIX}yasm
-	ASM_NASM=$YASM
+	ASM_NASM=${YASM}
 
 	CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
 	LT_SYS_LIBRARY_PATH="/usr/${arch}/lib:${SYSROOT}/usr/lib/${arch}/${API}"

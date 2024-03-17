@@ -13,7 +13,7 @@ lst_bin='kvazaar'
 lst_lic='COPYING CREDITS README.md'
 lst_pc='kvazaar.pc'
 
-dev_vrs='2.3.0'
+dev_vrs='2.3.0-d8c9688'
 
 . xbuild
 

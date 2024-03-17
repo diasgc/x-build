@@ -10,6 +10,7 @@ eta='60'
 cmake_bin='BUILD_EXAMPLES'
 cmake_static='BUILD_STATIC_LIBS'
 
+dev_vrs='2.0'
 lst_inc='taglib/*.h'
 lst_lib='libtag libtag_c'
 lst_bin='tagreader 
@@ -22,6 +23,10 @@ lst_lic='COPYING.LGPL COPYING.MPL'
 lst_pc='taglib.pc taglib_c.pc'
 
 . xbuild
+
+source_patch(){
+  do_log 'sub' git submodule update --init
+}
 
 start
 

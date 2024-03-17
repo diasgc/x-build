@@ -14,13 +14,13 @@ dep='libpng libjpeg x265 libde265 aom'
 eta='60'
 mingw_posix=true
 
-cmake_config='-DWITH_AOM=ON -DWITH_X265=ON -DWITH_DAV1D=OFF -DWITH_LIBDE265=ON -DWITH_RAV1E=OFF'
+cmake_config='-DWITH_AOM=ON -DWITH_X265=ON -DWITH_DAV1D=OFF -DWITH_LIBDE265=ON -DWITH_RAV1E=OFF -DBUILD_TESTING=OFF'
 cmake_bin='WITH_EXAMPLES'
 ac_config='--disable-rav1e --disable-go --disable-gdk-pixbuf'
 ac_bin='--disable-examples|--enable-examples'
 
 dev_bra='main'
-dev_vrs=''
+dev_vrs='1.17.6'
 stb_bra=''
 stb_vrs=''
 
@@ -31,6 +31,8 @@ lst_lic='LICENSE AUTHORS'
 lst_pc='-ss 19:20 -to 25:20'
 
 . xbuild
+
+$host_ndk && LIBS+=" -llog"
 
 start
 

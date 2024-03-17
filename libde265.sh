@@ -16,7 +16,7 @@ lst_lic='COPYING AUTHORS'
 lst_pc='libde265.pc'
 
 dev_bra='main'
-dev_vrs=''
+dev_vrs='1.0.15'
 stb_bra=''
 stb_vrs=''
 
