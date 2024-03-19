@@ -13,7 +13,7 @@ cfg_cmd="./autogen.sh -s"
 eta='144'
 
 dev_bra='master'
-dev_vrs=''
+dev_vrs='1.0.19'
 stb_bra=''
 stb_vrs=''
 

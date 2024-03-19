@@ -9,22 +9,21 @@ dsc='Image metadata library and tools'
 lic='Other'
 src='https://github.com/Exiv2/exiv2.git'
 cfg='cmake'
-dep='libiconv expat libpng'
+dep='libiconv expat libpng inih'
 eta='60'
 # Options
-xmp="OFF"
-png="OFF"
+xmp="ON"
+png="ON"
 mingw_posix=true
 
 cmake_config="-DINSTALL_EXAMPLES=OFF -DEXIV2_BUILD_DOC=OFF \
-	-DEXIV2_BUILD_SAMPLES=OFF -DBUILD_TESTING=OFF \
-	-DEXIV2_TEAM_PACKAGING=ON"
+	-DEXIV2_BUILD_SAMPLES=OFF -DBUILD_TESTING=OFF"
 
 extraOpts(){
 	if [ "$1" == "--min" ];then
-		png="ON"
-		xmp="ON"
-		dep="libiconv"
+		png="OFF"
+		xmp="OFF"
+		dep="libiconv inih"
 	fi
 }
 
@@ -44,9 +43,11 @@ on_config_mingw(){
 
 . xbuild
 
-$build_shared && cmake_config+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=ON" || cmake_config+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=OFF"
+#$build_shared && cmake_config+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=ON" || cmake_config+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=OFF"
+$clang && WFLAGS+=" -Wno-unused-command-line-argument -Wno-unused-but-set-variable -Wno-format"
+LDFLAGS+=" -liconv"
 
-source_patch(){
+_source_patch(){
 	# update mingw toolchain to <xv_x64_mingw> in .config
 	sed -i "s|7.3|${xv_x64_mingw}|g" ${dir_src}/cmake/toolschains/ubuntu1804-mingw64.cmake
 	# hack for cross compile with mingw on ubuntu

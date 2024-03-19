@@ -9,9 +9,11 @@ apt="${lib}-dev"
 dsc='The ModPlug mod file playing library.'
 lic='Public'
 src='https://github.com/Konstanty/libmodplug.git'
-sty='git'
 cfg='ar'
 eta='40'
+
+dev_bra='main'
+dev_vrs='0.8.9.1'
 
 . xbuild
 

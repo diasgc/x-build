@@ -12,7 +12,7 @@ config_dir='build/cmake'
 eta='30'
 
 dev_bra='master'
-dev_vrs='1.9.3'
+dev_vrs='1.9.5'
 stb_bra=''
 stb_vrs=''
 

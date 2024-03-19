@@ -1,0 +1,17 @@
+#!/bin/bash
+
+source ./utils/.utils
+
+for a in *.sh; do
+
+    src=$(cat $a | grep -oP "src='.*'" | sed "s/src=//g;s/'//g")
+
+    case $src in
+        *git*)
+            vlocal=$(cat $a | grep -oP "dev_vrs='.*'" | sed "s/dev_vrs=//g;s/'//g")
+            vrem=$(git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g' | tail -n1 | sed 's/[a-zA-Z\-\^\{\}]//g')
+            printf "%-20s: %-20s %-20s\n" "  $a" "scrpt: $vlocal" "git: $vrem"
+            ;;
+    esac
+    
+done

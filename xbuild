@@ -243,11 +243,15 @@ start(){
 			# check whether to custom get source
 			if fn_defined 'source_get'; then
 				fn_log 'get' source_get
+				unset sty
 			elif [ -n "${git}" ]; then
-				git_clone ${git} ${lib} ${src_opt}
+				src=$git
+				sty="git"
 			elif [ -n "${svn}" ]; then
-				do_svn ${svn} ${lib}
-			elif [ -n "${sty}" ]; then
+				src=$svn
+				sty="svn"
+			fi
+			if [ -n "${sty}" ]; then
 				case $sty in
 					git)           git_clone $src $lib $src_opt;;
 					tgz|txz|tlz)   wget_tarxx $src $lib;;

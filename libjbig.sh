@@ -7,9 +7,7 @@
 lib='libjbig'
 dsc='JBIG1 data compression standard (ITU-T T.82) lossless image compression'
 lic='GPL'
-
-#src='https://www.cl.cam.ac.uk/~mgk25/git/cdjbigkit' sty='git'
-vrs='2.1' src="https://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-${vrs}.tar.gz"
+git='https://www.cl.cam.ac.uk/~mgk25/git/jbigkit'
 cfg='cmake'
 eta='17'
 
@@ -22,10 +20,12 @@ lst_inc='jbig_ar.h jbig85.h jbig.h'
 lst_lib='libjbig85 libjbig'
 lst_bin='pbmtojbg85 pbmtojbg jbgtopbm85 jbgtopbm'
 
+dev_vrs='2.1'
+
 . xbuild
-
+#set -x
 start
-
+#set +x
 # Filelist
 # --------
 #
