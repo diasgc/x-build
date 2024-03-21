@@ -11,14 +11,13 @@ lic='MLP-2.0'
 src='https://github.com/inikep/lizard.git'
 cfg='cmake'
 dep=''
-cmake_cmakelists='lizard.cmake'
 eta='60'
 
 lst_inc='lizard_frame.h lizard_common.h lizard_compress.h'
 lst_lib='liblizard'
 lst_bin='lizard'
 lst_lic='LICENSE.MIT README.md'
-lst_pc='fastlz.pc'
+lst_pc='liblizard.pc'
 dev_vrs='1.0.0'
 
 . xbuild
