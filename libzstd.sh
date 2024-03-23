@@ -14,7 +14,7 @@ cmake_bin="ZSTD_BUILD_PROGRAMS"
 
 config_dir='build/cmake'
 
-dev_vrs='1.5.2'
+dev_vrs='1.5.6'
 lst_inc='zstd_errors.h zstd.h zdict.h'
 lst_lib='libzstd'
 lst_bin='zstdgrep zstd zstdless'

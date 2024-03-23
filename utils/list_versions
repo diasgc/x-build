@@ -1,8 +1,8 @@
 #!/bin/bash
 
-source ./utils/.utils
+source .utils
 
-for a in *.sh; do
+for a in ../*.sh; do
 
     src=$(cat $a | grep -oP "src='.*'" | sed "s/src=//g;s/'//g")
 
