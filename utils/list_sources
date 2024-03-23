@@ -6,9 +6,11 @@ for a in ../*.sh; do
 
     src=$(cat $a | grep -oP "src='.*'" | sed "s/src=//g;s/'//g")
 
-    case $src in
-        *git*) printf "%-20s: %-20s\n" "  $a" "git: $src";;
-        *)     printf "%-20s: %-20s\n" "  $a" "other: $src";;
-    esac
+    if [ -n "$src" ]; then
+        case $src in
+            *git*) printf "%-20s: %-20s\n" "  $a" "git: $src";;
+            *svn*) printf "%-20s: %-20s\n" "  $a" "svn: $src";;
+        esac
+    fi
     
 done
