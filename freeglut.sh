@@ -11,7 +11,7 @@ src='https://github.com/dcnieho/FreeGLUT.git'
 cfg='cmake'
 eta='0'
 
-config_dir='freeglut/freeglut'
+#config_dir='freeglut/freeglut'
 cmake_static='FREEGLUT_BUILD_STATIC_LIBS'
 cmake_shared='FREEGLUT_BUILD_SHARED_LIBS'
 cmake_config='-DFREEGLUT_BUILD_DEMOS=OFF'
@@ -31,11 +31,7 @@ eta='20'
 
 . xbuild
 
-on_config_ndk(){
-    cmake_config+=' -DFREEGLUT_GLES=ON'
-    pkg='freeglut-gles'
-    return 0
-}
+$host_ndk && cmake_config+=' -DFREEGLUT_GLES=ON'
 
 start
 
