@@ -9,9 +9,7 @@ dep='ogg'
 eta='60'
 
 dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='0.11.4'
      
 lst_inc='celt/*.h'
 lst_lib='libcelt0'

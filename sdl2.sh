@@ -15,7 +15,7 @@ cfg='cmake'
 eta='60'
 pkg='sdl3'
 cmake_static='SDL_STATIC'
-cmake_config="-DRPATH=OFF -DASAN=ON -DASSEMBLY=ON"
+cmake_config="-DRPATH=OFF -DASAN=ON -DASSEMBLY=ON -DSDL_HIDAPI_LIBUSB=OFF"
 
 lst_inc='SDL2/*.h'
 lst_lib='libSDL2main libSDL2 libhidapi'
@@ -24,7 +24,7 @@ lst_lic='LICENSE AUTHORS'
 lst_pc='sdl3.pc'
 
 dev_bra='master'
-dev_vrs='3.0.0'
+dev_vrs='3.1.0'
 
 . xbuild
 

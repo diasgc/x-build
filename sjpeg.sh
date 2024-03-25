@@ -21,7 +21,7 @@ lst_pc='sjpeg.pc'
 
 . xbuild
 
-CFG="-DSJPEG_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"
+$host_ndk && cmake_config+=" -DSJPEG_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"
 
 start
 

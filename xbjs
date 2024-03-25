@@ -1,11 +1,16 @@
 #!/bin/bash
-cat << "EOF"
+source .common
 
-THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄ █▀▀ █▀▀▄ 
-     ▄▀▄ ▀▀ █▀▀▄ █  █  █  █   █  █ █▀▀ █▀▀▄ 
-    ▀   ▀   ▀▀▀  ▀▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀  ▀▀▀ ▀  ▀
-    A cross-compile builder scripting helper
+echo -e "$(
+cat <<-EOF
+
+${CC1}THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄ █▀▀ █▀▀▄ 
+${CY1}     ▄▀▄ ▀▀ █▀▀▄ █  █  █  █   █  █ █▀▀ █▀▀▄ 
+${CY0}    ▀   ▀   ▀▀▀  ▀▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀  ▀▀▀ ▀  ▀
+${CW}    Cross-compile build scripts
+
 EOF
+)"
 
 jload(){
     lib=$1

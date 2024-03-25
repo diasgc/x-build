@@ -10,7 +10,6 @@ src="https://downloads.xvid.com/downloads/xvidcore-${vrs}.tar.gz"
 cfg='cmake'
 eta='20'
 pkg='libxvidcore'
-cmake_cmakelists='xvidcore.cmake'
 pc_url=$url
 #pc_llib='-lxvidcore'
 

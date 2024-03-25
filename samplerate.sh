@@ -12,8 +12,6 @@ eta='54'
 #cbk="LIBSAMPLERATE_EXAMPLES"
 dev_bra='master'
 dev_vrs='0.2.2'
-stb_bra='tags/0.2.2'
-stb_vrs='0.2.2'
 
 lst_inc='samplerate.h'
 lst_lib='libsamplerate'

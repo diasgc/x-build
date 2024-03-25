@@ -59,6 +59,7 @@ cmake_build_toolchainfile(){
 		set(ZLIB_INCLUDE_DIRS ${SYSROOT}/usr/include)
 		set(ZLIB_LIBRARIES ${SYSROOT}/usr/lib/${arch})
 		set(ZLIB_VERSION_STRING 1.2.11)
+		#include(${ANDROID_NDK_HOME}/../../cmake/3.22.1/share/cmake-3.22/Modules/FindOpenGL.cmake)
 		include(${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake)
 		EOF
 	#mingw_stdlibs='-lwsock32 -lws2_32 -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32'
