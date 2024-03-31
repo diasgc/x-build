@@ -13,6 +13,8 @@ src='https://github.com/MediaArea/MediaInfoLib.git'
 cfg='cmake'
 eta='10'
 config_dir='Project/CMake'
+dep='libzen'
+
 lst_inc='MediaInfo/MediaInfoList.h
 	MediaInfo/MediaInfo_Events.h
 	MediaInfo/MediaInfo.h
@@ -21,6 +23,8 @@ lst_inc='MediaInfo/MediaInfoList.h
 	MediaInfoDLL/MediaInfoDLL.h'
 lst_lib='libmediainfo'
 lst_bin=''
+
+dev_vrs='24.03'
 
 . xbuild
 

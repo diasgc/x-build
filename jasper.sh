@@ -16,7 +16,7 @@ cmake_bin="JAS_ENABLE_PROGRAMS"
 cmake_config="-DBUILD_TESTING=OFF -DJAS_ENABLE_DOC=OFF -DJAS_STDC_VERSION=202202L -DALLOW_IN_SOURCE_BUILD=ON"
 
 dev_bra='master'
-dev_vrs='4.2.2'
+dev_vrs='4.2.3'
 
 lst_inc='jasper/*.h'
 lst_lib='libjasper'

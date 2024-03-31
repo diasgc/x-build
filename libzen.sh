@@ -14,7 +14,7 @@ lst_lib='libzen'
 lst_bin=''
 lst_lic='License.txt'
 lst_pc='libzen.pc'
-dev_vrs='0.4.39'
+dev_vrs='0.4.41'
 
 cmake_static='BUILD_STATIC_LIBS'
 
