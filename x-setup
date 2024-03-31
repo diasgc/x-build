@@ -447,6 +447,7 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
             #[ -f "${dir_toolchain}/bin/as" ] || sudo ln -s "${ndk_toolchain}/bin/${c_lib[${i}]}-as" "${dir_toolchain}/bin/as"
             #[ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s -f "${ndk_toolchain}/bin/lld" "${dir_toolchain}/bin/ld"
             check_ndk_symlink "${dir_toolchain}/bin/ld" && sudo ln -sfn "${ndk_toolchain}/bin/ld" "${dir_toolchain}/bin/ld"
+            check_ndk_symlink "${dir_toolchain}/bin/yasm" && sudo ln -sfn "${ndk_toolchain}/bin/yasm" "${dir_toolchain}/bin/yasm"
             
             for j in as ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
                 check_ndk_symlink "${dir_toolchain}/bin/${j}" && sudo ln -sfn "${ndk_toolchain}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
