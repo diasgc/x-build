@@ -1,8 +1,4 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
 
 lib='liblc3'
 pkg='lc3'
@@ -26,6 +22,12 @@ lst_pc=''
 eta='20'
 
 . xbuild
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
 
 #source_get(){ return 0; }
 #patch_source(){ return 0; }

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#             a8  a7  x86 x64
-# ndk-clang   PP. ... ... ...
-# linux-gnu   ... ... ... ...
-# mingw-llvm  ... ... ... ...
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 lib='libmediainfo'
 apt="${lib}-dev"
