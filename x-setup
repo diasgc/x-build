@@ -156,6 +156,7 @@ function install_llvm_mingw {
     fi
     cd $(dirname ${LLVM_MINGW_HOME})
     [ -d "llvm-mingw" ] && rm -rf "llvm-mingw"
+    # git ls-remote https://github.com/mstorsjo/llvm-mingw | grep -oP 'tags.*20.*' | tail -n 1 | sed 's/tags\//'
     export llvm_mingw_rel=$(git ls-remote --tags --refs --sort="v:refname" 'https://github.com/mstorsjo/llvm-mingw.git' 2>/dev/null | tail -n1 | sed 's/.*\///')
     wget_untar "https://github.com/mstorsjo/llvm-mingw/releases/download/${llvm_mingw_rel}/llvm-mingw-${llvm_mingw_rel}-ucrt-ubuntu-18.04-x86_64.tar.xz" "llvm-mingw"    
     echo $llvm_mingw_rel >"${LLVM_MINGW_HOME}/version"
