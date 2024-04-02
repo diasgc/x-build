@@ -13,7 +13,7 @@ mki='install/strip'
 
 cmake_config="-DWITH_JPEG8=ON -DWITH_JPEG7=ON -DWITH_DOCS=OFF -DWITH_MAN=OFF"
 
-dev_vrs='2.1.3'
+dev_vrs='3.0.3'
 lst_inc='jerror.h jconfig.h jpeglib.h jmorecfg.h turbojpeg.h'
 lst_lib='libjpeg libturbojpeg'
 lst_bin='rdjpgcom jpegtran wrjpgcom djpeg tjbench cjpeg'

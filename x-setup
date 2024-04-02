@@ -151,14 +151,15 @@ function install_llvm_gnu {
 function install_llvm_mingw {
     # install llvm-mingw
     local od=$(pwd)
+    local repo='mstorsjo/llvm-mingw'
     if [ -z "${LLVM_MINGW_HOME}" ]; then
         export LLVM_MINGW_HOME="$HOME/llvm-mingw"
     fi
     cd $(dirname ${LLVM_MINGW_HOME})
     [ -d "llvm-mingw" ] && rm -rf "llvm-mingw"
-    # git ls-remote https://github.com/mstorsjo/llvm-mingw | grep -oP 'tags.*20.*' | tail -n 1 | sed 's/tags\//'
-    export llvm_mingw_rel=$(git ls-remote --tags --refs --sort="v:refname" 'https://github.com/mstorsjo/llvm-mingw.git' 2>/dev/null | tail -n1 | sed 's/.*\///')
-    wget_untar "https://github.com/mstorsjo/llvm-mingw/releases/download/${llvm_mingw_rel}/llvm-mingw-${llvm_mingw_rel}-ucrt-ubuntu-18.04-x86_64.tar.xz" "llvm-mingw"    
+    #export llvm_mingw_rel=$(git ls-remote https://github.com/mstorsjo/llvm-mingw | grep -oP 'tags.*20.*' | tail -n 1 | sed 's,tags/,,' | tr -d '^{}')
+    export llvm_mingw_rel=$(curl --silent "https://api.github.com/repos/$repo/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    wget_untar "https://github.com/mstorsjo/llvm-mingw/releases/download/${llvm_mingw_rel}/llvm-mingw-${llvm_mingw_rel}-ucrt-ubuntu-20.04-x86_64.tar.xz" "llvm-mingw"    
     echo $llvm_mingw_rel >"${LLVM_MINGW_HOME}/version"
     export xv_llvm_mingw=$(./llvm-mingw/bin/aarch64-w64-mingw32-clang --version | grep -oP '\d*\.\d*.\d* (?=\()')
     cd $od
@@ -485,6 +486,7 @@ if [ -z "${LLVM_MINGW_HOME}" ]; then
         export LLVM_MINGW_HOME=$(dirname $(dirname $llvm_mingw_bin_dir))
     fi
 fi
+
 if [ -n "${LLVM_MINGW_HOME}" ]; then
     printf "${CH}%-20s: ${C0}%s\n" "  found at" ${LLVM_MINGW_HOME}
     
@@ -501,6 +503,7 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
     llvm_mingw_clang_version=$(${LLVM_MINGW_HOME}/bin/clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
     printf "${CH}%-20s: ${C0}%s\n" '  clang' "$llvm_mingw_clang_version"
 
+    
     # check and create symlinks in toolchains dir if needed
     for cl in aarch64 arm i686 x86_64; do
         for e in ar nm addr2line dlltool objcopy ranlib readelf strings strip windres; do
@@ -540,6 +543,7 @@ fi
 echo -ne "\n${CC1}${b} Writing config${C0}"
 
 [ -z "${llvm_mingw}" ] && [ -n "${LLVM_MINGW_HOME}" ] && llvm_mingw=${LLVM_MINGW_HOME}
+
 case "$(uname -s)" in
     Linux)  build_arch=$(echo $(uname -m)-linux-gnu)
     [ -n "$(grep -q BCM2708 /proc/cpuinfo)" ] && build_arch="${build_arch}eabihf"    
@@ -552,9 +556,10 @@ case "$(uname -s)" in
     CYGWIN*|MINGW32*|MSYS*|MINGW*) build_arch=$(echo $(uname -m)-w64-mingw32);;
 esac
 
-xv_x64_mingw=$(ls -t /usr/lib/gcc/x86_64-w64-mingw32 2>/dev/null | grep -E "*-win32" | head -n1)
-xv_x86_mingw=$(ls -t /usr/lib/gcc/i686-w64-mingw32 2>/dev/null | grep -E "*-win32" | head -n1)
-: "${API:=24}"
+xv_x64_mingw=$(ls -t /usr/lib/gcc/x86_64-w64-mingw32 | grep -E "*-win32" | head -n1 2>/dev/null )
+xv_x86_mingw=$(ls -t /usr/lib/gcc/i686-w64-mingw32 | grep -E "*-win32" | head -n1 2>/dev/null)
+
+: "${API:=34}"
 
 cat <<-EOF >${dir_root}/.config
 #!/bin/bash
