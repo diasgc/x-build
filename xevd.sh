@@ -24,7 +24,7 @@ lst_lic='COPYING'
 lst_pc="xevd${sfx}.pc"
 
 dev_bra='main'
-dev_vrs=''
+dev_vrs='0.4.1'
 stb_bra=''
 stb_vrs='0.4.1'
 
