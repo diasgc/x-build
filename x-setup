@@ -148,6 +148,12 @@ function install_llvm_gnu {
     $cmd_install llvm clang libc6-dev-arm64-cross libc6-dev-armhf-cross
 }
 
+function llvm_mingw_get_latest_version {
+    local repo='mstorsjo/llvm-mingw'
+    #echo $(git ls-remote https://github.com/mstorsjo/llvm-mingw | grep -oP 'tags.*20.*' | tail -n 1 | sed 's,tags/,,' | tr -d '^{}')
+    echo $(curl --silent "https://api.github.com/repos/$repo/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+}
+
 function install_llvm_mingw {
     # install llvm-mingw
     local od=$(pwd)
@@ -157,8 +163,7 @@ function install_llvm_mingw {
     fi
     cd $(dirname ${LLVM_MINGW_HOME})
     [ -d "llvm-mingw" ] && rm -rf "llvm-mingw"
-    #export llvm_mingw_rel=$(git ls-remote https://github.com/mstorsjo/llvm-mingw | grep -oP 'tags.*20.*' | tail -n 1 | sed 's,tags/,,' | tr -d '^{}')
-    export llvm_mingw_rel=$(curl --silent "https://api.github.com/repos/$repo/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    export llvm_mingw_rel=$(llvm_mingw_get_latest_version)
     wget_untar "https://github.com/mstorsjo/llvm-mingw/releases/download/${llvm_mingw_rel}/llvm-mingw-${llvm_mingw_rel}-ucrt-ubuntu-20.04-x86_64.tar.xz" "llvm-mingw"    
     echo $llvm_mingw_rel >"${LLVM_MINGW_HOME}/version"
     export xv_llvm_mingw=$(./llvm-mingw/bin/aarch64-w64-mingw32-clang --version | grep -oP '\d*\.\d*.\d* (?=\()')
@@ -476,34 +481,7 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
     fi
 fi
 
-echo -e "\n${CC1}LLVM MINGW:"
-if [ -z "${LLVM_MINGW_HOME}" ]; then
-    llvm_mingw_bin_dir=$(find ~ -name "aarch64-w64-mingw32uwp-dlltool" | head -n1)
-    if [ -z "${llvm_mingw_bin_dir}" ]; then
-        echo -e "not found. Install?"; read -p "[Y|n]" pndk
-        case $pndk in y|Y) install_llvm_mingw;; esac
-    else
-        export LLVM_MINGW_HOME=$(dirname $(dirname $llvm_mingw_bin_dir))
-    fi
-fi
-
-if [ -n "${LLVM_MINGW_HOME}" ]; then
-    printf "${CH}%-20s: ${C0}%s\n" "  found at" ${LLVM_MINGW_HOME}
-    
-    llvm_mingw_version_latest=$(git ls-remote --tags --refs --sort="v:refname" 'https://github.com/mstorsjo/llvm-mingw.git' 2>/dev/null | tail -n1 | sed 's/.*\///')
-    [ -f "${LLVM_MINGW_HOME}/version" ] || echo "$llvm_mingw_version_latest" >>"${LLVM_MINGW_HOME}/version"
-    llvm_mingw_version=$(cat ${LLVM_MINGW_HOME}/version)
-    printf "${CH}%-20s: ${C0}%s " '  version' $llvm_mingw_version
-    if [ "${llvm_mingw_version}" == "${llvm_mingw_version_latest}" ]; then
-        echo -e "(updated)"
-    else
-        echo -e "${CY1} latest is ${llvm_mingw_version_latest}${C0}"
-    fi
-
-    llvm_mingw_clang_version=$(${LLVM_MINGW_HOME}/bin/clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
-    printf "${CH}%-20s: ${C0}%s\n" '  clang' "$llvm_mingw_clang_version"
-
-    
+function llvm_mingw_check_symlinks_old {
     # check and create symlinks in toolchains dir if needed
     for cl in aarch64 arm i686 x86_64; do
         for e in ar nm addr2line dlltool objcopy ranlib readelf strings strip windres; do
@@ -519,6 +497,56 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
         [ ! -f "${dir_toolchain}/${cl}-w64-mingw32-widl" ] && ln -s "${LLVM_MINGW_HOME}/bin/i686-w64-mingw32-widl" "${dir_toolchain}/${cl}-w64-mingw32-ld" 2>/dev/null
     done
     printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
+}
+
+function llvm_mingw_check_symlinks {
+    for cl in aarch64 arm i686 x86_64; do
+        target_dir="/usr/${cl}-w64-mingw32"
+        test -d "${target_dir}" || mkdir -p ${target_dir}/bin
+        for e in addr2line ar c++ clang++ dlltool g++ gcc ld llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf strings strip windl windres; do
+            v="${target_dir}/bin/${e}"
+            if [ ! -f "${v}" ]; then
+                ln -s "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32-${e}" "${v}" 2>/dev/null
+                ln -s "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32uwp-${e}" "uwp-${v}" 2>/dev/null
+            fi
+        done
+        test -d "${target_dir}/include" || ln -s "${LLVM_MINGW_HOME}/include" "${target_dir}/include"
+        test -d "${target_dir}/lib" || ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/lib" "${target_dir}/lib"
+        test -d "${target_dir}/share" || || ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/share" "${target_dir}/share"
+    done
+    printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
+}
+
+echo -e "\n${CC1}LLVM MINGW:"
+if [ -z "${LLVM_MINGW_HOME}" ]; then
+    llvm_mingw_bin_dir=$(find ~ -name "aarch64-w64-mingw32uwp-dlltool" | head -n1)
+    if [ -z "${llvm_mingw_bin_dir}" ]; then
+        echo -e "not found. Install?"; read -p "[Y|n]" pndk
+        case $pndk in y|Y) install_llvm_mingw;; esac
+    else
+        export LLVM_MINGW_HOME=$(dirname $(dirname $llvm_mingw_bin_dir))
+    fi
+fi 
+
+if [ -n "${LLVM_MINGW_HOME}" ]; then
+    printf "${CH}%-20s: ${C0}%s\n" "  found at" ${LLVM_MINGW_HOME}
+    
+    llvm_mingw_version_latest=$(llvm_mingw_get_latest_version)
+    [ -f "${LLVM_MINGW_HOME}/version" ] || echo "$llvm_mingw_version_latest" >>"${LLVM_MINGW_HOME}/version"
+    llvm_mingw_version=$(cat ${LLVM_MINGW_HOME}/version)
+    printf "${CH}%-20s: ${C0}%s " '  version' $llvm_mingw_version
+    if [ "${llvm_mingw_version}" == "${llvm_mingw_version_latest}" ]; then
+        echo -e "(updated)"
+    else
+        echo -e "${CY1} latest is ${llvm_mingw_version_latest}${C0}"
+    fi
+
+    llvm_mingw_clang_version=$(${LLVM_MINGW_HOME}/bin/clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
+    printf "${CH}%-20s: ${C0}%s\n" '  clang' "$llvm_mingw_clang_version"
+
+    
+    # check and create symlinks in toolchains dir if needed
+    # llvm_mingw_check_symlinks_old
 fi
 
 echo -e "\n${CC1}${b} Build tools${C0}"
