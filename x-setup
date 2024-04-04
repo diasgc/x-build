@@ -323,6 +323,8 @@ if $init; then
 fi
 
 check_install gcc g++
+gcc_version=$(gcc -dumpversion)
+printf "${CH}%-20s: ${C0}%s\n" '  gcc version' ${gcc_version}
 
 echo -e "\n${CC1}This Machine:"
 [ -z "${build_arch}" ] && build_arch="$(uname -m)-${OSTYPE,,}"
@@ -340,7 +342,7 @@ fi
 export dir_toolchain="$(pwd)/builds/toolchain"
 
 echo -e "\n${CC1}GNU-GCC:"
-check_install 'gcc-aarch64-linux-gnu' 'g++-aarch64-linux-gnu' 'libstdc++-11-dev-arm64-cross'
+check_install 'gcc-aarch64-linux-gnu' 'g++-aarch64-linux-gnu' "libstdc++-${gcc_version}-dev-arm64-cross"
 check_install 'gcc-arm-linux-gnueabihf' 'g++-arm-linux-gnueabihf' 'libstdc++6-armhf-cross'
 check_install 'gcc-i686-linux-gnu' 'g++-i686-linux-gnu'
 
@@ -353,7 +355,7 @@ echo
 cclang=$(command -v clang)
 if [ -n "${cclang}" ]; then
     printf "${CH}%-20s: ${C0}%s\n" "  found at" ${cclang}
-    clang_version=$(clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
+    clang_version=$(clang -dumpversion)
     printf "${CH}%-20s: ${C0}%s\n" '  clang' "$clang_version"
     # install symlinks
 	cl=(aarch64 arm i686 x86_64)
@@ -502,17 +504,18 @@ function llvm_mingw_check_symlinks_old {
 function llvm_mingw_check_symlinks {
     for cl in aarch64 arm i686 x86_64; do
         target_dir="/usr/${cl}-w64-mingw32"
-        test -d "${target_dir}" || mkdir -p ${target_dir}/bin
+        test -d "${target_dir}"         || sudo mkdir -p ${target_dir}/bin
+        test -d "${target_dir}/dll"     || sudo ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/bin"   "${target_dir}/dll"
+        test -d "${target_dir}/include" || sudo ln -s "${LLVM_MINGW_HOME}/include"                 "${target_dir}/include"
+        test -d "${target_dir}/lib"     || sudo ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/lib"   "${target_dir}/lib"
+        test -d "${target_dir}/share"   || sudo ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/share" "${target_dir}/share"
+        
         for e in addr2line ar c++ clang++ dlltool g++ gcc ld llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf strings strip windl windres; do
             v="${target_dir}/bin/${e}"
-            if [ ! -f "${v}" ]; then
-                ln -s "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32-${e}" "${v}" 2>/dev/null
-                ln -s "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32uwp-${e}" "uwp-${v}" 2>/dev/null
-            fi
+            test -f "${v}"     || sudo ln -s "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32-${e}"    "${v}"
+            test -f "uwp-${v}" || sudo ln -s "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32uwp-${e}" "uwp-${v}"
         done
-        test -d "${target_dir}/include" || ln -s "${LLVM_MINGW_HOME}/include" "${target_dir}/include"
-        test -d "${target_dir}/lib" || ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/lib" "${target_dir}/lib"
-        test -d "${target_dir}/share" || || ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/share" "${target_dir}/share"
+        
     done
     printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
 }
@@ -521,7 +524,7 @@ echo -e "\n${CC1}LLVM MINGW:"
 if [ -z "${LLVM_MINGW_HOME}" ]; then
     llvm_mingw_bin_dir=$(find ~ -name "aarch64-w64-mingw32uwp-dlltool" | head -n1)
     if [ -z "${llvm_mingw_bin_dir}" ]; then
-        echo -e "not found. Install?"; read -p "[Y|n]" pndk
+        echo -ne "  not found. Install? "; read -p "[Y|n]" pndk
         case $pndk in y|Y) install_llvm_mingw;; esac
     else
         export LLVM_MINGW_HOME=$(dirname $(dirname $llvm_mingw_bin_dir))
@@ -546,7 +549,7 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
 
     
     # check and create symlinks in toolchains dir if needed
-    # llvm_mingw_check_symlinks_old
+    llvm_mingw_check_symlinks
 fi
 
 echo -e "\n${CC1}${b} Build tools${C0}"
