@@ -15,6 +15,7 @@ clear
 
 #
 : "${dir_root:=$(dirname $0)}"
+: "${mingw_repo}:=mstorsjo/llvm-mingw}"
 
 check_install(){
     local v0
@@ -149,22 +150,19 @@ function install_llvm_gnu {
 }
 
 function llvm_mingw_get_latest_version {
-    local repo='mstorsjo/llvm-mingw'
-    #echo $(git ls-remote https://github.com/mstorsjo/llvm-mingw | grep -oP 'tags.*20.*' | tail -n 1 | sed 's,tags/,,' | tr -d '^{}')
-    echo $(curl --silent "https://api.github.com/repos/$repo/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    echo $(curl --silent "https://api.github.com/repos/${mingw_repo}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 }
 
 function install_llvm_mingw {
     # install llvm-mingw
     local od=$(pwd)
-    local repo='mstorsjo/llvm-mingw'
     if [ -z "${LLVM_MINGW_HOME}" ]; then
         export LLVM_MINGW_HOME="$HOME/llvm-mingw"
     fi
     cd $(dirname ${LLVM_MINGW_HOME})
     [ -d "llvm-mingw" ] && rm -rf "llvm-mingw"
     export llvm_mingw_rel=$(llvm_mingw_get_latest_version)
-    wget_untar "https://github.com/mstorsjo/llvm-mingw/releases/download/${llvm_mingw_rel}/llvm-mingw-${llvm_mingw_rel}-ucrt-ubuntu-20.04-x86_64.tar.xz" "llvm-mingw"    
+    wget_untar "https://github.com/${mingw_repo}/releases/download/${llvm_mingw_rel}/llvm-mingw-${llvm_mingw_rel}-ucrt-ubuntu-20.04-x86_64.tar.xz" "llvm-mingw"    
     echo $llvm_mingw_rel >"${LLVM_MINGW_HOME}/version"
     export xv_llvm_mingw=$(./llvm-mingw/bin/aarch64-w64-mingw32-clang --version | grep -oP '\d*\.\d*.\d* (?=\()')
     cd $od
@@ -510,7 +508,7 @@ function llvm_mingw_check_symlinks {
         test -d "${target_dir}/lib"     || sudo ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/lib"   "${target_dir}/lib"
         test -d "${target_dir}/share"   || sudo ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/share" "${target_dir}/share"
         
-        for e in addr2line ar c++ clang++ dlltool g++ gcc ld llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf strings strip windl windres; do
+        for e in addr2line ar c++ clang clang++ dlltool g++ gcc ld llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf strings strip windl windres; do
             v="${target_dir}/bin/${e}"
             test -f "${v}"     || sudo ln -s "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32-${e}"    "${v}"
             test -f "uwp-${v}" || sudo ln -s "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32uwp-${e}" "uwp-${v}"
@@ -544,7 +542,8 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
         echo -e "${CY1} latest is ${llvm_mingw_version_latest}${C0}"
     fi
 
-    llvm_mingw_clang_version=$(${LLVM_MINGW_HOME}/bin/clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
+    llvm_mingw_clang_version=$(${LLVM_MINGW_HOME}/bin/clang -dumpversion)
+    xv_llvm_mingw=${llvm_mingw_clang_version%%.*}
     printf "${CH}%-20s: ${C0}%s\n" '  clang' "$llvm_mingw_clang_version"
 
     
@@ -587,8 +586,8 @@ case "$(uname -s)" in
     CYGWIN*|MINGW32*|MSYS*|MINGW*) build_arch=$(echo $(uname -m)-w64-mingw32);;
 esac
 
-xv_x64_mingw=$(ls -t /usr/lib/gcc/x86_64-w64-mingw32 | grep -E "*-win32" | head -n1 2>/dev/null )
-xv_x86_mingw=$(ls -t /usr/lib/gcc/i686-w64-mingw32 | grep -E "*-win32" | head -n1 2>/dev/null)
+#xv_x64_mingw=$(ls -t /usr/lib/gcc/x86_64-w64-mingw32 | grep -E "*-win32" | head -n1 2>/dev/null )
+#xv_x86_mingw=$(ls -t /usr/lib/gcc/i686-w64-mingw32 | grep -E "*-win32" | head -n1 2>/dev/null)
 
 : "${API:=34}"
 
@@ -617,14 +616,14 @@ export config_lastupdate=$(date +%s) \\
     NASM_EXECUTABLE="$(command -v nasm)" \\
     PKG_CONFIG="$(command -v pkg-config)" \\
     HOST_NPROC="$(nproc)" \\
-    xv_llvm_mingw="$(ls -t /usr/lib/gcc-cross/arm-linux-gnueabihf 2>/dev/null | head -n1)" \\
+    xv_llvm_mingw="${xv_llvm_mingw}" \\
     llvm_mingw_rel="${llvm_mingw_rel}" \\
-    xv_aarch64_gnu="$(ls -t /usr/lib/gcc-cross/aarch64-linux-gnu 2>/dev/null | head -n1)" \\
-    xv_armeabi_gnu="${xv_armeabi_gnu}" \\
-    xv_x86_gnu="$(ls -t /usr/lib/gcc-cross/i686-linux-gnu 2>/dev/null | head -n1)" \\
-    xv_x64_gnu="$(ls -t /usr/lib/gcc/x86_64-linux-gnu 2>/dev/null | head -n1)" \\
-    xv_x64_mingw="${xv_x64_mingw%%-*}" \\
-    xv_x86_mingw="${xv_x86_mingw%%-*}"
+    xv_aarch64_gnu="$(/usr/bin/aarch64-linux-gnu-gcc -dumpversion)" \\
+    xv_armeabi_gnu="$(/usr/bin/arm-linux-gnueabihf-gcc -dumpversion)" \\
+    xv_x86_gnu="$(/usr/bin/i686-linux-gnu-gcc -dumpversion)" \\
+    xv_x64_gnu="$(/usr/bin/x86_64-linux-gnu-gcc -dumpversion)" \\
+    xv_x64_mingw="${xv_llvm_mingw}" \\
+    xv_x86_mingw="${xv_llvm_mingw}"
 EOF
 
 echo -ne "... ${CC1}Done!${C0}\n\n"

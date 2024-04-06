@@ -236,8 +236,11 @@ package_showinfo(){
 	[ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}\e[1m${lib^^} - ${C0}${dsc}\e[0m"
 	[ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
 
-	# log file link
-	echo -e "${CD}${ind}${CD}see log at \e[4m${log_file}\e[24m${C0}"
+	# see links
+	echo -e "${CD}${ind}${CD}see log   : \e[4m${log_file}\e[24m${C0}"
+	echo -e "${CD}${ind}${CD}    script: \e[4m${0}\e[24m${C0}"
+	echo -e "${CD}${ind}${CD}    source: \e[4m${dir_src}\e[24m${C0}\n${CD}${ind}${CD}"
+
 	# Licence
 	echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "
 
@@ -287,6 +290,82 @@ package_longdesc(){
 	return 0
 }
 
+
+clearAll(){
+	if [ -z "$lib" ];then
+		read -p 'Clear all data? (Builds, Sources and Logs) [Y|n] ' ca
+		case $ca in Y|y) rm -rf builds sources && clear;;esac
+	else
+		rm -rf sources/$lib
+		[ -n "$arch" ] && rm -rf builds/$arch/$lib builds/$arch/$lib.log
+	fi
+}
+
+checkPkg(){
+	local pf="${dir_install_pc}/${pkg}.pc"
+	[ -f "$pf" ] && echo $pf
+	return 0
+}
+
+list_tarball(){
+	local lf=$(ls -1 ${dir_pkgdist}/${lib}*${arch}.tar.gz 2>/dev/null | tail -n1)
+	if [ -z "${lf}" ] || [ ! -f "${lf}" ]; then
+		return 1
+	fi
+	tar -ztvf ${lf} | grep -e "[^/]$"
+	return 0
+}
+
+# USAGE: create_patch [b64] <rel_path_oldfile> [<rel_path_newfile>]
+create_patch(){  
+	local od=$(pwd); cd ${dir_src} || return 1
+	local b64=false
+	[ "${1}" == "b64" ] && b64=true && shift
+	case $# in
+		0) return 1;;
+		1) touch "${1}_"
+		   $b64 && diff -Naur "${1}_" "${1}" >"${1}.patch" || diff -Naur "${1}_" "${1}" | base64 -w 72 >"${1}.patch"
+		   ;;
+		*) $b64 && diff -Naur "${1}" "${2}" >"${2}.patch" || diff -Naur "${1}" "${2}" | base64 -w 72 >"${2}.patch"
+		   ;;
+	esac
+	cd $od
+}
+
+hwinfoCountCores(){
+	echo $(nproc)
+	# or cat /proc/cpuinfo | grep -Po -c 'model name\s+: \K(.*)'
+}
+
+hwinfoCountCoresReadable(){
+	case $(nproc) in
+		"1") echo "Single-Core";;
+		"2") echo "Dual-Core";;
+		"4") echo "Quad-Core";;
+		"6") echo "Hexa-Core";;
+		"8") echo "Octa-Core";;
+		*) echo "$n-Core";;
+	esac
+}
+
+hwinfoProcessor(){
+	cat /proc/cpuinfo | grep -Po 'model name\s+: \K(.*)' | head -n1
+}
+
+prompt_remove(){
+	while [ -n "${1}" ]; do
+		echo -ne "\n  Are you sure you want do remove ${CY1}$(basename $1)?${C0} Type 'Yes' to proceed: "; read q
+		if [ "${q}" == "Yes" ]; then
+		echo -ne "  > Removing $1... " && rm -rf $1 2>/dev/null && echo -e " ${CG1}done${C0}" || echo -e "${CR1} Fail${C0}"
+		else
+		break
+		fi
+		shift
+	done
+	echo
+}
+
+
 patch_check_patchdir(){
   test $patch_skip && return 0
   local patch_list=( $(ls -1 ${dir_patches}/${lib}*.patch 2>/dev/null) )
@@ -334,12 +413,225 @@ patch_check_xbpatch(){
 	return 0
 }
 
+# usage libname.sh --patch a [sources/libname/]path/to/newfile [sources/libname/]path/to/oldfile
+patch_append(){
+	local newfile=${1}
+	local oldfile
+	str_starts "${newfile}" "sources/${lib}/" && newfile="${newfile//sources\/${lib}\//}"
+	[ -f "sources/${lib}/${newfile}" ] || doErr "unable to find file sources/${lib}/${newfile}"
+	shift
+	cd sources/${lib}
+	if [ -z "${1}" ]; then
+		oldfile="${newfile::-3}old"
+		touch sources/${lib}/${oldfile}
+	else
+		oldfile=${1}
+		str_starts "${oldfile}" "sources/${lib}/" && newfile="${oldfile//sources\/${lib}\//}"
+		[ -f "${oldfile}" ] || doErr "unable to find file sources/${lib}/${oldfile}"
+	fi
+	diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" >>${dir_root}/sources/${lib}/xbuild.patch
+	cd ../..
+	echo -e "\n  ${CC1}Patch file updated at:${C0} $(pwd)/sources/${lib}/xbuild.patch\n\n"
+}
+
+patch_embed(){
+	if [ ! -f "sources/${lib}/xbuild.patch" ]; then
+		doErr "No sources/${lib}/xbuild.patch file to embed"
+	fi
+	hdr="STR_PATCH"
+	case $1 in
+		xb64|XB64) echo -e "\n<<'XB64_PATCH'" >>${0}
+				cat "sources/${lib}/xbuild.patch" | base64 -w 90 >>${0}
+				echo -e "XB64_PATCH" >>${0}
+				;;
+		lzs|LZS)   echo -e "\n<<'LZS_PATCH'" >>${0}
+				cat "sources/${lib}/xbuild.patch" | utils/lz-string -c -w 90 - >>${0}
+				echo -e "LZS_PATCH" >>${0}
+				;;
+	esac
+}
+
+patch_get(){
+	matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
+	if [ ${#matches[@]} -gt 0 ]; then
+		for match in ${matches[@]}; do
+			block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $0)
+			case $match in
+				XB64_PATCH) echo "${block}" | base64 -d;;
+				LZS_PATCH)  echo "${block}" | utils/lz-string -d -;;
+			esac
+		done
+	fi
+	return 0;
+}
+
+create_diff(){
+	local b64=false
+	local newfile=${1}
+	local oldfile
+	[ -f "sources/${lib}/${newfile}" ] || doErr "unable to find file sources/${lib}/${newfile}"
+	shift
+	pushdir sources/${lib}
+	if [ -z "${1}" ]; then
+		oldfile="${newfile::-3}old"
+		touch sources/${lib}/${oldfile}
+	else
+		oldfile=${1}
+		[ -f "${oldfile}" ] || doErr "unable to find file sources/${lib}/${oldfile}"
+	fi
+	if $b64; then
+		diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" | base64 -w 90 >>"${newfile}.patch"
+	else
+		diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" >"${newfile}.patch"
+	fi
+	echo -e "\n  ${CC1}Done${C0}\n"
+	read -p "Open file? y|n: " yn
+	case $yn in y|Y) nano "${newfile}.patch";; esac
+	popdir
+}
+
 request_cmd(){
 	local c1=$1
 	local c2=$2
 	test -z "${c2}" && c2=${c1}
 	test -z $(command -v ${c1}) && apt_install ${c2}
 	return 0
+}
+
+
+set_break(){
+    case $1 in
+        git)    break_on_git=true;;
+        patch)  break_on_patch=true;;
+        config) break_on_config=true;;
+        build)  break_on_build=true;;
+        make)   break_on_make=true;;
+    esac
+    return 0
+}
+
+menu_tune(){
+	case $1 in
+		smd855)   CPPFLAGS+=" -mtune=cortex-a76.cortex-a55";;
+		smd865)   CPPFLAGS+=" -mtune=cortex-a77.cortex-a55";;
+		smd888)   CPPFLAGS+=" -mtune=cortex-a78.cortex-a55";;
+		cortex-*) CPPFLAGS+=" -mtune=$1";;
+	esac
+}
+
+menu_clear(){
+	while [ -n "$1" ];do
+		case $1 in
+			source|srclib)   prompt_remove ${dir_src};;
+			allsources|sources)  prompt_remove ${dir_sources};;
+			builds)   prompt_remove ${dir_install};;
+			packages) prompt_remove ${dir_pkgdist};;
+			wipe*)    prompt_remove ${dir_pkgdist} ${dir_install} ${dir_sources};;
+		esac
+		shift
+	done
+	return 0
+}
+
+prt_hmenu(){
+	echo -e "\n${1}\n"
+	shift
+	local a
+	local b
+	while [ -n "$1" ]; do
+		a="$1"; shift
+		b="$1"; shift
+		printf "  ${CC0}%-20s: ${C0}%s\n" "$a" "$b"
+	done
+	echo
+}
+
+menu_get(){
+	local pkgfile="${dir_install_pc}/${pkg}.pc"
+	[ -f "${pkgfile}" ] && local has_pc=true
+	case $1 in
+		help)		prt_hmenu "${CW}usage: $0 --get ${CC0}<opt>" \
+					'cflags' 'get pkg-config --cflags' 'ldflags' 'get pkg-config --libs' 'ldstatic' 'get pkg-config --libs --static' \
+					'pc-ver' 'get package version' 'pc-path|pc' 'get pkg-config file path' 'pc-name' 'get pkg-config file name without .pc' \
+					'prefix' 'get prefix / install dir' 'libname' 'get the libname' 'aptname' 'get the debian package name' 'var <variable>' \
+					'get <variable> value' 'vrs_remote' 'get git remote latest version' 'vrs_tag' 'get git remote latest tag' 'vrs_tags' \
+					'get git remote tag list' 'vrs_local' 'get git local version' 'options|opts' 'show build options' 'log' 'edit (nano) log file' \
+					'patch' 'show decoded patch included in the script'
+					;;
+		cflags)     [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --cflags)";;
+		ldflags)    [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs)";;
+		ldstatic)   [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs --static)";;
+		pc-ver)     [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --modversion)";;
+		pc-path|pc) echo "${pkgfile}";;
+		pc-name)    echo "${pkg}";;
+		prefix)     echo "${dir_install}";;
+		libname)    echo "${lib}";;
+		aptname)    echo "${apt}";;
+		var)        shift; echo "${!1}";;
+		vrs_latest) echo $(github_latest_tgz); exit 0;;
+		vrs_remote) fn_defined 'vremote' && version_parse "$(vremote)" || git_version_remote $src;;
+		vrs_taglist)git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
+		vrs_tags)   git ls-remote --tags --sort="v:refname" $src | grep -oP 'tags/.*\d+\.\d+\.\d+.*';;
+		vrs_local)  git_version_local $dir_src;;
+		opt*)       showOpts "$(pwd)/sources/$lib"; exit 0;;
+		log)        [ -f "${dir_install}/${lib}.log" ] && nano ${dir_install}/${lib}.log;;
+		patch)      patch_get; exit 0;;
+		vrs_git)    git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g' | tail -n1;;
+		vrs_git_n)  git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g' | tail -n1 | sed 's/[a-zA-Z\-\^\{\}]//g';;
+	esac
+}
+
+menu_git(){
+	local b=false
+	[ -z "${lib}" ] && return 0
+	[ -z "${src}" ] && return 0
+	case $1 in
+		help)       prt_hmenu "${CW}usage: $0 --git ${CC0}<opt>" \
+					'tar*' 'list current tarball contents' 'branches' 'list all local git available branches' \
+					'tags' 'list all local git available branches' \
+					'env' 'list toolchain environment variables' 'deps' 'list packages that depend on '${lib}''
+					;;
+		clone)      str_contains $src 'git' || return 0
+					[ -d "sources/${lib}" ] && rm -rf sources/${lib}
+					git clone $src sources/${lib}
+					;;
+	esac
+	return 0
+}
+
+
+menu_list(){
+	local b=false
+	[ -n "${arch}" ] && [ -n "${lib}" ] && b=true
+	case $1 in
+		help)       prt_hmenu "${CW}usage: $0 --list ${CC0}<opt>" \
+					'tar*' 'list current tarball contents' 'branches' 'list all local git available branches' \
+					'tags' 'list all local git available branches' \
+					'env' 'list toolchain environment variables' 'deps' 'list packages that depend on '${lib}''
+					;;
+		tar*)       $b && list_tarball;;
+		branches)   [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" branch -a;;
+		opt*)       showOpts "$(pwd)/sources/$lib"; exit 0;;
+		tags)       [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" tag --list;;
+		env)        $b && loadToolchain && print_vars CC CXX LD AS AR NM RANLIB STRIP ADDR2LINE OBJCOPY OBJDUMP READELF SIZE STRINGS WINDRES GCOV;;
+		deps)       for f in ${dir_root}/*.sh; do
+					[ -n "$(cat $f | grep -oP 'dep=.*'${lib}'.*')" ] && echo $(basename $f) | sed 's|\.sh||'
+					done
+					;;
+	esac
+	return 0
+}
+
+menu_goto(){
+	case $1 in
+		src|source) pushd ${dir_src};;
+		bin)        pushd ${dir_install_bin};;
+		lib)        pushd ${dir_install_lib};;
+		include)    pushd ${dir_install_include};;
+		pkgconfig)  pushd ${dir_install_pc};;
+		*)          exit 0;;
+	esac
+#bash
 }
 
 utils_get_latest_release(){

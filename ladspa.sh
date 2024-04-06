@@ -9,6 +9,7 @@ lib='ladspa'
 apt='ladspa-sdk'
 dsc='Linux Audio Developers Simple Plugin API'
 lic='LGPL'
+vrs='1.17'
 src="http://www.ladspa.org/download/ladspa_sdk_${vrs}.tgz"
 cfg='cmake'
 dep='sndfile'

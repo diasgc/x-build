@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# ERROR: /usr/bin/install: cannot stat '../bin/flite_time': No such file or directory
+
 lib='flite'
 apt='flite'
 dsc='A small fast portable speech synthesis system'
