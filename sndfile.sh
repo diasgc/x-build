@@ -11,7 +11,7 @@ lic='LGPL-3.0'
 src='https://github.com/libsndfile/libsndfile.git'
 cfg='cmake'
 tls='python'
-dep='ogg vorbis opus flac speex sqlite3 lame'
+#dep='ogg vorbis opus flac speex sqlite3 lame'
 eta='78'
 mki='install'
 
@@ -22,7 +22,7 @@ cmake_config="-DENABLE_PACKAGE_CONFIG=ON -DBUILD_TESTING=OFF -DINSTALL_MANPAGES=
 ac_nosysroot=true
 
 dev_bra='main'
-dev_vrs='1.1.0beta2'
+dev_vrs='1.2.2'
 stb_bra='tags/v1.0.30'
 stb_vrs='1.0.30'
 
@@ -36,7 +36,7 @@ lst_bin='sndfile-convert
 	sndfile-concat
 	sndfile-info
 	sndfile-metadata-set
-	sndfile-metadata-get
+	sndfile-metadata-get7174
 	sndfile-salvage'
 lst_lic='COPYING AUTHORS'
 lst_pc='sndfile.pc'

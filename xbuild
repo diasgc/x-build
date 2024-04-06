@@ -408,7 +408,6 @@ start(){
 			cfg_cmd="${dir_config}/configure"
 			cfg_args+=("--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
 			do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
-			#do_log 'configure' ${dir_config}/${exec_config} --prefix=${dir_install} ${CFG} ${CSH} ${CBN} ${cfg_args[@]}
 			;;
 
 		meson)
@@ -1305,7 +1304,7 @@ toolchain_android(){
 	PKG_CONFIG_DIR="/usr/${arch}/local/lib/pkgconfig"
 	CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/include -I${SYSROOT}/usr/local/include"
 	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-	#test $build_static && LDFLAGS+=" -static-libstdc++ -lc++_static"
+	test $build_static && LDFLAGS+=" -static-libstdc++ -lc++_static"
 
 	cmake_system_processor="${target_trip[0]}${target_trip[1]}"
 	$host_arm32 && cmake_system_processor="armv7-a"
@@ -1954,6 +1953,7 @@ while [ $1 ];do
 		--desc )    echo $dsc && exit 0;;
 		
 		--get)      shift; menu_get $@; exit 0;;
+		
 		--check)    shift; check_install $@; exit 0;;
 
 		--list)     shift; menu_list $@; exit 0;;
@@ -1982,6 +1982,8 @@ while [ $1 ];do
 		--nobanner) banner=false;;
 		--nodev)    nodev=true;;
 		
+		--latest-release) utils_get_latest_release; exit 0;;
+
 		* ) if fn_defined 'extraOpts'; then
 				extraOpts $1
 			else
@@ -2064,8 +2066,10 @@ case $cfg in
 		}
 		;;
 	meson) build_system=meson
-		$build_static && ! $build_shared && CSH="-Ddefault_library=static"
-		$build_shared && ! $build_static && CSH="-Ddefault_library=shared"
+		test -z "${meson_static}" && meson_static="-Ddefault_library=static"
+		$build_static && ! $build_shared && CSH="${meson_static}"
+		test -z "${meson_shared}" && meson_shared="-Ddefault_library=shared"
+		$build_shared && ! $build_static && CSH="${meson_shared}"
 		$build_static && $build_shared && CSH="-Ddefault_library=both"
 		;;
 	mk|make) build_system=make;;

@@ -14,7 +14,7 @@ cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='BUILD_TOOLS'
 
 dev_bra=''
-dev_vrs=''
+dev_vrs='1.0.19'
 stb_bra=''
 stb_vrs=''
 

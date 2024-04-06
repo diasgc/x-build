@@ -185,6 +185,22 @@ generate_script(){
 	#set +x
 }
 
+# usage github_latest_release <user/repo>
+github_latest_release(){
+	echo $(curl --silent "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+}
+
+github_latest_tgz(){
+	echo "https://github.com/intel/libvpl/archive/refs/tags/v2.10.1.tar.gz://github.com/intel/libvpl.git"
+
+}
+
+github_repo_id(){
+	local paths=( ${1//\// } )
+	paths[3]=${paths[3]/\.git/}
+	echo "${paths[2]}/${paths[3]}"
+}
+
 github_json(){
 	local paths=( ${1//\// } )
 	local url=
@@ -326,7 +342,22 @@ request_cmd(){
 	return 0
 }
 
-
+utils_get_latest_release(){
+	if fn_defined 'latest_release'; then
+		echo $(latest_release)
+	elif [ -z "${src}" ]; then
+		echo "Unknown source ${src}"
+	else
+		local paths=( ${src//\// } )
+		paths[3]=${paths[3]/\.git/}
+		case ${paths[1]} in
+			github.com) github_latest_release "${paths[2]}/${paths[3]}"
+				;;
+			*) echo $(git ls-remote --tags --sort "v:refname" $src | tail -n1 | rev | awk -v FS='/' '{print $1}' | rev)
+				;;
+		esac
+	fi
+}
 
 
 # unused

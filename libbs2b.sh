@@ -22,6 +22,9 @@ lst_pc='libbs2b.pc'
 
 . xbuild
 
+$host_ndk && export ac_cv_func_malloc_0_nonnull=yes ac_cv_func_realloc_0_nonnull=yes
+LDFLAGS+=" -lm"
+
 start
 
 # cpu av8 av7 x86 x64

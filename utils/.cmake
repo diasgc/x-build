@@ -44,6 +44,7 @@ cmake_build_toolchainfile(){
 		set(CMAKE_POSITION_INDEPENDENT_CODE 1)
 		EOF
 	[ -n "${cmake_definitions}" ] && echo "add_definitions("${cmake_definitions[@]}")" >>${cmake_toolchain_file}
+	[ -n "${cmake_add_link_options}" ] && echo "add_link_options("${cmake_add_link_options}")" >>${cmake_toolchain_file}
 	[ -n "${cmake_cxx_flags_release}" ] && echo "set(CMAKE_CXX_FLAGS_RELEASE \""${cmake_cxx_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
 	[ -n "${cmake_c_flags_release}" ] && echo "set(CMAKE_C_FLAGS_RELEASE \""${cmake_c_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
 	[ -n "${cmake_include_directories}" ] && echo "cmake_include_directories("${cmake_include_directories[@]}")" >>${cmake_toolchain_file}

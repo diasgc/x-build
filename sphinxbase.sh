@@ -20,6 +20,7 @@ ac_config='--without-python'
 . xbuild
 
 $host_mingw && mki='install'
+$host_ndk && LDFLAGS+=" -llog"
 
 start
 

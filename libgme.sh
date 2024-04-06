@@ -7,7 +7,7 @@ lic='LGPL-2.1'
 src='https://bitbucket.org/mpyne/game-music-emu.git'
 cfg='cmake'
 eta='60'
-cmake_static='BUILD_STATIC_LIBS'
+cmake_config='-DBUILD_TESTING=OFF -DBLARGG_BUILD_DLL=0'
 
 lst_inc='gme/*.h'
 lst_lib='libgme'
@@ -16,7 +16,7 @@ lst_lic='license.txt license.gpl2.txt'
 lst_pc='libgme.pc'
 
 dev_bra='master'
-dev_vrs='0.7.0'
+dev_vrs='0.6.4'
 stb_bra=''
 stb_vrs=''
 
