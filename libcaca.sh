@@ -12,8 +12,10 @@ cfg='ac'
 pkg='caca'
 eta='80'
 
+ac_config='--disable-doc --disable-java --disable-python --disable-ruby'
+
 dev_bra='main'
-dev_vrs=''
+dev_vrs='0.99.beta20'
 stb_bra='tags/v0.99.beta20'
 stb_vrs='v0.99.beta20'
 
@@ -25,7 +27,7 @@ lst_pc='caca++.pc caca.pc'
 
 . xbuild
 
-CFG="--disable-doc --disable-imlib2 --disable-java --disable-win32 --disable-cppunit --disable-zzuf --disable-conio"
+$host_mingw || ac_config+=" --disable-win32"
 
 source_config(){
   sed -i 's/^AC_PREREQ/# &/' configure.ac
@@ -34,10 +36,10 @@ source_config(){
     caca/caca0.h caca/caca0.h caca/figfont.c \
     caca/string.c
   sed -i 's/if defined(_WIN32)/if defined(_MSC_VER)/g' cxx/caca++.h
-  sed -i 's/-O2 -fno-strength-reduce/-O3 -flto/g' configure
+  $use_clang && sed -i 's/-O2 -fno-strength-reduce/-O3 -flto/g' configure
 }
 
-WFLAGS="-Wno-ignored-optimization-argument -Wno-absolute-value -Wno-unused-but-set-variable"
+#CFLAGS+=" -Wno-ignored-optimization-argument -Wno-absolute-value -Wno-unused-but-set-variable -Wno-int-conversion"
 
 start
 
@@ -71,7 +73,3 @@ start
 # bin/cacademo
 # bin/cacaview
 # bin/cacaplay
-
-<<'CMakeLists.txt'
-
-CMakeLists.txt

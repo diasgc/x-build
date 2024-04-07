@@ -22,11 +22,11 @@ lst_lic='COPYING AUTHORS'
 lst_pc='snappy.pc'
 
 dev_bra='master'
-dev_vrs='1.1.9'
-stb_bra=''
-stb_vrs='1.1.9'
+dev_vrs='1.2.0'
 
-. xbuild && start
+. xbuild
+
+start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

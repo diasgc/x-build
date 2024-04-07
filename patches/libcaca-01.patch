@@ -16,3 +16,27 @@
 -
  #include <stdlib.h>
  #include <stdio.h>
+--- caca/caca_internals.h       2024-04-07 23:12:18.362347386 +0100
++++ caca/caca_internals.h       2024-04-07 23:11:53.625438477 +0100
+@@ -268,7 +268,7 @@
+ extern void _caca_set_term_title(char const *);
+ 
+ /* Internal memory function */
+-extern void *_caca_alloc2d(size_t width, size_t height, size_t elem_size);
++// extern void *_caca_alloc2d(size_t width, size_t height, size_t elem_size);
+ 
+ /* Profiling functions */
+ #if defined PROF
+   GNU nano 7.2                                                                        caca/caca.h.patch                                                                                 
+--- caca/caca.h 2024-04-07 23:15:21.881007088 +0100
++++ caca/caca.h 2024-04-07 23:15:23.513065740 +0100
+@@ -47,6 +47,8 @@
+ {
+ #endif
+ 
++extern void *_caca_alloc2d(size_t width, size_t height, size_t elem_size);
++
+ /** \e libcaca canvas */
+ typedef struct caca_canvas caca_canvas_t;
+ /** dither structure */
+ 

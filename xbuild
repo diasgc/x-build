@@ -56,13 +56,14 @@ export HOST_NPROC=$(nproc)
 : "${ind:=}"
 : "${vnd:=}"
 : "${ac_reconf:=true}"
+: "${cmake_build_type:=Release}"
 
 ndk_testtc=true
 
 $req_update_deps && update=true
 pkg_fmt="tgz"
 timeout_days=3
-cmake_build_type=Release
+
 cmake_toolchain_file=
 mingw_posix_suffix=
 update=false
@@ -398,7 +399,7 @@ start(){
 			cmake_configure
 			cfg_cmd=cmake
 			: "${cmake_bdir:=${dir_config}}"
-			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}" "-Wno-dev")
+			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}")
 			do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
 			case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 			;;
@@ -1300,15 +1301,15 @@ toolchain_android(){
 	ASM_NASM=${YASM}
 
 	CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
-	LT_SYS_LIBRARY_PATH="/usr/${arch}/lib:${SYSROOT}/usr/lib/${arch}/${API}"
+	LT_SYS_LIBRARY_PATH="/usr/${arch}/lib:${SYSROOT}/usr/lib/${arch}:${SYSROOT}/usr/lib/${arch}/${API}"
 	PKG_CONFIG_DIR="/usr/${arch}/local/lib/pkgconfig"
-	CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/include -I${SYSROOT}/usr/local/include"
+	CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/include -I${SYSROOT}/usr/include"
 	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
 	test $build_static && LDFLAGS+=" -static-libstdc++ -lc++_static"
 
 	cmake_system_processor="${target_trip[0]}${target_trip[1]}"
 	$host_arm32 && cmake_system_processor="armv7-a"
-	cmake_findrootpath="/usr/${arch} /usr/${arch}/lib /usr/${arch}/lib/${API} ${dir_install}"
+	cmake_findrootpath="/usr/${arch} /usr/${arch}/lib /usr/${arch}/lib/${API} /usr/${arch}/sysroot/usr ${dir_install}"
 	export NDK_API=${API}
 }
 

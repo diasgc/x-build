@@ -12,11 +12,14 @@ lic='LGPL'
 vrs='1.17'
 src="http://www.ladspa.org/download/ladspa_sdk_${vrs}.tgz"
 cfg='cmake'
-dep='sndfile'
 eta='60'
 pc_llib='-lladspa'
 cmake_static='BUILD_STATIC_LIBS'
 build_strip=false
+
+# just install header
+cmake_bin='BUILD_PROGRAMS'
+cmake_config='-DBUILD_PLUGINS=OFF'
 
 dev_bra='master'
 dev_vrs='1.17'

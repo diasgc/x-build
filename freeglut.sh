@@ -31,8 +31,6 @@ eta='20'
 
 . xbuild
 
-$host_ndk && cmake_config+=' -DFREEGLUT_GLES=ON'
-
 start
 
 # ndk: https://sourceforge.net/p/freeglut/bugs/257/
