@@ -1344,59 +1344,31 @@ toolchain_mingw32_old(){
 	export RC=${CROSS_PREFIX}windres
 }
 
-toolchain_mingw32(){
-
+toolchain_llvm_mingw(){
 	local ltsdir
 	PLATFORM='Windows'
 
 	SYSROOT="/usr/${arch}"
 	TOOLCHAIN="${SYSROOT}/bin/"
 	CROSS_PREFIX="${TOOLCHAIN}"
-
-	CC="${CROSS_PREFIX}clang"
-	CXX="${CROSS_PREFIX}clang++"
+	if $use_clang; then
+		CC="${CROSS_PREFIX}clang"
+		CXX="${CROSS_PREFIX}clang++"
+	else
+		CC="${CROSS_PREFIX}gcc"
+		CXX="${CROSS_PREFIX}g++"
+	fi
 	AS="${CROSS_PREFIX}as"
-	LD="${CROSS_PREFIX}ld"
-	YASM=${CROSS_PREFIX}yasm
+	LD="${CROSS_PREFIX}ld.bfd"
+	export RC=${CROSS_PREFIX}windres
+	LT_SYS_LIBRARY_PATH="${LLVM_MINGW_HOME}/lib/clang/${xv_llvm_mingw}"
+	CPPFLAGS+=" -I${SYSROOT}/include"
+	LDFLAGS="-L${LT_SYS_LIBRARY_PATH}/lib -L${SYSROOT}/lib ${LDFLAGS}"
+	YASM=yasm
 	ASM_NASM=${NASM}
 	NASM=${NASM}
-
-	LT_SYS_LIBRARY_PATH="/usr/${arch}/lib"
-	PKG_CONFIG_DIR="/usr/${arch}/local/lib/pkgconfig"
-	CPPFLAGS+=" -I${SYSROOT}/include -I${SYSROOT}/local/include"
-	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-	test $build_static && LDFLAGS+=" -static-libstdc++ -lc++_static"
-
-	cmake_system_processor="${target_trip[0]}${target_trip[1]}"
-	$host_arm32 && cmake_system_processor="armv7-a"
-	cmake_findrootpath="/usr/${arch} /usr/${arch}/lib /usr/${arch}/lib/${API} ${dir_install}"
-	export NDK_API=${API}
-
-	if [ -n "${LLVM_MINGW_HOME}" ] && $use_llvm_mingw; then
-		TOOLCHAIN="${LLVM_MINGW_HOME}/bin"
-		SYSROOT="${LLVM_MINGW_HOME}/${arch}"
-		CROSS_PREFIX="${TOOLCHAIN}/${arch}-"
-		$use_clang && {
-			CC="${CROSS_PREFIX}clang" CXX="${CC}++"
-		} || {
-			CC="${CROSS_PREFIX}gcc" CXX="${CROSS_PREFIX}g++"
-		}
-		LD+=".bfd"
-		LT_SYS_LIBRARY_PATH="${LLVM_MINGW_HOME}/lib/clang/${xv_llvm_mingw}"
-		CPPFLAGS+=" -I${LLVM_MINGW_HOME}/${arch}/include"
-		LDFLAGS="-L${LT_SYS_LIBRARY_PATH}/lib -L${SYSROOT}/lib ${LDFLAGS}"
-	else
-		CROSS_PREFIX="${arch}-"
-		TOOLCHAIN="/usr/${arch}/bin"
-		SYSROOT="/usr/${arch}"
-		$mingw_posix && posix="-posix" || unset posix
-		CC="${CROSS_PREFIX}gcc${posix}"
-		CXX="${CROSS_PREFIX}g++${posix}"
-		LT_SYS_LIBRARY_PATH="/usr/lib/gcc/${arch}/${xv_x64_mingw}"
-		LDFLAGS="-L${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-	fi
 	cmake_findrootpath="${SYSROOT} ${LT_SYS_LIBRARY_PATH} ${dir_install}"
-	export RC=${CROSS_PREFIX}windres
+
 }
 
 loadToolchain(){
@@ -1413,7 +1385,8 @@ loadToolchain(){
 
 	if $host_cross; then
 		case $PLATFORM in
-			Android) toolchain_android;;	
+			Android) toolchain_android;;
+			Windows) toolchain_llvm_mingw;;
 			Linux)
 			local cross
 			local ltsdir
@@ -1453,8 +1426,6 @@ loadToolchain(){
 			cmake_findrootpath="${SYSROOT}/${arch}
 			${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir}
 			${dir_install}"
-			;;
-		Windows) toolchain_mingw32
 			;;
 		esac
 	else

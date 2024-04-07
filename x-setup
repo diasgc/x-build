@@ -481,41 +481,35 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
     fi
 fi
 
-function llvm_mingw_check_symlinks_old {
-    # check and create symlinks in toolchains dir if needed
-    for cl in aarch64 arm i686 x86_64; do
-        for e in ar nm addr2line dlltool objcopy ranlib readelf strings strip windres; do
-            v="${dir_toolchain}/${cl}-w64-mingw32-${e}"
-            [ ! -f "${v}" ] && ln -s "${LLVM_MINGW_HOME}/bin/llvm-${e}" "${v}" 2>/dev/null
-        done
-        for e in as c++ c11 c99 cc clang clang++ g++ gcc; do
-            v="${dir_toolchain}/${cl}-w64-mingw32-${e}"
-            [ ! -f "${v}" ] && ln -s "${LLVM_MINGW_HOME}/bin/clang-target-wrapper.sh" "${v}" 2>/dev/null
-        done
-        [ ! -f "${dir_toolchain}/${cl}-w64-mingw32-objdump" ] && ln -s "${LLVM_MINGW_HOME}/bin/objdump-wrapper.sh" "${dir_toolchain}/${cl}-w64-mingw32-objdump" 2>/dev/null
-        [ ! -f "${dir_toolchain}/${cl}-w64-mingw32-ld" ] && ln -s "${LLVM_MINGW_HOME}/bin/ld-wrapper.sh" "${dir_toolchain}/${cl}-w64-mingw32-ld" 2>/dev/null
-        [ ! -f "${dir_toolchain}/${cl}-w64-mingw32-widl" ] && ln -s "${LLVM_MINGW_HOME}/bin/i686-w64-mingw32-widl" "${dir_toolchain}/${cl}-w64-mingw32-ld" 2>/dev/null
-    done
-    printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
+# usage create_symlink <src> <dst> will test if src and dst exists first
+function create_symlink {
+    test ! -f "${2}" && test -f "${1}" && sudo ln -s "${1}" "${2}"
 }
 
 function llvm_mingw_check_symlinks {
+    
     for cl in aarch64 arm i686 x86_64; do
+
         target_dir="/usr/${cl}-w64-mingw32"
-        test -d "${target_dir}"         || sudo mkdir -p ${target_dir}/bin
-        test -d "${target_dir}/dll"     || sudo ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/bin"   "${target_dir}/dll"
-        test -d "${target_dir}/include" || sudo ln -s "${LLVM_MINGW_HOME}/include"                 "${target_dir}/include"
-        test -d "${target_dir}/lib"     || sudo ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/lib"   "${target_dir}/lib"
-        test -d "${target_dir}/share"   || sudo ln -s "${LLVM_MINGW_HOME}/${cl}-w64-mingw32/share" "${target_dir}/share"
+        source_dir="${LLVM_MINGW_HOME}/${cl/arm/armv7}-w64-mingw32"
+    
+        test -d "${target_dir}"         || sudo mkdir -p "${target_dir}/bin"
+        test -d "${target_dir}/dll"     || sudo ln -s "${source_dir}/bin"          "${target_dir}/dll"
+        test -d "${target_dir}/include" || sudo ln -s "${LLVM_MINGW_HOME}/include" "${target_dir}/include"
+        test -d "${target_dir}/lib"     || sudo ln -s "${source_dir}/lib"          "${target_dir}/lib"
+        test -d "${target_dir}/share"   || sudo ln -s "${source_dir}/share"        "${target_dir}/share"
         
-        for e in addr2line ar c++ clang clang++ dlltool g++ gcc ld llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf strings strip windl windres; do
-            v="${target_dir}/bin/${e}"
-            test -f "${v}"     || sudo ln -s "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32-${e}"    "${v}"
-            test -f "uwp-${v}" || sudo ln -s "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32uwp-${e}" "uwp-${v}"
+        for e in addr2line ar as c++ clang clang++ dlltool g++ gcc ld llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf size strings strip widl windres; do
+    
+            create_symlink "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32-${e}"    "${target_dir}/bin/${e}"
+            create_symlink "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32uwp-${e}" "${target_dir}/bin/uwp-${e}"
+    
         done
         
     done
+    
     printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
+
 }
 
 echo -e "\n${CC1}LLVM MINGW:"
@@ -563,7 +557,7 @@ echo -e "\n${CC1}${b} Repository tools${C0}"
 check_install git subversion lzip unzip
 
 echo -e "\n${CC1}${b} Other tools${C0}"
-check_install curl gperf bison texinfo patch jq
+check_install curl gperf bison texinfo patch jq gettext
 
 echo -e "\n${CC1}${b} Utilities${C0}"
 if [ ! -f "${dir_root}/utils/lz-string" ]; then
@@ -627,3 +621,28 @@ export config_lastupdate=$(date +%s) \\
 EOF
 
 echo -ne "... ${CC1}Done!${C0}\n\n"
+
+
+
+
+
+
+
+# unused
+function llvm_mingw_check_symlinks_old {
+    # check and create symlinks in toolchains dir if needed
+    for cl in aarch64 arm i686 x86_64; do
+        for e in ar nm addr2line dlltool objcopy ranlib readelf strings strip windres; do
+            v="${dir_toolchain}/${cl}-w64-mingw32-${e}"
+            [ ! -f "${v}" ] && ln -s "${LLVM_MINGW_HOME}/bin/llvm-${e}" "${v}" 2>/dev/null
+        done
+        for e in as c++ c11 c99 cc clang clang++ g++ gcc; do
+            v="${dir_toolchain}/${cl}-w64-mingw32-${e}"
+            [ ! -f "${v}" ] && ln -s "${LLVM_MINGW_HOME}/bin/clang-target-wrapper.sh" "${v}" 2>/dev/null
+        done
+        [ ! -f "${dir_toolchain}/${cl}-w64-mingw32-objdump" ] && ln -s "${LLVM_MINGW_HOME}/bin/objdump-wrapper.sh" "${dir_toolchain}/${cl}-w64-mingw32-objdump" 2>/dev/null
+        [ ! -f "${dir_toolchain}/${cl}-w64-mingw32-ld" ] && ln -s "${LLVM_MINGW_HOME}/bin/ld-wrapper.sh" "${dir_toolchain}/${cl}-w64-mingw32-ld" 2>/dev/null
+        [ ! -f "${dir_toolchain}/${cl}-w64-mingw32-widl" ] && ln -s "${LLVM_MINGW_HOME}/bin/i686-w64-mingw32-widl" "${dir_toolchain}/${cl}-w64-mingw32-ld" 2>/dev/null
+    done
+    printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
+}
