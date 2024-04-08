@@ -543,6 +543,7 @@ start(){
 	end_script
 }
 
+# see https://mesonbuild.com/Commands.html for command line options
 meson_configure(){
 	export cfg_file="${dir_config}/${arch}.meson"
 	test -f "${cfg_file}"  && rm ${cfg_file}
@@ -556,6 +557,7 @@ meson_configure(){
 	fi
 	meson_create_toolchain ${cfg_file}
 	MAKE_EXECUTABLE=ninja
+	$build_static && meson_cfg+=' --prefer-static'
 	[ -n "${meson_cfg}" ] && CFG="${meson_cfg} ${CFG}"
 }
 

@@ -7,9 +7,10 @@ lic='LGPL-2.1'
 src='https://github.com/fribidi/fribidi.git'
 cfg='meson'
 eta='60'
-meson_cfg="-Db_lto=true -Ddocs=false"
+meson_bin='bin'
+meson_cfg="-Db_lto=true -Ddocs=false -Dtests=false"
 
-dev_vrs='1.0.11'
+dev_vrs='1.0.13'
 
 lst_inc='fribidi/*.h'
 lst_lib='libfribidi'
@@ -20,6 +21,7 @@ lst_pc='fribidi.pc'
 . xbuild
 
 $host_mingw || meson_cfg+=' -Db_pie=true'
+$use_clang && meson_cfg+=' --warnlevel=0'
 
 start
 

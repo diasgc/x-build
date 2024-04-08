@@ -15,7 +15,7 @@ lst_lic='COPYING COPYING.LESSER AUTHORS'
 lst_pc='libzmq.pc'
 
 dev_bra='master'
-dev_vrs='4.3.5'
+dev_vrs='4.3.6'
 stb_bra=''
 stb_vrs=''
 

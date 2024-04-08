@@ -17,7 +17,7 @@ ac_config='--without-mpg123 --without-portaudio --without-portaudiocpp --without
 ac_bin='--disable-examples|--enable-examples'
 
 dev_bra='master'
-dev_vrs='0.7.6'
+dev_vrs='0.7.6+release.autotools'
 stb_bra=''
 stb_vrs=''
 
