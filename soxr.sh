@@ -8,8 +8,8 @@ src='https://git.code.sf.net/p/soxr/code.git'
 cfg='cmake'
 eta='45'
 cmake_bin='BUILD_EXAMPLES'
-cmake_config='-DBUILD_TESTS=OFF'
-cmake_cxx_flags_release=(-Oz -flto -g -DNDEBUG)
+cmake_config='-DBUILD_TESTS=OFF -DWITH_OPENMP=OFF'
+cmake_cxx_flags_release=(-Ofast -flto -g -DNDEBUG)
 cmake_definitions=(-Wno-c99-extensions)
 
 lst_inc='soxr.h soxr-lsr.h'

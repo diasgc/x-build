@@ -45,7 +45,7 @@
          FILES ${CMAKE_CURRENT_BINARY_DIR}/libchromaprint.pc
          DESTINATION ${LIB_INSTALL_DIR}/pkgconfig
 
---- libchromaprint.pc.cmak_	2022-01-22 00:58:44.555377700 +0000
+--- libchromaprint.pc.cmake	2022-01-22 00:58:44.555377700 +0000
 +++ libchromaprint.pc.cmake	2022-01-22 01:13:16.675377700 +0000
 @@ -1,11 +1,12 @@
 -prefix=${CMAKE_INSTALL_PREFIX}
@@ -66,6 +66,7 @@
 -Cflags: -I${INCLUDE_INSTALL_DIR}
 +Version: @PROJECT_VERSION@
 +Libs: -L${libdir} -lchromaprint
++Libs.private:  -lfftw3
 +Cflags: -I${includedir}
 +
 
