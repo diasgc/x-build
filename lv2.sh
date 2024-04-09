@@ -16,6 +16,8 @@ eta='19'
 
 . xbuild
 
+dev_vrs='1.18.11'
+
 meson_cfg='-Ddocs=disabled -Dtests=disabled'
 
 start

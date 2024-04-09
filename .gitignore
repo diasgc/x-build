@@ -8,5 +8,5 @@ utils/lz-string
 .vscode
 _test.sh
 _template.sh
-ffmpeg-*.cfg
+#ffmpeg-*.cfg
 ffmpeg.oldz

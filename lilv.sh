@@ -4,17 +4,18 @@
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
-lib='libqrencode'
-dsc='A fast and compact QR Code encoding library'
-lic='GNU Lesser General Public License v2.1'
+lib='lilv'
+dsc='LV2 host library'
+lic='ISC License'
 vrs=''
-src="https://github.com/fukuchi/libqrencode.git"
-cfg='cmake'
-dep='libpng'
+src="https://gitlab.com/lv2/lilv.git"
+cfg='meson'
 eta='0'
 
+#meson_cfg='-Dbindings_py=disabled -Ddocs=disabled -Dhtml=disabled -Dsinglehtml=disabled -Dtests=disabled -Dtools=disabled'
+
 dev_bra='master'
-dev_vrs='4.1.1'
+dev_vrs=''
 stb_bra=''
 stb_vrs=''
 

@@ -253,13 +253,13 @@ if(BUILD_EXAMPLES)
 endif()
 
 install(FILES ${DC1394_PUBLIC_H}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libdc1394
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dc1394
 )
 
 set(prefix ${CMAKE_INSTALL_PREFIX})
-set(exec_prefix ${prefix})
-set(libdir ${CMAKE_INSTALL_LIBDIR})
-set(includedir ${CMAKE_INSTALL_INCLUDEDIR})
+set(exec_prefix "\${prefix}")
+set(libdir "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
 set(VERSION ${PROJECT_VERSION})
 
 configure_file(libdc1394-2.pc.in ${CMAKE_BINARY_DIR}/libdc1394-2.pc @ONLY)

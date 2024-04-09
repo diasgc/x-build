@@ -541,7 +541,7 @@ start(){
 	test -n "${pcvrs}" && sed -i "s/dev_vrs='.*'/dev_vrs='"${pcvrs}"'/g" ${scrpt}
 
 	end_script
-}
+}	
 
 # see https://mesonbuild.com/Commands.html for command line options
 meson_configure(){

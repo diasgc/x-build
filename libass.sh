@@ -16,7 +16,7 @@ lst_lic='COPYING README.md'
 lst_pc='libass.pc'
 
 dev_bra='master'
-dev_vrs='0.15.2'
+dev_vrs='0.17.1'
 
 . xbuild
 ac_nosysroot=true

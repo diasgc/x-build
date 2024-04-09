@@ -7,11 +7,11 @@ lic='MIT'
 src='https://github.com/harfbuzz/harfbuzz.git'
 cfg='cmake'
 tls='ragel'
-dep='freetype fontconfig glib2 cairo libicu'
+#dep='freetype fontconfig glib2 cairo libicu'
 eta='400'
 
 dev_bra='main'
-dev_vrs='4.0.0'
+dev_vrs='8.4.0'
 stb_bra=''
 stb_vrs=''
 
@@ -26,8 +26,7 @@ cmake_bin='HB_BUILD_UTILS'
 
 extraOpts(){
 	case $1 in
-		--min)  unset dep; ac_config+=' --with-glib=no --with-gobject=no --with-cairo=no --with-fontconfig=no --with-icu=no --with-freetype=no';;
-		--max) dep='freetype fontconfig glib2 cairo libicu';;
+		--full) dep='freetype fontconfig glib2 cairo libicu';;
 	esac
 }
 

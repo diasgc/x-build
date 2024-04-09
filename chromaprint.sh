@@ -10,8 +10,8 @@ cfg='cmake'
 eta='12'
 
 mkc='clean'
-mki='install/strip'
-make_install='install/strip'
+mki='install'
+make_install='install'
 cmake_static="BUILD_STATIC_LIBS"
 
 lst_inc='chromaprint.h'
@@ -30,7 +30,7 @@ stb_vrs=''
 
 . xbuild
 
-cmake_config="-DKISSFFT_SOURCE_DIR=${dir_src}/src/3rdparty/kissfft -DBUILD_TOOLS=OFF -DBUILD_TESTS=OFF"
+cmake_config="-DBUILD_TOOLS=OFF -DBUILD_TESTS=OFF" #-DKISSFFT_SOURCE_DIR=${dir_src}/src/3rdparty/kissfft 
 
 start
 
