@@ -11,10 +11,13 @@ src='https://git.libssh.org/projects/libssh.git'
 cfg='cmake'
 eta='170'
 bra='stable-0.9'
-#dep='openssl mbedtls'
+
+dep='libgcrypt'
+dep_opt='-DWITH_GCRYP=ON'
 
 cmake_static='BUILD_STATIC_LIB'
-cmake_config='-DWITH_SERVER=OFF -DWITH_SFTP=OFF -DWITH_EXAMPLES=OFF -DWITH_DEBUG_CALLTRACE=OFF -DWITH_SYMBOL_VERSIONING=OFF -DWITH_NACL=OFF -DWITH_MBEDTLS=OFF'
+cmake_config='-DWITH_EXAMPLES=OFF -DUNIT_TESTING=OFF'
+
 
 dev_bra='master'
 dev_vrs='0.9.8'
@@ -28,6 +31,16 @@ lst_lic='COPYING BSD AUTHORS'
 lst_pc='libssh.pc'
 
 . xbuild
+
+extraOpts(){
+    case $1 in
+     --dev*)    build_static=true;; 
+     --openssl) dep='openssl'; dep_opt='-DWITH_GCRYP=OFF -DWITH_MBEDTLS=OFF';;
+     --mbedtls) dep='mbedtls'; dep_opt='-DWITH_GCRYP=OFF -DWITH_MBEDTLS=ON';;
+    esac
+}
+
+cmake_config+=" ${dep_opt}"
 
 start
 
