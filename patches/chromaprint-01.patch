@@ -66,7 +66,19 @@
 -Cflags: -I${INCLUDE_INSTALL_DIR}
 +Version: @PROJECT_VERSION@
 +Libs: -L${libdir} -lchromaprint
-+Libs.private:  -lfftw3
++Libs.private: -l@FFT_LIB@
 +Cflags: -I${includedir}
 +
+
+--- CMakeLists.txt	2024-04-09 22:32:22.522493220 +0100
++++ CMakeLists.txt	2024-04-09 23:23:03.077300817 +0100
+@@ -79,7 +79,7 @@
+ 
+ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+ 
+-find_package(FFmpeg)
++#find_package(FFmpeg)
+ 
+ if(FFMPEG_LIBRARIES)
+ 	cmake_push_check_state(RESET)
 

@@ -256,15 +256,15 @@ start(){
 				case $sty in
 					git)           git_clone $src $lib $src_opt;;
 					tgz|txz|tlz)   wget_tarxx $src $lib;;
-					svn)           do_svn $src $lib;;
-					hg)            do_hg $src $lib;;
+					svn)           svn_clone $src $lib;;
+					hg)            hg_clone $src $lib;;
 					*)             doErr "unknown sty=$sty for $src";;
 				esac
 			else
 				case $src in
 					*.tar.*|*.tgz) wget_tarxx $src $lib;;
 					*.git|*git.*)  git_clone $src $lib $src_opt;;
-					*svn.*)        do_svn $src $lib;;
+					*svn.*)        svn_clone $src $lib;;
 					*)             doErr "Unknown source type for $src";;
 				esac
 			fi
@@ -1085,13 +1085,13 @@ git_clone(){
 	cd ..
 }
 
-do_svn(){
+svn_clone(){
 	request_cmd svn subversion || err
 	#[ $(command -v svn) ] || apt_install subversion || err
 	do_log 'svn' svn checkout $1 $2
 }
 
-do_hg(){
+hg_clone(){
 	request_cmd hg mercurial || err
 	#[ $(command -v hg) ] || apt_install mercurial || err
 	do_log 'clone' hg clone $1 $2

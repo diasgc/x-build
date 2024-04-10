@@ -1,8 +1,4 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  -   .   .   .   .   .   .   .   .   .   .  static
-#  +   .   .   .   .   .   .   .   .   .   .  shared
-#  +   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='lv2'
 dsc='An extensible audio plugin interface'
@@ -18,13 +14,17 @@ eta='19'
 
 dev_vrs='1.18.11'
 
-meson_cfg='-Ddocs=disabled -Dtests=disabled'
+meson_cfg='-Ddocs=disabled -Dtests=disabled -Dplugins=disabled'
 
 start
 
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
 # Filelist
 # --------
-
 # lib/pkgconfig/lv2.pc
 # lib/lv2/event.lv2/event.h
 # lib/lv2/event.lv2/event.ttl

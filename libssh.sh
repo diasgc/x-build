@@ -30,15 +30,15 @@ lst_bin=''
 lst_lic='COPYING BSD AUTHORS'
 lst_pc='libssh.pc'
 
-. xbuild
-
 extraOpts(){
     case $1 in
      --dev*)    build_static=true;; 
      --openssl) dep='openssl'; dep_opt='-DWITH_GCRYP=OFF -DWITH_MBEDTLS=OFF';;
-     --mbedtls) dep='mbedtls'; dep_opt='-DWITH_GCRYP=OFF -DWITH_MBEDTLS=ON';;
+     --mbedtls) dep='mbedtls'; dep_opt="-DWITH_GCRYP=OFF -DWITH_MBEDTLS=ON -DMBEDTLS_INCLUDE_DIR=${dir_install}/include";;
     esac
 }
+
+. xbuild
 
 cmake_config+=" ${dep_opt}"
 

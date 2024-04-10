@@ -5,6 +5,7 @@ apt="${lib}-dev"
 dsc='An open source, portable, easy to use, readable and flexible SSL library.'
 lic='Apache-2.0'
 src='https://github.com/ARMmbed/mbedtls.git'
+sub='submodule update --init'
 cfg='cmake'
 tls='python3 perl'
 eta='1266'
@@ -15,7 +16,7 @@ cmake_bin="ENABLE_PROGRAMS"
 cmake_config="-DENABLE_TESTING=OFF" #-DUNSAFE_BUILD=OFF -DMBEDTLS_FATAL_WARNINGS=ON -DLINK_WITH_PTHREAD=OFF -DLINK_WITH_TRUSTED_STORAGE=OFF"
 
 dev_bra='master'
-dev_vrs='v3.1.0'
+dev_vrs='v3.6.0'
 stb_bra=''
 stb_vrs=''
 

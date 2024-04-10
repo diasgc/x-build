@@ -2,7 +2,7 @@
 
 lib='chromaprint'
 pkg='libchromaprint'
-apt='libchromaprint1'
+apt='libchromaprint-dev'
 dsc='C library for generating audio fingerprints used by AcoustID'
 src='https://github.com/acoustid/chromaprint.git'
 lic='LGPL-2.1'
@@ -10,9 +10,6 @@ cfg='cmake'
 eta='12'
 dep='fftw'
 
-mkc='clean'
-mki='install'
-make_install='install'
 cmake_static="BUILD_STATIC_LIBS"
 
 lst_inc='chromaprint.h'
@@ -28,7 +25,7 @@ stb_vrs=''
 
 . xbuild
 
-cmake_config="-DBUILD_TOOLS=OFF -DBUILD_TESTS=OFF -DFFMPEG_LIBRARIES=OFF -DFFT_LIB=fftw3" #-DKISSFFT_SOURCE_DIR=${dir_src}/src/3rdparty/kissfft
+cmake_config="-DBUILD_TOOLS=OFF -DBUILD_TESTS=OFF -DFFT_LIB=fftw3" #-DKISSFFT_SOURCE_DIR=${dir_src}/src/3rdparty/kissfft
 
 start
 
