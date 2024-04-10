@@ -1,0 +1,59 @@
+--- subprojects/zix.wrap	1970-01-01 01:00:00.000000000 +0100
++++ subprojects/zix.wrap	2024-04-10 23:09:40.742295432 +0100
+@@ -0,0 +1,8 @@
++# Copyright 2022-2023 David Robillard <d@drobilla.net>
++# SPDX-License-Identifier: 0BSD OR ISC
++
++[wrap-file]
++directory = zix-0.4.2
++source_url = https://download.drobilla.net/zix-0.4.2.tar.xz
++source_filename = zix-0.4.2.tar.xz
++source_hash = 0c071cc11ab030bdc668bea3b46781b6dafd47ddd03b6d0c2bc1ebe7177e488d
+
+--- subprojects/suil.wrap	1970-01-01 01:00:00.000000000 +0100
++++ subprojects/suil.wrap	2024-04-10 23:11:29.076307038 +0100
+@@ -0,0 +1,8 @@
++# Copyright 2022-2023 David Robillard <d@drobilla.net>
++# SPDX-License-Identifier: 0BSD OR ISC
++
++[wrap-file]
++directory = suil-0.10.20
++source_url = https://download.drobilla.net/suil-0.10.20.tar.xz
++source_filename = suil-0.10.20.tar.xz
++source_hash = 0c071cc11ab030bdc668bea3b46781b6dafd47ddd03b6d0c2bc1ebe7177e488d
+
+--- subprojects/sratom.wrap	1970-01-01 01:00:00.000000000 +0100
++++ subprojects/sratom.wrap	2024-04-10 23:15:05.968365122 +0100
+@@ -0,0 +1,8 @@
++# Copyright 2022-2023 David Robillard <d@drobilla.net>
++# SPDX-License-Identifier: 0BSD OR ISC
++
++[wrap-file]
++directory = sratom-0.6.16
++source_url = https://download.drobilla.net/sratom-0.6.16.tar.xz
++source_filename = sratom-0.6.16.tar.xz
++source_hash = 71c157991183e53d0555393bb4271c75c9b5f5dab74a5ef22f208bb22de322c4
+
+--- subprojects/sord.wrap	1970-01-01 01:00:00.000000000 +0100
++++ subprojects/sord.wrap	2024-04-10 23:14:41.063897450 +0100
+@@ -0,0 +1,8 @@
++# Copyright 2022-2023 David Robillard <d@drobilla.net>
++# SPDX-License-Identifier: 0BSD OR ISC
++
++[wrap-file]
++directory = sord-0.16.16
++source_url = https://download.drobilla.net/sord-0.16.16.tar.xz
++source_filename = sord-0.16.16.tar.xz
++source_hash = 257f876d756143da02ee84c9260af93559d6249dd87f317e70ab5fffcc975fd0
+
+--- subprojects/serd.wrap	1970-01-01 01:00:00.000000000 +0100
++++ subprojects/serd.wrap	2024-04-10 23:18:17.247968422 +0100
+@@ -0,0 +1,8 @@
++# Copyright 2022-2023 David Robillard <d@drobilla.net>
++# SPDX-License-Identifier: 0BSD OR ISC
++
++[wrap-file]
++directory = serd-0.32.2
++source_url = https://download.drobilla.net/serd-0.32.2.tar.xz
++source_filename = serd-0.32.2.tar.xz
++source_hash = df7dc2c96f2ba1decfd756e458e061ded7d8158d255554e7693483ac0963c56b
