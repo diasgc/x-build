@@ -13,6 +13,8 @@ cfg='cmake'
 eta='0'
 dep='spirv-headers'
 
+cmake_static='SPIRV_TOOLS_BUILD_STATIC'
+
 dev_bra='master'
 dev_vrs=''
 stb_bra=''
@@ -28,8 +30,10 @@ eta='20'
 
 . xbuild
 
-if [ $host_ndk ]; then
-    CXXFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/third_party/spirv-tools/include"
-else
-    start
-fi
+#if [ $host_ndk ]; then
+#    CXXFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/third_party/spirv-tools/include"
+#else
+#    start
+#fi
+
+start
