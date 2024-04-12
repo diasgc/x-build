@@ -9,9 +9,10 @@ dsc='eXtra-fast Essential Video Decoder, MPEG-5 EVC (Essential Video Coding)'
 lic='BSD-3c'
 src='https://github.com/mpeg5/xevd.git'
 cfg='cmake'
+# -DSET_PROF=MAIN crashes with missing xevdm_itrans_map_tbl_neon fix in branch dev-BuildErrorsHotfix
+bra='dev-BuildErrorsHotfix'
 
-# todo: -DSET_PROF=MAIN crashes with missing xevdm_itrans_map_tbl_neon
-xevd_profile='BASE' # BASE|MAIN
+xevd_profile='MAIN' # BASE|MAIN
 
 case $xevd_profile in BASE) sfx='b';; esac
 
@@ -32,7 +33,9 @@ stb_vrs='0.4.1'
 
 source_patch(){
     # v0.4.1-6-g418ed6d: there's a typo at src_base/neon/xevd_dbk_neon.h
-    sed -i 's/_XEVD_DBK_NOEN_H_/_XEVD_DBK_NEON_H_/g' ${dir_src}/src_base/neon/xevd_dbk_neon.h
+    pushd ${dir_src}
+    sed -i 's/_XEVD_DBK_NOEN_H_/_XEVD_DBK_NEON_H_/g' src_base/neon/xevd_dbk_neon.h
+    popd
 }
 
 cmake_config="-DSET_PROF=${xevd_profile} -DXEVD_APP_STATIC_BUILD=ON"
@@ -40,6 +43,6 @@ cmake_config="-DSET_PROF=${xevd_profile} -DXEVD_APP_STATIC_BUILD=ON"
 $host_native && cmake_config+=' -DXEVD_NATIVE_BUILD=ON'
 $host_arm && cmake_config+=" -DARM=TRUE"
 
-WFLAGS+="-Wno-unknown-warning-option -Wno-typedef-redefinition -Wno-sometimes-uninitialized -Wno-shift-negative-value -Wno-tautological-pointer-compare"
+WFLAGS+="-Wno-for-loop-analysis -Wno-unknown-warning-option -Wno-typedef-redefinition -Wno-sometimes-uninitialized -Wno-shift-negative-value -Wno-tautological-pointer-compare"
 
 start
