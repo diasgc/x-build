@@ -12,8 +12,8 @@ cfg='cmake'
 eta='170'
 bra='stable-0.9'
 
-dep='libgcrypt'
-dep_opt='-DWITH_GCRYP=ON'
+dep='openssl'
+dep_opt='-DWITH_GCRYP=OFF -DWITH_MBEDTLS=OFF'
 
 cmake_static='BUILD_STATIC_LIB'
 cmake_config='-DWITH_EXAMPLES=OFF -DUNIT_TESTING=OFF'
@@ -33,7 +33,7 @@ lst_pc='libssh.pc'
 extraOpts(){
     case $1 in
      --dev*)    build_static=true;; 
-     --openssl) dep='openssl'; dep_opt='-DWITH_GCRYP=OFF -DWITH_MBEDTLS=OFF';;
+     --gcrypt) dep='libgcrypt'; dep_opt='-DWITH_GCRYP=ON -DWITH_MBEDTLS=OFF';;
      --mbedtls) dep='mbedtls'; dep_opt="-DWITH_GCRYP=OFF -DWITH_MBEDTLS=ON -DMBEDTLS_INCLUDE_DIR=${dir_install}/include";;
     esac
 }
@@ -41,6 +41,7 @@ extraOpts(){
 . xbuild
 
 cmake_config+=" ${dep_opt}"
+cmake_add_definitions ("-Wno-deprecated-declarations")
 
 start
 

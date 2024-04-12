@@ -209,6 +209,10 @@ for d in $dep; do
         kvazaar)   lm="-lm";;
         openh264|libplacebo|lensfun) lcpp="-lc++_static -lc++abi";;&
         lensfun)   liconv="-liconv";;
+        libssh)    LDFLAGS+=" -lz -lssl -lcrypto";;
+        libass)    LDFLAGS+=" -lbz2_static";;
+        libdc1394) LDFLAGS+=" -ldc1394-juju -ldc1394-linux -lraw1394";;
+        glslang)   LDFLAGS+=" -lHLSL -lOGLCompiler -lSPIRV-Tools-opt -lSPIRV-Tools";;
      esac
 done
 

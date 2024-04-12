@@ -7,7 +7,7 @@ src='https://gitlab.com/lv2/lv2.git'
 sty='git'
 cfg='meson'
 pkg='lv2'
-dep='sndfile'
+dep='sndfile lilv'
 eta='19'
 
 . xbuild
