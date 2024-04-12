@@ -3,11 +3,11 @@
 lib='glslang'
 dsc='OpenGL and OpenGL ES shader front end and validator'
 lic='BSD-3c'
-src='https://github.com/KhronosGroup/glslang.git'
+# After version 13.1.1 libHLSL and libOGLCompiler were removed
+src='https://github.com/KhronosGroup/glslang.git' vrs='13.1.1'
 cfg='cmake'
 eta='147'
 pc_llibs='-lglslang -lOSDependent -lHLSL -lOGLCompiler -lSPVRemapper'
-# see https://src.fedoraproject.org/rpms/glslang/blob/rawhide/f/0001-pkg-config-compatibility.patch
 
 dev_vrs='main-tot'
 
@@ -25,7 +25,16 @@ lst_pc='libSPIRV.pc libOSDependent.pc libSPVRemapper.pc libOGLCompiler.pc libHLS
 
 . xbuild
 
-cmake_config="-DBUILD_TESTING=OFF -DENABLE_OPT=ON -DENABLE_HLSL=OF -DINSTALL_GTEST=OFF -DBUILD_EXTERNAL=ON"
+patch_source(){
+    pushd ${dir_src}
+    ./update_glslang_sources.py
+    popd
+}
+
+cmake_config='-DBUILD_TESTING=OFF -DINSTALL_GTEST=OFF
+ -DENABLE_OPT=ON -DALLOW_EXTERNAL_SPIRV_TOOLS=ON
+ -DENABLE_HLSL=ON 
+ -DBUILD_EXTERNAL=ON'
 
 start
 

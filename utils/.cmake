@@ -60,7 +60,7 @@ cmake_build_toolchainfile(){
 		set(ANDROID_ABI ${ABI})
 		set(ANDROID_PLATFORM ${API})
 		set(ANDROID_NDK ${ANDROID_NDK_HOME})
-		set(ANDROID_STL c++_${NDK_STL}
+		set(ANDROID_STL c++_${NDK_STL})
 		set(ZLIB_INCLUDE_DIRS ${SYSROOT}/usr/include)
 		set(ZLIB_LIBRARIES ${SYSROOT}/usr/lib/${arch})
 		set(ZLIB_VERSION_STRING 1.2.11)
