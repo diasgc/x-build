@@ -237,9 +237,11 @@ package_showinfo(){
 	[ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
 
 	# see links
+	echo -e "${CD}${ind}${CD}"
 	echo -e "${CD}${ind}${CD}see log   : \e[4m${log_file}\e[24m${C0}"
 	echo -e "${CD}${ind}${CD}    script: \e[4m${0}\e[24m${C0}"
 	echo -e "${CD}${ind}${CD}    source: \e[4m${dir_src}\e[24m${C0}\n${CD}${ind}${CD}"
+	echo -e "${CD}${ind}${CD}    build : \e[4m${dir_install}\e[24m${C0}\n${CD}${ind}${CD}"
 
 	# Licence
 	echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "
