@@ -45,4 +45,12 @@ $host_arm && cmake_config+=" -DARM=TRUE"
 
 WFLAGS+="-Wno-for-loop-analysis -Wno-unknown-warning-option -Wno-typedef-redefinition -Wno-sometimes-uninitialized -Wno-shift-negative-value -Wno-tautological-pointer-compare"
 
+on_end(){
+    if $build_static; then
+        local a_lib="${dir_install_lib}/${lst_lib}"
+        test -f "${a_lib}.a" || ln -sf "${dir_install_lib}/xevd${sfx}/${lst_lib}.a" "${a_lib}.a"
+        test -f "${a_lib}.so" && mv -f "${a_lib}.so" "${a_lib}.so_"
+    fi
+}
+
 start

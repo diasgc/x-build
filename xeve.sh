@@ -36,4 +36,12 @@ $host_arm && cmake_config+=" -DARM=TRUE"
 
 WFLAGS+=" -Wno-unknown-warning-option -Wno-empty-body -Wno-shift-negative-value -Wno-parentheses-equality -Wno-typedef-redefinition -Wno-for-loop-analysis"
 
+on_end(){
+    if $build_static; then
+        local a_lib="${dir_install_lib}/${lst_lib}"
+        test -f "${a_lib}.a" || ln -sf "${dir_install_lib}/xeve${sfx}/${lst_lib}.a" "${a_lib}.a"
+        test -f "${a_lib}.so" && mv -f "${a_lib}.so" "${a_lib}.so_"
+    fi
+}
+
 start

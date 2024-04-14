@@ -240,8 +240,9 @@ package_showinfo(){
 	echo -e "${CD}${ind}${CD}"
 	echo -e "${CD}${ind}${CD}see log   : \e[4m${log_file}\e[24m${C0}"
 	echo -e "${CD}${ind}${CD}    script: \e[4m${0}\e[24m${C0}"
-	echo -e "${CD}${ind}${CD}    source: \e[4m${dir_src}\e[24m${C0}\n${CD}${ind}${CD}"
-	echo -e "${CD}${ind}${CD}    build : \e[4m${dir_install}\e[24m${C0}\n${CD}${ind}${CD}"
+	echo -e "${CD}${ind}${CD}    source: \e[4m${dir_src}\e[24m${C0}"
+	echo -e "${CD}${ind}${CD}    build : \e[4m${root_dir}/builds/${arch}\e[24m${C0}"
+	echo -e "${CD}${ind}${CD}"
 
 	# Licence
 	echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "

@@ -4,13 +4,11 @@ lib='libpulse'
 apt="${lib}-dev"
 dsc='PulseAudio Client Interface'
 lic='LGPL-2.1'
-#vrs='15.0'
 src='https://gitlab.freedesktop.org/pulseaudio/pulseaudio.git'
 cfg='meson'
-#dep='glib2 libtool sndfile' # fftwf samplerate soxr speex sndfile
 pkg='libpulse'
 eta='120'
-API=28 # required pthread_mutexattr_setprotocol
+#API=28 # required pthread_mutexattr_setprotocol
 
 lst_inc='pulse/*.h'
 lst_lib='libpulse libpulse-simple libpulse-mainloop-glib pulseaudio/libpulsedsp pulseaudio/libpulsecommon-15.0'
@@ -20,42 +18,51 @@ lst_pc='libpulse.pc libpulse-simple.pc libpulse-mainloop-glib.pc'
 
 . xbuild
 
-meson_cfg="-Ddaemon=false -Ddoxygen=false -Dman=false -Dtests=false -Dglib=enabled -Ddatabase=simple -Dconsolekit=disabled -Dtcpwrap=disabled"
-$host_ndk && meson_cfg+=" -Dalsa=disabled -Dx11=disabled -Dgtk=disabled -Dopenssl=disabled -Dgsettings=disabled" && LIBS="-landroid-glob -landroid-execinfo"
+#meson_cfg="-Ddaemon=false -Ddoxygen=false -Dman=false -Dtests=false -Dglib=enabled -Ddatabase=simple -Dconsolekit=disabled -Dtcpwrap=disabled"
+meson_cfg="-Ddaemon=false -Dclient=false -Ddoxygen=false -Dgcov=false -Dman=false -Dtests=false -Ddatabase=simple"
+#$host_ndk && meson_cfg+=" -Dalsa=disabled -Dx11=disabled -Dgtk=disabled -Dopenssl=disabled -Dgsettings=disabled" && LIBS="-landroid-glob -landroid-execinfo"
 $clang && LDFLAGS+=" -Wl,--undefined-version"
+$host_ndk && LDFLAGS+=" -landroid-glob -landroid-execinfo"
 
 LDFLAGS+=" -liconv"
 
 # cannot compile static libs
 
-n_cfg+=" -D stream-restore-clear-old-devices=true \
-    -D zshcompletiondir=no \
-    -D asyncns=disabled \
-    -D avahi=disabled \
-    -D bluez5=disabled \
-    -D bluez5-gstreamer=disabled \
-    -D bluez5-native-headset=false \
-    -D bluez5-ofono-headset=false \
-    -D fftw=disabled \
-    -D elogind=disabled \
-    -D gsettings=disabled \
-    -D gstreamer=disabled \
-    -D gtk=disabled \
-    -D ipv6=false \
-    -D jack=disabled \
-    -D lirc=disabled \
-    -D openssl=disabled \
-    -D orc=disabled \
-    -D samplerate=disabled \
-    -D soxr=disabled \
-    -D tcpwrap=disabled \
-    -D valgrind=disabled \
-    -D x11=disabled \
-    -D adrian-aec=false \
-    -D webrtc-aec=disabled"
+meson_cfg+=' -Dalsa=disabled
+-Dasyncns=disabled
+-Davahi=disabled
+-Dbluez5=disabled
+-Dbluez5-gstreamer=disabled
+-Dbluez5-native-headset=false
+-Dbluez5-ofono-headset=false
+-Dconsolekit=disabled
+-Ddbus=disabled
+-Delogind=disabled
+-Dfftw=disabled
+-Dglib=disabled
+-Dgsettings=disabled
+-Dgstreamer=disabled
+-Dgtk=disabled
+-Dhal-compat=false
+-Dipv6=false
+-Djack=disabled
+-Dlirc=disabled
+-Dopenssl=disabled
+-Dorc=disabled
+-Doss-output=disabled
+-Dsamplerate=disabled
+-Dsoxr=disabled
+-Dspeex=disabled
+-Dsystemd=disabled
+-Dtcpwrap=disabled
+-Dudev=disabled
+-Dvalgrind=disabled
+-Dx11=disabled
+-Denable-smoother-2=false'
 
-$host_arm && CFG+=" -Datomic-arm-linux-helpers=true"
-$host_ndk && CFLAGS='-D__ANDROID__'
+$host_arm && meson_cfg+=" -Datomic-arm-linux-helpers=true -Datomic-arm-memory-barrier=true"
+$host_ndk && CFLAGS+=' -D__ANDROID__'
+#$host_ndk && CPPFLAGS+=' -Wl,-Bstatic'
 
 on_editpack(){
     rm -rf share/locale
