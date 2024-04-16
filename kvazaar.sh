@@ -4,18 +4,22 @@ lib='kvazaar'
 dsc='An open source C library for efficient image processing and image analysis operations'
 lic='LGPL-2.1'
 src='https://github.com/ultravideo/kvazaar.git'
+
 cfg='cmake'
-eta='70'
+cmake_config='-DBUILD_TESTS=OFF'
 
 lst_inc='kvazaar.h'
 lst_lib='libkvazaar'
 lst_bin='kvazaar'
 lst_lic='COPYING CREDITS README.md'
 lst_pc='kvazaar.pc'
+eta='70'
 
-dev_vrs='2.3.0-d8c9688'
+dev_vrs='2.3.0'
 
 . xbuild
+
+$host_ndk && vrs='v2.3.0' # v2.3.1 fails to cmake find_package threads not found
 
 start
 

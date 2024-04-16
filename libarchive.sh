@@ -16,13 +16,13 @@ lst_bin='bsdcat bsdtar bsdcpio'
 lst_lic='COPYING'
 lst_pc='libarchive.pc'
 
-dev_vrs='3.6.1'
+dev_vrs='3.7.4dev'
 
 ac_nosysroot=true
 
 . xbuild
 
-$host_ndk && CPPFLAGS+=" -I./contrib/android/include"
+$host_ndk && CPPFLAGS+=" -I${dir_src}/contrib/android/include"
 
 on_editpack(){
     if $host_ndk; then

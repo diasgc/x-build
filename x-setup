@@ -15,7 +15,8 @@ clear
 
 #
 : "${dir_root:=$(dirname $0)}"
-: "${mingw_repo}:=mstorsjo/llvm-mingw}"
+
+#export LLVM_MINGW_JSON=$(curl --silent "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
 
 check_install(){
     local v0
@@ -150,7 +151,7 @@ function install_llvm_gnu {
 }
 
 function llvm_mingw_get_latest_version {
-    echo $(curl --silent "https://api.github.com/repos/${mingw_repo}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    echo $(curl --silent "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 }
 
 function install_llvm_mingw {
