@@ -1,0 +1,41 @@
+--- inc/com_thread.h	2024-04-17 18:47:29.408860900 +0100
++++ inc/com_thread.h	2024-04-17 18:48:13.889838353 +0100
+@@ -23,7 +23,6 @@
+ 
+ #else
+ 
+-#pragma comment(lib, "pthreadVC2.lib")
+ 
+ #include <semaphore.h>
+ #include <pthread.h>
+--- test/utest.c	2024-04-17 18:34:32.976393456 +0100
++++ test/utest.c	2024-04-17 18:34:56.936081092 +0100
+@@ -57,7 +57,7 @@
+ #define FRAME_LOGLEVEL              LOG_LEVEL_1
+ 
+ #ifndef _WIN32
+-#if defined(__APPLE__) || defined(__loongarch__)
++#if defined(__APPLE__) || defined(__loongarch__) || defined(__ANDROID__)
+ #include <unistd.h>
+ #define _lseeki64 lseek
+ #else
+--- inc/uavs3e.h	2024-04-17 18:21:41.234268686 +0100
++++ inc/uavs3e.h	2024-04-17 18:24:57.360621054 +0100
+@@ -62,7 +62,7 @@
+ 
+ #define PIC_ALIGN_SIZE 8
+ 
+-#if defined(_WIN32) || defined(__linux__)
++#if defined(_WIN32) || defined(__linux__) && ! defined(__ANDROID__)
+ #include <sys/timeb.h>
+ #elif defined(__GNUC__)
+ #include <sys/time.h>
+@@ -72,7 +72,7 @@
+ 
+ static __inline long long get_mdate(void)
+ {
+-#if defined(_WIN32) || defined(__linux__)
++#if defined(_WIN32) || defined(__linux__) && ! defined(__ANDROID__)
+     struct timeb tb;
+     ftime(&tb);
+     return ((long long)tb.time * 1000 + (long long)tb.millitm) * 1000;

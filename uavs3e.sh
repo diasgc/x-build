@@ -11,19 +11,22 @@ src='https://github.com/uavs3/uavs3e.git'
 cfg='cmake'
 eta='0'
 
+lst_inc='uavs3e/uavs3e.h uavs3e/com_api.h'
+lst_lib='libuavs3e'
+lst_bin='uavs3enc'
+dev_vrs='1.3.'
+
+. xbuild
+
 cmake_config='-DCOMPILE_10BIT=1'
 cmake_static='-DBUILD_SHARED_LIBS=0'
 
-lst_inc=''
-lst_lib=''
-lst_bin=''
-dev_vrs='1.3.1'
-
-_on_config_arm(){
-    doErr "Arm not supported."
-}
-
-. xbuild
+cmake_definitions+=(
+    '-Wno-macro-redefined'
+    '-Wno-logical-not-parentheses'
+    '-Wno-shift-negative-value'
+    '-Wno-constant-conversion'
+)
 
 start
 
