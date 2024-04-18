@@ -43,15 +43,14 @@ extraOpts(){
 on_end(){
   test ! -f ${dir_install_pc}/lept.pc && \
     test -f ${dir_install_pc}/lept_Release.pc && \
-    ln -s ${dir_install_pc}/lept_Release.pc ${dir_install_pc}/lept.pc
+    ln -sf ${dir_install_pc}/lept_Release.pc ${dir_install_pc}/lept.pc
+  return 0
 }
 
 
-WFLAGS+=" -Wno-address-of-packed-member"
+cmake_definitions+=('-Wno-address-of-packed-member')
 
 . xbuild
-
-
 
 start
 

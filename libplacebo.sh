@@ -9,7 +9,7 @@ eta='60'
 tls='python3-mako'
 
 dev_bra='main'
-dev_vrs='4.192.0'
+dev_vrs='7.349.0'
 stb_bra=''
 stb_vrs=''
 

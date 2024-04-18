@@ -16,7 +16,7 @@ lst_lic='AUTHORS.md LICENSE.txt'
 lst_pc='libvvenc.pc'
 
 dev_bra='master'
-dev_vrs='1.11.0'
+dev_vrs='1.11.1'
 
 . xbuild
 

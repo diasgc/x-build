@@ -13,7 +13,7 @@ cmake_bin="LIBRESSL_APPS"
 cmake_config="-DLIBRESSL_TESTS=OFF -DENABLE_NC=ON -DENABLE_EXTRATESTS=OFF"
 
 dev_bra='master'
-dev_vrs=''
+dev_vrs='3.9.0'
 stb_bra=''
 stb_vrs=''
 

@@ -4,6 +4,8 @@
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
+# NDK: configure: error: argp not found. Consider installing argp-standalone
+
 lib='libavc1394'
 dsc='libavc1394 is a programming interface for the 1394 Trade Association AV/C (Audio/Video Control) Digital Interface Command Set.'
 lic='GNU Lesser General Public License v2.1'
