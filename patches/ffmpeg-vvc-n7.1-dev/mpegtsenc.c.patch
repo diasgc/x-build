@@ -1,0 +1,14 @@
+--- libavformat/mpegtsenc.c	2024-04-19 20:37:48.953078357 +0100
++++ libavformat/mpegtsenc.c	2024-04-19 20:38:25.707272049 +0100
+@@ -472,6 +472,11 @@
+     case AV_CODEC_ID_HEVC:
+         stream_type = STREAM_TYPE_VIDEO_HEVC;
+         break;
++    case AV_CODEC_ID_VVC:
++        av_log(s, AV_LOG_ERROR,
++                "MPEGTS VVC %s.\n", avcodec_get_name(st->codecpar->codec_id));
++        stream_type = STREAM_TYPE_VIDEO_VVC;
++        break;
+     case AV_CODEC_ID_PCM_BLURAY:
+         stream_type = 0x80;
+         break;

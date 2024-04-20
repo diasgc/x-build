@@ -1,0 +1,13 @@
+--- libavdevice/android_camera.c        2024-02-17 00:06:59.573506835 +0000
++++ libavdevice/android_camera.c        2024-02-17 11:37:31.259142242 +0000
+@@ -648,8 +648,8 @@
+         av_display_matrix_flip(display_matrix, 1, 0);
+     }
+ 
+-    side_data = av_packet_side_data_new(&st->codecpar->side_data,
+-                                        &st->codecpar->nb_side_data,
++    side_data = av_packet_side_data_new(&st->codecpar->coded_side_data,
++                                        &st->codecpar->nb_coded_side_data,
+                                         AV_PKT_DATA_DISPLAYMATRIX,
+                                         sizeof(display_matrix), 0);
+                                         
