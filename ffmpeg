@@ -257,6 +257,7 @@ extLibsPrintList(){
 	local s
 	local l
 	local vl
+	local dsc
 	local vr
 	while [ -n "$1" ]; do
 		l="${1/_/-}"
