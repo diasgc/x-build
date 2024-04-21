@@ -8,10 +8,12 @@ project(shine
 )
 
 set(EXEC_NAME shineenc)
-
+set(VERSION ${PROJECT_VERSION})
+set(prefix ${CMAKE_INSTALL_PREFIX})
 set(${PROJECT_NAME}_lic
     COPYING
 )
+
 set(${PROJECT_NAME}_hdrs
     src/lib/layer3.h
 )

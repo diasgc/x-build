@@ -8,7 +8,7 @@ cfg="cmake"
 eta='35'
 
 dev_bra=''
-dev_vrs=''
+dev_vrs='3.1.1'
 stb_bra=''
 stb_vrs=''
 
@@ -16,7 +16,7 @@ lst_inc='shine/layer3.h'
 lst_lib='libshine'
 lst_bin='shineenc'
 lst_lic='COPYING'
-lst_pc='shine.pc'y
+lst_pc='shine.pc'
 
 . xbuild
 

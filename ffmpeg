@@ -256,11 +256,18 @@ extLibsList(){
 extLibsPrintList(){
 	local s
 	local l
+	local vl
+	local vr
 	while [ -n "$1" ]; do
 		l="${1/_/-}"
 		s="$(extLibsFindScript $l)"
-		test -n "${s}" && ca=${CC1} || ca=${CD}
-		printf "${ca}%-30s: ${CW}%s\n" "  --enable-$l" "${s}"		
+		if [ -n "${s}" ]; then
+			vl=$(cat ${dir_root}/${s} | grep -oP "dev_vrs='\K([0-9\.]+)")
+			printf "${CC1}%-30s ${CW}%-20s %s\n" "  --enable-$l" "${s}" "${vl}"
+		else
+			printf "${CD}%-30s Unavailable${C0}\n" "  --enable-$l"
+		fi 
+		
 		shift
 	done
 }
