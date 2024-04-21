@@ -23,7 +23,7 @@ lst_lic='COPYING'
 lst_pc="xeve${sfx}.pc"
 
 dev_bra='main'
-dev_vrs='0.4.3'
+dev_vrs='0.5.0'
 stb_bra=''
 stb_vrs='0.4.3'
 

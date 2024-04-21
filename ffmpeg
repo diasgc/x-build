@@ -177,10 +177,99 @@ ffOpts(){
 	fi
 }
 
+ffExtLibs(){
+	pushd ${dir_root}
+	local ffopts="ffmpeg-${vrs_tag}.opts"
+	test -f "${ffopts}" || ffOpts
+	local extlib
+	local script
+	local ca
+	local ad
+	
+	while IFS=$'\n' read -r -a line; do
+		extlib=$(echo $line | grep -oP '\-\-enable\-\K([a-zA-Z0-9_-]+)')
+		ad=$(echo $line | grep -oP 'autodetect')
+		if [ -n "${extlib}" ]; then
+			if [ -f "${extlib}.sh" ]; then
+				ca="${CC1}"; cb="${CW}"; script="${extlib}.sh";
+			elif [ -f "lib${extlib}.sh" ]; then
+				ca="${CC1}"; cb="${CW}"; script="lib${extlib}.sh"
+			elif [ -f "${extlib/lib/}.sh" ]; then
+				ca="${CC1}"; cb="${CW}"; script="${extlib/lib/}.sh"
+			else
+				ca="${CD}"; cb="${C0}"; script=
+			fi
+			test -n "$ad" && ca="${C0}" && cb="${C0}" && script="[auto] ${script}"
+			printf "${ca}%-30s: ${CW}%s\n" "  --enable-$extlib" "${script}"
+		fi
+	done <"${ffopts}"
+	echo -e "${C0}\n"
+	popd >/dev/null
+}
+
+extLibsAutodetectList(){
+	cat configure | sed -n '/EXTERNAL_AUTODETECT_LIBRARY_LIST=\"/,/\"/p' | sed '1d;$d;s/^ *//g'
+}
+
+extLibsGPLList(){
+	cat configure | sed -n '/EXTERNAL_LIBRARY_GPL_LIST=\"/,/\"/p' | sed '1d;$d;s/^ *//g'
+}
+
+extLibsNonFreeList(){
+	cat configure | sed -n '/EXTERNAL_LIBRARY_NONFREE_LIST=\"/,/\"/p' | sed '1d;$d;s/^ *//g'
+}
+
+extLibsVersion3List(){
+	cat configure | sed -n '/EXTERNAL_LIBRARY_VERSION3_LIST=\"/,/\"/p' | sed '1d;$d;s/^ *//g'
+}
+
+extractConfigList(){
+	cat ${dir_src}/configure | sed -n '/'$1'=\"/,/\"/p' | sed '1d;$d;s/^ *//g'
+}
+
+extLibsFindScript(){
+	test -f "${dir_root}/${1}.sh" && echo "${1}.sh" && return 0
+	test -f "${dir_root}/lib${1}.sh" && echo "lib${1}.sh" && return 0
+	test -f "${dir_root}/${1/lib/}.sh" && echo "${1/lib/}.sh" && return 0
+	return 0
+}
+
+extLibsList(){
+	extList=( $(cat ${dir_src}/configure | sed -n '/EXTERNAL_LIBRARY_LIST=\"/,/\"/p' | sed '1d;$d;s/^ *//g;/^\$.*/d') )
+	extV3List=( $(extractConfigList 'EXTERNAL_LIBRARY_VERSION3_LIST') )
+	extNonFreeList=( $(extractConfigList 'EXTERNAL_LIBRARY_NONFREE_LIST') )
+	extGplList=( $(extractConfigList 'EXTERNAL_LIBRARY_GPL_LIST') )
+	extGplV3List=( $(extractConfigList 'EXTERNAL_LIBRARY_GPLV3_LIST') )
+	#extList+=( ${extV3List[@]} ${extNonFreeList[@]} ${extGplList[@]} )
+	echo -e "${CC1}External Libs:"
+	extLibsPrintList ${extList[@]}
+	echo -e "\n${CC1}External GPL Libs:"
+	extLibsPrintList ${extGplList[@]}
+	echo -e "\n${CC1}External Version3 Libs:"
+	extLibsPrintList ${extV3List[@]}
+	echo -e "\n${CC1}External GPLV3 Libs:"
+	extLibsPrintList ${extGplV3List[@]}
+	echo -e "\n${CC1}External NonFree Libs:"
+	extLibsPrintList ${extNonFreeList[@]}
+}
+
+extLibsPrintList(){
+	local s
+	local l
+	while [ -n "$1" ]; do
+		l="${1/_/-}"
+		s="$(extLibsFindScript $l)"
+		test -n "${s}" && ca=${CC1} || ca=${CD}
+		printf "${ca}%-30s: ${CW}%s\n" "  --enable-$l" "${s}"		
+		shift
+	done
+}
 
 extraOpts(){
 	case $1 in
 		--show-options) ffOpts; exit 0;;
+		--show-libs) ffExtLibs; exit 0;;
+		--list-libs) extLibsList; exit 0;;
 		--patch-vvc) applyVvcPatch=true;;
 		--enable-*)  extlibs+=" $1"; addDep $1;;
 		--disable-*) extlibs+=" $1";;
