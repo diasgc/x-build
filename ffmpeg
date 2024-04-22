@@ -240,6 +240,8 @@ extLibsList(){
 	extNonFreeList=( $(extractConfigList 'EXTERNAL_LIBRARY_NONFREE_LIST') )
 	extGplList=( $(extractConfigList 'EXTERNAL_LIBRARY_GPL_LIST') )
 	extGplV3List=( $(extractConfigList 'EXTERNAL_LIBRARY_GPLV3_LIST') )
+	hwaccel_nonfree=( $(extractConfigList 'HWACCEL_LIBRARY_NONFREE_LIST'))
+	hwaccel_list=( $(cat ${dir_src}/configure | sed -n '/HWACCEL_LIBRARY_LIST=\"/,/\"/p' | sed '1d;$d;s/^ *//g;/^\$.*/d') )
 	#extList+=( ${extV3List[@]} ${extNonFreeList[@]} ${extGplList[@]} )
 	echo -e "${CC1}External Libs:"
 	extLibsPrintList ${extList[@]}
