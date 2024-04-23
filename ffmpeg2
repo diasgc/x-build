@@ -1,4 +1,5 @@
 #!/bin/bash
+# 2024 diasgc
 
 # cpu av8 av7 x86 x64
 # NDK + +  .   .   .  clang
@@ -8,399 +9,75 @@
 lib='ffmpeg'
 dsc='FFmpeg is the leading multimedia framework'
 lic='GLP-2.0'
-#vrs='n6.2-dev^{}'
-src='https://git.ffmpeg.org/ffmpeg.git'
+pkg='libavcodec'
+vrs='n7.1-dev^{}'
+vrs_tag="${vrs/\^\{\}/}"
+src='https://github.com/FFmpeg/FFmpeg.git'
+src_dev='https://ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2'
+src_tgz="https://github.com/FFmpeg/FFmpeg/archive/refs/tags/${vrs_tag}.tar.gz"
+patch_skip=true
+
 cfg='ac'
-eta='777'
+ac_nohost=true
+
 mki='install'
 make_install='install'
-pkg='libavcodec'
-
-patch_skip=true
-ac_nohost=true
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
+eta='777'
 
-ffblock="FFDATA"
-
-tested_ndk_libs=( aribb24 avisynth frei0r kvazaar lcms2 libwebp lensfun openjpeg svtav1 theora vidstab vpx vulkan vvdec vvenc x264 x265 zimg opencl openh264 libplacebo)
-failed_ndk_libs=(  )
-
-
-
-applyOptions(){
-    IFS='|' read -r -a keys <<<"$1"
-    for k in "${keys[@]}"; do
-        IFS=',' read -r -a field <<<"$k"
-        dep+=(${field[0]/;/ })
-        opt+=(${field[1]/;/ })
-    done
+extractConfigList(){
+	cat ${dir_src}/configure | sed -n '/'$1'=\"/,/\"/p' | sed '1d;$d;s/^ *//g'
 }
 
-zenSplit(){
-    IFS='|' read -r -a keys <<<"$1"
-    echo "${keys[@]}"
+zen_config(){
+
+  test "$TERM_PROGRAM" == "vscode" && \
+    printf "\nThis won't run on VSCODE terminal.\nExiting...\n\n" && \
+    exit 0
+  
+  local git_tags=$(git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g')
+	git_tags=$(echo "$git_tags" | grep '^n' | tail -n 15 | sed '1!G;h;$!d' | sed -z 's/\n/|/g' | sed 's/|$//')
+	git_tags="master|$git_tags"
+  
+  local zen=$(zenity --width=500 --forms --title "Build Options" \
+    --add-combo "Target Arch" --combo-values "native|android-armv8|android-armv7|android-x64|linux-arm64|linux-x64|windows-arm64|windows-x64" \
+    --add-combo "Source Version" --combo-values "${git_tags}" \
+    --add-combo "Link Type" --combo-values "static|shared" \
+    --add-combo "Build Executables" --combo-values "yes|no" \
+    --add-combo "Optimize for" --combo-values "Size|Performance" \
+    --add-combo "External Libs" --combo-values "custom|full|extended|basic|min|none" \
+    --add-entry "Version Name" \
+  )
+  #echo "$zen"
+  local zen_opts
+  local xb_args
+  local ff_args
+  local ff_extralibs
+  IFS='|' read -r -a zen_opts <<<"${zen}"
+
+	xb_args=( "${zen_opts[0]}" )
+	bra="${zen_opts[1]}"
+  xb_args+=( "--${zen_opts}" )
+	
+  test "x${zen_opts[3]}" != "xno" && ff_args+=( "--bin" )
+	test "x${zen_opts[4]}" != "xPerformance" && ff_args="--enable-small"
+  
+  case "{zen_opts[5]}" in
+    custom)   ;;
+    full)     ;;
+    extended) ;;
+    basic)    ;;
+    min)      ;;
+  esac
+
+	test "x${zen_opts[5]}" != "xnone" && zfilter+=( "audio" )
+	ff_extraversion="${zen_opts[6]}"
+
+	selectExtras $(IFS=$'|'; printf %s "${zfilter[*]}")
+	argList+=( "--force" )
 }
 
-zenTagList(){
-    tagList=$(git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g')
-    tagList=$(echo "$tagList" | grep '^n' | tail -n 10 | sed '1!G;h;$!d' | sed -z 's/\n/|/g' | sed 's/|$//')
-    echo "master|$tagList"
-}
-
-selectExtras(){
-    local tag=$1
-    local block=$(awk '/^<<'"$ffblock"'/{flag=1; next} /^'"$ffblock"'/{flag=0} flag' $0 | grep -P "\t${tag}\t" | sed 's/\t/\n/g')
-    local cfgzen=()
-    while IFS=$'\n' read -r -a entry; do
-        case ${entry} in *'${'*) entry=$(eval echo ${entry});; esac
-        cfgzen+=( "${entry}" );
-    done <<<"${block}"
-    local test_zen=$(IFS=$'\n' zenity --list --checklist --text="Features" \
-        --print-column=4 --hide-column=4 --height=600 --width=800 \
-        --column "Use" --column "lib" --column "type" --column "ffopt"  --column "Description" \
-        "${cfgzen[@]}")
-    IFS='|' read -r -a keys <<<"$test_zen"
-    for k in "${keys[@]}"; do
-        IFS=';' read -r -a field <<<"$k"
-        dep+=(${field[0]/\'/})
-        opt+=(${field[1]/\'/})
-    done
-    #echo "deps: ${dep[@]}"
-    #echo "opts: ${opt[@]}"
-}
-
-ffmpegConfig(){
-
-    test "$TERM_PROGRAM" == "vscode" && \
-        printf "\nThis won't run on VSCODE terminal.\nExiting...\n\n" && \
-        exit 0
-        
-    archOpts=(
-        TRUE    NATIVE          "native"
-        false   android-arm64   "aa8"
-        false   android-armv7   "aa7"
-        false   android-x64     "aa64"
-        false   linux-arm64     "la8"
-        false   linux-armv7     "la7"
-        false   linux-x64       "lx64"
-        false   windows-arm64   "wa8"
-        false   windows-x64     "wx64"
-    )
-
-    sizeOpts=(
-        TRUE    Performance     ","
-        false   Size            ",--enable-small;--disable-debug"
-    )
-
-    zen=$(zenity --width=500 --forms --title "Build Options" \
-        --add-combo "Target Arch" --combo-values "native|android-armv8|android-armv7|android-x64|linux-arm64|linux-x64|windows-arm64|windows-x64" \
-        --add-combo "Source Version" --combo-values "$(zenTagList)" \
-        --add-combo "Link Type" --combo-values "static|shared|both" \
-        --add-combo "Build Executables" --combo-values "yes|no" \
-        --add-combo "Optimize for" --combo-values "Size|Performance" \
-        --add-combo "Audio External Libs" --combo-values "none|basic|extended" \
-        --add-combo "Video External Libs" --combo-values "none|basic|extended" \
-        --add-combo "Net External Libs" --combo-values "none|basic|extended" \
-        --add-combo "Subtitle External Libs" --combo-values "none|basic|extended" \
-        --add-combo "I/O External Libs" --combo-values "none|basic|extended" \
-        --add-entry "Version Name" \
-    )
-
-    test -z "$zen" && exit 1
-    #0 android-armv8
-    #1 n6.2-dev^{}
-    #2 static yes Performance basic basic none none 6.2-basicAV
-    extopts=
-    mainOpts=( $(zenSplit ${zen[@]}) )
-    zfilter=()
-    dep=
-    opt=
-
-    argList=( "${mainOpts[0]}" )
-    bra=${mainOpts[1]}
-
-    test "x${mainOpts[2]}" != "xshared" && argList+=( "--static" )
-    test "x${mainOpts[2]}" != "xstatic" && argList+=( "--shared" )
-    test "x${mainOpts[3]}" != "xno" && argList+=( "--bin" )
-    test "x${mainOpts[4]}" != "xPerformance" && extopts="--enable-small"
-    case ${mainOpts[5]} in
-        basic)    zfilter+=( "audio" ); A1=TRUE; A2=FALSE;;
-        extended) zfilter+=( "audio" ); A1=TRUE; A2=TRUE;;
-    esac
-    case ${mainOpts[6]} in
-        basic)    zfilter+=( "video" ); V1=TRUE; V2=FALSE;;
-        extended) zfilter+=( "video" ); V1=TRUE; V2=TRUE;;
-    esac
-    case ${mainOpts[7]} in
-        basic)    zfilter+=( "net" ); N1=TRUE; N2=FALSE;;
-        extended) zfilter+=( "net" ); N1=TRUE; N2=TRUE;;
-    esac
-    case ${mainOpts[8]} in
-        basic)    zfilter+=( "sub" ); V1=TRUE; V2=FALSE;;
-        extended) zfilter+=( "sub" ); V1=TRUE; V2=TRUE;;
-    esac
-    case ${mainOpts[9]} in
-        basic)    zfilter+=( "io" ); I1=TRUE; I2=FALSE;;
-        extended) zfilter+=( "io" ); I1=TRUE; I2=TRUE;;
-    esac
-    extraversion="${mainOpts[10]}"
-
-    selectExtras $(IFS=$'|'; printf %s "${zfilter[*]}")
-    argList+=( "--force" )
-    #echo "arguments: ${argList[@]}"
-    #echo "ffmpeg options: ${opt[@]}"
-    #echo "lib dependencies: ${dep[@]}"
-    dep=$(echo "${dep[@]}")
-    extlibs=$(echo "${opt[@]}")
-	cat <<-EOF >$(pwd)/ffmpeg-${extraversion}.cfg
-		#!/bin/bash
-
-		dep='${dep}'
-		argList=( ${argList[@]} )
-		extlibs='${extlibs}'
-        extraversion='${extraversion}'
-        bra='${bra}'
-		EOF
-
-    set -- "${argList[@]}"
-}
-
-loadConfig(){
-    echo "loading $1"
-    if [ -f "$1" ]; then
-        source $1
-        echo "arguments: ${argList[@]}"
-        echo "ffmpeg options: ${extlibs}"
-        echo "lib dependencies: ${dep}"
-        echo "version: ${extraversion}"
-    fi
-    set -- "${argList[@]}"
-}
-
-
-extraOpts(){
-    case $1 in
-        --patch-vvc) applyVvcPatch=true;;
-        --enable-*)  extlibs+=" $1"; addDep $1;;
-        --disable-*) extlibs+=" $1";;
-    esac
-    return 0
-}
-
-case $1 in
-    --config)   ffmpegConfig;;
-    --load)     shift; loadConfig $1;;
-esac
-
-test -n "${argList[0]}" && set -- "${argList[@]}"
-
-source xbuild
-
-extopts="--pkg-config-flags=--static \
-         --enable-lto \
-         --enable-runtime-cpudetect \
-         --disable-symver \
-         --cross-prefix=${CROSS_PREFIX} \
-        $extopts"
-
-nonfree=false
-gpl=false
-v3=false
-
-gpl_libs='@(avisynth|aribb24|frei0r|libcdio|libutvideo|libvidstab|x264|x265|xavs|xvidcode)'
-vs3_libs='@(aribb24|opencore-amr|lensfun|vo-amrwbenc)'
-nfr_libs='@(fdk-aac|openssl)'
-
-for d in $dep; do
-     case $d in
-        $nfr_libs) nonfree=true;;&
-        $gpl_libs) gpl=true;;&
-        $vs3_libs) v3=true;;&
-        vv??c)     patch_vvc=true;;
-        kvazaar)   lm="-lm";;
-        openh264|libplacebo|lensfun) $host_ndk && lcpp="-lc++_static -lc++abi";;&
-        lensfun)   liconv="-liconv";;
-     esac
-done
-
-$nonfree && extlibs+=' --enable-nonfree'
-$gpl && extlibs+=' --enable-gpl'
-$v3 && extlibs+=' --enable-version3'
-
-if $build_shared; then
-     extlibs+=" --enable-shared --disable-static"
-fi
-unset CSH
-
-$host_arm && extopts+=' --enable-neon'
-$host_x86 && extopts+=' --disable-asm'
-
-case $host_os in
-    android)    CPPFLAGS+=" -Ofast -fPIC -fPIE -fblocks -Wno-implicit-const-int-float-conversion -Wno-deprecated-declarations" # -ffunction-sections -fdata-sections -Wl,--gc-sections"
-                CFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/libshaderc/include -I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include/vulkan"
-                extopts+=" --enable-jni --enable-mediacodec --enable-asm --enable-inline-asm --enable-pic --enable-cross-compile" #unecessary --disable-alsa
-                #extopts+=" --disable-indev=android_camera"
-                LDFLAGS+=" -ldl -lm -lc++_static -lc++abi -liconv"
-                ;;
-     gnu)       extopts+=" --enable-opencl --enable-opengl --enable-pic" LDFLAGS+=" -ldl -lstdc++"
-                lspci -k | grep -A 2 -i "VGA" | grep amd && extopts+=" --enable-nvenc"
-                lspci -k | grep -A 2 -i "VGA" | grep nvidia && extopts+=" --enable-nvenc"
-                ;;
-esac
-
-ac_config="--arch=$CPU \
-     --target-os=${PLATFORM,,} \
-     --cc=$CC \
-     --ar=$AR \
-     --strip=$STRIP \
-     --disable-doc \
-     --disable-htmlpages \
-     --disable-ffplay \
-     --pkg-config=$(which pkg-config) \
-     --extra-libs=-lpthread \
-     $extopts \
-     $extlibs"
-
-test -n "$extraversion" && ac_config="--extra-version=$extraversion $ac_config"
-# make the log cleaner
-WFLAGS='-Wno-unused-command-line-argument'
-_vvc_patch(){
-    if [ ! -f "${dir_src}/vvc_patched" ]; then
-        pushd ${dir_src}
-        wget -O Add-support-for-H266-VVC.patch https://patchwork.ffmpeg.org/series/9992/mbox/
-        git apply Add-support-for-H266-VVC.patch --exclude=libavcodec/version.h
-        touch vvc_patched
-        popd
-    fi
-}
-
-vvc_patch(){
-    if [ ! -f "${dir_src}/vvc_patched" ]; then
-        pushd ${dir_src}
-        git apply ../../patches/ffmpeg-vvc.patch --exclude=libavcodec/version.h
-        touch vvc_patched
-        popd
-    fi
-}
-
-lensfun_patch(){
-    sed -i '/lensfun.h lf_db_new/lensfun.h lf_db_create/g' "${dir_src}/configure"
-}
-
-patch_source(){
-    test ${patch_vvc} && vvc_patch
-    lensfun_patch
-}
-
-case $1 in
-
-esac
-
-start
-
-# Patch to libavdevice/android_camera.c in n6.2-dev
-<<'LZS_PATCH'
-LQgEBsEsCMEMDcAmBTekDGyD0sB2iAnAe0kQH11YBbZA2AOnQEgAmABhYBZgPgBGAOyg2bAFxsAbKICsATnrSBAZmm
-SAHCtABqESIBQWwxBgIUaTDnzFSFarQbN2XHi35C+fUUoFe+9FnJ8nCxcLNq6bHoAAlGgwBKcagA0atoJyakxeqA5u
-bkIZIiQAM4ADuCwAJ5kVLAALgSQAB5kAGZQpQAURWUV1bUNzUmgfMNsAJQA3Nl5AL7ZesB5xaTIhfWwoAC8oAWlsOg
-A1sh1ZCso63WwZLjIAO6dAGTFdcAAfOhEKOj7BO/na0QGySizyYPBEMhUNAz1eHy+yB+sD+b1w0DOq0usBBWmWmKBV
-22u3gZH2RxOGIuBOutwesPen2+vwZCPIAKxOOhXO5EPp8KZyPeaIorMpgOBMx5Uu5AEEAGpkAAKAGkACpkAAiMtVMs
-1AEkAMqKgAyMoAmgBZbUAJT1AA0QdKndCVgAvZBEVrdErlKo1eqNJrjMZTBZAA
-LZS_PATCH
-
-<<FFDATA
-${V1}	aom	video	'aom;--enable-libaom'	'Alliance for Open Media AV1 codec'
-${V2}	aribb24	video	'aribb24;--enable-libaribb24'	'A library for ARIB STD-B24, decoding JIS 8 bit characters and parsing MPEG-TS stream'
-${V2}	avisynth	video	'avisynth;--enable-avisynth'	'A powerful nonlinear scripting language for video'
-${A2}	celt	audio	'celt;--enable-libcelt'	'CELT is a low-delay audio codec'
-${A2}	chromaprint	audio	'chromaprint;--enable-chromaprint'	'C library for generating audio fingerprints used by AcoustID'
-${A2}	codec2	audio	'codec2;--enable-libcodec2'	'A speech codec for 2400 bit/s and below'
-${V2}	dav1d	video	'dav1d;--enable-libdav1d'	'AV1 cross-platform decoder, open-source, and focused on speed and correctness.'
-${V2}	davs2	video	'davs2;--enable-libdavs2'	'An open-source decoder of AVS2-P2/IEEE1857.4 video coding standard'
-${A1}	fdk-aac	audio	'fdk-aac;--enable-libfdk-aac'	'A standalone library of the Fraunhofer FDK AAC code from Android'
-${A2}	flite	audio	'flite;--enable-libflite'	'A small fast portable speech synthesis system'
-${S1}	fontconfig	sub	'fontconfig;--enable-libfontconfig'	'Font customization and configuration library'
-${S1}	freetype	sub	'freetype;--enable-libfreetype'	'A free, high-quality, and portable font engine.'
-${V1}	frei0r	video	'frei0r;--enable-frei0r'	'A large collection of free and portable video plugins'
-${S1}	fribidi	sub	'fribidi;--enable-libfribidi'	'Unicode Bidirectional Algorithm Library'
-${A2}	glslang	video	'glslang;--enable-libglslang'	'OpenGL and OpenGL ES shader front end and validator'
-${N1}	gmp	net	'gmp;--enable-gmp'	'GNU Multiple Precision Arithmetic Library'
-${N1}	gnutls	net	'gnutls;--enable-gnutls'	'GnuTLS implements the TLS/SSL (Transport Layer Security aka Secure Sockets Layer) protocol'
-${S1}	harfbuzz	sub	'harfbuzz;--enable-libharfbuzz'	'HarfBuzz text shaping engine'
-${V1}	kvazaar	video	'kvazaar;--enable-libkvazaar'	'An open source C library for efficient image processing and image analysis operations'
-${A2}	ladspa	audio	'ladspa;--enable-ladspa'	'Linux Audio Developers Simple Plugin API'
-${A1}	lame	audio	'lame;--enable-libmp3lame'	'LAME is a high quality MPEG Audio Layer III (MP3) encoder'
-${V2}	lcms2	video	'lcms2;--enable-lcms2'	'A free, open source, CMM engine. It provides fast transforms between ICC profiles'
-${V2}	lensfun	video	'lensfun;--enable-liblensfun'	'An open source database of photographic lenses and their characteristics'
-${S1}	libass	sub	'libass;--enable-libass'	'LibASS is an SSA/ASS subtitles rendering library'
-${I1}	libbluray	io	'libbluray;--enable-libbluray'	'Library to access Blu-Ray disks'
-${A2}	libbs2b	audio	'libbs2b;--enable-libbs2b'	'Bauer stereophonic-to-binaural DSP'
-${S1}	libcaca	sub	'libcaca;--enable-libcaca'	'Colour AsCii Art library'
-${I1}	libcdio	io	'libcdio;--enable-libcdio'	'Portable CD-ROM I/O library'
-${I1}	libdc1394	io	'libdc1394;--enable-libdc1394'	'IIDC Camera Control Library '
-${N1}	libgcrypt	net	'libgcrypt;--enable-gcrypt'	'The GNU crypto library'
-${A2}	libgme	audio	'libgme;--enable-libgme'	'Blarggs video game music emulation library'
-${A2}	libgsm	audio	'libgsm;--enable-libgsm'	'GSM 06.10 lossy speech compression'
-${I1}	libiec61883	io	'libiec61883;--enable-libiec61883'	'An isochronous streaming media library for IEEE 1394'
-${N1}	libilbc	net	'libilbc;--enable-libilbc'	'Internet Low Bitrate Codec (iLBC) library'
-${I1}	libjack	io	'libjack;--enable-libjack'	'Jack Audio Connection Kit: a low-latency synchronous callback-based media server'
-${V2}	libjxl	video	'libjxl;--enable-libjxl'	'A fast, compressed, persistent binary data store library for C.'
-${I1}	libklvanc	extra	'libklvanc;--enable-libklvanc'	'VANC Processing Framework'
-${A2}	libmodplug	audio	'libmodplug;--enable-libmodplug'	'The ModPlug mod file playing library.'
-${I1}	libmysofa	extra	'libmysofa;--enable-libmysofa'	'Reader for AES SOFA files to get better HRTFs'
-${V2}	libplacebo	video	'libplacebo;--enable-libplacebo'	'Reusable library for GPU-accelerated image/video processing primitives and shaders'
-${A2}	libpulse	audio	'libpulse;--enable-libpulse'	'PulseAudio Client Interface'
-${N1}	librist	net	'librist;--enable-librist'	'A library that can be used to easily add the RIST protocol to your application.'
-${V2}	librsvg	video	'librsvg;--enable-librsvg'	'A small library to render Scalable Vector Graphics (SVG)'
-${N1}	librtmp	net	'librtmp;--enable-librtmp'	'rtmpdump is a toolkit for RTMP streams. All forms of RTMP are supported, including rtmp://, rtmpt://, rtmpe://, rtmpte://, and rtmps://.'
-${A2}	librubberband	audio	'librubberband;--enable-librubberband'	'An audio time-stretching and pitch-shifting library and utility program.'
-${V2}	libshaderc	video	'libshaderc;--enable-libshaderc'	'A library for compiling shader strings into SPIR-V.'
-${N1}	libsrt	net	'libsrt;--enable-libsrt'	'Secure Reliable Transport (SRT) is an open source transport technology that optimizes streaming performance across unpredictable networks, such as the Internet.'
-${N1}	libssh	net	'libssh;--enable-libssh'	'The SSH library'
-${V1}	libwebp	video	'libwebp;--enable-libwebp'	'Library to encode and decode images in WebP format'
-${I1}	libxml2	extra	'libxml2;--enable-libxml2'	'GNOME XML library'
-${N1}	libzmq	net	'libzmq;--enable-libzmq'	'ZeroMQ core engine in C++, implements ZMTP/3.1'
-${A2}	lv2	audio	'lv2;--enable-lv2'	'An extensible audio plugin interface'
-${N1}	mbedtls	net	'mbedtls;--enable-mbedtls'	'An open source, portable, easy to use, readable and flexible SSL library.'
-${A1}	openal	audio	'openal;--enable-openal'	'OpenAL Soft with Android support'
-${I1}	opencl	extra	'opencl;--enable-opencl'	'Khronos OpenCL-Headers'
-${A1}	opencore-amr	audio	'opencore-amr;--enable-libopencore-amrnb --enable-libopencore-amrwb'	'OpenCORE Adaptive Multi Rate (AMR) speech codec'
-${V2}	opencv	video	'opencv;--enable-libopencv'	'Open Source Computer Vision Library'
-${V1}	openh264	video	'openh264;--enable-libopenh264'	'Open Source H.264 Codec'
-${V1}	openjpeg	video	'openjpeg;--enable-libopenjpeg'	'OpenJPEG is an open-source JPEG 2000 codec written in C language.'
-${A1}	openmpt	audio	'openmpt;--enable-libopenmpt'	'a library to render tracker music'
-${N1}	openssl	net	'openssl;--enable-openssl'	'TLS/SSL and crypto library'
-${A1}	opus	audio	'opus;--enable-libopus'	'Opus is a codec for interactive speech and audio transmission over the Internet'
-${A2}	pocketsphinx	audio	'pocketsphinx;--enable-pocketsphinx'	'Speech recognition tool'
-${A1}	shine	audio	'shine;--enable-libshine'	'Super fast fixed-point MP3 encoder.'
-${A1}	snappy	audio	'snappy;--enable-libsnappy'	'Snappy is a compression/decompression library'
-${A1}	soxr	audio	'soxr;--enable-libsoxr'	'The SoX resampler library'
-${A1}	speex	audio	'speex;--enable-libspeex'	'Speex is an audio codec tuned for speech'
-${V1}	svtav1	video	'svtav1;--enable-libsvtav1'	'Scalable Video Technology for AV1 (SVT-AV1 Encoder and Decoder)'
-${I1}	tensorflow	extra	'tensorflow;--enable-libtensorflow'	'An Open Source Machine Learning Framework for Everyone'
-${S1}	tesseract	sub	'tesseract;--enable-libtesseract'	'An OCR Engine that was developed at HP Labs between 1985 and 1995... and now at Google'
-${V2}	theora	video	'theora;--enable-libtheora'	'Theora video compression format'
-${A1}	twolame	audio	'twolame;--enable-libtwolame'	'MPEG Audio Layer 2 (MP2) encoder'
-${V2}	uavs3d	video	'uavs3d;--enable-libuavs3d'	'AVS3 decoder which supports AVS3-P2 baseline profile.'
-${V2}	vapoursynth	video	'vapoursynth;--enable-vapoursynth'	'A video processing framework with simplicity in mind'
-${V2}	vidstab	video	'vidstab;--enable-libvidstab'	'Vidstab is a video stabilization library which can be plugged-in with Ffmpeg and Transcode'
-${V2}	vmaf	video	'vmaf;--enable-libvmaf'	'Perceptual video quality assessment based on multi-method fusion'
-${A1}	vo-amrwbenc	audio	'vo-amrwbenc;--enable-libvo-amrwbenc'	'VisualOn Adaptive Multi-Rate Wideband speech codec library'
-${A1}	vorbis	audio	'vorbis;--enable-libvorbis'	'Ogg Vorbis audio format'
-${V1}	vpx	video	'vpx;--enable-libvpx'	'WebM Project VPx codec implementation'
-${V1}	vulkan	video	'vulkan;--enable-vulkan'	'Khronos Vulkan-Headers'
-${V1}	vvdec	video	'vvdec;--enable-libvvdec'	'Fraunhofer Versatile Video Decoder (VVdeC)'
-${V1}	vvenc	video	'vvenc;--enable-libvvenc'	'Fraunhofer Versatile Video Encoder'
-${V1}	x264	video	'x264;--enable-libx264'	'x264, the best and fastest H.264 encoder'
-${V1}	x265	video	'x265;--enable-libx265'	'x265 is an open source HEVC encoder'
-${V1}	xavs2	video	'xavs2;--enable-libxavs2'	'An open-source encoder of AVS2-P2/IEEE1857.4 video coding standard'
-${V1}	xavs	video	'xavs;--enable-libxavs'	'High quality encoder and decoder of the Audio Video Standard of China (AVS)'
-${V1}	xeve	video	'xeve;--enable-libxeve'	'eXtra-fast Essential Video Encoder, MPEG-5 EVC (Essential Video Coding)'
-${V1}	xevd	video	'xevd;--enable-libxevd'	'eXtra-fast Essential Video Decoder, MPEG-5 EVC (Essential Video Coding)'
-${V1}	xvidcore	video	'xvidcore;--enable-libxvid'	'Xvid decoder/encoder library'
-${V2}	zimg	video	'zimg;--enable-libzimg'	'Scaling, colorspace conversion, and dithering library'
-${I1}	zvbi	io	'zvbi;--enable-libzvbi'	'VBI Capturing and Decoding Library'
-FFDATA
+zen_config
