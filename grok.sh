@@ -8,6 +8,7 @@ cfg='cmake'
 cmake_static='BUILD_STATIC_LIBS'
 eta='35'
 cmake_config='-DBUILD_TESTING=OFF -DWITH_GTEST=OFF -DZLIBNG_ENABLE_TESTS=OFF -Dtiff-docs=OFF'
+# (ndk-)clang is not able to compile a simple test program. (libjpeg-turbo)
 
 dev_bra='main'
 dev_vrs='3.1.1'

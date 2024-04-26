@@ -4,9 +4,12 @@ lib='lib7zip'
 dsc='c++ library wrapper of 7zip'
 lic='MLP-2.0'
 src='https://github.com/stonewell/lib7zip.git'
+
 cfg='cmake'
+cmake_config+='-DENABLE_TEST=OFF'
 
 eta='1095'
+dev_vrs='3.0.0'
 
 . xbuild
 

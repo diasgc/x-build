@@ -1,0 +1,62 @@
+--- CMakeLists.txt	2024-04-26 14:53:14.652515677 +0100
++++ CMakeLists.txt	2024-04-26 15:10:08.393157972 +0100
+@@ -61,4 +61,7 @@
+ endif()
+ 
+ ADD_SUBDIRECTORY(src)
++OPTION(BUILD_TESTS "Build Tests" OFF)
++IF(BUILD_TESTS)
+ ADD_SUBDIRECTORY(test)
++ENDIF(BUILD_TESTS)
+
+--- src/CMakeLists.txt	2024-04-26 14:53:44.228950630 +0100
++++ src/CMakeLists.txt	2024-04-26 15:07:50.460418938 +0100
+@@ -25,6 +25,12 @@
+   "${P7ZIP_INCLUDE_PATH}"
+ )
+ 
++INSTALL(TARGETS lib7zip
++  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
++)
++
+ IF (BUILD_SHARED_LIB)
+ ADD_LIBRARY(lib7zip_shared SHARED ${lib7zip_src}
+    ${lib7zip_NODIST_SOURCES}
+@@ -38,4 +44,34 @@
+ TARGET_INCLUDE_DIRECTORIES(lib7zip_shared PRIVATE
+   "${P7ZIP_INCLUDE_PATH}"
+ )
++
++INSTALL(TARGETS lib7zip_shared
++  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
++)
++
+ ENDIF()
++
++install(FILES lib7zip.h DESTINATION include)
++
++SET(PKGCONFIG_IN ${CMAKE_SOURCE_DIR}/pkgconfig.pc.in)
++
++IF(NOT EXISTS ${PKGCONFIG_IN})
++  FILE(WRITE ${PKGCONFIG_IN}
++    "prefix=@CMAKE_INSTALL_PREFIX@\n"
++    "exec_prefix=\${prefix}\n"
++    "libdir=\${exec_prefix}/lib\n"
++    "includedir=\${prefix}/include\n"
++    "\n"
++    "Name: lib7zip\n"
++    "Description: c++ library wrapper of 7zip\n"
++    "URL: https://github.com/stonewell/lib7zip\n"
++    "Version: @PROJECT_VERSION@\n"
++    "Libs: -L\${libdir} -l7zip\n"
++    "Cflags: -I\${includedir}\n"
++  )
++ENDIF()
++
++configure_file(${PKGCONFIG_IN} ${CMAKE_BINARY_DIR}/lib7zip.pc @ONLY)
++install(FILES ${CMAKE_BINARY_DIR}/lib7zip.pc DESTINATION lib/pkgconfig)
+
