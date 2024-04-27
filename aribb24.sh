@@ -25,7 +25,6 @@ lst_pc='aribb24.pc'
 
 . xbuild
 
-
 WFLAGS="-Wno-pointer-to-int-cast -Wno-unused-command-line-argument"
 
 start

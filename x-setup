@@ -163,7 +163,7 @@ function install_llvm_mingw {
     cd $(dirname ${LLVM_MINGW_HOME})
     [ -d "llvm-mingw" ] && rm -rf "llvm-mingw"
     export llvm_mingw_rel=$(llvm_mingw_get_latest_version)
-    wget_untar "https://github.com/${mingw_repo}/releases/download/${llvm_mingw_rel}/llvm-mingw-${llvm_mingw_rel}-ucrt-ubuntu-20.04-x86_64.tar.xz" "llvm-mingw"    
+    wget_untar "https://github.com/mstorsjo/llvm-mingw/releases/download/${llvm_mingw_rel}/llvm-mingw-${llvm_mingw_rel}-ucrt-ubuntu-20.04-x86_64.tar.xz" "llvm-mingw"    
     echo $llvm_mingw_rel >"${LLVM_MINGW_HOME}/version"
     export xv_llvm_mingw=$(./llvm-mingw/bin/aarch64-w64-mingw32-clang --version | grep -oP '\d*\.\d*.\d* (?=\()')
     cd $od
