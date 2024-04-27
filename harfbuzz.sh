@@ -32,7 +32,7 @@ extraOpts(){
 
 . xbuild
 
-CPPFLAGS+=" -I${dir_install_include}/freetype2"
+cmake_definitions+=('-Wno-double-promotion')
 
 start
 

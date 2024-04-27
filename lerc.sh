@@ -15,7 +15,7 @@ lst_bin=''
 lst_lic='LICENSE NOTICE'
 lst_pc='Lerc.pc'
 
-dev_vrs='4.0.4'
+dev_vrs='4.0.0'
 
 . xbuild
 

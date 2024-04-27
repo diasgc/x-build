@@ -1,30 +1,155 @@
---- CMakeLists.txt	2021-10-09 14:39:20.783000000 +0100
-+++ CMakeLists.txt	2021-10-09 14:41:14.801780300 +0100
-@@ -5,6 +5,7 @@
- include(FindPkgConfig)
- find_package(PNG REQUIRED)
- include_directories(${PNG_INCLUDE_DIRS})
-+option(USE_SDL "Use SDL" OFF)
- option(BUILD_SHARED_LIBS "Build shared FLIF encoder/decoder libraries" ON)
- option(BUILD_STATIC_LIBS "Build static FLIF encoder/decoder libraries" ON)
- 
-@@ -12,6 +13,7 @@
- # find SDL2
- 
- find_package(PkgConfig QUIET)
-+if (USE_SDL)
- pkg_check_modules(PKG_SDL2 QUIET sdl2)
- 
- find_path(SDL2_INCLUDE_DIR
-@@ -38,6 +40,8 @@
-   PATH_SUFFIXES x64 x86
+--- src/CMakeLists.txt	2024-04-27 09:54:42.583161294 +0100
++++ src/CMakeLists.txt	2024-04-27 09:58:54.163355053 +0100
+@@ -86,9 +86,9 @@
+     ${FLIF_SRC_DIR}/library/flif_enc.h
  )
  
-+endif(USE_SDL)
+-if(WIN32)
 +
- include(FindPackageHandleStandardArgs)
- find_package_handle_standard_args(SDL2
-                                   REQUIRED_VARS SDL2_INCLUDE_DIR SDL2_LIBRARY SDL2MAIN_LIBRARY)
+     set(STATIC_LINKED_LIBS ${ZLIB_LIBRARY})
+-endif()
++
+ 
+ if(CMAKE_COMPILER_IS_GNUCXX)
+     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
+@@ -135,29 +135,6 @@
+     LODEPNG_NO_COMPILE_PNG LODEPNG_NO_COMPILE_DISK
+ )
+ 
+-# executable
+-
+-if(WIN32)
+-    set(WINDOWS_EXE_SOURCE
+-        ${FLIF_SRC_DIR}/../build/MSVC/getopt/getopt.c
+-    )
+-endif()
+-
+-add_executable(flif_exe ${COMMON_SOURCES} ${WINDOWS_EXE_SOURCE} ${FLIF_SRC_DIR}/flif-enc.cpp ${FLIF_SRC_DIR}/flif.cpp)
+-target_link_libraries(flif_exe ${PNG_LIBRARY} ${STATIC_LINKED_LIBS})
+-set_target_properties(flif_exe PROPERTIES OUTPUT_NAME flif)
+-add_executable(dflif_exe ${COMMON_SOURCES} ${WINDOWS_EXE_SOURCE} ${FLIF_SRC_DIR}/flif-enc.cpp ${FLIF_SRC_DIR}/flif.cpp)
+-target_compile_definitions(dflif_exe PRIVATE DECODER_ONLY)
+-target_link_libraries(dflif_exe ${PNG_LIBRARY} ${STATIC_LINKED_LIBS})
+-set_target_properties(dflif_exe PROPERTIES OUTPUT_NAME dflif)
+-
+-if(WIN32)
+-    target_include_directories(flif_exe PRIVATE ${FLIF_SRC_DIR}/../build/MSVC/getopt)
+-    target_compile_definitions(flif_exe PRIVATE ${DEFINITIONS_FOR_ALL_TARGETS} STATIC_GETOPT ) # prevents dllexporting symbols for getopt
+-    target_include_directories(dflif_exe PRIVATE ${FLIF_SRC_DIR}/../build/MSVC/getopt)
+-    target_compile_definitions(dflif_exe PRIVATE ${DEFINITIONS_FOR_ALL_TARGETS} STATIC_GETOPT ) # prevents dllexporting symbols for getopt
+-endif()
+-
+ # library
+ if(BUILD_SHARED_LIBS)
+     add_library(flif_lib SHARED ${COMMON_SOURCES} ${FLIF_ENC_FILES})
+@@ -177,9 +154,6 @@
+ 
+     target_include_directories(flif_lib PRIVATE ${FLIF_SRC_DIR}/../extern)
+     target_include_directories(flif_lib_dec PRIVATE ${FLIF_SRC_DIR}/../extern)
+-
+-    target_link_libraries(flif_exe flif_lib)
+-    target_link_libraries(dflif_exe flif_lib_dec)
+     install(TARGETS flif_lib flif_lib_dec
+       RUNTIME DESTINATION bin
+       LIBRARY DESTINATION lib
+@@ -187,14 +161,6 @@
+       PUBLIC_HEADER DESTINATION include)
+ endif(BUILD_SHARED_LIBS)
+ 
+-target_include_directories(flif_exe PRIVATE ${FLIF_SRC_DIR}/../extern)
+-target_include_directories(dflif_exe PRIVATE ${FLIF_SRC_DIR}/../extern)
+-install(TARGETS flif_exe dflif_exe
+-    RUNTIME DESTINATION bin)
+-install(FILES ${FLIF_SRC_DIR}/../tools/gif2flif 
+-   PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_READ DESTINATION bin)
+-install(FILES ${FLIF_SRC_DIR}/../tools/apng2flif 
+-   PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_READ DESTINATION bin)
+ install(FILES ${FLIF_SRC_DIR}/../doc/flif.1
+    DESTINATION ${CMAKE_INSTALL_FULL_MANDIR}/man1)
+ 
+@@ -223,13 +189,47 @@
+       LIBRARY DESTINATION lib
+       ARCHIVE DESTINATION lib
+       PUBLIC_HEADER DESTINATION include)
+-
+-    if (NOT(BUILD_SHARED_LIBS))
+-       target_link_libraries(flif_exe flif_lib_static)
+-       target_link_libraries(dflif_exe flif_lib_dec_static)
+-    endif(NOT(BUILD_SHARED_LIBS))
+ endif(BUILD_STATIC_LIBS)
+ 
++# executable
++option(BUILD_EXECUTABLES "Build executables" OFF)
++if(BUILD_EXECUTABLES)
++if(WIN32)
++    set(WINDOWS_EXE_SOURCE
++        ${FLIF_SRC_DIR}/../build/MSVC/getopt/getopt.c
++    )
++endif()   
++add_executable(flif_exe ${COMMON_SOURCES} ${WINDOWS_EXE_SOURCE} ${FLIF_SRC_DIR}/flif-enc.cpp ${FLIF_SRC_DIR}/flif.cpp)
++target_link_libraries(flif_exe ${PNG_LIBRARY} ${STATIC_LINKED_LIBS})
++set_target_properties(flif_exe PROPERTIES OUTPUT_NAME flif)
++add_executable(dflif_exe ${COMMON_SOURCES} ${WINDOWS_EXE_SOURCE} ${FLIF_SRC_DIR}/flif-enc.cpp ${FLIF_SRC_DIR}/flif.cpp)
++target_compile_definitions(dflif_exe PRIVATE DECODER_ONLY)
++target_link_libraries(dflif_exe ${PNG_LIBRARY} ${STATIC_LINKED_LIBS})
++set_target_properties(dflif_exe PROPERTIES OUTPUT_NAME dflif)
++
++if(WIN32)
++    target_include_directories(flif_exe PRIVATE ${FLIF_SRC_DIR}/../build/MSVC/getopt)
++    target_compile_definitions(flif_exe PRIVATE ${DEFINITIONS_FOR_ALL_TARGETS} STATIC_GETOPT ) # prevents dllexporting symbols for getopt
++    target_include_directories(dflif_exe PRIVATE ${FLIF_SRC_DIR}/../build/MSVC/getopt)
++    target_compile_definitions(dflif_exe PRIVATE ${DEFINITIONS_FOR_ALL_TARGETS} STATIC_GETOPT ) # prevents dllexporting symbols for getopt
++endif()
++if (NOT(BUILD_SHARED_LIBS))
++target_link_libraries(flif_exe flif_lib_static)
++target_link_libraries(dflif_exe flif_lib_dec_static)
++else()
++target_link_libraries(flif_exe flif_lib)
++target_link_libraries(dflif_exe flif_lib_dec)
++endif()
++target_include_directories(flif_exe PRIVATE ${FLIF_SRC_DIR}/../extern)
++target_include_directories(dflif_exe PRIVATE ${FLIF_SRC_DIR}/../extern)
++install(TARGETS flif_exe dflif_exe
++    RUNTIME DESTINATION bin)
++install(FILES ${FLIF_SRC_DIR}/../tools/gif2flif 
++   PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_READ DESTINATION bin)
++install(FILES ${FLIF_SRC_DIR}/../tools/apng2flif 
++   PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_READ DESTINATION bin)
++endif(BUILD_EXECUTABLES)
++
+ # gdk-pixbuf loader, enabling FLIF-viewing in pixbuf applications like Eye of Gnome
+ if(GDK_FOUND AND (BUILD_SHARED_LIBS OR BUILD_STATIC_LIBS))
+ ## The loader is LGPLed so there's no reason to use libflif_dec here
+@@ -323,7 +323,8 @@
+ endif(${SDL2_FOUND} AND ${BUILD_SHARED_LIBS})
+ 
+ # test
+-
++option(BUILD_TEST "Build Test" OFF)
++if(BUILD_TEST)
+ if(BUILD_SHARED_LIBS)
+ add_executable(libtest ${FLIF_SRC_DIR}/../tools/test.c)
+ target_link_libraries(libtest flif_lib)
+@@ -337,10 +338,6 @@
+ target_include_directories(libtest_static PRIVATE ${FLIF_SRC_DIR}/library)
+ endif(BUILD_STATIC_LIBS)
+ 
+-# license stuff
+-install(FILES "${FLIF_SRC_DIR}/../LICENSE" "${FLIF_SRC_DIR}/../LICENSE_Apache2" "${FLIF_SRC_DIR}/../LICENSE_GPL" "${FLIF_SRC_DIR}/../LICENSE_LGPL" "${FLIF_SRC_DIR}/../FLIF-CLA-template.txt"
+-   DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/licenses/FLIF")
+-
+ enable_testing()
+ add_test(NAME libtest COMMAND libtest dummy.flif)
+ add_test(NAME libtest_static COMMAND libtest_static dummy.flif)
+@@ -350,3 +347,7 @@
+     add_test(NAME roundtrip2 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/test-roundtrip.sh ${CMAKE_CURRENT_SOURCE_DIR}/../tools/kodim01.png kodim01.flif decoded_kodim01.png)
+     add_test(NAME roundtrip3 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/test-roundtrip_anim.sh ${CMAKE_CURRENT_SOURCE_DIR}/../tools/endless_war.gif endless_war.flif)
+ endif()
++endif(BUILD_TEST)
++
++install(FILES "${FLIF_SRC_DIR}/../LICENSE" "${FLIF_SRC_DIR}/../LICENSE_Apache2" "${FLIF_SRC_DIR}/../LICENSE_GPL" "${FLIF_SRC_DIR}/../LICENSE_LGPL" "${FLIF_SRC_DIR}/../FLIF-CLA-template.txt"
++   DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/licenses/FLIF")
+
 --- image/crc32k.hpp	2021-10-09 15:35:37.121780300 +0100
 +++ image/crc32k.hpp	2021-10-09 20:01:28.768086800 +0100
 @@ -3,7 +3,7 @@

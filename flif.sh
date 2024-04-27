@@ -12,8 +12,11 @@ src='https://github.com/FLIF-hub/FLIF.git'
 cfg='cmake'
 dep='libpng'
 eta='60'
+pc_llibs='-lflif -lflif_dec'
+config_dir='src'
+cmake_definitions+=('-Wno-sign-compare' '-Wno-type-limits' '-Wno-unused-but-set-variable')
 
-dev_vrs='0.4'
+dev_vrs='v0.4'
 
 lst_inc='flif_dec.h flif_enc.h flif.h flif_common.h'
 lst_lib='libflif libflif_dec'
@@ -24,13 +27,7 @@ lst_lic='share/licenses/FLIF/LICENSE_Apache2
     share/licenses/FLIF/LICENSE_LGPL
     share/licenses/FLIF/FLIF-CLA-template.txt'
 
-pc_llibs=$lst_lib
-config_dir='src'
-
 . xbuild
-
-CPPFLAGS+=" -Wno-sign-compare -Wno-type-limits"
-HOST_NPROC=16
 
 start
 
