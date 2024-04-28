@@ -1,0 +1,126 @@
+--- configure.ac	2024-04-29 00:13:37.361774759 +0100
++++ configure.ac	2024-04-29 00:13:32.729804229 +0100
+@@ -100,10 +100,10 @@
+ AC_FUNC_FORK
+ AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
+ AC_HEADER_MAJOR
+-AC_FUNC_MALLOC
++#AC_FUNC_MALLOC
+ AC_FUNC_MKTIME
+ AC_FUNC_MMAP
+-AC_FUNC_REALLOC
++#AC_FUNC_REALLOC
+ AC_FUNC_STRTOD
+ 
+ dnl AC_*_IFELSE and similar macros below here are custom checks for features that
+
+--- src/proxy-client.c	2024-04-28 23:39:15.593386844 +0100
++++ src/proxy-client.c	2024-04-28 23:43:06.026722990 +0100
+@@ -468,7 +468,7 @@
+    {
+       do
+       {
+-#ifdef HAVE_LIBPTHREAD
++#if defined(HAVE_LIBPTHREAD) && !defined(__ANDROID__)
+          pthread_testcancel();
+ #endif
+ 
+--- src/io-v4l.c	2024-04-28 23:38:46.525021338 +0100
++++ src/io-v4l.c	2024-04-28 23:35:19.626799308 +0100
+@@ -210,8 +210,9 @@
+ 	v->read_active = TRUE;
+ 
+ 	for (;;) {
++		#ifndef __ANDROID__
+ 		pthread_testcancel();
+-
++		#endif
+ 		r = read(v->fd, raw->data, raw->size);
+ 
+ 		if (r == -1 && (errno == EINTR || errno == ETIME))
+
+--- src/io-v4l2k.c	2024-04-28 23:37:15.110742593 +0100
++++ src/io-v4l2k.c	2024-04-28 23:37:44.365174459 +0100
+@@ -658,8 +658,9 @@
+ 
+ 	for (;;) {
+ 		/* from zapping/libvbi/v4lx.c */
++		#ifndef __ANDROID__
+ 		pthread_testcancel();
+-
++		#endif
+ 		r = read(v->fd, raw->data, raw->size);
+ 
+ 		if (r == -1  && (errno == EINTR || errno == ETIME))
+
+--- daemon/proxyd.c	2024-04-28 23:29:00.829592146 +0100
++++ daemon/proxyd.c	2024-04-28 23:48:18.258773801 +0100
+@@ -788,9 +788,10 @@
+    pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
+ 
+    pthread_cleanup_push(vbi_proxyd_acq_thread_cleanup, pvoid_arg);
++   #ifndef __ANDROID__
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+-
++   #endif
+    p_proxy_dev->thread_active = TRUE;
+ 
+    pthread_mutex_lock(&p_proxy_dev->start_mutex);
+@@ -836,8 +837,9 @@
+    if (p_proxy_dev->thread_active)
+    {
+       p_proxy_dev->wait_for_exit = TRUE;
++      #ifndef __ANDROID__
+       pthread_cancel(p_proxy_dev->thread_id);
+-
++      #endif
+       vbi_proxyd_calc_timeout_ms(&tsp, 50);
+       ret = pthread_cond_timedwait(&p_proxy_dev->start_cond, &p_proxy_dev->start_mutex, &tsp);
+       if (ret != 0)
+
+--- src/chains.c	2024-04-29 00:16:29.418775495 +0100
++++ src/chains.c	2024-04-29 00:19:33.132871864 +0100
+@@ -286,6 +286,7 @@
+    }
+ }
+ 
++#ifndef __ANDROID__
+ int ioctl(int fd, ioctl_request_t request, ...)
+ {
+    /*
+@@ -444,7 +445,7 @@
+       }
+    }
+ }
+-
++#endif
+ int fcntl(int fd, fcntl_request_t request, ...)
+ {
+    va_list args;
+
+--- contrib/atsc-cc.c	2024-04-29 00:22:17.587164872 +0100
++++ contrib/atsc-cc.c	2024-04-29 00:24:42.723598796 +0100
+@@ -8022,10 +8022,10 @@
+ 	/* Don't swap out any code or data pages. If the capture
+ 	   thread is delayed we may lose packets. Errors ignored. */
+ 	mlockall (MCL_CURRENT | MCL_FUTURE);
+-
++	#ifndef __ANDROID__
+ 	pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, /* old */ NULL);
+ 	pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, /* old */ NULL);
+-
++	#endif
+ 	/* Page aligned reads are not required, but who knows, it
+ 	   may allow some DMA magic or speed up copying. */
+ 	start = ct_buffer + 4096;
+@@ -8168,7 +8168,9 @@
+ 	log (2, "Closing DVB device.\n");
+ 
+ 	if (0 != capture_thread_id) {
++		#ifndef __ANDROID__
+ 		pthread_cancel (capture_thread_id);
++		#endif
+ 		pthread_join (capture_thread_id, NULL);
+ 
+ 		capture_thread_id = 0;

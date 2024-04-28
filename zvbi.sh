@@ -18,11 +18,23 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-dev_vrs=''
+# ndk:error ld.lld: warning: ../src/.libs/libzvbi.a: archive member 'libiconv.a' is neither ET_REL nor LLVM bitcode
+dev_vrs='0.2.42'
 
 . xbuild
 
-ac_config="--disable-dependency-tracking --disable-silent-rules --without-x"
+ac_config="--disable-dependency-tracking --disable-silent-rules --without-x --disable-tests --disable-examples"
+
+$host_ndk && ac_config+=' --disable-nls'
+
+CPPFLAGS+=" -Wno-invalid-source-encoding \
+ -Wno-tautological-pointer-compare \
+ -Wno-pointer-bool-conversion \
+ -Wno-string-plus-int \
+ -Wno-dangling-else \
+ -Wno-unused-command-line-argument \
+ -Wno-single-bit-bitfield-constant-conversion"
+LDFLAGS+=" -liconv"
 
 start
 
