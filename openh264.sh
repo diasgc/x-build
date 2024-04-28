@@ -14,6 +14,8 @@ lst_bin=''
 lst_lic='LICENSE'
 lst_pc='openh264.pc'
 
+dev_vrs='2.4.1'
+
 meson_cfg='-Dcpp_rtti=false -Dcpp_lib=-lc++_static'
 
 _build_prepare(){

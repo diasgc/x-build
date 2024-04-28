@@ -9,7 +9,7 @@ cfg='cmake'
 eta='147'
 pc_llibs='-lglslang -lOSDependent -lHLSL -lOGLCompiler -lSPVRemapper'
 
-dev_vrs='main-tot'
+dev_vrs='1.3.280'
 
 lst_inc='glslang/*.h glslang/Public/*.h glslang/Include/*.h glslang/MachineIndependent/*.h glslang/SPIRV/*.h glslang/HLSL/*.h'
 lst_lib='libSPIRV

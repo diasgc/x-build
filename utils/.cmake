@@ -57,6 +57,7 @@ cmake_build_toolchainfile(){
 		local NDK_STL="static"
 		$build_shared && NDK_STL="shared"
 		cat <<-EOF >>${cmake_toolchain_file}
+		set(CMAKE_ANDROID_NDK OFF)
 		set(ANDROID_ABI ${ABI})
 		set(ANDROID_PLATFORM ${API})
 		set(ANDROID_NDK ${ANDROID_NDK_HOME})
@@ -67,7 +68,6 @@ cmake_build_toolchainfile(){
 		include(${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake)
 		EOF
 	fi
-	$host_ndk && 
 	#mingw_stdlibs='-lwsock32 -lws2_32 -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32'
 	mingw_stdlibs='-static-libgcc -static-libstdc++ -lwsock32 -lws2_32'
 	mingw_exelink='-Wl,-Bstatic'

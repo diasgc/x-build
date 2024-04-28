@@ -16,6 +16,8 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='frei0r.pc'
 
+dev_vrs='1.8'
+
 . xbuild
 
 unset CSH
