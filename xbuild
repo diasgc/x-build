@@ -1413,7 +1413,7 @@ loadToolchain(){
 				CXX="${TOOLCHAIN}/clang++"
 				AS=${CROSS_PREFIX}as
 				LD="ld.lld"
-				LDFLAGS+=' -L/usr/lib/llvm-10/lib'
+				LDFLAGS+=' -L/usr/lib/llvm-18/lib'
 
 			else
 				CC=${CROSS_PREFIX}gcc
