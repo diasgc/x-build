@@ -1357,12 +1357,13 @@ toolchain_llvm_mingw(){
 	if $use_clang; then
 		CC="${CROSS_PREFIX}clang"
 		CXX="${CROSS_PREFIX}clang++"
+		AS="${CROSS_PREFIX}clang"
 	else
 		CC="${CROSS_PREFIX}gcc"
 		CXX="${CROSS_PREFIX}g++"
+		AS="${CROSS_PREFIX}as"
 	fi
-	AS="${CROSS_PREFIX}as"
-	LD="${CROSS_PREFIX}ld.bfd"
+	LD="${CROSS_PREFIX}ld"
 	export RC=${CROSS_PREFIX}windres
 	LT_SYS_LIBRARY_PATH="${LLVM_MINGW_HOME}/lib/clang/${xv_llvm_mingw}"
 	CPPFLAGS+=" -I${SYSROOT}/include"
