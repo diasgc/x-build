@@ -488,11 +488,12 @@ function create_symlink {
 }
 
 function llvm_mingw_check_symlinks {
-    
+    local cl_abi
     for cl in aarch64 arm i686 x86_64; do
 
         target_dir="/usr/${cl}-w64-mingw32"
-        source_dir="${LLVM_MINGW_HOME}/${cl/arm/armv7}-w64-mingw32"
+        cl_abi=${cl/arm/armv7}
+        source_dir="${LLVM_MINGW_HOME}/${cl_abi}-w64-mingw32"
     
         test -d "${target_dir}"         || sudo mkdir -p "${target_dir}/bin"
         test -d "${target_dir}/dll"     || sudo ln -s "${source_dir}/bin"          "${target_dir}/dll"
@@ -502,8 +503,8 @@ function llvm_mingw_check_symlinks {
         
         for e in addr2line ar as c++ clang clang++ dlltool g++ gcc ld llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf size strings strip widl windres; do
     
-            create_symlink "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32-${e}"    "${target_dir}/bin/${e}"
-            create_symlink "${LLVM_MINGW_HOME}/bin/${cl}-w64-mingw32uwp-${e}" "${target_dir}/bin/uwp-${e}"
+            create_symlink "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}"    "${target_dir}/bin/${e}"
+            create_symlink "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32uwp-${e}" "${target_dir}/bin/uwp-${e}"
     
         done
         
