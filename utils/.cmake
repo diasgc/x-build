@@ -14,7 +14,19 @@
 # cmake_include_directories[]
 # WFLAGS
 
-
+cmake_clang_toolchain(){
+	export cmake_toolchain_file="${dir_build}/${arch}.cmake"
+	cat <<-EOF >${cmake_toolchain_file}
+		set(CMAKE_SYSTEM_NAME "${PLATFORM}")
+		set(CMAKE_SYSTEM_PROCESSOR "${cmake_system_processor}")
+		set(CMAKE_C_COMPILER ${CC})
+		set(CMAKE_CXX_COMPILER ${CXX})
+		set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+		set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
+		set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+		set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
+		EOF
+}
 
 cmake_build_toolchainfile(){
 	export cmake_toolchain_file="${dir_build}/${arch}.cmake"
