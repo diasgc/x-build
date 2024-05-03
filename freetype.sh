@@ -6,9 +6,20 @@ apt='libfreetype-dev'
 dsc='A free, high-quality, and portable font engine.'
 lic='BSD'
 src='https://gitlab.freedesktop.org/freetype/freetype.git'
-cfg='ag'
-dep='libpng brotli bzip2'
+
+cfg='cmake'
+#cfg='ag'
+#dep='libpng brotli bzip2'
 eta='60'
+cmake_config='-DFT_DISABLE_ZLIB=TRUE -DFT_DISABLE_BZIP2=TRUE -DFT_DISABLE_PNG=TRUE -DFT_DISABLE_HARFBUZZ=TRUE -DFT_DISABLE_BROTLI=TRUE'
+
+extraOpts(){
+    case $1 in --full)
+        dep='zlib bzip2 libpng harfbuzz brotlu'
+        cmake_config='-DFT_REQUIRE_ZLIB=TRUE -DFT_REQUIRE_BZIP2=TRUE -DFT_REQUIRE=TRUE -DFT_REQUIRE_HARFBUZZ=TRUE -DFT_REQUIRE_BROTLI=TRUE'
+        ;;
+    esac
+}
 
 lst_inc='freetype2/*.h freetype2/freetype/*.h'
 lst_lib='libfreetype'
@@ -16,7 +27,7 @@ lst_bin=''
 lst_lic='docs/FTL.TXT docs/GPLv2.TXT docs/LICENSE.TXT'
 lst_pc='freetype2.pc'
 
-dev_vrs='24.1.18'
+dev_vrs='26.1.20'
 
 . xbuild
 
