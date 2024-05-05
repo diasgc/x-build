@@ -1289,6 +1289,7 @@ download(){
 }
 
 toolchain_android(){
+	PLATFORM='Android'
 	[ -d "${ANDROID_NDK_HOME}" ] || doErr "No ANDROID NDK Toolchain found. Aborting."
 
 	TOOLCHAIN="${ndk_toolchain}"
@@ -1307,7 +1308,7 @@ toolchain_android(){
 	PKG_CONFIG_DIR="/usr/${arch}/local/lib/pkgconfig"
 	CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/include -I${SYSROOT}/usr/include"
 	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-	test $build_static && LDFLAGS+=" -static-libstdc++ -lc++_static"
+	#test $build_static && LDFLAGS+=" -static-libstdc++ -lc++_static"
 
 	cmake_system_processor="${target_trip[0]}${target_trip[1]}"
 	$host_arm32 && cmake_system_processor="armv7-a"
@@ -1414,7 +1415,9 @@ loadToolchain(){
 				CXX="${TOOLCHAIN}/clang++"
 				AS=${CROSS_PREFIX}as
 				LD="ld.lld"
-				LDFLAGS+=' -L/usr/lib/llvm-18/lib'
+				GNU_CLANG_VERSION_FULL="$(clang -dumpversion)"
+  				GNU_CLANG_VERSION_MAJOR=${GNU_CLANG_VERSION_FULL%%\.*}
+				LDFLAGS+=" -L/usr/lib/llvm-${GNU_CLANG_VERSION_MAJOR}/lib"
 
 			else
 				CC=${CROSS_PREFIX}gcc
@@ -1427,18 +1430,16 @@ loadToolchain(){
 			[ -n "$ltsdir" ] && LT_SYS_LIBRARY_PATH="${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir}"
 			LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
 			CPPFLAGS+=" -I${SYSROOT}/include -I${SYSROOT}/local/include"
-			cmake_findrootpath="${SYSROOT}/${arch}
-			${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir}
-			${dir_install}"
+			cmake_findrootpath="${SYSROOT}/${arch} ${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir} ${dir_install}"
 			;;
 		esac
 	else
 		TOOLCHAIN=/usr/bin
 		SYSROOT=/usr
 		if $use_clang; then
-		CROSS_PREFIX=llvm-
-		CC=clang CXX=clang++ AS=llvm-as LD=ld.lld
-		$host_native && CPPFLAGS='-mtune=native'
+			CROSS_PREFIX=llvm-
+			CC=clang CXX=clang++ AS=${CC} LD=ld.lld
+			$host_native && CPPFLAGS='-mtune=native'
 		else
 		CROSS_PREFIX=
 		CC=gcc CXX=g++ AS=as LD=ld

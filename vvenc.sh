@@ -20,7 +20,7 @@ dev_vrs='1.11.1'
 
 . xbuild
 
-cmake_cxx_flags_release=(-Oz -flto -g -DNDEBUG)
+cmake_cxx_flags_release=(-Ofast -flto -g -DNDEBUG)
 $host_arm && cmake_config+=" -DVVENC_ENABLE_X86_SIMD=FALSE -DVVENC_ENABLE_ARM_SIMD=TRUE"
 
 start
