@@ -28,6 +28,8 @@ cmake_clang_toolchain(){
 		EOF
 }
 
+cmake_test_1=false
+
 cmake_build_toolchainfile(){
 	export cmake_toolchain_file="${dir_build}/${arch}.cmake"
 	cat <<-EOF >${cmake_toolchain_file}
@@ -35,6 +37,8 @@ cmake_build_toolchainfile(){
 		set(CMAKE_SYSTEM_PROCESSOR "${cmake_system_processor}")
 		set(CMAKE_C_COMPILER ${CC})
 		set(CMAKE_CXX_COMPILER ${CXX})
+		EOF
+	$cmake_test_1 && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_AR ${AR} CACHE FILEPATH Archiver)
 		set(CMAKE_RANLIB ${RANLIB} CACHE FILEPATH Indexer)
 		set(CMAKE_C_COMPILER_AR "${AR}")
@@ -49,26 +53,22 @@ cmake_build_toolchainfile(){
 		set(CMAKE_ADDR2LINE "${ADDR2LINE}")
 		set(CMAKE_LINKER "${LD}")
 		set(CMAKE_NM "${NM}")
+		set(CMAKE_POSITION_INDEPENDENT_CODE 1)
+		EOF
+	$host_cross && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 		set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
 		set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 		set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
-		set(CMAKE_POSITION_INDEPENDENT_CODE 1)
 		EOF
-	[ -n "${cmake_definitions}" ] && echo "add_definitions("${cmake_definitions[@]}")" >>${cmake_toolchain_file}
-	[ -n "${cmake_add_link_options}" ] && echo "add_link_options("${cmake_add_link_options}")" >>${cmake_toolchain_file}
-	[ -n "${cmake_cxx_flags_release}" ] && echo "set(CMAKE_CXX_FLAGS_RELEASE \""${cmake_cxx_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
-	[ -n "${cmake_c_flags_release}" ] && echo "set(CMAKE_C_FLAGS_RELEASE \""${cmake_c_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
-	[ -n "${cmake_include_directories}" ] && echo "cmake_include_directories("${cmake_include_directories[@]}")" >>${cmake_toolchain_file}
-	[ -n "${WFLAGS}" ] && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
+
 	$host_x86 && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_C_COMPILER_ARG1 "-m32")
 		set(CMAKE_CXX_COMPILER_ARG1 "-m32")
-			EOF
-	if $host_ndk; then
-		local NDK_STL="static"
-		$build_shared && NDK_STL="shared"
-		cat <<-EOF >>${cmake_toolchain_file}
+		EOF
+	
+  $build_shared && NDK_STL="shared" || NDK_STL="static"
+	$host_ndk && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_ANDROID_NDK OFF)
 		set(ANDROID_ABI ${ABI})
 		set(ANDROID_PLATFORM ${API})
@@ -79,7 +79,7 @@ cmake_build_toolchainfile(){
 		set(ZLIB_VERSION_STRING 1.2.11)
 		include(${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake)
 		EOF
-	fi
+	
 	#mingw_stdlibs='-lwsock32 -lws2_32 -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32'
 	mingw_stdlibs='-static-libgcc -static-libstdc++ -lwsock32 -lws2_32'
 	mingw_exelink='-Wl,-Bstatic'
@@ -95,6 +95,13 @@ cmake_build_toolchainfile(){
 		set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" ".dll.a" ".lib" ".a")
 		EOF
 	#cmake_addcpack
+  test -n "${cmake_definitions}" && echo "add_definitions("${cmake_definitions[@]}")" >>${cmake_toolchain_file}
+	test -n "${cmake_add_link_options}" && echo "add_link_options("${cmake_add_link_options}")" >>${cmake_toolchain_file}
+	test -n "${cmake_cxx_flags_release}" && echo "set(CMAKE_CXX_FLAGS_RELEASE \""${cmake_cxx_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
+	test -n "${cmake_c_flags_release}" && echo "set(CMAKE_C_FLAGS_RELEASE \""${cmake_c_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
+	test -n "${cmake_include_directories}" && echo "cmake_include_directories("${cmake_include_directories[@]}")" >>${cmake_toolchain_file}
+	test -n "${WFLAGS}" && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
+	
 }
 
 cmake_shouldreplace_cmakelists(){
@@ -214,9 +221,10 @@ cmake_configure(){
 		esac
 	fi
 
-	if [ -z "${cmake_shared}" ]; then
-		$build_shared && CSH+=' -DBUILD_SHARED_LIBS=ON' || CSH+=' -DBUILD_SHARED_LIBS=OFF'
-	else
+	#if [ -z "${cmake_shared}" ]; then
+	#	$build_shared && CSH+=' -DBUILD_SHARED_LIBS=ON' || CSH+=' -DBUILD_SHARED_LIBS=OFF'
+	#else
+  if [ -n "${cmake_shared}" ]; then
 		arr=(${cmake_shared//|/ })
 		case ${#arr[@]} in
 			1) $build_shared && CSH+=" -D${arr[0]}=ON" || CSH+=" -D${arr[0]}=OFF";;

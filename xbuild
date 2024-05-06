@@ -178,10 +178,10 @@ start(){
 		local lnk=$(get_link_pkg ${arch} ${lib})
 		#echo "link=$lnk"
 		if [ -n "${lnk}" ]; then
-		wget_pkg_tgz ${lnk} ${dir_install}
-		$skip_pc || logver "${dir_install_pc}/${pkg}.pc"
-		end_script
-		exit 0
+			wget_pkg_tgz ${lnk} ${dir_install}
+			$skip_pc || logver "${dir_install_pc}/${pkg}.pc"
+			end_script
+			exit 0
 		fi
 	fi
 
@@ -451,7 +451,7 @@ start(){
 		$host_clang && static_ldflag="-all${static_ldflag}"
 	fi
 
-	$build_static && LDFLAGS="${static_ldflag} $LDFLAGS"
+	$host_clang && $build_static && LDFLAGS="-static $LDFLAGS"
 
 	log_vars CFLAGS CXXFLAGS WFLAGS CPPFLAGS LDFLAGS LIBS
 
@@ -1414,7 +1414,7 @@ loadToolchain(){
 				CC="${TOOLCHAIN}/clang"
 				CXX="${TOOLCHAIN}/clang++"
 				AS=${CROSS_PREFIX}as
-				LD="ld.lld"
+				LD="${TOOLCHAIN}/ld.lld"
 				GNU_CLANG_VERSION_FULL="$(clang -dumpversion)"
   				GNU_CLANG_VERSION_MAJOR=${GNU_CLANG_VERSION_FULL%%\.*}
 				LDFLAGS+=" -L/usr/lib/llvm-${GNU_CLANG_VERSION_MAJOR}/lib"
@@ -1439,11 +1439,11 @@ loadToolchain(){
 		if $use_clang; then
 			CROSS_PREFIX=llvm-
 			CC=clang CXX=clang++ AS=${CC} LD=ld.lld
-			$host_native && CPPFLAGS='-mtune=native'
+			$host_native && CPPFLAGS="-mtune=native ${CPPFLAGS}"
 		else
 		CROSS_PREFIX=
 		CC=gcc CXX=g++ AS=as LD=ld
-		$host_native && CPPFLAGS='-march=native'
+		$host_native && CPPFLAGS="-march=native ${CPPFLAGS}"
 		fi
 	fi
 

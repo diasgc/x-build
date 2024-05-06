@@ -21,7 +21,7 @@ dev_vrs='2.3.0'
 
 . xbuild
 
-#cmake_cxx_flags_release=(-Ofast -flto -g -DNDEBUG)
+# native clang llvm-18: missing LLVMgold.so
 
 start
 
