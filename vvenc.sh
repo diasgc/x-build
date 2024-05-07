@@ -19,7 +19,8 @@ dev_vrs='1.11.1'
 
 . xbuild
 
-# native clang llvm-18: missing LLVMgold.so
+# native clang llvm-18: missing LLVMgold.so. Workaround:_ disable lto
+$host_clang && test "$host_sys" = "linux" && test -f ${SYSROOT}/lib/LLVMgold.so || cmake_config+=' -DVVENC_ENABLE_LINK_TIME_OPT=OFF' 
 
 start
 

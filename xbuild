@@ -1410,14 +1410,14 @@ loadToolchain(){
 			fi
 			TOOLCHAIN="${SYSROOT}/bin"
 			if $use_clang; then
-				CROSS_PREFIX="${TOOLCHAIN}/llvm-"
-				CC="${TOOLCHAIN}/clang"
-				CXX="${TOOLCHAIN}/clang++"
-				AS=${CROSS_PREFIX}as
-				LD="${TOOLCHAIN}/ld.lld"
+				CROSS_PREFIX="llvm-"
+				CC="clang -target ${arch}"
+				CXX="clang++ -target ${arch}"
+				AS=${CC}
+				LD="ld.lld"
 				GNU_CLANG_VERSION_FULL="$(clang -dumpversion)"
   				GNU_CLANG_VERSION_MAJOR=${GNU_CLANG_VERSION_FULL%%\.*}
-				LDFLAGS+=" -L/usr/lib/llvm-${GNU_CLANG_VERSION_MAJOR}/lib"
+				#LDFLAGS+=" -L/usr/lib/llvm-${GNU_CLANG_VERSION_MAJOR}/lib"
 
 			else
 				CC=${CROSS_PREFIX}gcc

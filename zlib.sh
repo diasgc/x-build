@@ -14,7 +14,7 @@ eta='22'
 cmake_bin="BUILD_TOOLS"
 mkc='distclean'
 
-dev_vrs='1.2.9'
+dev_vrs='1.3.1.1'
 
 lst_inc='zlib.h zconf.h'
 lst_lib='libz'
