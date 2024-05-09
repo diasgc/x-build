@@ -1,8 +1,8 @@
 #!/bin/bash
 # cpu av8 av7 x86 x64
-# NDK PP+  .   .   .   clang
-# GNU  .   .   .  PP++ gcc
-# WIN  .   .   .   .   clang/gcc
+# NDK  +   .   .   .   clang
+# GNU  .   .   .   .   clang/gcc
+# WIN  +   .   .   .   clang
 
 lib='svtav1'
 dsc='Scalable Video Technology for AV1 (SVT-AV1 Encoder and Decoder)'

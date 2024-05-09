@@ -86,11 +86,12 @@ cmake_build_toolchainfile(){
 	#mingw_exelink='-static-libgcc -static-libstdc++ -Wl,-pdb='
 	$host_mingw && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_COMPILER_IS_MINGW ON)
+		set(CMAKE_FIND_ROOT_PATH \${CMAKE_FIND_ROOT_PATH} ${LLVM_MINGW_HOME}/generic-w64-mingw32 ${LLVM_MINGW_HOME}/${arch}-w64-mingw32/bin)
 		set(CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES "${LLVM_MINGW_HOME}/${arch}/include/c++/v1;${LLVM_MINGW_HOME}/lib/clang/*/include;${LLVM_MINGW_HOME}/${arch}/include")
 		set(CMAKE_RC_COMPILER ${CROSS_PREFIX}windres)
 		set(CMAKE_MC_COMPILER ${CROSS_PREFIX}windmc)
-		set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libgcc -static-libstdc++ ${mingw_stdlibs} \${CMAKE_CXX_STANDARD_LIBRARIES}")
-		set(CMAKE_EXE_LINKER_FLAGS "\${CMAKE_EXE_LINKER_FLAGS} ${mingw_exelink}")
+		set(CMAKE_CXX_STANDARD_LIBRARIES "${mingw_stdlibs} \${CMAKE_CXX_STANDARD_LIBRARIES}")
+		#set(CMAKE_EXE_LINKER_FLAGS "${mingw_exelink} \${CMAKE_EXE_LINKER_FLAGS}")
 		set(CMAKE_FIND_LIBRARY_PREFIXES "lib" "")
 		set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" ".dll.a" ".lib" ".a")
 		EOF

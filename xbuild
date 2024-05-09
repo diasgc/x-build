@@ -1350,15 +1350,16 @@ toolchain_mingw32_old(){
 
 toolchain_llvm_mingw(){
 	local ltsdir
+	local cargs=
 	PLATFORM='Windows'
 
 	SYSROOT="/usr/${arch}"
 	TOOLCHAIN="${SYSROOT}/bin/"
 	CROSS_PREFIX="${TOOLCHAIN}"
 	if $use_clang; then
-		CC="${CROSS_PREFIX}clang"
-		CXX="${CROSS_PREFIX}clang++"
-		AS="${CROSS_PREFIX}clang"
+		CC="${LLVM_MINGW_HOME}/bin/clang --start-no-unused-arguments -target ${arch} -rtlib=compiler-rt -unwindlib=libunwind -fuse-ld=lld --end-no-unused-arguments"
+		CXX="${LLVM_MINGW_HOME}/bin/clang++ --start-no-unused-arguments -target ${arch} -rtlib=compiler-rt -unwindlib=libunwind -stdlib=libc++ -fuse-ld=lld --end-no-unused-arguments"
+		AS="${CC}"
 	else
 		CC="${CROSS_PREFIX}gcc"
 		CXX="${CROSS_PREFIX}g++"

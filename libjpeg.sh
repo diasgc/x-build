@@ -30,6 +30,8 @@ extraOpts(){
 
 . xbuild
 
+#test $host_arm && $host_mingw && cmake_definitions+=(-mfloat-abi=softfp)
+
 start
 
 # cpu av8 av7 x86 x64
