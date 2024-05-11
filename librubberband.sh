@@ -9,6 +9,8 @@ cfg='meson'
 dep='sndfile samplerate fftw'
 eta='49'
 
+meson_cfg='-Dtests=disabled -Dlv2=disabled -Dladspa=disabled -Dvamp=disabled'
+
 dev_bra='default'
 dev_vrs='3.3.0'
 stb_bra='tags/v'${dev_vrs}
@@ -21,6 +23,8 @@ lst_lic='COPYING'
 lst_pc='rubberband.pc'
 
 . xbuild
+
+$build_bin && meson_cfg+=' -Dcmdline=enabled' || meson_cfg+=' -Dcmdline=disabled'
 
 start
 

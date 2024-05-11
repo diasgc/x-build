@@ -15,7 +15,7 @@ eta='0'
 
 meson_cfg='-Dbenchmarks=disabled -Ddocs=disabled -Dhtml=disabled -Dtests=disabled -Dtests_cpp=disabled' 
 dev_bra='master'
-dev_vrs='0.4.2'
+dev_vrs='0.4.3'
 stb_bra=''
 stb_vrs=''
 

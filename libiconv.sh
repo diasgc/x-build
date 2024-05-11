@@ -20,7 +20,7 @@ lst_bin='iconv'
 lst_lic='COPYING COPYING.LIB AUTHORS'
 lst_pc='libiconv.pc'
 
-dev_vrs='1.16'
+dev_vrs='1.17'
 
 iconv_latest_vrs(){
 	local out="$(curl https://ftp.gnu.org/gnu/libiconv/ 2>/dev/null)"

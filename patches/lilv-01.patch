@@ -22,6 +22,18 @@
 +source_filename = suil-0.10.20.tar.xz
 +source_hash = 0c071cc11ab030bdc668bea3b46781b6dafd47ddd03b6d0c2bc1ebe7177e488d
 
+--- subprojects/lv2.wrap	1970-01-01 01:00:00.000000000 +0100
++++ subprojects/lv2.wrap	2024-04-10 23:11:29.076307038 +0100
+@@ -0,0 +1,8 @@
++# Copyright 2022-2023 David Robillard <d@drobilla.net>
++# SPDX-License-Identifier: 0BSD OR ISC
++
++[wrap-file]
++directory = mda-lv2-1.2.10
++source_url = https://download.drobilla.net/mda-lv2-1.2.10.tar.xz
++source_filename = mda-lv2-1.2.10.tar.xz
++source_hash = 0c071cc11ab030bdc668bea3b46781b6dafd47ddd03b6d0c2bc1ebe7177e488d
+
 --- subprojects/sratom.wrap	1970-01-01 01:00:00.000000000 +0100
 +++ subprojects/sratom.wrap	2024-04-10 23:15:05.968365122 +0100
 @@ -0,0 +1,8 @@

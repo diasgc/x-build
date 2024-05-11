@@ -13,7 +13,6 @@ src="https://gitlab.com/lv2/lilv.git"
 cfg='meson'
 dep='libiconv zix'
 eta='6'
-patch_skip=true
 
 meson_cfg='-Dbindings_py=disabled -Ddocs=disabled -Dhtml=disabled -Dsinglehtml=disabled -Dtests=disabled -Dtools=disabled'
 
