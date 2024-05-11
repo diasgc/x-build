@@ -373,9 +373,9 @@ if [ -n "${cclang}" ]; then
                 check_slink "/usr/bin/llvm-addr2line" "/usr/lib/${llvm_vrs}/bin/llvm-addr2line"
                 check_slink "/usr/bin/llvm-windres" "/usr/lib/${llvm_vrs}/bin/llvm-windres"
             fi
-			check_slink "/usr/${t}/bin/ld" "/usr/bin/ld.lld"
-			check_wrapper_gnu "${t}" 'clang' '-fuse-ld=lld'
-			check_wrapper_gnu "${t}" 'clang++' '-fuse-ld=lld'
+			check_slink "/usr/${t}/bin/ld.lld" "/usr/bin/ld.lld"
+			check_wrapper_gnu "${t}" 'clang' '--start-no-unused-arguments --sysroot=/usr/'${t}' -fuse-ld=lld --end-no-unused-arguments'
+			check_wrapper_gnu "${t}" 'clang++' '--start-no-unused-arguments --sysroot=/usr/'${t}' -stdlib=libc++ -fuse-ld=lld --end-no-unused-arguments'
 		fi
 	done
 fi
@@ -496,10 +496,10 @@ function llvm_mingw_check_symlinks {
         source_dir="${LLVM_MINGW_HOME}/${cl_abi}-w64-mingw32"
     
         test -d "${target_dir}"         || sudo mkdir -p "${target_dir}/bin"
-        test -d "${target_dir}/dll"     || sudo ln -s "${source_dir}/bin"          "${target_dir}/dll"
-        test -d "${target_dir}/include" || sudo ln -s "${LLVM_MINGW_HOME}/include" "${target_dir}/include"
-        test -d "${target_dir}/lib"     || sudo ln -s "${source_dir}/lib"          "${target_dir}/lib"
-        test -d "${target_dir}/share"   || sudo ln -s "${source_dir}/share"        "${target_dir}/share"
+        test -d "${target_dir}/dll"     || sudo ln -s "${source_dir}/bin"     "${target_dir}/dll"
+        test -d "${target_dir}/include" || sudo ln -s "${source_dir}/include" "${target_dir}/include"
+        test -d "${target_dir}/lib"     || sudo ln -s "${source_dir}/lib"     "${target_dir}/lib"
+        test -d "${target_dir}/share"   || sudo ln -s "${source_dir}/share"   "${target_dir}/share"
         
         for e in addr2line ar as c++ clang clang++ dlltool g++ gcc ld llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf size strings strip widl windres; do
     

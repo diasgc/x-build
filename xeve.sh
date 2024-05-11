@@ -1,8 +1,8 @@
 #!/bin/bash
 # cpu av8 av7 x86 x64
-# NDK N/A N/A  .   .  clang
-# GNU N/A N/A  .   .  gcc
-# WIN N/A N/A  .   .  clang/gcc
+# NDK  +  N/A  .   .  clang
+# GNU  F   F   .   .  gcc
+# WIN  F   F   .   .  clang/gcc
 
 lib='xeve'
 dsc='eXtra-fast Essential Video Encoder, MPEG-5 EVC (Essential Video Coding)'
@@ -34,6 +34,7 @@ cmake_config="-DSET_PROF=${xeve_profile}"
 $host_native && cmake_config+=' -DXEVE_NATIVE_BUILD=ON'
 $host_arm && cmake_config+=" -DARM=TRUE"
 
+# supress warnings as errors
 WFLAGS+=" -Wno-unknown-warning-option -Wno-empty-body -Wno-shift-negative-value -Wno-parentheses-equality -Wno-typedef-redefinition -Wno-for-loop-analysis"
 
 on_end(){

@@ -1357,8 +1357,8 @@ toolchain_llvm_mingw(){
 	TOOLCHAIN="${SYSROOT}/bin/"
 	CROSS_PREFIX="${TOOLCHAIN}"
 	if $use_clang; then
-		CC="${LLVM_MINGW_HOME}/bin/clang --start-no-unused-arguments -target ${arch} -rtlib=compiler-rt -unwindlib=libunwind -fuse-ld=lld --end-no-unused-arguments"
-		CXX="${LLVM_MINGW_HOME}/bin/clang++ --start-no-unused-arguments -target ${arch} -rtlib=compiler-rt -unwindlib=libunwind -stdlib=libc++ -fuse-ld=lld --end-no-unused-arguments"
+		CC="${LLVM_MINGW_HOME}/bin/clang --start-no-unused-arguments -target ${arch} --sysroot=/usr/${arch} -rtlib=compiler-rt -unwindlib=libunwind -fuse-ld=lld --end-no-unused-arguments"
+		CXX="${LLVM_MINGW_HOME}/bin/clang++ --start-no-unused-arguments -target ${arch} --sysroot=/usr/${arch} -rtlib=compiler-rt -unwindlib=libunwind -stdlib=libc++ -fuse-ld=lld --end-no-unused-arguments"
 		AS="${CC}"
 	else
 		CC="${CROSS_PREFIX}gcc"
@@ -1377,6 +1377,81 @@ toolchain_llvm_mingw(){
 
 }
 
+toolchain_linux_old(){
+	local cross
+	local ltsdir
+	case $arch in
+		aarch64-*) cross="-cross" ltsdir=$xv_aarch64_gnu;;
+		arm-*)     cross="-cross" ltsdir=$xv_armeabi_gnu;;
+		i686-*)    cross="-cross" ltsdir=$xv_x86_gnu;;
+		x86_64-*)  cross= ltsdir=$xv_x64_gnu;;
+	esac
+	if [ -n "$cross" ]; then
+		SYSROOT="/usr/${arch}"
+		CROSS_PREFIX="${arch}-"
+	else
+		SYSROOT="/usr"
+		CROSS_PREFIX=""
+	fi
+	TOOLCHAIN="${SYSROOT}/bin"
+	if $use_clang; then
+		CROSS_PREFIX="llvm-"
+		CC="clang -target ${arch}"
+		CXX="clang++ -target ${arch}"
+		AS=${CC}
+		LD="ld.lld"
+		GNU_CLANG_VERSION_FULL="$(clang -dumpversion)"
+		GNU_CLANG_VERSION_MAJOR=${GNU_CLANG_VERSION_FULL%%\.*}
+		#LDFLAGS+=" -L/usr/lib/llvm-${GNU_CLANG_VERSION_MAJOR}/lib"
+
+	else
+		CC=${CROSS_PREFIX}gcc
+		CXX=${CROSS_PREFIX}g++
+		AS=${CROSS_PREFIX}as
+		LD=${CROSS_PREFIX}ld
+	fi
+	ASM_NASM=nasm
+	# local ltsdir=$(ls -t /usr/lib/gcc${cross}/${arch} 2>/dev/null | head -n1)
+	LT_SYS_LIBRARY_PATH="${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir}"
+	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
+	CPPFLAGS+=" -I${SYSROOT}/include -I${SYSROOT}/local/include"
+	cmake_findrootpath="${SYSROOT}/${arch} ${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir} ${dir_install}"
+}
+
+toolchain_linux(){
+	$host_cross && cross="-cross"
+	ltsdir=$(gcc -dumpversion)
+	if $use_clang; then
+		SYSROOT="/usr/${arch}"
+		TOOLCHAIN="${SYSROOT}/bin"
+		CROSS_PREFIX="llvm-"
+		CC="${TOOLCHAIN}/clang"
+		CXX="${TOOLCHAIN}/clang++"
+		#CC="clang -target ${arch}" # -fuse-ld=lld"
+		#CXX="clang++ -target ${arch}" # -fuse-ld=lld"
+		AS="${CC}"
+		LD="${TOOLCHAIN}/ld.lld --sysroot=${SYSROOT}"
+		$build_static && LDFLAGS+=" -static"
+		GNU_CLANG_VERSION_FULL="$(clang -dumpversion)"
+		GNU_CLANG_VERSION_MAJOR=${GNU_CLANG_VERSION_FULL%%\.*}
+		CPPFLAGS="-I$/usr/lib/clang/${GNU_CLANG_VERSION_MAJOR}/include ${CPPFLAGS}"
+		LT_SYS_LIBRARY_PATH="/usr/lib/llvm-${GNU_CLANG_VERSION_MAJOR}"
+	else
+		SYSROOT="/usr/${arch}"
+		TOOLCHAIN="/usr/bin"
+		CROSS_PREFIX="${TOOLCHAIN}/${arch}-"
+		CC="${CROSS_PREFIX}gcc"
+		CXX="${CROSS_PREFIX}g++"
+		AS="${CROSS_PREFIX}as"
+		LD="${CROSS_PREFIX}ld"
+		LT_SYS_LIBRARY_PATH="/usr/lib/gcc${cross}/${arch}/${ltsdir}"
+	fi
+	ASM_NASM=nasm
+	LDFLAGS="-L${SYSROOT}/lib -L${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
+	CPPFLAGS=" -I${SYSROOT}/include -I${SYSROOT}/local/include ${CPPFLAGS}"
+	cmake_findrootpath="${SYSROOT} ${LT_SYS_LIBRARY_PATH} ${dir_install}"
+}
+
 loadToolchain(){
 
 	CMAKE_EXECUTABLE=cmake
@@ -1393,46 +1468,7 @@ loadToolchain(){
 		case $PLATFORM in
 			Android) toolchain_android;;
 			Windows) toolchain_llvm_mingw;;
-			Linux)
-			local cross
-			local ltsdir
-			case $arch in
-				aarch64-*) cross="-cross" ltsdir=$xv_aarch64_gnu;;
-				arm-*)     cross="-cross" ltsdir=$xv_armeabi_gnu;;
-				i686-*)    cross="-cross" ltsdir=$xv_x86_gnu;;
-				x86_64-*)  cross= ltsdir=$xv_x64_gnu;;
-			esac
-			if [ -n "$cross" ]; then
-				SYSROOT="/usr/${arch}"
-				CROSS_PREFIX="${arch}-"
-			else
-				SYSROOT="/usr"
-				CROSS_PREFIX=""
-			fi
-			TOOLCHAIN="${SYSROOT}/bin"
-			if $use_clang; then
-				CROSS_PREFIX="llvm-"
-				CC="clang -target ${arch}"
-				CXX="clang++ -target ${arch}"
-				AS=${CC}
-				LD="ld.lld"
-				GNU_CLANG_VERSION_FULL="$(clang -dumpversion)"
-  				GNU_CLANG_VERSION_MAJOR=${GNU_CLANG_VERSION_FULL%%\.*}
-				#LDFLAGS+=" -L/usr/lib/llvm-${GNU_CLANG_VERSION_MAJOR}/lib"
-
-			else
-				CC=${CROSS_PREFIX}gcc
-				CXX=${CROSS_PREFIX}g++
-				AS=${CROSS_PREFIX}as
-				LD=${CROSS_PREFIX}ld
-			fi
-			ASM_NASM=nasm
-			# local ltsdir=$(ls -t /usr/lib/gcc${cross}/${arch} 2>/dev/null | head -n1)
-			[ -n "$ltsdir" ] && LT_SYS_LIBRARY_PATH="${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir}"
-			LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-			CPPFLAGS+=" -I${SYSROOT}/include -I${SYSROOT}/local/include"
-			cmake_findrootpath="${SYSROOT}/${arch} ${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir} ${dir_install}"
-			;;
+			Linux)   toolchain_linux;;
 		esac
 	else
 		TOOLCHAIN=/usr/bin
