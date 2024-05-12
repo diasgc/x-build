@@ -33,7 +33,7 @@ eta='20'
 $host_ndk && {
     build_shared=true
     build_static=false
-    cmake_config+=" -DANDROID_STL=c++_shared -DENABLE_INTEL_CPU=OFF" #-DANDROID_PLATFORM=34 -DANDROID_ABI=arm64-v8a"
+    cmake_config+=" -DANDROID=ON -DANDROID_STL=c++_shared -DENABLE_INTEL_CPU=OFF" #-DANDROID_PLATFORM=34 -DANDROID_ABI=arm64-v8a"
     LDFLAGS+=" -llog"
 }
 

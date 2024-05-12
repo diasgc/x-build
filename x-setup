@@ -494,7 +494,7 @@ function llvm_mingw_check_symlinks {
         rm -r "${LLVM_MINGW_HOME}/include"
         ln -s ${LLVM_MINGW_HOME}/generic-w64-mingw32/include ${LLVM_MINGW_HOME}/include
     fi
-    
+
     for cl in aarch64 arm i686 x86_64; do
 
         target_dir="/usr/${cl}-w64-mingw32"
@@ -610,7 +610,7 @@ export config_lastupdate=$(date +%s) \\
     vrs_ndk="${ndk_version}" \\
     vrs_ndk_major="$(echo ${ndk_version} | sed 's/\..*//')" \\
     ndk_toolchain="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64" \\
-    ndk_sysroot="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+    ndk_sysroot="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot" \\
     LLVM_MINGW_HOME="${llvm_mingw}" \\
     LLVM_MINGW_REL="${llvm_mingw_rel}" \\
     MAKE_EXECUTABLE="$(command -v make)" \\

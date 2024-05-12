@@ -5,9 +5,15 @@ apt='libtesseract-dev'
 dsc='An OCR Engine that was developed at HP Labs between 1985 and 1995... and now at Google'
 lic='Apache-2.0'
 src='https://github.com/tesseract-ocr/tesseract.git'
-cfg='ag'
 dep='leptonica'
 pkg='tesseract'
+
+cfg='ag'
+ac_config='--disable-debug --disable-doc --disable-graphics'
+
+#cfg='cmake'
+#cmake_static='BUILD_SHARED_LIBS=OFF'
+#cmake_config='-DGRAPHICS_DISABLED=ON -DUSE_SYSTEM_ICU=ON -DDISABLE_TIFF=ON -DSW_BUILD=OFF'
 
 lst_inc='tesseract/*.h'
 lst_lib='libtesseract'
@@ -15,12 +21,8 @@ lst_bin='tesseract'
 lst_lic='LICENSE'
 lst_pc='tesseract.pc'
 
-dev_vrs='5.3.4'
+dev_vrs='5.4.0-rc1-1-gf397'
 
-#cmake_static='BUILD_SHARED_LIBS=OFF'
-#cmake_config='-DGRAPHICS_DISABLED=ON -DUSE_SYSTEM_ICU=ON -DDISABLE_TIFF=ON'
-
-ac_config='--disable-debug --disable-doc --disable-graphics'
 
 . xbuild
 

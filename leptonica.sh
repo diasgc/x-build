@@ -19,12 +19,12 @@ lst_bin='converttops converttopdf convertsegfilestops
 lst_lic='leptonica-license.txt'
 lst_pc='lept_Release.pc'
 
-dev_vrs='1.84.0'
+dev_vrs='1.84.1'
 
 cmake_bin="BUILD_PROG"
 cmake_config="-DBUILD_TESTS=OFF -DENABLE_GIF=OFF -DENABLE_ZLIB=OFF \
   -DENABLE_PNG=OFF -DENABLE_JPEG=OFF -DENABLE_TIFF=OFF \
-  -DENABLE_WEBP=OFF -DENABLE_OPENJPEG=OFF"
+  -DENABLE_WEBP=OFF -DENABLE_OPENJPEG=OFF -DSW_BUILD=OFF"
 
 ac_nosysroot=true
 ac_config+=" --disable-programs \
