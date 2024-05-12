@@ -20,13 +20,11 @@ lst_pc='shine.pc'
 
 . xbuild
 
-#CPPFLAGS+=" -I${SRCDIR}/src/lib -I${SRCDIR}/src/bin"
-
 start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang
-# GNU  .   .   .   .  gcc
+# GNU +++  .   .   .  clang/gcc
 # WIN +++  .   .   .  clang/gcc
 
 # Filelist

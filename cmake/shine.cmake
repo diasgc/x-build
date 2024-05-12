@@ -14,6 +14,14 @@ set(${PROJECT_NAME}_lic
     COPYING
 )
 
+include(GNUInstallDirs)
+include(CheckLibraryExists)
+set(private_libs )
+check_library_exists(m cos "" LIBM)
+if(LIBM)
+set(private_libs m)
+endif()
+
 set(${PROJECT_NAME}_hdrs
     src/lib/layer3.h
 )
@@ -90,12 +98,10 @@ if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
     add_lib(-static STATIC)
 endif()
 
-include(GNUInstallDirs)
-
 # Executables
 if(BUILD_EXECUTABLES)
     add_executable(${EXEC_NAME} ${${PROJECT_NAME}_exec})
-    target_link_libraries(${EXEC_NAME} ${PROJECT_NAME})
+    target_link_libraries(${EXEC_NAME} ${PROJECT_NAME} ${private_libs})
     install(TARGETS ${EXEC_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 

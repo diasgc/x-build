@@ -18,18 +18,14 @@ lst_pc='vidstab.pc'
 dev_bra='main'
 dev_vrs='1.20'
 
-#cmake_config="-DUSE_OMP=OFF"
-
 . xbuild
-
-#$host_arm && cmake_config+=" -DSSE2_FOUND=OFF"
 
 start
 
 # cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
+# NDK  +   .   .   .  clang
+# GNU  +   .   .   .  gcc
+# WIN  +   .   .   .  clang/gcc
 
 # Filelist
 # --------
