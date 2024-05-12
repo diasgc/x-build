@@ -18,7 +18,7 @@ lst_pc='xavs2.pc'
 
 . xbuild
 
-cmake_config='-DDISABLE_WARNINGS=ON -DXAVS2_OPENCL=ON'
+cmake_config='-DDISABLE_WARNINGS=ON -DXAVS2_OPENCL=ON -DBUILD_EXECUTABLE=OFF'
 #cmake_config+=" -DENABLE_ASM=ON -DX264_SOURCE_DIR=${dir_sources}/x264"
 
 start
