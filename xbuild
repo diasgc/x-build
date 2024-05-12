@@ -1355,17 +1355,18 @@ toolchain_llvm_mingw(){
 
 	SYSROOT="/usr/${arch}"
 	TOOLCHAIN="${SYSROOT}/bin/"
-	CROSS_PREFIX="${TOOLCHAIN}"
+	CROSS_PREFIX="${LLVM_MINGW_HOME}/bin/${arch}-"
 	if $use_clang; then
-		CC="${LLVM_MINGW_HOME}/bin/clang --start-no-unused-arguments -target ${arch} --sysroot=/usr/${arch} -rtlib=compiler-rt -unwindlib=libunwind -fuse-ld=lld --end-no-unused-arguments"
-		CXX="${LLVM_MINGW_HOME}/bin/clang++ --start-no-unused-arguments -target ${arch} --sysroot=/usr/${arch} -rtlib=compiler-rt -unwindlib=libunwind -stdlib=libc++ -fuse-ld=lld --end-no-unused-arguments"
+		CC="${CROSS_PREFIX}clang"
+		CXX="${CROSS_PREFIX}clang++"
 		AS="${CC}"
+		LD="${CROSS_PREFIX}ld"
 	else
 		CC="${CROSS_PREFIX}gcc"
 		CXX="${CROSS_PREFIX}g++"
 		AS="${CROSS_PREFIX}as"
+		LD="${CROSS_PREFIX}ld"
 	fi
-	LD="${CROSS_PREFIX}ld"
 	export RC=${CROSS_PREFIX}windres
 	LT_SYS_LIBRARY_PATH="${LLVM_MINGW_HOME}/lib/clang/${xv_llvm_mingw}"
 	CPPFLAGS+=" -I${SYSROOT}/include"

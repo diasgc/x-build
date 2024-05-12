@@ -489,6 +489,12 @@ function create_symlink {
 
 function llvm_mingw_check_symlinks {
     local cl_abi
+
+    if [ -z "$(ls -A ${LLVM_MINGW_HOME}/include)" ]; then
+        rm -r "${LLVM_MINGW_HOME}/include"
+        ln -s ${LLVM_MINGW_HOME}/generic-w64-mingw32/include ${LLVM_MINGW_HOME}/include
+    fi
+    
     for cl in aarch64 arm i686 x86_64; do
 
         target_dir="/usr/${cl}-w64-mingw32"
