@@ -15,11 +15,13 @@ lst_lic='COPYING AUTHORS'
 lst_pc='json-c.pc'
 
 dev_bra='master'
-dev_vrs='0.15.99'
+dev_vrs='0.17.99'
 stb_bra=''
 stb_vrs=''
 
 . xbuild
+
+cmake_config='-DDISABLE_WERROR=ON'
 
 # CMAKE OPTIONS
 # DISABLE_STATIC_FPIC	Bool	The default builds position independent code. Set this to OFF to create a shared library only.

@@ -10,6 +10,7 @@ lic='MIT License'
 src="https://github.com/xqq/libaribcaption.git"
 cfg='cmake'
 cmake_shared='ARIBCC_SHARED_LIBRARY'
+dep='fontconfig'
 eta='0'
 
 dev_bra='master'

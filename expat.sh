@@ -23,6 +23,8 @@ config_dir="expat"
 
 . xbuild
 
+$build_static && ! $build_shared && cmake_config+=' -DBUILD_SHARED_LIBS=OFF'
+
 start
 
 # cpu av8 av7 x86 x64

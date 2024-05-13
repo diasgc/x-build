@@ -1431,7 +1431,7 @@ toolchain_linux(){
 		#CXX="${TOOLCHAIN}/clang++"  
 		CXX="clang++ -target ${arch}" # -fuse-ld=lld"
 		AS="${CC}"
-		LD="${TOOLCHAIN}/ld.lld --sysroot=${SYSROOT}"
+		LD="${TOOLCHAIN}/ld.lld" # --sysroot=${SYSROOT}"
 		$build_static && LDFLAGS+=" -static"
 		GNU_CLANG_VERSION_FULL="$(clang -dumpversion)"
 		GNU_CLANG_VERSION_MAJOR=${GNU_CLANG_VERSION_FULL%%\.*}
@@ -1586,13 +1586,13 @@ set_env(){
 		x86_64)  host_arm=false; host_arm32=false; host_arm64=false; host_x86=false; host_x64=true;;
 	esac
 	case ${target_trip[3]} in
-		android) host_sys=linux;   host_mingw=false; host_os=android; host_ndk=true;  host_clang=true;  PLATFORM="Android"
+		android) host_sys=linux;   host_mingw=false; host_os=android; host_ndk=true;	host_gnu=false;	host_clang=true;  PLATFORM="Android"
 		dir_install="/usr/${arch}/local"
 		;;
-		gnu)     host_sys=linux;   host_mingw=false; host_os=gnu;     host_ndk=false; host_clang=false; PLATFORM="Linux"
+		gnu)     host_sys=linux;   host_mingw=false; host_os=gnu;     host_ndk=false;	host_gnu=true;	host_clang=false; PLATFORM="Linux"
 		dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
 		;;
-		mingw32) host_sys=windows; host_mingw=true;  host_os=mingw32; host_ndk=false; host_clang=true;  PLATFORM="Windows"
+		mingw32) host_sys=windows; host_mingw=true;  host_os=mingw32; host_ndk=false;	host_gnu=false;	host_clang=true;  PLATFORM="Windows"
 		dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
 		;;
 	esac
