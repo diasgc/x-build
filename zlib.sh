@@ -12,7 +12,6 @@ src='https://github.com/madler/zlib.git'
 cfg='cmake'
 eta='22'
 cmake_bin="ZLIB_BUILD_EXAMPLES"
-#mkc='distclean'
 
 dev_vrs='1.3.1.1'
 
@@ -22,9 +21,12 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='zlib.pc'
 
+compiler_config(){
+    $host_gnu && $host_arm && use_clang=false
+}
+
 . xbuild
 
-$host_gnu && cmake_add_link_options+=(-fuse-ld=lld)
 
 on_end(){
     $host_mingw && {

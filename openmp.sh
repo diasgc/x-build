@@ -21,7 +21,11 @@ dev_vrs=''
 
 . xbuild
 
-$clang && WFLAGS='-Wno-unused-variable -Wno-nonnull'
+$use_clang && WFLAGS='-Wno-unused-variable -Wno-nonnull'
+
+# openmp does not support static build
+build_static=false
+build_shared=true
 
 start
 

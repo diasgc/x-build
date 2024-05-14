@@ -4,12 +4,16 @@ lib='speex'
 dsc='Speex is an audio codec tuned for speech'
 lic='BSD'
 src='https://gitlab.xiph.org/xiph/speex.git'
-cfg='ag' # meson won't build static libs
-dep='ogg speexdsp'
+cfg='meson'
+dep='speexdsp'
 eta='90'
 
-ac_bin="--disable-binaries|--enable-binaries"
-ac_config='--disable-maintainer-mode'
+meson_config='-Dtest-binaries=disabled'
+$build_bin && dep+=' ogg' || meson_config+=" -Dtools=disabled"
+
+#cfg='ag'
+#ac_bin="--disable-binaries|--enable-binaries"
+#ac_config='--disable-maintainer-mode'
 
 lst_inc='speex/*.h'
 lst_lib='libspeex'
@@ -18,9 +22,12 @@ lst_lic='COPYING AUTHORS'
 lst_pc='speex.pc'
 dev_vrs='1.2.1'
 
+
+
 . xbuild
 
-LDFLAGS+=" -lm"
+
+#LDFLAGS+=" -lm"
 
 start
 

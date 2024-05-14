@@ -1426,12 +1426,12 @@ toolchain_linux(){
 		SYSROOT="/usr/${arch}"
 		TOOLCHAIN="${SYSROOT}/bin"
 		CROSS_PREFIX="llvm-"
-		#CC="${TOOLCHAIN}/clang"     
-		CC="clang -target ${arch}" # -fuse-ld=lld"
-		#CXX="${TOOLCHAIN}/clang++"  
-		CXX="clang++ -target ${arch}" # -fuse-ld=lld"
+		CC="${TOOLCHAIN}/clang"     
+		#CC="clang -target ${arch}" # -fuse-ld=lld"
+		CXX="${TOOLCHAIN}/clang++"  
+		#CXX="clang++ -target ${arch}" # -fuse-ld=lld"++
 		AS="${CC}"
-		LD="${TOOLCHAIN}/ld.lld" # --sysroot=${SYSROOT}"
+		LD="${TOOLCHAIN}/ld.lld" # --sysroot=${SYSROOT}"+
 		$build_static && LDFLAGS+=" -static"
 		GNU_CLANG_VERSION_FULL="$(clang -dumpversion)"
 		GNU_CLANG_VERSION_MAJOR=${GNU_CLANG_VERSION_FULL%%\.*}
@@ -1780,6 +1780,11 @@ while [ $1 ];do
 done
 
 fn_undef 'extraOpts'
+
+if fn_defined 'compiler_config'; then
+	compiler_config
+	fn_undef 'compiler_config'
+fi
 
 [ -z "${mingw_posix}" ] && mingw_posix=false
 
