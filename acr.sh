@@ -13,9 +13,7 @@ lst_inc=''
 lst_lib=''
 lst_bin='amr acr acr-install acr-sh acr-cat'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ..+  .   .   .  clang

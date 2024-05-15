@@ -15,7 +15,7 @@ clear
 
 #
 : "${dir_root:=$(dirname $0)}"
-
+: "${verbose}:=false}"
 #export LLVM_MINGW_JSON=$(curl --silent "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
 
 check_install(){
@@ -178,9 +178,17 @@ function build_utils {
 }
 
 check_slink() {
+    local status
 	if [ ! -f "${1}" ]; then
-		sudo ln -s "${2}" "${1}"
-	fi
+		sudo ln -s "${2}" "${1}" 2>&1 >/dev/null && status="created" || status="failed"
+        test $verbose && printf "${CH}%-50s-> ${C1}%s\n" "    $1" "${2} ${status}"
+	elif [ "$(readlink ${1})" == "${2}" ]; then
+        test $verbose && printf "${CH}%-50s-> ${C0}%s\n" "    $1" "${2} ok"
+    else
+        sudo ln -s "${2}" "${1}" 2>&1 >/dev/null && status="updated" || status="failed"
+        test $verbose && printf "${CH}%-50s-> ${C1}%s\n" "    $1" "${2} ${status}"
+    fi
+    return 0
 }
 
 check_wrapper_gnu() {
@@ -211,6 +219,7 @@ XB_HAS_MINGW_GCC=false
 
 # first-time load common functions
 [ -z ${vsh+x} ] && . .common
+
 # set cyan theme color
 CH=${CC0}
 force=false
@@ -321,10 +330,6 @@ if $init; then
 	fi
 fi
 
-check_install gcc g++
-gcc_version=$(gcc -dumpversion)
-printf "${CH}%-20s: ${C0}%s\n" '  gcc version' ${gcc_version}
-
 echo -e "\n${CC1}This Machine:"
 [ -z "${build_arch}" ] && build_arch="$(uname -m)-${OSTYPE,,}"
 [ -z "${build_os}" ] && build_os=$(uname -s)
@@ -334,6 +339,9 @@ printf "${CH}%-20s: ${C0}%s\n" '  build os' ${build_os}
 printf "${CH}%-20s: ${C0}%s\n" '  build cpu' ${build_cpu}
 
 
+check_install gcc g++
+gcc_version=$(gcc -dumpversion)
+printf "${CH}%-20s: ${C0}%s\n" '  gcc version' ${gcc_version}
 
 if [ ! -d "builds/toolchain" ]; then
     mkdir -p builds/toolchain
@@ -354,8 +362,9 @@ echo
 cclang=$(command -v clang)
 if [ -n "${cclang}" ]; then
     printf "${CH}%-20s: ${C0}%s\n" "  found at" ${cclang}
-    clang_version=$(clang -dumpversion)
-    printf "${CH}%-20s: ${C0}%s\n" '  clang' "$clang_version"
+    CLANG_GNU_VERSION_FULL=$(clang -dumpversion)
+    CLANG_GNU_VERSION=${CLANG_GNU_VERSION_FULL%%\.*}
+    printf "${CH}%-20s: ${C0}%s\n" '  clang' "${CLANG_GNU_VERSION_FULL}"
     # install symlinks
 	cl=(aarch64 arm i686 x86_64)
 	ab=(arm64 armhf i386 x86_64)
@@ -363,6 +372,14 @@ if [ -n "${cclang}" ]; then
 	for a in 0 1 2 3; do
 		t="${cl[$a]}-linux-${abi[$a]}"
 		if [ "${t}" != "${build_arch}" ]; then
+            printf ""
+
+
+
+
+
+
+
 			check_install libc6-dev-${ab[$a]}-cross libstdc++6-${ab[$a]}-cross
 			[ -d "/usr/${t}/bin" ] || sudo mkdir -p "/usr/${t}/bin"
 			for e in ar as nm addr2line objcopy objdump ranlib readelf size strings strip windres; do
@@ -405,33 +422,38 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
     fi
     if [ -n "${ANDROID_NDK_HOME}" ]; then
         printf "${CH}%-20s: ${C0}%s\n" "  found at" ${ANDROID_NDK_HOME}
-        ndk_version=$(cat ${ANDROID_NDK_HOME}/source.properties | grep "^Pkg.Revision = " | sed 's/Pkg.Revision = //')
-        printf "${CH}%-20s: ${C0}%s " '  version' $ndk_version
-        ndk_versions=($(wget -qO- https://developer.android.com/ndk/downloads | grep -oP '(?<=ndkVersion..)\d+\.\d+\.\d+.*(?=")'))
-        ndk_version_latest=${ndk_versions[-1]}
-        if [ "${ndk_version}" == "${ndk_version_latest}" ]; then
+        ndk_release=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po 'Revision.=.\K([0-9\.]+)')
+        printf "${CH}%-20s: ${C0}%s " '  version' ${ndk_relase}
+        ndk_release_list=($(wget -qO- https://developer.android.com/ndk/downloads | grep -oP '(?<=ndkVersion..)\d+\.\d+\.\d+.*(?=")'))
+        ndk_release_latest=${ndk_release_list[-1]}
+        if [ "${ndk_relase}" == "${ndk_release_latest}" ]; then
             echo -e "(updated)"
         else
-            echo -e "${CY1} latest is ${ndk_version_latest}${C0}"
+            echo -e "${CY1} latest is ${ndk_release_latest}${C0}"
             ndk_parent="$(dirname $ANDROID_NDK_HOME)"
-            if [ -d "${ndk_parent}/${ndk_version_latest}" ]; then
-                read -p "  Switch from ${ndk_version} to ${ndk_version_latest}? [Y|n]" yn;
+            if [ -d "${ndk_parent}/${ndk_release_latest}" ]; then
+                read -p "  Switch from ${ndk_version} to ${ndk_release_latest}? [Y|n]" yn;
                 case $yn in
                     y*|Y*)
-                        export ANDROID_NDK_HOME="${ndk_parent}/${ndk_version_latest}"
-                        vrs_ndk=${ndk_version_latest}
+                        export ANDROID_NDK_HOME="${ndk_parent}/${ndk_release_latest}"
+                        vrs_ndk=${ndk_release_latest}
                         sed -i 's@^export ANDROID_NDK_HOME=.*$@export ANDROID_NDK_HOME='"$ANDROID_NDK_HOME"'@' ~/.bashrc
                         source ~/.bashrc
                         ;;
                 esac
             fi
         fi
-        
+        ndk_release=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po 'BaseRevision.=.\K([0-9\.]+)')
         ndk_build="linux-$(uname -m)"
-        ndk_toolchain="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/${ndk_build}"
-        ndk_sysroot="${ndk_toolchain}/sysroot"
-        ndk_clang_version=$(${ndk_toolchain}/bin/clang --version | grep -o 'clang version [0-9]*.[0-9]*.[0-9]*')
-        printf "${CH}%-20s: ${C0}%s\n" '  clang' "$ndk_clang_version"
+        TOOLCHAIN_NDK="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/${ndk_build}"
+        SYSROOT_NDK="${TOOLCHAIN_NDK}/sysroot"
+        CLANG_NDK_VERSION_FULL="$(${TOOLCHAIN_NDK}/bin/clang -dumpversion)"
+        CLANG_NDK_VERSION="${CLANG_NDK_VERSION_FULL%%\.*}"
+
+        #TOOLCHAIN_NDK="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/${ndk_build}"
+        #ndk_sysroot="${TOOLCHAIN_NDK}/sysroot"
+        #ndk_clang_version=$(${TOOLCHAIN_NDK}/bin/clang -dumpversion)
+        printf "${CH}%-20s: ${C0}%s\n" '  clang' "${CLANG_NDK_VERSION_FULL}"
 
         # check and create symlinks in toolchains dir if needed
         c_arch=('aarch64' 'arm' 'i686' 'x86_64')
@@ -443,26 +465,33 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
         for i in 0 1 2 3; do
             #cl="${c_arch[${i}]}"
 
+            printf "   ${CH}Checking symlinks for ${CW}${c_arch[${i}]}"
             dir_toolchain="/usr/${c_lib[${i}]}"
             #
             [ -d "${dir_toolchain}/bin" ] || sudo mkdir -p "${dir_toolchain}/bin"
-            if $force || [ ! -f "${dir_toolchain}/bin/clang" ]; then 
+            test $verbose && printf "\n       clang"
+            if $force || [ ! -f "${dir_toolchain}/bin/clang" ]; then
                 check_wrapper_ndk "clang" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang"
             fi
+            test $verbose && printf " clang++"
             if $force || [ ! -f "${dir_toolchain}/bin/clang++" ]; then 
                 check_wrapper_ndk "clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
+                
             fi
-            #[ -f "${dir_toolchain}/bin/as" ] || sudo ln -s "${ndk_toolchain}/bin/${c_lib[${i}]}-as" "${dir_toolchain}/bin/as"
-            #[ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s -f "${ndk_toolchain}/bin/lld" "${dir_toolchain}/bin/ld"
-            check_ndk_symlink "${dir_toolchain}/bin/ld" && sudo ln -sfn "${ndk_toolchain}/bin/ld" "${dir_toolchain}/bin/ld"
-            check_ndk_symlink "${dir_toolchain}/bin/yasm" && sudo ln -sfn "${ndk_toolchain}/bin/yasm" "${dir_toolchain}/bin/yasm"
+            #[ -f "${dir_toolchain}/bin/as" ] || sudo ln -s "${TOOLCHAIN_NDK}/bin/${c_lib[${i}]}-as" "${dir_toolchain}/bin/as"
+            #[ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s -f "${TOOLCHAIN_NDK}/bin/lld" "${dir_toolchain}/bin/ld"
+            check_ndk_symlink "${dir_toolchain}/bin/ld" && sudo ln -sfn "${TOOLCHAIN_NDK}/bin/ld" "${dir_toolchain}/bin/ld"
+            test $verbose && printf " ld"
+            check_ndk_symlink "${dir_toolchain}/bin/yasm" && sudo ln -sfn "${TOOLCHAIN_NDK}/bin/yasm" "${dir_toolchain}/bin/yasm"
+            test $verbose && printf " yasm"
             
             for j in as ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
-                check_ndk_symlink "${dir_toolchain}/bin/${j}" && sudo ln -sfn "${ndk_toolchain}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
-                #[ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -s -f "${ndk_toolchain}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
+                test $verbose && printf " $j"
+                check_ndk_symlink "${dir_toolchain}/bin/${j}" && sudo ln -sfn "${TOOLCHAIN_NDK}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
+                #[ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -s -f "${TOOLCHAIN_NDK}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
             done
             
-            check_ndk_symlink "${dir_toolchain}/lib" && sudo ln -sfn "${ndk_toolchain}/sysroot/usr/lib/${c_lib[${i}]}" "${dir_toolchain}/lib"
+            check_ndk_symlink "${dir_toolchain}/lib" && sudo ln -sfn "${TOOLCHAIN_NDK}/sysroot/usr/lib/${c_lib[${i}]}" "${dir_toolchain}/lib"
             [ -f "${dir_toolchain}/lib/libpthread.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/libpthread.a"
             [ -f "${dir_toolchain}/lib/librt.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/librt.a"
             
@@ -473,6 +502,7 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
             
             [ -d "${dir_toolchain}/local" ] && sudo unlink ${dir_toolchain}/local
             sudo ln -sf "${dir_root}/builds/android/${c_abi[${i}]}" "${dir_toolchain}/local"
+            echo -e "${CH} ok${C0}"
         done
         printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
         
@@ -484,7 +514,13 @@ fi
 
 # usage create_symlink <src> <dst> will test if src and dst exists first
 function create_symlink {
-    test ! -f "${2}" && test -f "${1}" && sudo ln -s "${1}" "${2}"
+    if [ ! -f "${2}" ] || [ ! "$(readlink ${2})" == "${1}" ]; then
+        sudo ln -s "${1}" "${2}"
+        test $verbose && printf "${CC1}%-10s ${C0}%-60s-> ${CW}%s\n" "   created" "${1}" "${2}"
+    else
+        test $verbose && printf "${CH}%-10s ${C0}%-60s-> ${C0}%s\n" "   ok" "${1}" "${2}"
+    fi
+    #test ! -f "${2}" && test -f "${1}" && sudo ln -s "${1}" "${2}"
 }
 
 function llvm_mingw_check_symlinks {
@@ -507,6 +543,7 @@ function llvm_mingw_check_symlinks {
         test -d "${target_dir}/lib"     || sudo ln -s "${source_dir}/lib"     "${target_dir}/lib"
         test -d "${target_dir}/share"   || sudo ln -s "${source_dir}/share"   "${target_dir}/share"
         
+        printf "   ${CH}Checking symlinks for ${CW}${cl_abi}\n"
         for e in addr2line ar as c++ clang clang++ dlltool g++ gcc ld llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf size strings strip widl windres; do
     
             create_symlink "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}"    "${target_dir}/bin/${e}"
@@ -534,19 +571,19 @@ fi
 if [ -n "${LLVM_MINGW_HOME}" ]; then
     printf "${CH}%-20s: ${C0}%s\n" "  found at" ${LLVM_MINGW_HOME}
     
-    llvm_mingw_version_latest=$(llvm_mingw_get_latest_version)
-    [ -f "${LLVM_MINGW_HOME}/version" ] || echo "$llvm_mingw_version_latest" >>"${LLVM_MINGW_HOME}/version"
-    llvm_mingw_version=$(cat ${LLVM_MINGW_HOME}/version)
-    printf "${CH}%-20s: ${C0}%s " '  version' $llvm_mingw_version
-    if [ "${llvm_mingw_version}" == "${llvm_mingw_version_latest}" ]; then
+    llvm_mingw_latest_release=$(llvm_mingw_get_latest_version)
+    [ -f "${LLVM_MINGW_HOME}/version" ] || echo "$llvm_mingw_latest_release" >>"${LLVM_MINGW_HOME}/version"
+    llvm_mingw_release=$(cat ${LLVM_MINGW_HOME}/version)
+    printf "${CH}%-20s: ${C0}%s " '  release' $llvm_mingw_release
+    if [ "${llvm_mingw_version}" == "${llvm_mingw_latest_release}" ]; then
         echo -e "(updated)"
     else
-        echo -e "${CY1} latest is ${llvm_mingw_version_latest}${C0}"
+        echo -e "${CY1} latest is ${llvm_mingw_latest_release}${C0}"
     fi
 
-    llvm_mingw_clang_version=$(${LLVM_MINGW_HOME}/bin/clang -dumpversion)
-    xv_llvm_mingw=${llvm_mingw_clang_version%%.*}
-    printf "${CH}%-20s: ${C0}%s\n" '  clang' "$llvm_mingw_clang_version"
+    CLANG_MINGW_VERSION_FULL=$(${LLVM_MINGW_HOME}/bin/clang -dumpversion)
+    CLANG_MINGW_VERSION=${llvm_mingw_clang_version%%.*}
+    printf "${CH}%-20s: ${C0}%s\n" '  clang' "${CLANG_MINGW_VERSION_FULL}"
 
     
     # check and create symlinks in toolchains dir if needed
@@ -598,20 +635,21 @@ cat <<-EOF >${dir_root}/.config
 export config_lastupdate=$(date +%s) \\
     dir_root="$(pwd)" \\
     cmd_install="${cmd_install}" \\
-    ROOTDIR="$(pwd)" \\
     build_arch="${build_arch}" \\
     XB_HAS_GNU_CLANG=${XB_HAS_GNU_CLANG} \\
     XB_HAS_MINGW_CLANG=${XB_HAS_MINGW_CLANG} \\
     XB_HAS_MINGW_GCC=${XB_HAS_MINGW_GCC} \\
     XB_HAS_NDK_CLANG=${XB_HAS_NDK_CLANG} \\
+    CLANG_NDK_VERSION=${CLANG_NDK_VERSION} \\
+    CLANG_GNU_VERSION= \\
+    CLANG_MINGW_VERSION= \\
+    LLVM_MINGW_HOME="${llvm_mingw}" \\
     ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
     API="${API}" \\
-    ndk_cc=(clang clang++) \\
-    vrs_ndk="${ndk_version}" \\
-    vrs_ndk_major="$(echo ${ndk_version} | sed 's/\..*//')" \\
-    ndk_toolchain="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64" \\
-    ndk_sysroot="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot" \\
-    LLVM_MINGW_HOME="${llvm_mingw}" \\
+    NDK_API="${API}" \\
+    NDK_RELEASE="${ndk_release}" \\
+    TOOLCHAIN_NDK="${TOOLCHAIN_NDK}" \\
+    SYSROOT_NDK="${SYSROOT_NDK}" \\
     LLVM_MINGW_REL="${llvm_mingw_rel}" \\
     MAKE_EXECUTABLE="$(command -v make)" \\
     CMAKE_EXECUTABLE="$(command -v cmake)" \\
@@ -620,10 +658,10 @@ export config_lastupdate=$(date +%s) \\
     HOST_NPROC="$(nproc)" \\
     xv_llvm_mingw="${xv_llvm_mingw}" \\
     llvm_mingw_rel="${llvm_mingw_rel}" \\
-    xv_aarch64_gnu="$(/usr/bin/aarch64-linux-gnu-gcc -dumpversion)" \\
-    xv_armeabi_gnu="$(/usr/bin/arm-linux-gnueabihf-gcc -dumpversion)" \\
-    xv_x86_gnu="$(/usr/bin/i686-linux-gnu-gcc -dumpversion)" \\
-    xv_x64_gnu="$(/usr/bin/x86_64-linux-gnu-gcc -dumpversion)" \\
+    GCC_AARCH64_REL="$(/usr/bin/aarch64-linux-gnu-gcc -dumpversion)" \\
+    GCC_ARMHF_REL="$(/usr/bin/arm-linux-gnueabihf-gcc -dumpversion)" \\
+    GCC_I686_REL="$(/usr/bin/i686-linux-gnu-gcc -dumpversion)" \\
+    GCC_X86_64_REL="$(/usr/bin/x86_64-linux-gnu-gcc -dumpversion)" \\
     xv_x64_mingw="${xv_llvm_mingw}" \\
     xv_x86_mingw="${xv_llvm_mingw}"
 EOF

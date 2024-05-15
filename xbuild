@@ -10,6 +10,14 @@ function trap_sigint {
 	echo -e "\n\n${CY1}  Interrupted by user${C0}\n  Log available at \e[4m${log_file}\e[24m\n\n"
 }
 
+function init {
+  if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
+		./x-setup
+	fi
+	[ -f ".config" ] && source .config || doErr 'Unable to initialize config file'
+	export is_init=true
+}
+
 # first load .common functions and error trap
 if [ -z ${vsh+x} ];then
 	source .common
@@ -101,7 +109,7 @@ shell_dstack=
 logtime_start=0
 logtime_end=0
 
-#export ROOTDIR=$(pwd)
+
 export CPPFLAGS=
 export target_trip=
 
@@ -120,16 +128,14 @@ export dir_pkgdist="${dir_root}/packages"
 
 xv_x86_mingw="10"
 
-init(){
-	[ -f ".config" ] && . .config
-	if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
-		./x-setup
-		. .config || doErr 'Unable to initialize config file'
-	fi
-	export is_init=true
-}
-
 ! $is_init && init
+
+
+
+
+
+
+
 
 main(){
 
@@ -176,7 +182,6 @@ start(){
 
 	if $build_pkgdl; then
 		local lnk=$(get_link_pkg ${arch} ${lib})
-		#echo "link=$lnk"
 		if [ -n "${lnk}" ]; then
 			wget_pkg_tgz ${lnk} ${dir_install}
 			$skip_pc || logver "${dir_install_pc}/${pkg}.pc"
@@ -790,7 +795,6 @@ meson_create_toolchain(){
 
 # usage cmake_create_toolchain <dir>
 cmake_create_toolchain(){
-	#export cmake_toolchain_file="${ROOTDIR}/xbuilder.cmake"
 	cmake_build_toolchainfile
 }
 
@@ -1292,9 +1296,9 @@ toolchain_android(){
 	PLATFORM='Android'
 	[ -d "${ANDROID_NDK_HOME}" ] || doErr "No ANDROID NDK Toolchain found. Aborting."
 
-	TOOLCHAIN="${ndk_toolchain}"
-	SYSROOT="/usr/${arch}/sysroot"
-	CROSS_PREFIX="/usr/${arch}/bin/"
+	TOOLCHAIN="/usr/${arch}"
+	SYSROOT="${TOOLCHAIN}/sysroot"
+	CROSS_PREFIX="${TOOLCHAIN}/bin/"
 
 	CC="${CROSS_PREFIX}clang"
 	CXX="${CROSS_PREFIX}clang++"
@@ -1304,7 +1308,7 @@ toolchain_android(){
 	ASM_NASM=${YASM}
 
 	CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
-	LT_SYS_LIBRARY_PATH="/usr/${arch}/lib:${SYSROOT}/usr/lib/${arch}:${SYSROOT}/usr/lib/${arch}/${API}"
+	LT_SYS_LIBRARY_PATH="${TOOLCHAIN}/lib:${SYSROOT}/usr/lib/${arch}:${SYSROOT}/usr/lib/${arch}/${NDK_API}"
 	PKG_CONFIG_DIR="/usr/${arch}/local/lib/pkgconfig"
 	CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/include -I${SYSROOT}/usr/include"
 	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
@@ -1382,10 +1386,10 @@ toolchain_linux_old(){
 	local cross
 	local ltsdir
 	case $arch in
-		aarch64-*) cross="-cross" ltsdir=$xv_aarch64_gnu;;
-		arm-*)     cross="-cross" ltsdir=$xv_armeabi_gnu;;
-		i686-*)    cross="-cross" ltsdir=$xv_x86_gnu;;
-		x86_64-*)  cross= ltsdir=$xv_x64_gnu;;
+		aarch64-*) cross="-cross" ltsdir=${GCC_AARCH64_REL};;
+		arm-*)     cross="-cross" ltsdir=${GCC_ARMHF_REL};;
+		i686-*)    cross="-cross" ltsdir=${GCC_I686_REL};;
+		x86_64-*)  unset cross;   ltsdir=${GCC_X86_64_REL};;
 	esac
 	if [ -n "$cross" ]; then
 		SYSROOT="/usr/${arch}"

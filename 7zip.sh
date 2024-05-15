@@ -25,10 +25,8 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
-
 source_config(){
     exit 0
 }
 
-start
+. xbuild && start
