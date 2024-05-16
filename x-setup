@@ -16,6 +16,7 @@ clear
 #
 : "${dir_root:=$(dirname $0)}"
 : "${verbose}:=false}"
+: "${NDK_API_DEFAULT:=34}"
 #export LLVM_MINGW_JSON=$(curl --silent "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
 
 check_install(){
@@ -202,14 +203,11 @@ check_wrapper_gnu() {
 }
 
 check_wrapper_ndk() {
-    if [ ! -f "${3}" ]; then
-		cat <<-eof | sudo tee ${3} >/dev/null
+    cat <<-eof | sudo tee ${3} >/dev/null
 		#!/bin/bash
-		\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${2}\${API}-${1} "\$@"
+		\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${2}\${API:=${NDK_API_DEFAULT}}-${1} "\$@"
 		eof
 		sudo chmod +x ${3}
-	fi
-    
 }
 
 XB_HAS_NDK_CLANG=true
@@ -358,6 +356,7 @@ $XB_HAS_GNU_CLANG && check_install clang-format clang-tidy clang-tools clang cla
                         libc++-dev libstdc++-12-dev libc++1 libc++abi-dev libc++abi1 libclang-dev \
                         libclang-common-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 \
                         lld lldb llvm-dev llvm-runtime llvm python3-clang
+
 echo
 cclang=$(command -v clang)
 if [ -n "${cclang}" ]; then
@@ -366,20 +365,13 @@ if [ -n "${cclang}" ]; then
     CLANG_GNU_VERSION=${CLANG_GNU_VERSION_FULL%%\.*}
     printf "${CH}%-20s: ${C0}%s\n" '  clang' "${CLANG_GNU_VERSION_FULL}"
     # install symlinks
+    check_install libllvmlibc-${CLANG_GNU_VERSION}-dev
 	cl=(aarch64 arm i686 x86_64)
 	ab=(arm64 armhf i386 x86_64)
 	abi=(gnu gnueabihf gnu gnu)
 	for a in 0 1 2 3; do
 		t="${cl[$a]}-linux-${abi[$a]}"
 		if [ "${t}" != "${build_arch}" ]; then
-            printf ""
-
-
-
-
-
-
-
 			check_install libc6-dev-${ab[$a]}-cross libstdc++6-${ab[$a]}-cross
 			[ -d "/usr/${t}/bin" ] || sudo mkdir -p "/usr/${t}/bin"
 			for e in ar as nm addr2line objcopy objdump ranlib readelf size strings strip windres; do
@@ -387,7 +379,7 @@ if [ -n "${cclang}" ]; then
 			done
             llvm_vrs=$(ls -lh ${cclang} | grep -oP 'llvm-\d+')
             if [ -n "${llvm_vrs}" ]; then
-                check_slink "/usr/bin/llvm-addr2line" "/usr/lib/${llvm_vrs}/bin/llvm-addr2line"
+                #check_slink "/usr/bin/llvm-addr2line" "/usr/lib/${llvm_vrs}/bin/llvm-addr2line"
                 check_slink "/usr/bin/llvm-windres" "/usr/lib/${llvm_vrs}/bin/llvm-windres"
             fi
 			check_slink "/usr/${t}/bin/ld.lld" "/usr/bin/ld.lld"
@@ -422,7 +414,8 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
     fi
     if [ -n "${ANDROID_NDK_HOME}" ]; then
         printf "${CH}%-20s: ${C0}%s\n" "  found at" ${ANDROID_NDK_HOME}
-        ndk_release=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po 'Revision.=.\K([0-9\.]+)')
+        ndk_release=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po '\.Revision.=.\K([0-9\.\-a-zA-Z]+)')
+        NDK_RELEASE=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po 'BaseRevision.=.\K([0-9\.]+)')
         printf "${CH}%-20s: ${C0}%s " '  version' ${ndk_release}
         ndk_release_list=($(wget -qO- https://developer.android.com/ndk/downloads | grep -oP '(?<=ndkVersion..)\d+\.\d+\.\d+.*(?=")'))
         ndk_release_latest=${ndk_release_list[-1]}
@@ -443,7 +436,6 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
                 esac
             fi
         fi
-        ndk_release=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po 'BaseRevision.=.\K([0-9\.]+)')
         ndk_build="linux-$(uname -m)"
         TOOLCHAIN_NDK="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/${ndk_build}"
         SYSROOT_NDK="${TOOLCHAIN_NDK}/sysroot"
@@ -647,7 +639,7 @@ export config_lastupdate=$(date +%s) \\
     ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
     API="${API}" \\
     NDK_API="${API}" \\
-    NDK_RELEASE="${ndk_release}" \\
+    NDK_RELEASE="${NDK_RELEASE}" \\
     TOOLCHAIN_NDK="${TOOLCHAIN_NDK}" \\
     SYSROOT_NDK="${SYSROOT_NDK}" \\
     LLVM_MINGW_REL="${LLVM_MINGW_REL}" \\

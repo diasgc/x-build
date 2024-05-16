@@ -8,9 +8,8 @@ cfg='ac'
 eta='240'
 mki='install'
 
-#ac_bin='--disable-examples|--enable-examples'
 ac_opts='--no-host --no-pic --no-sysroot'
-ac_config='--disable-docs --disable-install-srcs --disable-install-docs --disable-tools --disable-unit-tests'
+ac_config='--disable-examples --disable-unit-tests --disable-tools --disable-docs --enable-vp9-highbitdepth --as=yasm'
   #--enable-vp8 --enable-vp9 --enable-vp9-highbitdepth --enable-vp9-temporal-denoising --enable-vp9-postproc \
   #--enable-postproc --enable-onthefly-bitpacking --enable-multi-res-encoding --enable-better-hw-compatibility \
   #--enable-webm-io --enable-libyuv --enable-experimental --enable-pic "
@@ -23,19 +22,22 @@ lst_pc='vpx.pc'
 
 dev_vrs='1.14.0'
 
-. xbuild
+on_config(){
 
-$build_shared && unset CSH #--enable-shared only supported on ELF, OS/2, and Darwin for now
+  $build_shared && unset CSH #--enable-shared only supported on ELF, OS/2, and Darwin for now
 
-t2=$(arch_fromid arm64 armv7 x86 x86_64)
-$host_x86 && t3=$(os_fromid android linux win32) || t3=$(os_fromid android linux win64)
-ac_config+=" --target=${t2}-${t3}-gcc"
+  t2=$(arch_fromid arm64 armv7 x86 x86_64)
+  $host_x86 && t3=$(os_fromid android linux win32) || t3=$(os_fromid android linux win64)
+  ac_config+=" --target=${t2}-${t3}-gcc"
 
-$host_arm && ac_config+=" --enable-neon"
-$host_arm32 && ac_config+=" --disable-neon-asm"
-AS=${YASM}
+  $host_arm && ac_config+=" --enable-neon"
+  $host_arm32 && ac_config+=" --disable-neon-asm"
+  AS=${YASM}
 
-start
+}
+
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +X+  .   .   .  clang

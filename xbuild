@@ -11,10 +11,11 @@ function trap_sigint {
 }
 
 function init {
-  if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
+	[ -f ".config" ] && source .config
+	if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
 		./x-setup
+		source .config || doErr 'Unable to initialize config file'
 	fi
-	[ -f ".config" ] && source .config || doErr 'Unable to initialize config file'
 	export is_init=true
 }
 
@@ -179,6 +180,8 @@ main(){
 gitjson=
 
 start(){
+
+	fn_defined 'on_config' && on_config
 
 	if $build_pkgdl; then
 		local lnk=$(get_link_pkg ${arch} ${lib})
