@@ -423,7 +423,7 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
     if [ -n "${ANDROID_NDK_HOME}" ]; then
         printf "${CH}%-20s: ${C0}%s\n" "  found at" ${ANDROID_NDK_HOME}
         ndk_release=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po 'Revision.=.\K([0-9\.]+)')
-        printf "${CH}%-20s: ${C0}%s " '  version' ${ndk_relase}
+        printf "${CH}%-20s: ${C0}%s " '  version' ${ndk_release}
         ndk_release_list=($(wget -qO- https://developer.android.com/ndk/downloads | grep -oP '(?<=ndkVersion..)\d+\.\d+\.\d+.*(?=")'))
         ndk_release_latest=${ndk_release_list[-1]}
         if [ "${ndk_relase}" == "${ndk_release_latest}" ]; then
@@ -573,16 +573,16 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
     
     llvm_mingw_latest_release=$(llvm_mingw_get_latest_version)
     [ -f "${LLVM_MINGW_HOME}/version" ] || echo "$llvm_mingw_latest_release" >>"${LLVM_MINGW_HOME}/version"
-    llvm_mingw_release=$(cat ${LLVM_MINGW_HOME}/version)
-    printf "${CH}%-20s: ${C0}%s " '  release' $llvm_mingw_release
-    if [ "${llvm_mingw_version}" == "${llvm_mingw_latest_release}" ]; then
+    LLVM_MINGW_REL=$(cat ${LLVM_MINGW_HOME}/version)
+    printf "${CH}%-20s: ${C0}%s " '  release' ${LLVM_MINGW_REL}
+    if [ "${LLVM_MINGW_REL}" == "${llvm_mingw_latest_release}" ]; then
         echo -e "(updated)"
     else
         echo -e "${CY1} latest is ${llvm_mingw_latest_release}${C0}"
     fi
 
     CLANG_MINGW_VERSION_FULL=$(${LLVM_MINGW_HOME}/bin/clang -dumpversion)
-    CLANG_MINGW_VERSION=${llvm_mingw_clang_version%%.*}
+    CLANG_MINGW_VERSION=${llvm_mingw_clang_version%%\.*}
     printf "${CH}%-20s: ${C0}%s\n" '  clang' "${CLANG_MINGW_VERSION_FULL}"
 
     
@@ -641,8 +641,8 @@ export config_lastupdate=$(date +%s) \\
     XB_HAS_MINGW_GCC=${XB_HAS_MINGW_GCC} \\
     XB_HAS_NDK_CLANG=${XB_HAS_NDK_CLANG} \\
     CLANG_NDK_VERSION=${CLANG_NDK_VERSION} \\
-    CLANG_GNU_VERSION= \\
-    CLANG_MINGW_VERSION= \\
+    CLANG_GNU_VERSION=${CLANG_GNU_VERSION} \\
+    CLANG_MINGW_VERSION=${CLANG_MINGW_VERSION} \\
     LLVM_MINGW_HOME="${llvm_mingw}" \\
     ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
     API="${API}" \\
@@ -650,7 +650,7 @@ export config_lastupdate=$(date +%s) \\
     NDK_RELEASE="${ndk_release}" \\
     TOOLCHAIN_NDK="${TOOLCHAIN_NDK}" \\
     SYSROOT_NDK="${SYSROOT_NDK}" \\
-    LLVM_MINGW_REL="${llvm_mingw_rel}" \\
+    LLVM_MINGW_REL="${LLVM_MINGW_REL}" \\
     MAKE_EXECUTABLE="$(command -v make)" \\
     CMAKE_EXECUTABLE="$(command -v cmake)" \\
     NASM_EXECUTABLE="$(command -v nasm)" \\

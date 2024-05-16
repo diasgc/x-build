@@ -14,12 +14,12 @@ lst_pc=''
 lst_lic='LICENSE.txt'
 dev_vrs='1.4.23'
 
-. xbuild
+on_config(){
+    vrs="$(c_printf 'amf/public/include/core' 'Version.h' \
+        '"%d.%d.%d",AMF_VERSION_MAJOR,AMF_VERSION_MINOR,AMF_VERSION_RELEASE')"
+}
 
-vrs="$(c_printf 'amf/public/include/core' 'Version.h' \
-    '"%d.%d.%d",AMF_VERSION_MAJOR,AMF_VERSION_MINOR,AMF_VERSION_RELEASE')"
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang
