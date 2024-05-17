@@ -18,9 +18,7 @@ lst_bin=''
 lst_pc='simdjson.pc'
 lst_lic='LICENSE AUTHORS README.md'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

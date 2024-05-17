@@ -23,23 +23,19 @@ stb_vrs='R66-RC1-4'
 
 cmake_static='BUILD_STATIC_LIBS'
 
-get_version(){
-    c_printf 'include' 'VapourSynth.h' '"%d.%d",VAPOURSYNTH_API_MAJOR,VAPOURSYNTH_API_MINOR'
-}
-
-. xbuild
-
 build_strip=false
 
 # ffmpeg requires vsscript
 ac_config="--enable-python-module=no --enable-vspipe=no --enable-vsscript=no"
-$host_arm && ac_config+=" --enable-x86-asm=no"
-$host_arm && $host_clang && CPPFLAGS+=' -mno-outline-atomics'
 WFLAGS='-Wno-macro-redefined -Wno-sign-compare -Wno-typedef-redefinition'
 
-get_version
+on_config(){
+    $host_arm && ac_config+=" --enable-x86-asm=no"
+    $host_arm && $host_clang && CPPFLAGS+=' -mno-outline-atomics'
+    c_printf 'include' 'VapourSynth.h' '"%d.%d",VAPOURSYNTH_API_MAJOR,VAPOURSYNTH_API_MINOR'
+}
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++  +F   .  +F  clang

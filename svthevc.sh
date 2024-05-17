@@ -23,9 +23,7 @@ on_config_arm(){
   doErr 'Unsupported arm architecture'
 }
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .   clang

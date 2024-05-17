@@ -20,9 +20,7 @@ lst_lic='share/doc/libsoxr/LICENCE'
 dev_bra='master'
 dev_vrs='0.1.3'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++  ++  ++  ++  clang

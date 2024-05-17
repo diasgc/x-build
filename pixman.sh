@@ -10,8 +10,6 @@ cfg='ag'
 dep='libpng'
 eta='275'
 
-. xbuild
-
 dev_vrs='0.40.1'
 
 lst_inc='pixman-1/*.h'
@@ -20,15 +18,17 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='pixman-1.pc'
 
-$host_arm64 && ac_config='--disable-arm-a64-neon'
-$host_arm32 && ac_config='--disable-arm-neon --disable-arm-simd'
-$use_clang && WFLAGS='-Wunknown-attributes'
+on_config(){
+    $host_arm64 && ac_config='--disable-arm-a64-neon'
+    $host_arm32 && ac_config='--disable-arm-neon --disable-arm-simd'
+    $use_clang && WFLAGS='-Wunknown-attributes'
+}
 
 before_make(){
     sed -i 's/-g -O2/-O3 -flto/g;s/-Wall -W/-W/g' Makefile pixman/Makefile
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

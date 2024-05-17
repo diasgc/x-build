@@ -19,11 +19,11 @@ lst_bin='vjpeg sjpeg'
 lst_lic='COPYING AUTHORS'
 lst_pc='sjpeg.pc'
 
-. xbuild
+on_config(){
+    $host_ndk && cmake_config+=" -DSJPEG_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"
+}
 
-$host_ndk && cmake_config+=" -DSJPEG_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"
-
-start
+. xbuild && start
 
 # Filelist
 # --------

@@ -32,9 +32,7 @@ eta='20'
 #on_config_arm(){ return 0; }
 #on_config_x86x(){ return 0; }
 
-. xbuild
-
 #$host_ndk   && meson_cfg+=' -Dthreads=disabled' || meson_cfg+=' -Dthreads=enabled'
 #$host_mingw && meson_cfg+=' -Dposix=disabled'   || meson_cfg+=' -Dposix=enabled'
 
-start
+. xbuild && start

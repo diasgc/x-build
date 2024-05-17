@@ -19,8 +19,6 @@ dev_vrs='3.0.4'
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
 source_patch(){
     git submodule update --init --recursive
     #sed 's/Windows.h/windows.h/g' src/zimg/common/arm/cpuinfo_arm.cpp
@@ -31,7 +29,7 @@ on_editpack(){
     return 0
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

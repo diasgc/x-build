@@ -29,7 +29,13 @@ dev_vrs='0.4.1'
 stb_bra=''
 stb_vrs='0.4.1'
 
-. xbuild
+cmake_config="-DSET_PROF=${xevd_profile} -DXEVD_APP_STATIC_BUILD=ON"
+WFLAGS+="-Wno-for-loop-analysis \
+ -Wno-unknown-warning-option \
+ -Wno-typedef-redefinition \
+ -Wno-sometimes-uninitialized \
+ -Wno-shift-negative-value \
+ -Wno-tautological-pointer-compare"
 
 source_patch(){
     # v0.4.1-6-g418ed6d: there's a typo at src_base/neon/xevd_dbk_neon.h
@@ -38,12 +44,10 @@ source_patch(){
     popd
 }
 
-cmake_config="-DSET_PROF=${xevd_profile} -DXEVD_APP_STATIC_BUILD=ON"
-
-$host_native && cmake_config+=' -DXEVD_NATIVE_BUILD=ON'
-$host_arm && cmake_config+=" -DARM=TRUE"
-
-WFLAGS+="-Wno-for-loop-analysis -Wno-unknown-warning-option -Wno-typedef-redefinition -Wno-sometimes-uninitialized -Wno-shift-negative-value -Wno-tautological-pointer-compare"
+on_config(){
+    $host_native && cmake_config+=' -DXEVD_NATIVE_BUILD=ON'
+    $host_arm && cmake_config+=" -DARM=TRUE"
+}
 
 on_end(){
     if $build_static; then
@@ -53,4 +57,4 @@ on_end(){
     fi
 }
 
-start
+. xbuild && start

@@ -16,8 +16,6 @@ lst_lib='libuavs3e'
 lst_bin='uavs3enc'
 dev_vrs='1.3.'
 
-. xbuild
-
 cmake_config='-DCOMPILE_10BIT=1'
 cmake_static='-DBUILD_SHARED_LIBS=0'
 
@@ -28,7 +26,7 @@ cmake_definitions+=(
     '-Wno-constant-conversion'
 )
 
-start
+. xbuild && start
 
 # Filelist
 # --------

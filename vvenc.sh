@@ -17,12 +17,14 @@ lst_pc='libvvenc.pc'
 dev_bra='master'
 dev_vrs='1.11.1'
 
-. xbuild
+on_config(){
+    # native clang llvm-18: missing LLVMgold.so. Workaround:_ disable lto
+    $host_clang && test "$host_sys" = "linux" && test -f ${SYSROOT}/lib/LLVMgold.so || cmake_config+=' -DVVENC_ENABLE_LINK_TIME_OPT=OFF' 
+    return 0
+}
 
-# native clang llvm-18: missing LLVMgold.so. Workaround:_ disable lto
-$host_clang && test "$host_sys" = "linux" && test -f ${SYSROOT}/lib/LLVMgold.so || cmake_config+=' -DVVENC_ENABLE_LINK_TIME_OPT=OFF' 
 
-start
+start && . xbuild
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++  .   .  clang

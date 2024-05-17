@@ -18,11 +18,11 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
-. xbuild
+on_config(){
+    $host_ndk && CFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include"
+}
 
-$host_ndk && CFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include"
-
-start
+. xbuild && start
 
 # Filelist
 # --------

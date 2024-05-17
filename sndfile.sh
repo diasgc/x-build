@@ -41,8 +41,6 @@ lst_bin='sndfile-convert
 lst_lic='COPYING AUTHORS'
 lst_pc='sndfile.pc'
 
-. xbuild
-
 #extraOpts(){
 #	sndfile_extlibs=OFF
 #    case $1 in
@@ -52,7 +50,7 @@ lst_pc='sndfile.pc'
 #    return 0
 #}
 
-start
+. xbuild && start
 
 # Filelist
 # --------

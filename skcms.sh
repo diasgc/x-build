@@ -7,13 +7,7 @@ src='(https://skia.googlesource.com/skcms'
 cfg='bazel'
 eta='10'
 
-. xbuild
-
-build_all(){
-
-}
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ... ... ... ... CLANG

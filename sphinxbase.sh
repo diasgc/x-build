@@ -17,12 +17,12 @@ lst_bin='sphinx_jsgf2fsg sphinx_fe sphinx_pitch sphinx_lm_convert sphinx_lm_eval
 
 ac_config='--without-python'
 
-. xbuild
+on_config(){
+    $host_mingw && mki='install'
+    $host_ndk && LDFLAGS+=" -llog"
+}
 
-$host_mingw && mki='install'
-$host_ndk && LDFLAGS+=" -llog"
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

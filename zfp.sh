@@ -25,13 +25,11 @@ stb_vrs=''
 
 dualbuild_support=false
 
-. xbuild
-
 get_version(){
     vrs="$(c_printf 'include/zfp' 'version.h' '"%s",ZFP_VERSION_STRING')"
 }
 
-start
+. xbuild && start
 
 # Filelist
 # --------

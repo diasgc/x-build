@@ -25,9 +25,7 @@ dev_vrs=''
 stb_bra=''
 stb_vrs='1.1.0'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

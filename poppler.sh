@@ -22,12 +22,11 @@ lst_bin=''
 lst_lic='COPYING COPYING3'
 lst_pc='poppler-cpp.pc poppler.pc'
 
-. xbuild
-
 cmake_config="-DBUILD_GTK_TESTS=OFF -DBUILD_CPP_TESTS=OFF -DBUILD_MANUAL_TESTS=OFF -DBUILD_QT5_TESTS=OFF \
      -DBUILD_QT6_TESTS=OFF -DENABLE_QT5=OFF -DENABLE_QT6=OFF \
      -DENABLE_LIBCURL=OFF"
-start
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

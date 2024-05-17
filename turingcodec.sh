@@ -13,10 +13,7 @@ pkg='libturing'
 eta='1095'
 #CFG="-DUSE_SYSTEM_BOOST=OFF"
 
-. xbuild
-
 nodev=true
-
 
 source_patch(){
     # update cmakelists version to 3.1
@@ -25,4 +22,4 @@ source_patch(){
     done
 }
 
-start
+. xbuild && start

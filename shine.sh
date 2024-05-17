@@ -18,9 +18,7 @@ lst_bin='shineenc'
 lst_lic='COPYING'
 lst_pc='shine.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

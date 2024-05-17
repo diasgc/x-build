@@ -15,12 +15,10 @@ lst_bin='xavs'
 lst_lic=''
 lst_pc='xavs.pc'
 
-. xbuild
-
 ac_opts='--update-config_sub --update-config_guess --no-sysroot --no-pic'
 ac_config="--disable-asm --enable-pic"
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

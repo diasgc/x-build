@@ -19,11 +19,9 @@ lst_pc='libvvdec.pc'
 dev_bra='master'
 dev_vrs='2.3.0'
 
-. xbuild
-
 # native clang llvm-18: missing LLVMgold.so
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

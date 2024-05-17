@@ -17,8 +17,8 @@ eta='60'
 lst_inc=''
 lst_lib=''
 
-. xbuild
+on_config(){
+    CFG="-Drootprefix=${ROOTDIR}/builds"
+}
 
-CFG="-Drootprefix=${ROOTDIR}/builds"
-
-start
+. xbuild && start

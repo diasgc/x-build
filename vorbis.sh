@@ -17,13 +17,11 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='vorbisfile.pc vorbisenc.pc vorbis.pc'
 
-. xbuild
-
 cmake_config='-DBUILD_TESTING=OFF'
 cmake_static='BUILD_STATIC_LIBS'
 ac_config='--disable-docs --disable-examples --disable-oggtest'
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++  ++   .   .  clang

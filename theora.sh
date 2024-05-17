@@ -21,8 +21,6 @@ lst_bin='libtheoraenc libtheoradec libtheora'
 lst_lic='COPYING LICENCE AUTHORS'
 lst_pc='theora.pc theoraenc.pc theoradec.pc'
 
-. xbuild
-
 _source_config(){
     # dont run configure on autogen
     sed -i 's/^cd \$olddir/exit 0;&/' autogen.sh
@@ -31,7 +29,7 @@ _source_config(){
 
 ac_config="--disable-doc --disable-spec --disable-examples --disable-oggtest --disable-vorbistest"
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

@@ -23,13 +23,12 @@ dev_vrs='0.1.3'
 
 eta='17'
 
-. xbuild
-
 cmake_config='-DENABLE_ASM=ON'
 
 #[ "$arch" == "arm-linux-androideabi" ] && ac_config+=" --enable-armv7neon=yes"
 #HOST_NPROC=1
-start
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++ +++  .  clang

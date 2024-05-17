@@ -21,12 +21,14 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='zlib.pc'
 
-compiler_config(){
+on_config(){
     $host_gnu && $host_arm && use_clang=false
+    if $host_ndk;then
+        pc_libdir="/lib/${arch}"
+        create_pkgconfig_file zlib '-lz' "${SYSROOT}/usr"
+        exit 0
+    fi
 }
-
-. xbuild
-
 
 on_end(){
     $host_mingw && {
@@ -36,12 +38,7 @@ on_end(){
     return 0
 }
 
-if $host_ndk;then
-    pc_libdir="/lib/${arch}"
-    create_pkgconfig_file zlib '-lz' "${SYSROOT}/usr"
-else
-    start
-fi
+. xbuild && start
 
 # Filelist
 # --------

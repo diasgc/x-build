@@ -13,22 +13,24 @@ cfg='make'
 eta='45'
 API=26
 
-. xbuild
-# todo clean & simplify
-
 OBJS="tree.o unix.o html.o xml.o json.o hash.o color.o file.o"
 CFLAGS+=' -std=c11 -O3 -flto -Wall' LDFLAGS+=" -s"
 
-case $host_os in
-  android) CFLAGS+=" -D__ANDROID" LDFLAGS+=" -lc" OBJS+=" strverscmp.o";;
-  gnu) CFLAGS=" -DLINUX";;
-  *) doErr "  $arch is unsupported";;
-esac
+. xbuild
+# todo clean & simplify
 
-$host_64 && CFLAGS+=" -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
+on_config(){
+  case $host_os in
+    android) CFLAGS+=" -D__ANDROID" LDFLAGS+=" -lc" OBJS+=" strverscmp.o";;
+    gnu) CFLAGS=" -DLINUX";;
+    *) doErr "  $arch is unsupported";;
+  esac
 
-CFG="prefix=$INSTALL_DIR CC=$CC"
-mki="prefix=$INSTALL_DIR install"
+  $host_64 && CFLAGS+=" -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
+
+  CFG="prefix=$INSTALL_DIR CC=$CC"
+  mki="prefix=$INSTALL_DIR install"
+}
 
 source_patch(){
     # clear defaults

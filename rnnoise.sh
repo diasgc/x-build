@@ -16,9 +16,7 @@ lst_bin=''
 lst_lic='AUTHORS COPYING'
 lst_pc='rnnoise.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .   clang

@@ -23,13 +23,13 @@ lst_lic='LICENSE.md LICENSE-BSD2.md PATENTS.md'
 lst_pc='SvtAv1Enc.pc SvtAv1Dec.pc'
 
 cmake_config="-DBUILD_TESTING=OFF"
-
-. xbuild
-
-$host_ndk && LDFLAGS+=" -llog"
 WFLAGS='-Wno-unused-command-line-argument -Wno-implicit-function-declaration'
 
-start
+on_config(){
+    $host_ndk && LDFLAGS+=" -llog"
+}
+
+. xbuild && start
 
 # Filelist
 # --------

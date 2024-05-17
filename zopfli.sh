@@ -23,9 +23,7 @@ dev_vrs='1.0.3'
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

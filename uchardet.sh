@@ -16,13 +16,11 @@ lst_lib='libuchardet'
 lst_bin='uchardet'
 dev_vrs='0.0.8'
 
-. xbuild
-
 WFLAGS='-Wno-unused-const-variable'
 
 #$host_arm && cmake_config+=" -DCHECK_SSE2=OFF" || cmake_config+=" -DCHECK_SSE2=ON"
 
-start
+. xbuild && start
 
 # Filelist
 # --------

@@ -16,9 +16,7 @@ lst_pc='sqlite3.pc'
 
 dev_vrs='3.39.0'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

@@ -23,9 +23,7 @@ lst_pc='ucl.pc'
 build_strip=false
 eta='14'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++  .   .  clang

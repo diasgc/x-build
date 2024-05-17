@@ -18,11 +18,11 @@ lst_bin='twolame'
 lst_lic='COPYING README AUTHORS'
 lst_pc='twolame.pc'
 
-. xbuild
+on_config(){
+    $build_bin && dep='sndfile'
+}
 
-$build_bin && dep='sndfile'
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

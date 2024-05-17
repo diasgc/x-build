@@ -16,15 +16,16 @@ lst_pc='libvmaf.pc'
 
 dev_vrs='3.0.0'
 
-. xbuild
-
 config_dir="libvmaf"
 build_dir='libvmaf'
 
 meson_cfg='-Denable_docs=false -Denable_tests=false'
-$host_arm || meson_cfg+=' -Denable_avx512=true'
 
-start
+on_config(){
+    $host_arm || meson_cfg+=' -Denable_avx512=true'
+}
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

@@ -19,7 +19,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='libxvidcore.pc'
 
-. xbuild
+#WFLAGS="-Wno-unused-but-set-variable -Wno-shift-negative-value -Wno-misleading-indentation -Wno-unused-command-line-argument"
 
 source_get(){
     pushd $dir_sources
@@ -28,29 +28,29 @@ source_get(){
 	popd
 }
 
-if [ "x${cfg}" == "xac" ]; then
-	dir_config="${dir_src}/build/generic"
-	dir_build="${dir_src}/build/generic"
-	$host_ndk && $host_x86 && CFG+=" --disable-assembly"
-	$host_clang && static_ldflag="-static";
-	unset CSH # unsupported static/shared tags
-else
-	cmake_config="-DXVID_PKGCONFIG_IN=${dir_root}/cmake/pkg-config.pc.in"
-fi
-
-#WFLAGS="-Wno-unused-but-set-variable -Wno-shift-negative-value -Wno-misleading-indentation -Wno-unused-command-line-argument"
-
 _before_make(){
 	rm $dir_install/lib/libxvidcore.so*
 	sed -i 's/-O2 -fstrength-reduce/-Ofast -flto/g' ${dir_config}/platform.inc
 }
 
+on_config(){
+	if [ "x${cfg}" == "xac" ]; then
+		dir_config="${dir_src}/build/generic"
+		dir_build="${dir_src}/build/generic"
+		$host_ndk && $host_x86 && CFG+=" --disable-assembly"
+		$host_clang && static_ldflag="-static";
+		unset CSH # unsupported static/shared tags
+	else
+		cmake_config="-DXVID_PKGCONFIG_IN=${dir_root}/cmake/pkg-config.pc.in"
+	fi
+}
 
-start
+. xbuild && start
 
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  +   +   +   +   .   .   .   .   .   .   .  static
-#  +   +   +   +   .   .   .   .   .   .   .  shared
+# cpu av8 av7 x86 x64
+# NDK  +  N/A  .   .  clang
+# GNU  F   F   .   .  gcc
+# WIN  F   F   .   .  clang/gcc
 
 # Filelist
 # --------

@@ -22,13 +22,11 @@ lst_bin='tagreader
 lst_lic='COPYING.LGPL COPYING.MPL'
 lst_pc='taglib.pc taglib_c.pc'
 
-. xbuild
-
 source_patch(){
   do_log 'sub' git submodule update --init
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++  .  +++ clang

@@ -17,18 +17,17 @@ cmake_static='BUILD_STATIC_LIBS'
 
 dev_vrs='10.40'
 
-
 lst_inc='pcre2.h pcre2posix.h'
 lst_lib='libpcre2-posix libpcre2-8 libpcre2-16 libpcre2-32'
 lst_bin='pcre2-config pcre2grep'
 lst_lic='LICENSE COPYING AUTHORS'
 lst_pc='libpcre2-posix.pc libpcre2-8.pc libpcre2-16.pc libpcre2-32.pc'
 
-. xbuild
+on_config(){
+    $host_mingw || cmake_config+=' -DPCRE2_STATIC_PIC=ON'
+}
 
-$host_mingw || cmake_config+=' -DPCRE2_STATIC_PIC=ON'
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

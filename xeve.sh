@@ -27,15 +27,20 @@ dev_vrs='0.5.0'
 stb_bra=''
 stb_vrs='0.4.3'
 
-. xbuild
-
 cmake_config="-DSET_PROF=${xeve_profile}"
 
-$host_native && cmake_config+=' -DXEVE_NATIVE_BUILD=ON'
-$host_arm && cmake_config+=" -DARM=TRUE"
-
 # supress warnings as errors
-WFLAGS+=" -Wno-unknown-warning-option -Wno-empty-body -Wno-shift-negative-value -Wno-parentheses-equality -Wno-typedef-redefinition -Wno-for-loop-analysis"
+WFLAGS+=" -Wno-unknown-warning-option \
+ -Wno-empty-body \
+ -Wno-shift-negative-value \
+ -Wno-parentheses-equality \
+ -Wno-typedef-redefinition \
+ -Wno-for-loop-analysis"
+
+on_config(){
+    $host_native && cmake_config+=' -DXEVE_NATIVE_BUILD=ON'
+    $host_arm && cmake_config+=" -DARM=TRUE"
+}
 
 on_end(){
     if $build_static; then
@@ -45,4 +50,4 @@ on_end(){
     fi
 }
 
-start
+. xbuild && start

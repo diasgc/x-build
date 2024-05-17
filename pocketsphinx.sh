@@ -20,8 +20,8 @@ lst_bin=''
 
 dev_vrs='5.0.3'
 
-. xbuild
+on_config(){
+    $host_ndk && cmake_add_link_options='-llog'
+}
 
-$host_ndk && cmake_add_link_options='-llog'
-
-start
+. xbuild && start

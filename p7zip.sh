@@ -11,13 +11,14 @@ src='https://github.com/jinfeihan57/p7zip.git'
 cfg='make'
 eta='600'
 
-. xbuild
-
 static_ldflag=-static
-CXXFLAGS+=" $CPPFLAGS -Wno-c++11-narrowing -Wno-dangling-else -Wno-switch"
-CC="$CC $CFLAGS $CPPFLAGS"
-mkf="7z 7za OPTFLAGS=${CXXFLAGS} DEST_HOME=${dir_install}"
-mki="install DEST_HOME=${dir_install}"
+
+on_config(){
+    CXXFLAGS+=" $CPPFLAGS -Wno-c++11-narrowing -Wno-dangling-else -Wno-switch"
+    CC="$CC $CFLAGS $CPPFLAGS"
+    mkf="7z 7za OPTFLAGS=${CXXFLAGS} DEST_HOME=${dir_install}"
+    mki="install DEST_HOME=${dir_install}"
+}
 
 before_make(){
     make clean
@@ -35,4 +36,4 @@ create_package(){
     make install DEST_HOME=${1}
 }
 
-start
+. xbuild && start

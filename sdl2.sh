@@ -26,8 +26,6 @@ lst_pc='sdl3.pc'
 dev_bra='master'
 dev_vrs='3.1.0'
 
-. xbuild
-
 #$host_ndk && CFG+=" -DANDROID=ON"
 #$host_arm && CFG+=" -DARMNEON=ON -DARMSIMD=ON -DMMX=OFF"
 #$host_mingw && CFG+=" -DCMAKE_COMPILER_IS_MINGW=TRUE" || CFG+=" -DSDL_STATIC_PIC=ON"
@@ -38,7 +36,7 @@ _source_get(){
     popdir
 }
 
-start
+. xbuild && start
 
 # Filelist
 # --------

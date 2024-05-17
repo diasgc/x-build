@@ -28,12 +28,10 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
-
 #if [ $host_ndk ]; then
 #    CXXFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/third_party/spirv-tools/include"
 #else
 #    start
 #fi
 
-start
+. xbuild && start

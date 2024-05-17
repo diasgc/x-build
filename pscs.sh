@@ -18,8 +18,6 @@ mkc='distclean'
 lst_inc=''
 lst_lib=''
 
-. xbuild
-
 CFG="--disable-libsystemd --disable-libudev"
 
 source_config(){
@@ -27,4 +25,4 @@ source_config(){
     autoreconf -i
 }
 
-start
+. xbuild && start

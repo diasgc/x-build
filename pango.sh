@@ -19,9 +19,7 @@ lst_bin='pango-view pango-segmentation pango-list'
 lst_lic='LICENSE AUTHORS'
 lst_pc='pango.pc pangoft2.pc pangocairo.pc pangofc.pc pangoot.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

@@ -16,11 +16,9 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
-. xbuild
-
 CFG="--disable-install-examples"
 
-start
+. xbuild && start
 
 # Filelist
 # --------

@@ -22,14 +22,9 @@ lst_lic='COPYING AUTHORS'
 lst_pc='speex.pc'
 dev_vrs='1.2.1'
 
-
-
-. xbuild
-
+. xbuild && start
 
 #LDFLAGS+=" -lm"
-
-start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

@@ -18,9 +18,7 @@ lst_pc='vidstab.pc'
 dev_bra='main'
 dev_vrs='1.20'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  +   .   .   .  clang

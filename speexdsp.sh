@@ -15,9 +15,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='speexdsp.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

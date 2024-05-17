@@ -32,8 +32,6 @@ lst_pc='simde.pc'
 
 eta='20'
 
-. xbuild
-
 LDFLAGS+=" -lm"
 
 #source_get(){ return 0; }
@@ -41,4 +39,4 @@ LDFLAGS+=" -lm"
 #on_config_arm(){ return 0; }
 #on_config_x86x(){ return 0; }
 
-start
+. xbuild && start

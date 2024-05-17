@@ -26,16 +26,16 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
-
 patch_source(){
     curl -L -O https://github.com/arsv/perl-cross/releases/download/${cross_vrs}/perl-cross-${cross_vrs}.tar.gz
     tar --strip-components=1 -zxf perl-cross-${cross_vrs}.tar.gz && rm -f perl-cross-${cross_vrs}.tar.gz
 }
 
-if [ ${host_cross} ]; then
-    cfg='ac'
-    ac_config="--target=${arch} -Duseshrplib"
-fi
+on_config(){
+    if [ ${host_cross} ]; then
+        cfg='ac'
+        ac_config="--target=${arch} -Duseshrplib"
+    fi
+}
 
-start
+. xbuild && start

@@ -25,12 +25,10 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
-
 build_all(){
     pushd ${dir_src}
     cargo cinstall --release --prefix ${dir_install}/rav1e --target ${arch}
     popd
 }
 
-start
+. xbuild && start
