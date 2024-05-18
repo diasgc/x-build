@@ -18,13 +18,13 @@ lst_pc='frei0r.pc'
 
 dev_vrs='1.8'
 
-. xbuild
-
-unset CSH
-
 cmake_config='-DWITHOUT_GAVL=ON -DWITHOUT_OPENCV=ON -DBUILD_SHARED_LIBS=ON'
 
-start
+on_config(){
+    unset CSH
+}
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

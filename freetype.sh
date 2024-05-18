@@ -29,9 +29,7 @@ lst_pc='freetype2.pc'
 
 dev_vrs='26.1.20'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

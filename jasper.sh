@@ -24,15 +24,13 @@ lst_bin='jasper multithread imgcmp imginfo'
 lst_lic='COPYRIGHT.txt LICENSE.txt'
 lst_pc='jasper.pc'
 
+WFLAGS='-Wno-pedantic -Wno-strict-prototypes'
+
 on_config_mingw(){
     cmake_config="-DWITH_STACK_PROTECTOR=OFF"
 }
 
-. xbuild
-
-$clang && WFLAGS='-Wno-pedantic -Wno-strict-prototypes'
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

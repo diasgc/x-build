@@ -11,15 +11,23 @@ src='https://git.videolan.org/git/ffmpeg/nv-codec-headers.git'
 cfg='make'
 eta='0'
 
-lst_inc=''
+dev_vrs=''
+
+lst_inc='ffnvcodec/dynlink_cuda.h 
+ ffnvcodec/nvEncodeAPI.h
+ ffnvcodec/dynlink_loader.h
+ ffnvcodec/dynlink_cuviddec.h
+ ffnvcodec/dynlink_nvcuvid.h'
 lst_lib=''
 lst_bin=''
+lst_pc='ffnvcodec.pc'
 
-. xbuild
-mki="PREFIX=${INSTALL_DIR} install"
-make_install="PREFIX=${INSTALL_DIR} install"
+on_config(){
+    mki="PREFIX=${INSTALL_DIR} install"
+    make_install="PREFIX=${INSTALL_DIR} install"
+}
 
-start
+. xbuild && start
 
 # Filelist
 # --------

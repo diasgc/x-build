@@ -10,6 +10,8 @@ lic='GLP-2.0'
 src='https://github.com/markkilgard/glut.git'
 eta='0'
 
+cfg='' #missing build-system
+
 #https://github.com/dcnieho/FreeGLUT.git
 
 lst_inc=''
@@ -18,6 +20,4 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-. xbuild
-
-start
+. xbuild && start

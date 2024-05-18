@@ -10,6 +10,6 @@ lic='BSD-2c'
 src='https://github.com/mpeg5/ffevc.git'
 cfg='cmake'
 
-. xbuild
+dev_vrs=''
 
-start
+. xbuild && start

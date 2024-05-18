@@ -19,19 +19,19 @@ lst_bin='glib-gettextize gdbus glib-genmarshal gdbus-codegen gio-querymodules go
 lst_lic='COPYING AUTHORS'
 lst_pc='glib-2.0.pc gio-2.0.pc gio-windows-2.0.pc gmodule-2.0.pc gmodule-export-2.0.pc gobject-2.0.pc gthread-2.0.pc gmodule-no-export-2.0.pc'
 
-. xbuild
-
 before_make(){
     mkf="-C ${dir_build}"
     mki="${mkf} install"
     make_install="${mkf} install"
 }
 
-$host_mingw && meson_cfg+=' -Dlibelf=disabled -Dforce_posix_threads=true'
-WFLAGS='-Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-array-bounds'
-LDFLAGS+=" -L${dir_install_lib} -liconv -lffi"
+on_config(){
+    $host_mingw && meson_cfg+=' -Dlibelf=disabled -Dforce_posix_threads=true'
+    WFLAGS='-Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-array-bounds'
+    LDFLAGS+=" -L${dir_install_lib} -liconv -lffi"
+}
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++ ... ... CLANG

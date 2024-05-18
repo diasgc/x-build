@@ -7,11 +7,9 @@ src='https://github.com/jinhr9801/filename-extension-signature.git'
 cfg='cmake'
 eta='30'
 
-. xbuild
-
 skip_pc=true
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK --+  .   .   .  clang

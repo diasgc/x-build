@@ -11,7 +11,7 @@ tls='ragel'
 eta='400'
 
 dev_bra='main'
-dev_vrs='8.4.0'
+dev_vrs='8.5.0'
 stb_bra=''
 stb_vrs=''
 
@@ -23,6 +23,7 @@ lst_pc='libharfbuzz.pc libharfbuzz-subset.pc'
 
 ac_config='--with-libstdc++=yes'
 cmake_bin='HB_BUILD_UTILS'
+cmake_definitions+=('-Wno-double-promotion')
 
 extraOpts(){
 	case $1 in
@@ -30,11 +31,7 @@ extraOpts(){
 	esac
 }
 
-. xbuild
-
-cmake_definitions+=('-Wno-double-promotion')
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

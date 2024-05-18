@@ -23,7 +23,10 @@ lst_bin='spirv-remap glslangValidator'
 lst_lic='LICENSE.txt'
 lst_pc='libSPIRV.pc libOSDependent.pc libSPVRemapper.pc libOGLCompiler.pc libHLSL.pc libglslang.pc libglslang-default-resource-limits.pc'
 
-. xbuild
+cmake_config='-DBUILD_TESTING=OFF -DINSTALL_GTEST=OFF
+ -DENABLE_OPT=ON -DALLOW_EXTERNAL_SPIRV_TOOLS=ON
+ -DENABLE_HLSL=ON 
+ -DBUILD_EXTERNAL=ON'
 
 patch_source(){
     pushd ${dir_src}
@@ -31,12 +34,7 @@ patch_source(){
     popd
 }
 
-cmake_config='-DBUILD_TESTING=OFF -DINSTALL_GTEST=OFF
- -DENABLE_OPT=ON -DALLOW_EXTERNAL_SPIRV_TOOLS=ON
- -DENABLE_HLSL=ON 
- -DBUILD_EXTERNAL=ON'
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

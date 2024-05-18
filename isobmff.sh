@@ -16,7 +16,11 @@ dev_vrs=''
 stb_bra=''
 stb_vrs=''
 
-. xbuild
+source_patch(){
+    git submodule update --init --recursive
+}
+
+. xbuild && start
 
 #case $host_sys in
 #    linux)   xinclude="-I${dir_src}/IsoLib/libisomediafile/linux";;
@@ -27,9 +31,3 @@ stb_vrs=''
 #-I/${dir_src}/external/Part04-Dynamic_Range_Control/trunk/tools/wavIO/include -I/${dir_src}/external/Part04-Dynamic_Range_Control/trunk/tools/writeonlubitbuf/include"
 #CFLAGS+=" $xinclude" CXXFLAGS+=" $xinclude" CPPFLAGS+=" $xinclude"
 #mkf="libisoiff isoiff_tool"
- 
-source_patch(){
-    git submodule update --init --recursive
-}
-
-start

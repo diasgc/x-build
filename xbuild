@@ -1591,10 +1591,10 @@ set_target_build(){
 
 set_env(){
 	case ${target_trip[0]} in
-		aarch64) host_arm=true;  host_arm32=false; host_arm64=true;  host_x86=false; host_x64=false;;
-		arm)     host_arm=true;  host_arm32=true;  host_arm64=true;  host_x86=false; host_x64=false;;
-		i686)    host_arm=false; host_arm32=false; host_arm64=false; host_x86=true;  host_x64=false;;
-		x86_64)  host_arm=false; host_arm32=false; host_arm64=false; host_x86=false; host_x64=true;;
+		aarch64) host_arm=true;  host_arm32=false; host_arm64=true;  host_x86=false; host_x64=false; host_bits=64;;
+		arm)     host_arm=true;  host_arm32=true;  host_arm64=true;  host_x86=false; host_x64=false; host_bits=32;;
+		i686)    host_arm=false; host_arm32=false; host_arm64=false; host_x86=true;  host_x64=false; host_bits=32;;
+		x86_64)  host_arm=false; host_arm32=false; host_arm64=false; host_x86=false; host_x64=true; host_bits=64;;
 	esac
 	case ${target_trip[3]} in
 		android) host_sys=linux;   host_mingw=false; host_os=android; host_ndk=true;	host_gnu=false;	host_clang=true;  PLATFORM="Android"

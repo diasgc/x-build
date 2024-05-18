@@ -17,9 +17,7 @@ lst_pc=''
 
 dev_vrs='9'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++  .   .  clang

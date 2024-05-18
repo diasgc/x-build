@@ -27,11 +27,11 @@ extraOpts(){
   esac
 }
 
-. xbuild
+on_config(){
+  $host_arm || cmake_config+=" -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_AVX=ON -DENABLE_AVX2=ON"
+}
 
-$host_arm || cmake_config+=" -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_AVX=ON -DENABLE_AVX2=ON"
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK PP   .   .   .  clang

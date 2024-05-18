@@ -17,9 +17,7 @@ lst_pc=''
 
 dev_vrs='1.0.0'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

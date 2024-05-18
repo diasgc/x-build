@@ -35,21 +35,18 @@ source_config(){
 }
 
 before_make(){
-  for f in $(find . -name "Makefile"); do sed -i 's/-O2 -pedantic/-O3 -flto/g' $f; done
+  for f in $(find . -name "Makefile"); do
+    sed -i 's/-O2 -pedantic/-O3 -flto/g' $f
+  done
   build_strip=false
 }
 
-. xbuild
+on_config(){
+  ABI="${host_bits}"
+  $host_mingw && ac_config+=" --enable-fat"
+}
 
-if $host_arm64 || $host_x64; then
-  ABI=64
-else
-  ABI=32
-fi
-
-$host_mingw && ac_config+=" --enable-fat"
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++  ++   .   .  clang

@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# check_opt $1
+function check_opt(){
+	if [ -f "${dir_root}/${1}.sh" ]; then
+		script_list+=( "${1}" )
+	elif fn_defined 'extraOpts'; then
+		extraOpts $1
+	fi
+}
+
 aa64='@(aa64|aa8|a*64-*android|android*-a*64|arm*8*android|android*arm*8)'
 aa32='@(aa32|aa7|arm-*android*|arm*7*-android*|android*arm*7*)'
 ax86='@(a86|ax86|*86-*android|android*86)'
@@ -111,12 +120,13 @@ while [ $1 ];do
 		--nobanner) banner=false;;
 		--nodev)    nodev=true;;
 		
-		* ) if fn_defined 'extraOpts'; then
-				extraOpts $1
-			else
-				cfg_args+=("${1}")
-			fi
-			;;
+		* ) check_opt $1;;
+
 	esac
 	shift
 done
+
+for s in ${script_list[@]}; do
+	source "${s}.sh"
+done
+

@@ -3,13 +3,14 @@
 lib='imlib2'
 dsc='Image loading, rendering, saving library'
 lic='GLP-2.0'
-src='https://git.enlightenment.org/legacy/imlib2.git'
-cfg='ag'
+vrs='1.12.2'
+src='https://sourceforge.net/projects/enlightenment/files/imlib2-src/1.12.2/imlib2-'${vrs}'.tar.gz'
+cfg='ac'
 eta='0'
 dep='freetype zlib bzip2 liblzma giflib libwebp libpng libjpeg libtiff'
 
 dev_bra='main'
-dev_vrs=''
+dev_vrs='1.12.2'
 stb_bra=''
 stb_vrs=''
 
@@ -21,11 +22,9 @@ lst_pc=''
 
 eta='20'
 
-CFG='--with-x=no --without-x-shm-fd --without-svg --without-id3 --without-heif'
+ac_config='--with-x=no --without-x-shm-fd --without-svg --without-id3 --without-heif'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

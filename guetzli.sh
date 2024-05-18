@@ -23,9 +23,7 @@ lst_pc=''
 
 cmake_static='BUILD_STATIC_LIBS'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

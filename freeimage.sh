@@ -23,9 +23,7 @@ lst_bin=''
 lst_lic='license-fi.txt license-gplv2.txt license-gplv3.txt'
 lst_pc='freeimage.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

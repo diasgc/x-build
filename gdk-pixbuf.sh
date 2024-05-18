@@ -24,9 +24,7 @@ lst_bin='gdk-pixbuf-pixdata gdk-pixbuf-query-loaders gdk-pixbuf-csource'
 lst_lic='COPYING'
 lst_pc='gdk-pixbuf-2.0.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

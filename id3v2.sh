@@ -20,9 +20,7 @@ lst_bin=''
 lst_lic='COPYING'
 lst_pc=''
 
-. xbuild
-
-start
+. xbuild && start
 
 #             a8  a7  x86 x64
 # ndk-clang   ++. ++. ++. ++.

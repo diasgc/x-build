@@ -18,12 +18,12 @@ lst_bin='fribidi'
 lst_lic='COPYING AUTHORS'
 lst_pc='fribidi.pc'
 
-. xbuild
+on_config(){
+    $host_mingw || meson_cfg+=' -Db_pie=true'
+    $use_clang && meson_cfg+=' --warnlevel=0'
+}
 
-$host_mingw || meson_cfg+=' -Db_pie=true'
-$use_clang && meson_cfg+=' --warnlevel=0'
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++  .   .  clang

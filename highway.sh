@@ -22,9 +22,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='libhwy.pc libhwy-test.pc libhwy-contrib.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

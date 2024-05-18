@@ -18,9 +18,7 @@ lst_pc='fdk-aac.pc'
 
 dev_vrs='2.0.3'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++ +++ +++ clang
