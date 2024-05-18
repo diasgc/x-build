@@ -11,9 +11,11 @@ cfg='cmake'
 dep='libjpeg'
 eta='60'
 
-. xbuild
+on_config_ndk(){
+    cmake_config+=' -DUSE_MOZJPEG=OFF'
+}
 
-start
+. xbuild && start
 
 # Filelist
 # --------

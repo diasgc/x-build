@@ -37,6 +37,7 @@ cmake_build_toolchainfile(){
 		set(CMAKE_SYSTEM_PROCESSOR "${cmake_system_processor}")
 		set(CMAKE_C_COMPILER ${CC})
 		set(CMAKE_CXX_COMPILER ${CXX})
+		set(CMAKE_ASM_NASM_COMPILER ${YASM})
 		EOF
 	$cmake_test_1 && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_AR ${AR} CACHE FILEPATH Archiver)
