@@ -18,9 +18,7 @@ lst_bin='JxrEncApp JxrDecApp'
 lst_lic='LICENSE AUTHORS'
 lst_pc='jpegxr.pc jxrglue.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

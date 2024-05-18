@@ -24,9 +24,9 @@ lst_pc='libarchive.pc'
 
 dev_vrs='3.7.5dev'
 
-. xbuild
-
-$host_ndk && CPPFLAGS+=" -I${dir_src}/contrib/android/include"
+on_config_ndk(){
+    CPPFLAGS+=" -I${dir_src}/contrib/android/include"
+}
 
 on_editpack(){
     if $host_ndk; then
@@ -36,7 +36,7 @@ on_editpack(){
     return 0
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

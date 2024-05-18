@@ -21,12 +21,12 @@ dev_vrs='1.6'
 stb_bra=''
 stb_vrs=''
 
-. xbuild
+on_config(){
+    ac_config="--disable-maintainer-mode --disable-docs --with-oniguruma=${dir_install}"
+    unset CSH
+}
 
-ac_config="--disable-maintainer-mode --disable-docs --with-oniguruma=${dir_install}"
-unset CSH
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

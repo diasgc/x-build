@@ -36,11 +36,11 @@ extraOpts(){
     esac
 }
 
-. xbuild
+on_build_bin(){
+    meson_cfg+=' -Dutils=true'
+}
 
-$build_bin && meson_cfg+=' -Dutils=true'
-
-start
+. xbuild && start
 
 # Filelist
 # --------

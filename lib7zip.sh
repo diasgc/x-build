@@ -11,13 +11,11 @@ cmake_config+='-DENABLE_TEST=OFF'
 eta='1095'
 dev_vrs='3.0.0'
 
-. xbuild
-
 source_config(){
     git submodule init && git submodule update
 }
 
-start
+. xbuild && start
 
 # cmake incomplete - no install
 

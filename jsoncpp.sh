@@ -18,15 +18,13 @@ dev_vrs='1.9.5'
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
 # -DBUILD_OBJECT_LIBS -DBUILD_SHARED_LIBS -DBUILD_STATIC_LIBS -DBUILD_TESTING -DJSONCPP_WITH_EXAMPLE
 
 cmake_config="-DBUILD_TESTING=OFF -DJSONCPP_WITH_TESTS=OFF"
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='JSONCPP_WITH_EXAMPLE'
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

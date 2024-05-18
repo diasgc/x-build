@@ -19,8 +19,6 @@ dev_vrs='0.17.99'
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
 cmake_config='-DDISABLE_WERROR=ON'
 
 # CMAKE OPTIONS
@@ -32,7 +30,7 @@ cmake_config='-DDISABLE_WERROR=ON'
 # ENABLE_THREADING	Bool	Enable partial threading support.
 # OVERRIDE_GET_RANDOM_SEED  Override json_c_get_random_seed() with custom code.
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

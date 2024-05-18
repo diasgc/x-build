@@ -28,7 +28,7 @@ cmake_clang_toolchain(){
 		EOF
 }
 
-cmake_test_1=false
+: "${cmake_fulltoolchain:=false}"
 
 cmake_build_toolchainfile(){
 	export cmake_toolchain_file="${dir_build}/${arch}.cmake"
@@ -39,7 +39,7 @@ cmake_build_toolchainfile(){
 		set(CMAKE_CXX_COMPILER ${CXX})
 		set(CMAKE_ASM_NASM_COMPILER ${YASM})
 		EOF
-	$cmake_test_1 && cat <<-EOF >>${cmake_toolchain_file}
+	$cmake_fulltoolchain && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_AR ${AR} CACHE FILEPATH Archiver)
 		set(CMAKE_RANLIB ${RANLIB} CACHE FILEPATH Indexer)
 		set(CMAKE_C_COMPILER_AR "${AR}")

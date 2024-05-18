@@ -4,10 +4,9 @@ lib='libass'
 dsc='LibASS is an SSA/ASS subtitles rendering library'
 lic='ISC'
 src='https://github.com/libass/libass.git'
-cfg='ag'
-dep='freetype fontconfig fribidi libpng harfbuzz'
+cfg='meson'
+dep='fribidi'
 pkg='libass'
-eta='60'
 
 lst_inc='ass/*.h'
 lst_lib='libass'
@@ -17,11 +16,31 @@ lst_pc='libass.pc'
 
 dev_bra='master'
 dev_vrs='0.17.1'
+eta='4'
 
-. xbuild
-ac_nosysroot=true
-CPPFLAGS+=" -I${dir_install_include}/fribidi -I${dir_install_include}/freetype2"
-start
+#cfg='ag'
+#ac_nosysroot=true
+#dep='freetype fontconfig fribidi libpng harfbuzz'
+
+meson_fontconfig=disabled
+
+meson_cfg='-Dtest=false -Dprofile=false -Ddirectwrite=disabled -Dcoretext=disabled'
+
+extraOpts(){
+    case $1 in --full)
+        dep+=' fontconfig'
+        meson_fontconfig=enabled
+        ;;
+    esac
+}
+
+on_config(){
+    meson_cfg+=" -Dfontconfig=${meson_fontconfig}"
+    $host_cross && meson_cfg+=' -Drequire-system-font-provider=false'
+    #CPPFLAGS+=" -I${dir_install_include}/fribidi -I${dir_install_include}/freetype2"
+}
+
+. xbuild && start
 
 # Filelist
 # --------

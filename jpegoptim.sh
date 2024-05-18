@@ -11,8 +11,10 @@ cfg='cmake'
 dep='libjpeg'
 eta='60'
 
-on_config_ndk(){
-    cmake_config+=' -DUSE_MOZJPEG=OFF'
+on_config(){
+    # cannot cross-compile mozjpeg
+    $host_cross && cmake_config+=' -DUSE_MOZJPEG=OFF'
+    return 0
 }
 
 . xbuild && start

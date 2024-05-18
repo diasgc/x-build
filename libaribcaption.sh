@@ -24,9 +24,7 @@ lst_pc='libaribcaption.pc'
 
 eta='20'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

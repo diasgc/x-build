@@ -17,11 +17,11 @@ eta='70'
 
 dev_vrs='2.3.0'
 
-. xbuild
+on_config_ndk(){
+    vrs='v2.3.0' # v2.3.1 fails to cmake find_package threads not found
+}
 
-$host_ndk && vrs='v2.3.0' # v2.3.1 fails to cmake find_package threads not found
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

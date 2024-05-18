@@ -8,7 +8,7 @@ cfg='ag'
 pkg='ao'
 eta='60'
 
-lst_inc='ao/*.h'
+lst_inc='ao/ao.h ao/plugin.h ao/os_types.h'
 lst_lib='libao'
 lst_bin=''
 lst_lic='COPYING AUTHORS'
@@ -19,14 +19,12 @@ dev_vrs='1.2.2'
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
 before_make(){
-	#no docs
+	# no docs
 	sed -i '/^SUBDIRS/ {s/ doc//}' ${dir_src}/Makefile
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++  ++   .   .  clang

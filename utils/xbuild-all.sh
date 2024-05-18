@@ -57,9 +57,22 @@ THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄
      ▄▀▄ ▀▀ █▀▀▄ █  █  █  █   █  █ 
     ▀   ▀   ▀▀▀  ▀▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀ 
 
-   A cross-build script collection
+   Cross-build scripts for ubuntu
     
 EOF
+}
+
+color_vars(){
+	local v
+	local box=
+	for c in R Y G C B M O F L; do
+		for i in 0 1 2 3 4 5 6; do
+			v="C${c}${i}"
+			printf "$v\u2605 "
+		done
+		printf "\n"
+	done
+	echo
 }
 
 color_table(){

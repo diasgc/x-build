@@ -9,7 +9,6 @@ src='https://github.com/DanBloomberg/leptonica.git'
 cfg='cmake'
 mki='install'
 make_install='install-strip'
-eta='180'
 
 lst_inc='leptonica/*.h'
 lst_lib='liblept'
@@ -18,6 +17,7 @@ lst_bin='converttops converttopdf convertsegfilestops
   xtractprotos fileinfo convertformat convertfilestopdf'
 lst_lic='leptonica-license.txt'
 lst_pc='lept_Release.pc'
+eta='180'
 
 dev_vrs='1.84.1'
 
@@ -25,6 +25,7 @@ cmake_bin="BUILD_PROG"
 cmake_config="-DBUILD_TESTS=OFF -DENABLE_GIF=OFF -DENABLE_ZLIB=OFF \
   -DENABLE_PNG=OFF -DENABLE_JPEG=OFF -DENABLE_TIFF=OFF \
   -DENABLE_WEBP=OFF -DENABLE_OPENJPEG=OFF -DSW_BUILD=OFF"
+cmake_definitions+=('-Wno-address-of-packed-member')
 
 ac_nosysroot=true
 ac_config+=" --disable-programs \
@@ -47,12 +48,7 @@ on_end(){
   return 0
 }
 
-
-cmake_definitions+=('-Wno-address-of-packed-member')
-
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

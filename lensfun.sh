@@ -22,7 +22,9 @@ lst_pc='lensfun.pc'
 
 . xbuild
 
-$build_static && dep+=' libpng'
+on_build_static(){
+    dep+=' libpng'
+}
 
 start
 

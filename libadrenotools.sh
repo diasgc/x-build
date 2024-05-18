@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# no install target rule
+
 lib='libadrenotools'
 dsc='A library for applying rootless Adreno GPU driver modifications/replacements'
 lic='BSD-2c'
@@ -19,9 +21,7 @@ lst_pc='adrenotools.pc'
 
 dev_vrs=''
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

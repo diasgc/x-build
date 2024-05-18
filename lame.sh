@@ -21,9 +21,7 @@ lst_bin='lame mp3rtp'
 lst_lic='LICENSE COPYING'
 lst_pc='lame.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++  .   .  clang

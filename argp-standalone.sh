@@ -4,7 +4,15 @@
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
-# missing make install
+# all: missing make install
+#
+# ndk: [src/argp-getopt.h:179:12]
+#           warning: a function declaration without a prototype is deprecated in all versions of C and is treated as a zero-parameter prototype
+#           extern int getopt ();
+#      [src/argp-fmtstream.c:107:7]
+#           error: call to undeclared function 'fwrite_unlocked'
+#           fwrite_unlocked (fs->buf, 1, fs->p - fs->buf, fs->stream);
+
 
 lib='argp-standalone'
 dsc='Another standalone version of the argp argument parsing functions from glibc'
@@ -27,13 +35,10 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
+on_config(){
+    cmake_config='-DBUILD_TESTING=OFF'
+    $host_ndk && cmake_fulltoolchain=true && cmake_config+=" -DCMAKE_C_COMPILER_CLANG_SCAN_DEPS=${CROSS_PREFIX}clang-scan-deps"
+    #$host_ming32 || cmake_definitions+=('-D_GNU_SOURCE=1')
+}
 
-$host_ming32 || cmake_definitions+=('-D_GNU_SOURCE=1')
-
-#source_get(){ return 0; }
-#patch_source(){ return 0; }
-#on_config_arm(){ return 0; }
-#on_config_x86x(){ return 0; }
-
-start
+. xbuild && start

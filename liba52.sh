@@ -13,7 +13,6 @@ lic='GPL'
 src="https://liba52.sourceforge.io/files/a52dec-${vrs}.tar.gz"
 cfg='cmake'
 cmake_static='BUILD_STATIC_LIBS'
-eta='10'
 
 pc_llib='-la52'
 
@@ -22,12 +21,11 @@ lst_lib='liba52'
 lst_bin='a52dec extract_a52'
 lst_lic='COPYING AUTHORS'
 lst_pc='liba52.pc'
+eta='10'
 
 dev_vrs='0.7.4'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------
