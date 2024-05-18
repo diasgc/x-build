@@ -12,8 +12,8 @@ cfg='cmake'
 dep='libiconv expat libpng inih'
 eta='60'
 # Options
-xmp="ON"
-png="ON"
+exiv2_xmp="ON"
+exiv2_png="ON"
 mingw_posix=true
 
 cmake_config="-DINSTALL_EXAMPLES=OFF -DEXIV2_BUILD_DOC=OFF \
@@ -21,8 +21,8 @@ cmake_config="-DINSTALL_EXAMPLES=OFF -DEXIV2_BUILD_DOC=OFF \
 
 extraOpts(){
 	if [ "$1" == "--min" ];then
-		png="OFF"
-		xmp="OFF"
+		exiv2_png="OFF"
+		exiv2_xmp="OFF"
 		dep="libiconv inih"
 	fi
 }
@@ -35,17 +35,17 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc=''
 
-cmake_config+=" -DEXIV2_ENABLE_PNG=$png -DEXIV2_ENABLE_XMP=$xmp"
+cmake_config+=" -DEXIV2_ENABLE_PNG=$exiv2_png -DEXIV2_ENABLE_XMP=$exiv2_xmp"
 
 on_config_mingw(){
 	cmake_config+=" -DCMAKE_TOOLCHAIN_FILE=${dir_src}/cmake/toolschains/ubuntu1804-mingw64.cmake -DEXIV2_ENABLE_WIN_UNICODE=ON"
 }
 
-. xbuild
-
-#$build_shared && cmake_config+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=ON" || cmake_config+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=OFF"
-$clang && WFLAGS+=" -Wno-unused-command-line-argument -Wno-unused-but-set-variable -Wno-format"
-LDFLAGS+=" -liconv"
+on_config(){
+	#$build_shared && cmake_config+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=ON" || cmake_config+=" -DEXIV2_ENABLE_DYNAMIC_RUNTIME=OFF"
+	$use_clang && WFLAGS+=" -Wno-unused-command-line-argument -Wno-unused-but-set-variable -Wno-format"
+	LDFLAGS+=" -liconv"
+}
 
 _source_patch(){
 	# update mingw toolchain to <xv_x64_mingw> in .config
@@ -54,7 +54,7 @@ _source_patch(){
 	sed -i "s|AND NOT APPLE|AND NOT MINGW|" ${dir_src}/cmake/compilerFlags.cmake
 }
 
-start
+. xbuild && start
 
 # Filelist
 # --------

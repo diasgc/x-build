@@ -21,11 +21,11 @@ dev_vrs='2.6.2'
 
 config_dir="expat"
 
-. xbuild
+on_config(){
+    $build_static && ! $build_shared && cmake_config+=' -DBUILD_SHARED_LIBS=OFF'
+}
 
-$build_static && ! $build_shared && cmake_config+=' -DBUILD_SHARED_LIBS=OFF'
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang
