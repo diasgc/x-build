@@ -31,11 +31,11 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='daaladec.pc daalaenc.pc'
 
-. xbuild
+on_build_bin(){
+     dep+=" libjpeg"
+}
 
-$build_bin && dep+=" libjpeg"
-
-start
+. xbuild && start
 
 
 # Filelist

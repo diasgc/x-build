@@ -22,7 +22,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-. xbuild
 ARCH=neon
 CFLAGS+=" -march=armv8-a+simd -mtune=cortex-a75"
-start
+
+. xbuild && start

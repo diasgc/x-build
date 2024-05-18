@@ -16,9 +16,7 @@ lst_bin=''
 lst_lic='LICENSE README'
 lst_pc='miniz.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

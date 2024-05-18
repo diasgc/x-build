@@ -9,9 +9,6 @@ src="http://www.oberhumer.com/opensource/lzo/download/lzo-${vrs}.tar.gz"
 cfg='cmake'
 eta='10'
 
-cmake_static="ENABLE_STATIC"
-cmake_shared="ENABLE_SHARED"
-
 dev_bra='master'
 dev_vrs='2.10'
 stb_bra=''
@@ -23,9 +20,15 @@ lst_bin='../libexec/lzo/examples/*'
 lst_lic='COPYING AUTHORS'
 lst_pc='lzo2.pc'
 
-. xbuild
+on_build_static(){
+    cmake_config+=" -DENABLE_STATIC=ON"
+}
 
-start
+on_build_shared(){
+    cmake_config+=" -DENABLE_SHARED=ON"
+}
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

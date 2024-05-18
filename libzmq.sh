@@ -19,11 +19,9 @@ dev_vrs='4.3.6'
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
 CFG='--disable-Werror --with-libsodium'
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

@@ -21,9 +21,7 @@ lst_pc='oniguruma.pc'
 cmake_config='-DINSTALL_DOCUMENTATION=OFF'
 cmake_static='BUILD_STATIC_LIBS'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

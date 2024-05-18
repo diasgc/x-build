@@ -20,9 +20,7 @@ lst_lic='LICENSE.MIT README.md'
 lst_pc='liblizard.pc'
 dev_vrs='1.0.0'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

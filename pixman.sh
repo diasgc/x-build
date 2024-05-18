@@ -5,12 +5,12 @@ apt='libpixman-1-dev'
 pkg='pixman-1'
 dsc='Pixel-manipulation library for X and cairo'
 lic='GPL-2.0'
-src='https://github.com/freedesktop/pixman.git'
-cfg='ag'
-dep='libpng'
+src='https://gitlab.freedesktop.org/pixman/pixman.git'
+cfg='meson'
+#dep='libpng'
 eta='275'
 
-dev_vrs='0.40.1'
+dev_vrs='0.43.5'
 
 lst_inc='pixman-1/*.h'
 lst_lib='libpixman-1'
@@ -19,13 +19,11 @@ lst_lic='COPYING AUTHORS'
 lst_pc='pixman-1.pc'
 
 on_config(){
-    $host_arm64 && ac_config='--disable-arm-a64-neon'
-    $host_arm32 && ac_config='--disable-arm-neon --disable-arm-simd'
-    $use_clang && WFLAGS='-Wunknown-attributes'
-}
-
-before_make(){
-    sed -i 's/-g -O2/-O3 -flto/g;s/-Wall -W/-W/g' Makefile pixman/Makefile
+    meson_cfg='-Dgtk=disabled -Dlibpng=disabled -Dtests=disabled -Ddemos=disabled -Dopenmp=disabled'
+    $host_arm && meson_cfg+=' -Dneon=enabled'
+    $host_arm64 && ac_config='--disable-arm-a64-neon' && meson_cfg='-Da64-neon=enabled'
+    #$host_arm32 && ac_config='--disable-arm-neon --disable-arm-simd'
+    $use_clang && CFLAGS='-Wno-unknown-attributes'
 }
 
 . xbuild && start

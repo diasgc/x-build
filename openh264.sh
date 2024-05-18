@@ -22,9 +22,7 @@ _build_prepare(){
     $host_ndk && $build_static && sed -i 's/-lc++/-lc++_static/g' "${dir_src}/meson.build"
 }
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

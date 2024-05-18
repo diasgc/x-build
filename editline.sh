@@ -28,9 +28,7 @@ on_config_mingw(){
     cfg='cmake'
 }
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

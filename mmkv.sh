@@ -25,8 +25,11 @@ dev_vrs=''
 stb_bra=''
 stb_vrs='v1.2.12'
 
-. xbuild
 
-$host_ndk && CPPFLAGS+=" -DMMKV_ANDROID" && LDFLAGS+=" -L/usr/${arch}/lib -llog"
+on_config_ndk(){
+    CPPFLAGS+=" -DMMKV_ANDROID"
+    LDFLAGS+=" -L/usr/${arch}/lib -llog"
+}
 
-start
+
+. xbuild && start

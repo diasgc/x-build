@@ -9,6 +9,8 @@ cfg_cmd='./.bootstrap'
 dep='gmp'
 prp='lib64/pkgconfig/nettle.pc'
 eta='90'
+
+ac_config="--disable-documentation --disable-mini-gmp --enable-pic CC_FOR_BUILD=gcc"
 mkc='distclean'
 
 lst_inc='nettle/*.h'
@@ -19,20 +21,19 @@ lst_pc='hogweed.pc nettle.pc'
 
 dev_vrs='3.9.1'
 
-. xbuild
+on_config(){
+  $host_arm && CFG+=" --enable-arm-neon" || CFG+=" --enable-x86-sha-ni --enable-x86-aesni"
+  ($host_ndk || $host_mingw) && CFG+=' --disable-assembler'
+  $host_cross || dir_install_pc=${dir_install}/lib64/pkgconfig
+}
 
-CFG="--disable-documentation --disable-mini-gmp --enable-pic CC_FOR_BUILD=gcc"
-
-$host_arm && CFG+=" --enable-arm-neon" || CFG+=" --enable-x86-sha-ni --enable-x86-aesni"
-($host_ndk || $host_mingw) && CFG+=' --disable-assembler'
-$host_cross || dir_install_pc=${dir_install}/lib64/pkgconfig
 
 on_create_pc(){
   [ -d "${dir_install}/lib64" ] && [ ! -d "${dir_install}/lib" ] && ln -s "${dir_install}/lib64" "${dir_install}/lib"
   return 0
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

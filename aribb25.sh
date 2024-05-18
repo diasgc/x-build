@@ -12,9 +12,10 @@ dep='pscs'
 lst_inc=''
 lst_lib=''
 
-. xbuild
-
-start
+# todo ndk: patch files (undeclared functions)
+#  pthread_cancel (src/eventhandler.c:185:9),
+#  issetugid (src/sys_unix.c:175:6)
+. xbuild && start
 
 #             a8  a7  x86 x64
 # ndk-clang   ... ... ... ...

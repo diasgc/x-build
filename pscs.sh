@@ -5,20 +5,20 @@
 # mingw-llvm  ... ... ... ...
 
 lib='pscs'
+pkg='libpcsclite'
 apt='libpscs-dev'
 dsc='Middleware to access a smart card using SCard API (PC/SC)'
 lic='BSD-3c'
 src='https://salsa.debian.org/rousseau/PCSC.git'
-cfg='ac'
+cfg='meson'
 eta='10'
-dep='libusb'
-mki='install-strip'
-mkc='distclean'
+tls='flex'
 
 lst_inc=''
 lst_lib=''
 
-CFG="--disable-libsystemd --disable-libudev"
+ac_config="--disable-libsystemd --disable-libudev"
+meson_cfg="-Dlibsystemd=false -Dlibudev=false -Dlibusb=false -Dpolkit=false -Dusb=false -Dserial=false"
 
 source_config(){
     ./bootstrap

@@ -22,16 +22,18 @@ lst_bin='lz4'
 lst_lic='LICENSE'
 lst_pc='liblz4.pc'
 
-. xbuild
-
-cmake_static='BUILD_STATIC_LIBS'
-cmake_bin='LZ4_BUILD_CLI'
-$build_bin && cmake_config+=' -DLZ4_BUILD_LEGACY_LZ4C=ON'
-
 meson_cfg='-Ddebug_level=0 -Dbin_examples=false -Dbin_contrib=false -Dbin_tests=false'
 meson_bin='bin_programs'
 
-start
+on_build_bin(){
+    cmake_config+=' -DLZ4_BUILD_CLI=ON -DLZ4_BUILD_LEGACY_LZ4C=ON'
+}
+
+on_build_static(){
+    cmake_config+=' -DBUILD_STATIC_LIBS=ON'
+}
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

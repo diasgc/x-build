@@ -22,14 +22,11 @@ ac_config="--enable-experimental-postfilter \
      --enable-fixed-point \
      --enable-custom-modes"
 
-
-. xbuild
-
 source_patch(){
   sed -i 's|XIPH_PATH_OGG|#XIPH_PATH_OGG|g' configure
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++  ++  ++  ++  clang

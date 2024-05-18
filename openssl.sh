@@ -20,34 +20,30 @@ lst_lic='LICENSE.txt AUTHORS.md'
 lst_pc='libssl.pc libcrypto.pc openssl.pc'
 
 dev_vrs='3.3.0'
+CFLAGS='-Wno-macro-redefined'
 
 # install no docs
 mki="install_sw"
 
-. xbuild
+on_config(){
+  dir_build="${dir_src}/build_${arch}"
+  PATH=$TOOLCHAIN/bin:$PATH
+  $host_ndk && CFG="android-${target_trip[0]} -D__ANDROID_API__=$API no-tests" && CFG="${CFG/aarch64/arm64}"
 
-dir_build="${dir_src}/build_${arch}"
+  case $arch in
+    x86_64-w64-mingw32 )    CFG="no-idea no-mdc2 no-rc5 mingw64 --cross-compile-prefix=x86_64-w64-mingw32-";;
+    i686-w64-mingw32 )      CFG="no-idea no-mdc2 no-rc5 mingw --cross-compile-prefix=i686-w64-mingw32-";;
+  esac
 
-PATH=$TOOLCHAIN/bin:$PATH
-
-$host_ndk && CFG="android-${target_trip[0]} -D__ANDROID_API__=$API no-tests" && CFG="${CFG/aarch64/arm64}"
-
-case $arch in
-  x86_64-w64-mingw32 )    CFG="no-idea no-mdc2 no-rc5 mingw64 --cross-compile-prefix=x86_64-w64-mingw32-";;
-  i686-w64-mingw32 )      CFG="no-idea no-mdc2 no-rc5 mingw --cross-compile-prefix=i686-w64-mingw32-";;
-esac
-
-$build_shared || CFG+=" no-shared"
-
-export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
-
-CFLAGS='-Wno-macro-redefined'
+  $build_shared || CFG+=" no-shared"
+  export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
+}
 
 build_config(){
   do_log 'config' $dir_src/Configure ${CFG} --prefix=${dir_install}
 }
 
-start
+. xbuild && start
 
 
 # Filelist

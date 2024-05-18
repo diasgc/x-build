@@ -24,11 +24,7 @@ lst_pc='x264.pc'
 
 eta='60'
 
-. xbuild
-
-$host_ndk && AS=$CC
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++ +++  .  clang

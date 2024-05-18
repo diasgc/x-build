@@ -20,12 +20,10 @@ lst_bin='curl curl-config'
 lst_lic='COPYING'
 lst_pc='libcurl.pc'
 
-. xbuild
-
 # todo remove manual
 ac_config="--with-openssl --disable-manual"
 
-start
+. xbuild && start
 
 
 # Filelist

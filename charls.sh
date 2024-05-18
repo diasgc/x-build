@@ -19,11 +19,9 @@ lst_bin=''
 lst_lic='LICENSE.md'
 lst_pc='charls.pc'
 
-. xbuild
-
 # unsupported dual static shared build
 # todo patch src/CMakeLists.txt
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  P   .   .   .  clang

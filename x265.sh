@@ -39,12 +39,12 @@ extraOpts(){
     return 0
 }
 
-. xbuild
-
-$build_shared && cmake_config="-DENABLE_SHARED=ON" || cmake_config="-DENABLE_SHARED=OFF"
-$host_mingw && cmake_config+=" -DENABLE_PIC=OFF"
-$host_arm && cmake_config+=" -DCROSS_COMPILE_ARM=ON -DENABLE_ASSEMBLY=OFF" || cmake_config+=" -DCMAKE_ASM_NASM_FLAGS=-w-macro-params-legacy"
-$host_native && cmake_config+=' -DNATIVE_BUILD=ON'
+on_config(){
+    $build_shared && cmake_config="-DENABLE_SHARED=ON" || cmake_config="-DENABLE_SHARED=OFF"
+    $host_mingw && cmake_config+=" -DENABLE_PIC=OFF"
+    $host_arm && cmake_config+=" -DCROSS_COMPILE_ARM=ON -DENABLE_ASSEMBLY=OFF" || cmake_config+=" -DCMAKE_ASM_NASM_FLAGS=-w-macro-params-legacy"
+    $host_native && cmake_config+=' -DNATIVE_BUILD=ON'
+}
 
 build_config(){
     cd ${dir_build}
@@ -80,7 +80,7 @@ build_config(){
     
 }
 
-start
+. xbuild && start
 
 # Filelist
 # --------

@@ -27,13 +27,8 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
+on_config(){
+    $host_arm && do_err 'Not available for arm' && exit 1
+}
 
-$host_arm && do_err 'Not available for arm' && exit 1
-
-#source_get(){ return 0; }
-#patch_source(){ return 0; }
-#on_config_arm(){ return 0; }
-#on_config_x86x(){ return 0; }
-
-start
+. xbuild && start

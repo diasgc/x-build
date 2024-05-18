@@ -16,9 +16,7 @@ ac_bin="--disable-examples|--enable-examples"
 
 dev_vrs='0.1.6'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

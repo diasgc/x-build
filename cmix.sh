@@ -19,9 +19,7 @@ lst_pc=''
 
 dev_vrs='19'
 
-. xbuild
-
-start
+. xbuild && start
 
 #             a8  a7  x86 x64
 # ndk-clang   ... ... ... ...

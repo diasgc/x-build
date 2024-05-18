@@ -20,15 +20,15 @@ lst_bin='gnutls-serv srptool psktool gnutls-cli ocsptool certtool gnutls-cli-deb
 lst_lic='LICENSE'
 lst_pc='gnutls.pc'
 
-. xbuild
-
-vrs="3.6.16"
-src="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-${vrs}.tar.xz"
-
 ac_config="--disable-hardware-acceleration --enable-local-libopts --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-doc --disable-manpages --disable-guile --disable-tests"
 WFLAGS='-Wno-tautological-constant-compare -Wno-unused-but-set-variable -Wno-unused-function -Wno-implicit-const-int-float-conversion -Wno-implicit-const-int-float-conversion -Wno-unused-but-set-parameter'
 
-start
+on_config(){
+    vrs="3.6.16"
+    src="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-${vrs}.tar.xz"
+}
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

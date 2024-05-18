@@ -21,9 +21,7 @@ lst_bin='dav1d'
 lst_lic='COPYING'
 lst_pc='dav1d.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

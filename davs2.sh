@@ -19,6 +19,12 @@ lst_bin='davs2'
 lst_lic='COPYING'
 lst_pc='davs2.pc'
 
+on_config(){
+    dir_config="${dir_src}/build/linux"
+    dir_build="${dir_src}/build/linux"
+    mkf="STRIP="
+}
+
 on_config_ndk(){
     ac_config="--enable-lto --enable-pic --enable-strip"
     LDFLAGS="-llog"
@@ -26,9 +32,7 @@ on_config_ndk(){
 
 . xbuild
 
-dir_config="${dir_src}/build/linux"
-dir_build="${dir_src}/build/linux"
-mkf="STRIP="
+
 
 start
 

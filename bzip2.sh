@@ -22,9 +22,7 @@ dev_bra='master'
 dev_vrs='1.1.0'
 WFLAGS='-Wno-sign-conversion'
 
-. xbuild
-
-start
+. xbuild && start
 
 #             a8  a7  x86 x64
 # ndk-clang   +++ +++ ... ...

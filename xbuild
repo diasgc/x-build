@@ -231,6 +231,10 @@ start(){
 	$build_shared && bss="${bss}${SSB}[shared]" || bss="${bss}${CD}[shared]"
 	$build_bin && echo -ne "${bss}${SSB}[bin]${C0} " || echo -ne "${bss}${CD}[bin]${C0} "
 	
+	fn_defined 'on_build_bin' && unset CBN && on_build_bin 
+	fn_defined 'on_build_static' && unset CSH && on_build_static
+	fn_defined 'on_build_shared' && unset CSH && on_build_shared 
+	
 	cd ${dir_sources}
 
 
@@ -405,7 +409,7 @@ start(){
 	else case $build_system in
 		cmake)
 			cmake_configure
-			cfg_cmd=cmake
+			cfg_cmd=${CMAKE_EXECUTABLE}
 			: "${cmake_bdir:=${dir_config}}"
 			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}" -Wno-dev)
 			do_log "${build_system}" ${cfg_cmd} ${cfg_args[@]}
@@ -764,7 +768,7 @@ meson_create_toolchain(){
 		cpp_ld = '${LD}'
 		ar = '${AR}'
 		as = '${AS}'
-		pkgconfig = 'pkg-config'
+		pkg-config = '$(command -v pkg-config)'
 		addr2line = '${ADDR2LINE}'
 		objcopy = '${OBJCOPY}'
 		objdump = '${OBJDUMP}'
@@ -1245,7 +1249,7 @@ showOpts(){
 		local od=$(pwd)
 		local bdir=$(pwd)/builds
 		cd "${1}/${config_dir}"
-		[ -f CMakeLists.txt ] && cmake -LA | awk '{if(f)print} /-- Cache values/{f=1}' >${od}/builds/${lib}_cmake.opts && nano "${od}/builds/${lib}_cmake.opts"
+		[ -f CMakeLists.txt ] && ${CMAKE_EXECUTABLE} -LA | awk '{if(f)print} /-- Cache values/{f=1}' >${od}/builds/${lib}_cmake.opts && nano "${od}/builds/${lib}_cmake.opts"
 		[ -f configure ] && ./configure --help >${od}/builds/${lib}_aconf.opts && nano "${od}/builds/${lib}_aconf.opts"
 		cd $od
 	else
@@ -1439,11 +1443,11 @@ toolchain_linux(){
 		#CXX="clang++ -target ${arch}" # -fuse-ld=lld"++
 		AS="${CC}"
 		LD="${TOOLCHAIN}/ld.lld" # --sysroot=${SYSROOT}"+
-		$build_static && LDFLAGS+=" -static"
+		#$build_static && LDFLAGS+=" -static"
 		GNU_CLANG_VERSION_FULL="$(clang -dumpversion)"
 		GNU_CLANG_VERSION_MAJOR=${GNU_CLANG_VERSION_FULL%%\.*}
 		CPPFLAGS="-I$/usr/lib/clang/${GNU_CLANG_VERSION_MAJOR}/include ${CPPFLAGS}"
-		LT_SYS_LIBRARY_PATH="/usr/lib/llvm-${GNU_CLANG_VERSION_MAJOR}"
+		LT_SYS_LIBRARY_PATH="/usr/lib/llvm-${GNU_CLANG_VERSION_MAJOR}/lib"
 	else
 		SYSROOT="/usr/${arch}"
 		TOOLCHAIN="/usr/bin"

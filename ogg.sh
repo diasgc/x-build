@@ -16,12 +16,10 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='ogg.pc'
 
-. xbuild
-
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config='-DBUILD_TESTING=OFF -DINSTALL_DOCS=OFF'
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++  ++  ++  ++  clang

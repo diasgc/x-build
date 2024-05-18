@@ -31,9 +31,7 @@ on_config_ndk(){
     export API=26 #vulkan sync_merge
 }
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

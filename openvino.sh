@@ -28,18 +28,20 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
-
-$host_ndk && {
-    build_shared=true
-    build_static=false
-    cmake_config+=" -DANDROID=ON -DANDROID_STL=c++_shared -DENABLE_INTEL_CPU=OFF" #-DANDROID_PLATFORM=34 -DANDROID_ABI=arm64-v8a"
-    LDFLAGS+=" -llog"
+on_config(){
+    if $host_ndk; then
+        build_shared=true
+        build_static=false
+        cmake_config+=" -DANDROID=ON -DANDROID_STL=c++_shared -DENABLE_INTEL_CPU=OFF" #-DANDROID_PLATFORM=34 -DANDROID_ABI=arm64-v8a"
+        LDFLAGS+=" -llog"
+    fi
 }
+
+
 
 #source_get(){ return 0; }
 #patch_source(){ return 0; }
 #on_config_arm(){ return 0; }
 #on_config_x86x(){ return 0; }
 
-start
+. xbuild && start

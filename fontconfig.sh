@@ -18,19 +18,19 @@ lst_pc='fontconfig.pc'
 dev_bra='master'
 dev_vrs='2.13.94'
 
-. xbuild
-
 meson_cfg='-Db_pie=true -Db_lto=true -Ddoc=disabled -Dtests=disabled'
 
-# build with meson requires tools desabled for static build (cannot find -lbz2)
-build_tools='disabled'
-$build_bin && $build_static && \
-    test ! -f ${dir_install_lib}/libbz2.a && \
-    ln -s ${dir_install_lib}/libbz2_static.a ${dir_install_lib}/libbz2.a && \
-    build_tools='enabled'
-meson_cfg+=" -Dtools=${build_tools}"
+on_config(){
+    # build with meson requires tools desabled for static build (cannot find -lbz2)
+    build_tools='disabled'
+    $build_bin && $build_static && \
+        test ! -f ${dir_install_lib}/libbz2.a && \
+        ln -s ${dir_install_lib}/libbz2_static.a ${dir_install_lib}/libbz2.a && \
+        build_tools='enabled'
+    meson_cfg+=" -Dtools=${build_tools}"
+}
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++  F  +++ clang

@@ -25,6 +25,4 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
-
-start
+. xbuild && start

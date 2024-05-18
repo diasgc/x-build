@@ -6,7 +6,6 @@ lic='GPL'
 src='https://github.com/AviSynth/AviSynthPlus.git'
 cfg='cmake'
 
-cmake_bin="ENABLE_PLUGINS"
 cmake_config="-DHEADERS_ONLY=OFF"
 
 lst_inc='avisynth/*.h'
@@ -17,6 +16,9 @@ lst_pc='avisynth.pc'
 
 eta=240
 
+on_build_bin(){
+    cmake_config+=" -DENABLE_PLUGINS=ON"
+}
 on_config_mingw(){
     # dont pass LT_SYS_LIBRARY_PATH to avoid redefinition error
     unset PKG_CONFIG_LIBDIR

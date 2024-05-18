@@ -26,12 +26,16 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
+on_config(){
+    if [ $host_ndk ]; then
+        CXXFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/libshaderc/include"
+        exit 0
+    else
+        cmake_config='-DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON'
+    fi
+}
 
-if [ $host_ndk ]; then
-    CXXFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/libshaderc/include"
-else
-    cmake_config='-DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON'
-    start
-fi
+. xbuild && start
+
+
 

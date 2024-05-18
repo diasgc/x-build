@@ -25,8 +25,6 @@ pc_llib='-lcryptopp'
 
 eta='190'
 
-. xbuild
-
 source_config(){
     local url="https://raw.githubusercontent.com/noloader/cryptopp-cmake/master/"
     for f in CMakeLists.txt cryptopp-config.cmake; do
@@ -34,7 +32,7 @@ source_config(){
     done
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

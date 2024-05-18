@@ -21,9 +21,7 @@ lst_pc='libopenjp2.pc'
 
 dev_vrs='2.5.0'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

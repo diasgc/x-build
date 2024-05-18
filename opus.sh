@@ -8,7 +8,7 @@ src='https://github.com/xiph/opus.git'
 cfg='cmake'
 dep='ogg'
 eta='60'
-ac_nopic=true
+#ac_nopic=true
 
 cmake_bin='OPUS_BUILD_PROGRAMS'
 

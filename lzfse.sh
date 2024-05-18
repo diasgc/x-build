@@ -16,9 +16,7 @@ lst_pc='lzfse.pc'
 
 dev_vrs='0.1.1'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

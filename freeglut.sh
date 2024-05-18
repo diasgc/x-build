@@ -12,8 +12,8 @@ cfg='cmake'
 eta='0'
 
 #config_dir='freeglut/freeglut'
-cmake_static='FREEGLUT_BUILD_STATIC_LIBS'
-cmake_shared='FREEGLUT_BUILD_SHARED_LIBS'
+#cmake_static='FREEGLUT_BUILD_STATIC_LIBS'
+#cmake_shared='FREEGLUT_BUILD_SHARED_LIBS'
 cmake_config='-DFREEGLUT_BUILD_DEMOS=OFF'
 
 dev_bra='main'
@@ -29,9 +29,13 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
+on_config_ndk(){
+    CMAKE_EXECUTABLE="/home/diasgc/Android/Sdk/cmake/3.22.1/bin/cmake"
+    cmake_config+=' -DFREEGLUT_GLES=ON'
+    unset CSH
+}
 
-start
+. xbuild && start
 
 # ndk: https://sourceforge.net/p/freeglut/bugs/257/
 

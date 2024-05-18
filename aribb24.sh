@@ -23,11 +23,9 @@ lst_bin=''
 lst_lic='COPYING README.md'
 lst_pc='aribb24.pc'
 
-. xbuild
-
 WFLAGS="-Wno-pointer-to-int-cast -Wno-unused-command-line-argument"
 
-start
+. xbuild && start
 
 #             a8  a7  x86 x64
 # ndk-clang   ++. ++. ++. ++.

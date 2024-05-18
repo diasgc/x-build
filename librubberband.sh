@@ -24,7 +24,9 @@ lst_pc='rubberband.pc'
 
 . xbuild
 
-$build_bin && meson_cfg+=' -Dcmdline=enabled' || meson_cfg+=' -Dcmdline=disabled'
+on_config(){
+    $build_bin && meson_cfg+=' -Dcmdline=enabled' || meson_cfg+=' -Dcmdline=disabled'
+}
 
 start
 

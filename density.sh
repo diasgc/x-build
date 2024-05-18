@@ -25,13 +25,11 @@ lst_pc='density.pc'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config="-DBUILD_BENCHMARK=ON"
 
-. xbuild
-
 _source_config(){
   git submodule update --init --recursive
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++ .   .  clang

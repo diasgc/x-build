@@ -23,11 +23,9 @@ dev_vrs='1.5.1'
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
 cmake_config="-DBUILD_TOOLS=OFF -DBUILD_TESTS=OFF -DFFT_LIB=fftw3" #-DKISSFFT_SOURCE_DIR=${dir_src}/src/3rdparty/kissfft
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

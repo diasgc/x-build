@@ -24,11 +24,9 @@ lst_bin='exhale'
 lst_lic='README.md'
 lst_pc='exhale.pc'
 
-. xbuild
-
 cmake_config="-DBUILD_TESTS=OFF -DCMAKE_DL_LIBS=ON"
 
-start
+. xbuild && start
 
 
 # Filelist

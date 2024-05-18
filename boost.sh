@@ -23,11 +23,11 @@ lst_pc='boost.pc'
 pc_llib=null
 pc_vrs="$dev_vrs"
 
-. xbuild
+on_config(){
+    export CXXFLAGS="${CPPFLAGS}"
+}
 
-export CXXFLAGS="${CPPFLAGS}"
-
-start
+. xbuild && start
 
 # Filelist
 # --------

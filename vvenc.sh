@@ -24,7 +24,7 @@ on_config(){
 }
 
 
-start && . xbuild
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++  .   .  clang

@@ -24,9 +24,7 @@ lst_bin='aria2c'
 lst_lic='COPYING AUTHORS'
 lst_pc=''
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

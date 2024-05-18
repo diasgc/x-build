@@ -21,11 +21,11 @@ lst_bin=''
 lst_lic='LICENSE COPYRIGHT'
 lst_pc=''
 
-. xbuild
+on_config(){
+    $host_ndk && cmake_config+=' -DBUILD_ANDROID_EXAMPLES=OFF -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_KOTLIN_EXTENSIONS=OFF'
+}
 
-$host_ndk && cmake_config+=' -DBUILD_ANDROID_EXAMPLES=OFF -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_KOTLIN_EXTENSIONS=OFF'
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  +   .   .   .  clang

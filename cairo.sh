@@ -30,11 +30,9 @@ lst_pc='cairo-gobject.pc
   cairo-svg.pc
   cairo-script.pc'
 
-. xbuild
-
 WFLAGS=' -Wno-unused-function -Wno-parentheses-equality -Wno-implicit-const-int-float-conversion -Wno-sometimes-uninitialized -Wno-switch-enum'
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

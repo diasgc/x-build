@@ -24,8 +24,10 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-. xbuild
-
 cmake_config="-DBoost_NO_WARN_NEW_VERSIONS=ON"
-$host_arm32 || cmake_config+=' -DUSE_SIMD=ON'
-start
+
+on_config(){
+    $host_arm32 || cmake_config+=' -DUSE_SIMD=ON'
+}
+
+. xbuild && start

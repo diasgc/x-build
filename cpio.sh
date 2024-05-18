@@ -34,9 +34,7 @@ lst_inc=''
 lst_lib=''
 lst_bin='cpio'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

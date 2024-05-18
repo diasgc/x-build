@@ -25,17 +25,19 @@ lst_bin=''
 lst_lic='copying'
 lst_pc=''
 
-. xbuild
-
-$host_ndk && ac_config="--with-langvox=android --with-audio=linux --target=${arch}"
-
-dir_build=${dir_src}
-
 _on_make(){
     make && make get_voices
 }
 
-start
+on_config(){
+	dir_build=${dir_src}
+}
+
+on_config_ndk(){
+	ac_config="--with-langvox=android --with-audio=linux --target=${arch}"
+}
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

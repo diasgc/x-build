@@ -19,9 +19,7 @@ lst_bin='exrmultipart exrmakepreview exrenvmap exrmaketiled exrmultiview exrhead
 lst_lic='LICENSE.md PATENTES CODEOWNERS'
 lst_pc='OpenEXR.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

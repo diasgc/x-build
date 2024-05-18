@@ -27,9 +27,7 @@ lst_lic='share/licenses/FLIF/LICENSE_Apache2
     share/licenses/FLIF/LICENSE_LGPL
     share/licenses/FLIF/FLIF-CLA-template.txt'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

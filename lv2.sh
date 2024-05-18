@@ -10,13 +10,11 @@ pkg='lv2'
 dep='sndfile lilv'
 eta='19'
 
-. xbuild
-
 dev_vrs='1.18.11'
 
 meson_cfg='-Ddocs=disabled -Dtests=disabled -Dplugins=disabled'
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

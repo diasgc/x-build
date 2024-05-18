@@ -22,11 +22,11 @@ lst_bin=''
 lst_lic='COPYING'
 lst_pc='codec2.pc'
 
-. xbuild
+on_config(){
+    unset LDFLAGS
+}
 
-unset LDFLAGS
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++. ++. ++. ++. clang
