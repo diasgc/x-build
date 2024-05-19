@@ -27,4 +27,8 @@ lst_pc=''
 
 eta='20'
 
+on_config(){
+    LDFLAGS+=" -lglib-2.0"
+}
+
 . xbuild && start
