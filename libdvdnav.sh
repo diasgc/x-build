@@ -1,6 +1,6 @@
 #!/bin/bash
 # cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
+# NDK  +   .   .   .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
@@ -9,27 +9,20 @@ dsc='Library to navigate DVD disks'
 lic='GNU General Public License v2.0'
 vrs=''
 src="https://code.videolan.org/videolan/libdvdnav.git"
-cfg='cmake'
+cfg='ar'
 eta='0'
+dep='libdvdread'
+pkg='dvdnav'
 
 dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='6.1.1'
 
-lst_inc=''
-lst_lib=''
+lst_inc='dvdnav/dvdnav.h dvdnav/dvdnav_events.h dvdnav/dvd_types.h src/dvdnav/version.h'
+lst_lib='libdvdnav'
 lst_bin=''
-lst_lic='LICENSE AUTHORS'
-lst_pc=''
+lst_lic='AUTHORS ChangeLog COPYING README.md TODO'
+lst_pc='dvdnav.pc'
 
 eta='20'
 
-. xbuild
-
-#source_get(){ return 0; }
-#patch_source(){ return 0; }
-#on_config_arm(){ return 0; }
-#on_config_x86x(){ return 0; }
-
-start
+. xbuild && start

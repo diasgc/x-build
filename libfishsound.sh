@@ -1,8 +1,9 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  +   .   .   .   .   .   .   .   .   .   .  static
-#  +   .   .   .   .   .   .   .   .   .   .  shared
-#  -   .   .   .   .   .   .   .   .   .   .  bin
+
+# cpu av8 av7 x86 x64
+# NDK ++   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 lib='libfishsound'
 pkg='fishsound'
@@ -10,19 +11,16 @@ apt='libfishsound1-dev'
 dsc='Simple API that wraps Xiph.Org audio codecs'
 lic='BSD-2c'
 src='https://gitlab.xiph.org/xiph/libfishsound.git'
-sty='git'
 cfg='ag'
 dep='ogg vorbis speex flac sndfile'
 eta='20'
 
-. xbuild
+ac_nosysroot=true
 
-unset SYSROOT
-start
+. xbuild && start
 
 # Filelist
 # --------
-
 # include/fishsound/fishsound.h
 # include/fishsound/decode.h
 # include/fishsound/comments.h

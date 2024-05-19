@@ -9,17 +9,22 @@ pkg='gpg-error'
 apt='libgpg-error-dev'
 dsc='Error codes used by GnuPG et al.'
 lic='GPL-2.0'
-src='https://github.com/gpg/libgpg-error.git'
+vrs='1.49'
+src='https://github.com/gpg/libgpg-error/archive/refs/tags/libgpg-error-'${vrs}'.tar.gz'
+#src='https://github.com/gpg/libgpg-error.git'
 cfg='ar'
 eta='60'
 
-. xbuild
+ac_config="--disable-languages --disable-doc --disable-tests"
 
-CFG="--disable-languages --disable-doc --disable-tests"
-CPPFLAGS+=" -I${dir_src}/src"
-LDFLAGS+=" -L${dir_src}/src"
+_on_config(){
+    CPPFLAGS+=" -I${dir_src}/src"
+    LDFLAGS+=" -L${dir_src}/src"
+}
 
-case $arch in *android*) CFG+=" --disable-threads";; esac
+on_config_ndk(){
+    ac_config+=' --disable-threads'
+}
 
 source_patch(){
     local p="${dir_src}/src/syscfg/lock-obj-pub."
@@ -29,14 +34,14 @@ source_patch(){
     cp "${p}aarch64-unknown-linux-android.h" "${p}x86_64-unknown-linux-android.h"
 }
 
-before_make(){
+_before_make(){
     cd ${dir_build}
     # let make fail but generate 'gpg-error.h' so we can patch it after that
     make 2>&1 >>${log_file}
     [ -f "${dir_src}/src/gpg-error.h" ] && sed -i "/^}}}/d" ${dir_src}/src/gpg-error.h
 }
 
-start
+. xbuild && start
 
 # Filelist
 # --------

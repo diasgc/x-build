@@ -6,7 +6,8 @@ lic='Free'
 src='https://github.com/libffi/libffi.git'
 cfg='ar'
 eta='15'
-CFG='--enable-portable-binary --disable-docs'
+
+dev_vrs=''
 
 lst_inc='ffitarget.h ffi.h'
 lst_lib='libffi'
@@ -14,9 +15,9 @@ lst_bin=''
 lst_lic='LICENSE LICENSE-BUILDTOOLS'
 lst_pc='libffi.pc'
 
-. xbuild
+ac_config='--enable-portable-binary --disable-docs'
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

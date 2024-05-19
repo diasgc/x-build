@@ -10,8 +10,6 @@ eta='18'
 
 dev_bra='main'
 dev_vrs='0.19.0'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='gav1/*.h'
 lst_lib='libgav1'
@@ -19,15 +17,13 @@ lst_bin='gav1_decode'
 lst_lic='LICENSE AUTHORS'
 lst_pc='libgav1.pc'
 
-. xbuild
-
 cmake_config='-DLIBGAV1_ENABLE_EXAMPLES=OFF -DLIBGAV1_ENABLE_TESTS=OFF'
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang
-# GNU  .   .   .   .  gcc
+# GNU  .   .   .   .  clang/gcc
 # WIN  .   .   .   .  clang/gcc
 
 # Filelist

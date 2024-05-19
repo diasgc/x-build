@@ -12,9 +12,7 @@ mki='install-strip'
 mkc='distclean'
 
 dev_bra='main'
-dev_vrs='6.1.2'
-stb_bra=''
-stb_vrs=''
+dev_vrs='6.1.3'
 
 lst_inc='dvdread/*.h'
 lst_lib='libdvdread'
@@ -22,11 +20,9 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='dvdread.pc'
 
-. xbuild
+ac_config="--disable-apidoc"
 
-CFG="--disable-apidoc"
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

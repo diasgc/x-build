@@ -15,12 +15,9 @@ lst_bin=''
 lst_lic='README.rst'
 lst_pc='libdrm.pc libdrm_vc4.pc libdrm_amdgpu.pc libdrm_radeon.pc libdrm_freedreno.pc'
 
-
-. xbuild
-
 meson_cfg+=' -Dman-pages=disabled -Dnouveau=disabled -Dtests=false'
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

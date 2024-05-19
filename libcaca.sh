@@ -25,9 +25,9 @@ lst_bin='caca-config cacafire cacaserver img2txt cacaclock cacademo cacaview cac
 lst_lic='COPYING COPYING.GPL COPYING.LGPL COPYING.ISC AUTHORS'
 lst_pc='caca++.pc caca.pc'
 
-. xbuild
-
-$host_mingw || ac_config+=" --disable-win32"
+on_config(){
+  $host_mingw || ac_config+=" --disable-win32"
+}
 
 source_config(){
   sed -i 's/^AC_PREREQ/# &/' configure.ac
@@ -41,7 +41,7 @@ source_config(){
 
 #CFLAGS+=" -Wno-ignored-optimization-argument -Wno-absolute-value -Wno-unused-but-set-variable -Wno-int-conversion"
 
-start
+. xbuild && start
 
 # Filelist
 # --------

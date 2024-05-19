@@ -39,9 +39,7 @@ dev_vrs=''
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

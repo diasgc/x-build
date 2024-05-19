@@ -18,11 +18,11 @@ dev_vrs=''
 stb_bra=''
 stb_vrs=''
 
-. xbuild
+on_config(){
+    ac_config="--with-libgpg-error-prefix=${dir_install} --with-capabilities --disable-doc"
+}
 
-ac_config="--with-libgpg-error-prefix=${dir_install} --with-capabilities --disable-doc"
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

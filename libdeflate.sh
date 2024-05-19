@@ -22,11 +22,12 @@ lst_bin='gzip'
 lst_lic='COPYING'
 lst_pc='libdeflate.pc'
 
-. xbuild 
+on_config_arm(){
+    $host_arm32 && cmake_config='-DENABLE_CRC=OFF'
+    return 0
+}
 
-$host_arm32 && cmake_config='-DENABLE_CRC=OFF'
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

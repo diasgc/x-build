@@ -6,7 +6,7 @@
 # mingw-llvm  ... ... ... ...
 
 lib='libcloudstorage'
-apt="${libcloudstorage}-dev"
+apt="${lib}-dev"
 dsc='A C++  library providing access to files located in various cloud services licensed under GNU LGPLv2.1'
 lic='LGPL-2.1'
 src='https://code.videolan.org/videolan/libcloudstorage.git'
@@ -26,6 +26,4 @@ dev_vrs=''
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
-start
+. xbuild && start

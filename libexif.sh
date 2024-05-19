@@ -16,11 +16,9 @@ lst_lic='COPYING AUTHORS README SECURITY.md'
 lst_pc='libavif.pc'
 dev_vrs='0.6.24.1'
 
-. xbuild
-
 ac_config='--disable-docs'
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

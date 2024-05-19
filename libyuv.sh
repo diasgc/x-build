@@ -8,7 +8,7 @@ cfg='cmake'
 dep='libjpeg'
 eta='90'
 
-dev_vrs='1887'
+dev_vrs='1888'
 pc_llib='-lyuv'
 pc_libsprivate='-lpthread -ljpeg'
 

@@ -21,12 +21,10 @@ dev_vrs='0.2'
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
 CFLAGS="-fPIE -fPIC"
 LDFLAGS="-pie"
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

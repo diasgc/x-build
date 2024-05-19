@@ -7,7 +7,7 @@ lic='LGPL-3.0'
 src='https://github.com/strukturag/libde265.git'
 cfg='cmake'
 eta='140'
-cfg_cmd='./autogen.sh'
+#cfg_cmd='./autogen.sh'
 
 lst_inc='libde265/*.h'
 lst_lib='liblibde265'
@@ -23,21 +23,20 @@ stb_vrs=''
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config='-DENABLE_SDL=OFF'
 
-. xbuild
+on_config(){
+  if $host_arm; then
+    cmake_config+=' -DDISABLE_SSE=ON' 
+    ac_config+=" --disable-sse --disable-arm"
+  else
+    cmake_config+=' -DDISABLE_SSE=OFF'
+  fi
 
+  if [ "$build_system" == "automake" ] && $host_arm; then
+    CSH=${CSH/"--disable-shared "} #see similar https://github.com/opencv/opencv/pull/9052
+  fi
+}
 
-if $host_arm; then
-  cmake_config+=' -DDISABLE_SSE=ON' 
-  ac_config+=" --disable-sse --disable-arm"
-else
-  cmake_config+=' -DDISABLE_SSE=OFF'
-fi
-
-if [ "$build_system" == "automake" ] && $host_arm; then
-  CSH=${CSH/"--disable-shared "} #see similar https://github.com/opencv/opencv/pull/9052
-fi
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

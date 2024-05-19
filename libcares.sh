@@ -29,13 +29,11 @@ lst_bin=''
 lst_lic='LICENSE.md AUTHORS'
 lst_pc='libcares.pc'
 
-. xbuild
-
 on_editpack(){
     $build_man || rm -rf share/man
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

@@ -20,12 +20,13 @@ lst_bin='bs2bstream bs2bconvert'
 lst_lic='COPYING AUTHORS'
 lst_pc='libbs2b.pc'
 
-. xbuild
-
-$host_ndk && export ac_cv_func_malloc_0_nonnull=yes ac_cv_func_realloc_0_nonnull=yes
 LDFLAGS+=" -lm"
 
-start
+on_config_ndk(){
+    export ac_cv_func_malloc_0_nonnull=yes ac_cv_func_realloc_0_nonnull=yes
+}
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

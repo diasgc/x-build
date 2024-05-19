@@ -4,7 +4,7 @@
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
-# NDK: configure: error: argp not found. Consider installing argp-standalone
+# NDK: missing gnulib argp
 
 lib='libavc1394'
 dsc='libavc1394 is a programming interface for the 1394 Trade Association AV/C (Audio/Video Control) Digital Interface Command Set.'
@@ -28,7 +28,7 @@ lst_pc=''
 eta='20'
 
 on_config(){
-    LDFLAGS+=" -lglib-2.0"
+    CPPFLAGS+=" -I${dir_root}/sources/gnulib/native/argp/gllib"
+    LDFLAGS+=" -L${dir_root}/sources/gnulib/native/argp/gllib -lgnu"
 }
-
 . xbuild && start

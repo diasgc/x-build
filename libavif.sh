@@ -6,7 +6,7 @@ lic='BSD?'
 src='https://github.com/AOMediaCodec/libavif.git'
 cfg='cmake'
 dep='libpng libjpeg libyuv aom'
-eta='30'
+
 cmake_bin='AVIF_BUILD_APPS'
 cmake_static='BUILD_STATIC_LIBS'
 
@@ -15,15 +15,19 @@ lst_lib='libavif'
 lst_bin='avifenc avifdec'
 lst_lic='LICENSE README.md'
 lst_pc='libavif.pc'
-dev_vrs='0.9.3'
 
-. xbuild
+dev_vrs='1.0.4'
+eta='30'
 
-CFG="-DAVIF_ENABLE_WERROR=OFF -DAVIF_BUILD_EXAMPLES=OFF -DAVIF_BUILD_TESTS=OFF -DAVIF_CODEC_AOM=ON"
-$host_mingw && CPPFLAGS+=" -D__USE_MINGW_ANSI_STDIO=1"
+cmake_config="-DAVIF_ENABLE_WERROR=OFF -DAVIF_BUILD_EXAMPLES=OFF -DAVIF_BUILD_TESTS=OFF -DAVIF_CODEC_AOM=ON"
 LDFLAGS+=" -lpthread"
 
-start
+on_config(){
+    $host_mingw && CPPFLAGS+=" -D__USE_MINGW_ANSI_STDIO=1"
+}
+
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .   clang

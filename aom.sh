@@ -10,19 +10,13 @@ tls='perl'
 eta='240'
 
 dev_bra='main'
-dev_vrs='3.8.2'
+dev_vrs='3.9.0'
 
 lst_inc='aom/*.h'
 lst_lib='libaom'
 lst_bin='aomdec aomenc'
 lst_lic='LICENSE PATENTS AUTHORS'
 lst_pc='aom.pc'
-
-vremote(){
-     git ls-remote -t "$src" | grep -o 'v.*' | tail -n1
-}
-
-. xbuild
 
 cmake_static='CONFIG_STATIC=0|CONFIG_STATIC=1'
 cmake_bin='ENABLE_EXAMPLES'
@@ -37,7 +31,7 @@ cmake_config='-DENABLE_TESTS=OFF
 #$host_x86 && cmake_config+=' -DCMAKE_C_COMPILER_ARG1=-m32 -DCMAKE_CXX_COMPILER_ARG1=-m32'
 #$host_mingw && cmake_config+=" -DCONFIG_PIC=1"
 
-start
+. xbuild && start
 
 # v3.2.0      a8  a7  x86 x64
 # ndk-clang   +++ +++ +++ +++

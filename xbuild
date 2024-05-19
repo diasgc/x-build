@@ -56,7 +56,8 @@ export HOST_NPROC=$(nproc)
 : "${dep_build:=--static}"
 : "${build_strip:=false}"
 : "${build_cpack:=false}"
-: "${API:=29}"
+: "${API:=34}"
+: "${git_checkout:=false}"
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
 : "${build_pkgdl:=false}"
@@ -162,7 +163,7 @@ main(){
 
 	if [ -z "$(check_install pc)" ]; then
 		package_showinfo
-	elif $update || $retry; then
+	elif $update || $retry || $git_checkout; then
 		package_showinfo
 	else
 		end_script    
@@ -180,7 +181,6 @@ main(){
 gitjson=
 
 start(){
-
 	fn_defined 'on_config' && on_config
 
 	if $build_pkgdl; then
@@ -198,7 +198,7 @@ start(){
 		[ -d "${dir_src}" ] && rm -rf "${dir_src}" 2>/dev/null
 		! $req_update_deps && update=false
 	else
-		! $retry && [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
+		! $git_checkout && ! $retry && [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
 	fi
 
 	# Reset LOGFILE
@@ -299,6 +299,9 @@ start(){
 	cd ${dir_src}
 	if [ -n "${bra}" ]; then
 		do_log "${bra}" git checkout ${bra}
+	elif $git_checkout; then
+		do_log 'checkout' git checkout
+		unset git_checkout
 	fi
 
 	case $src in *git*) echo -ne "${CT0}[$(git describe --tags 2>/dev/null)]${CD} ";; esac
@@ -1716,6 +1719,7 @@ while [ $1 ];do
 		--static)   build_static=true; build_shared=false;;
 		--both)     build_static=true; build_shared=true;;
 		--bin)      build_bin=true;;
+		--checkout) git_checkout=true;;
 		--no-bin)   build_bin=false;;
 		--man)      build_man=true;;
 		--dist)     build_dist=true;;

@@ -20,13 +20,11 @@ lst_bin='lenstool'
 lst_lic='LICENSE AUTHORS'
 lst_pc='lensfun.pc'
 
-. xbuild
-
 on_build_static(){
     dep+=' libpng'
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

@@ -15,6 +15,4 @@ eta='60'
 pkg='libdc1394-2'
 cfg='cmake'
 
-. xbuild
-
-start
+. xbuild && start

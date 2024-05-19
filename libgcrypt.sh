@@ -1,8 +1,9 @@
 #!/bin/bash
-#             a8  a7  x86 x64
-# ndk-clang   +++ ... ... ...
-# linux-gnu   ... ... ... ...
-# mingw-llvm  ... ... ... ...
+
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
 
 lib='libgcrypt'
 apt='libgcrypt20-dev'
@@ -17,20 +18,19 @@ lst_inc='gcrypt.h'
 lst_lib='libgcrypt'
 lst_bin='mpicalc libgcrypt-config dumpsexp hmac256'
 
-. xbuild
-
-CFG="--disable-doc --with-libgpg-error-prefix=${LIBSDIR}"
-
-$host_arm && CFG+=" --disable-aesni-support \
+on_config(){
+    ac_config="--disable-doc --with-libgpg-error-prefix=${LIBSDIR}"
+    $host_arm && ac_config+=" --disable-aesni-support \
         --disable-shaext-support \
         --disable-pclmul-support \
         --disable-sse41-support \
         --disable-drng-support \
         --disable-avx-support \
         --disable-avx2-support"
-$host_gnu && CFG+=" --with-capabilities=yes"
+    $host_gnu && ac_config+=" --with-capabilities=yes"
+}
 
-start
+. xbuild && start
 
 # Filelist
 # --------

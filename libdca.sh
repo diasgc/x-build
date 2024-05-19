@@ -9,8 +9,6 @@ eta='0'
 
 dev_bra='master'
 dev_vrs='0.0.7'
-stb_bra='tags/0.0.7'
-stb_vrs='0.0.7'
 
 lst_inc='dts.h dca.h'
 lst_lib='libdca'
@@ -18,11 +16,13 @@ lst_bin='dcadec extract_dca dtsdec extract_dts'
 lst_lic='COPYING AUTHORS'
 lst_pc='libdca.pc libdts.pc'
 
-. xbuild
+on_config_ndk(){
+    test -f "${SYSROOT}/usr/include/sys/soundcard.h" || \
+		echo "#include <linux/soundcard.h>" >"$SYSROOT/usr/include/sys/soundcard.h" 
+	return 0
+}
 
-ndk_assert_h_sys_soundcard
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

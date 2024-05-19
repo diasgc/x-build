@@ -24,8 +24,6 @@ stb_vrs=''
 CFG="--without-cdio"
 WFLAGS='-Wno-header-guard'
 
-. xbuild
-
 source_patch(){
     # ix clang undefined symbol rpl_malloc error by disabling AC_FUNC_MALLOC
     sed -i 's|AC_FUNC_MALLOC|#AC_FUNC_MALLOC|' configure.ac
@@ -33,7 +31,7 @@ source_patch(){
     doAutoreconf ${dir_src}
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

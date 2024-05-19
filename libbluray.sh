@@ -22,10 +22,7 @@ lst_bin='zstdgrep zstd zstdless'
 lst_lic='LICENSE COPYING'
 lst_pc='libzstd.pc'
 
-. xbuild
-
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64 (static-shared-bin)
 # NDK +++  .   .   .  clang

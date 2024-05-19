@@ -27,8 +27,6 @@ dev_vrs='1.3.2'
 stb_bra=''
 stb_vrs=''
 
-. xbuild
-
 WFLAGS="-Wno-header-guard"
 
 source_patch(){
@@ -41,7 +39,7 @@ before_make(){
   sed -i 's/^SUBDIRS = doc include lib src test example/SUBDIRS = include lib/' Makefile
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

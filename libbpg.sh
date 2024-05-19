@@ -17,9 +17,7 @@ lst_bin=''
 
 dev_vrs='0.9.8'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------
