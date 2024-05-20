@@ -22,10 +22,8 @@ lst_bin='pbmtojbg85 pbmtojbg jbgtopbm85 jbgtopbm'
 
 dev_vrs='2.1'
 
-. xbuild
-#set -x
-start
-#set +x
+. xbuild && start
+
 # Filelist
 # --------
 #

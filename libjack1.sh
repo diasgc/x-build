@@ -8,9 +8,7 @@ src='https://github.com/jackaudio/jack1.git'
 cfg='ag'
 eta='30'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

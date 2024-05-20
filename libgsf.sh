@@ -21,9 +21,7 @@ lst_bin='gsf-vba-dump gsf gsf-office-thumbnailer'
 lst_lic='COPYING COPYING.LIB'
 lst_pc='libgsf-1.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  F   .   .  clang

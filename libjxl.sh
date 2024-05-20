@@ -22,11 +22,11 @@ lst_lic='LICENSE PATENTS AUTHORS'
 lst_pc=''
 dev_vrs='0.10.0'
 
-. xbuild
+on_config_ndk(){
+    cmake_config+=" -DSJPEG_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"
+}
 
-$host_ndk && cmake_config+=" -DSJPEG_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"
-
-start
+. xbuild && start
 
 # errors:
 # arm-android: clang++: error: unsupported option '-mfloat-abi=hard' for target 'thumbv7-none-linux-android28' (ac_strategy.cc)

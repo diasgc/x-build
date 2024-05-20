@@ -13,10 +13,8 @@ pc_llib="-lgsm"
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='BUILD_TOOLS'
 
-dev_bra=''
+dev_bra='master'
 dev_vrs='1.0.19'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='gsm.h'
 lst_lib='libgsm'
@@ -24,11 +22,11 @@ lst_bin='toast untoast tcat'
 lst_lic='COPYRIGHT'
 lst_pc='libgsm.pc'
 
-. xbuild
+on_config(){
+    LD=${CC}
+}
 
-LD=${CC}
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

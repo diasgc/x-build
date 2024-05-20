@@ -21,20 +21,18 @@ ac_bin='--disable-examples|--enable-examples'
 
 dev_bra='main'
 dev_vrs='1.17.6'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='libheif/*.h'
-lst_lib=''
-lst_bin=''
+lst_lib='libheif'
+lst_bin='heif-convert heif-enc heif-info'
 lst_lic='LICENSE AUTHORS'
-lst_pc='-ss 19:20 -to 25:20'
+lst_pc='libheif.pc'
 
-. xbuild
+on_config_ndk(){
+    LIBS+=" -llog"
+}
 
-$host_ndk && LIBS+=" -llog"
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

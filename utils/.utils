@@ -55,42 +55,6 @@ config_guess(){
   return 0
 }
 
-# usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
-create_pkgconfig_file(){
-	[ -z "${1}" ] && pc_file=${lib} || pc_file=${1}
-	[ -z "${2}" ] && pc_llib="-l${pc_file}" || pc_llib=${2}
-	[ -z "${3}" ] && pc_prefix=${dir_install} || pc_prefix=${3}
-	[ "${pc_llib}" == "null" ] && pc_llib=''
-	[ -z "$pc_libdir" ] && pc_libdir="/lib"
-	[ -z "$pc_incdir" ] && pc_incdir="/include"
-	[ -z "$pc_cflags" ] && pc_cflags="-I\${includedir}"
-	[ -z "$pc_libs" ] && pc_libs="-L\${libdir}"
-	[ -z "$pc_url" ] && pc_url=$(dirname $src)
-	fn_defined 'get_version' && get_version && pc_vrs=$vrs
-	[ -z "$pc_vrs" ] && {
-	[ -d "${dir_src}/.git" ] && pc_vrs=$(git_getversion ${dir_src}) || pc_vrs=$vrs
-	}
-	cat <<-EOF >${dir_install_pc}/${pc_file}.pc
-		prefix=${pc_prefix}
-		exec_prefix=\${prefix}
-		libdir=\${exec_prefix}${pc_libdir}
-		includedir=\${prefix}${pc_incdir}
-
-		Name: ${lib}
-		Description: ${dsc}
-		URL: ${pc_url}
-		Version: ${pc_vrs}
-		Requires: ${pc_requires}
-		Requires.private: ${pc_requiresprivate}
-		Libs: ${pc_libs} ${pc_llib}
-		Libs.private: ${pc_libsprivate}
-		Cflags: ${pc_cflags}
-
-		EOF
-	pc_filelist="${pc_file}.pc ${pc_filelist}"
-	unset pc_libdir pc_incdir pc_cflags pc_libs pc_url
-}
-
 build_packages_getdistdir(){
 	[ -f "${dir_install_pc}/${pkg}.pc" ] && vrs=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
 	[ -z "$vrs" ] && set_git_version

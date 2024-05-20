@@ -22,8 +22,6 @@ lst_bin='ilbc_test'
 lst_lic='COPYING AUTHORS'
 lst_pc='libilbc.pc'
 
-. xbuild
-
 source_get(){
     do_progress 'git' git clone --depth=1 $src $lib
     cd $lib
@@ -31,7 +29,7 @@ source_get(){
     cd ..
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

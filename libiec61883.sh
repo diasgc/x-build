@@ -19,11 +19,15 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc=''
 
-. xbuild
+dev_vrs=''
 
 #$host_mingw && unset dep
 
-start
+. xbuild && start
+
+
+
+
 
 
 # Filelist

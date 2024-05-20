@@ -32,25 +32,27 @@ lst_bin='genrb makeconv icuexportdata pkgdata gencnval gencfu gendict uconv icu-
 lst_lic='COPYING'
 lst_pc='icu-i18n.pc icu-uc.pc icu-io.pc'
 
-. xbuild
+on_config(){
+    if [ ! $host_ndk ] || [ $API -lt 31 ]; then
 
-if [ ! $host_ndk ] || [ $API -lt 31 ]; then
+        dir_build="${dir_src}/${config_dir}/build_${arch}"
+        ac_config="--with-data-packaging=archive"
 
-    dir_build="${dir_src}/${config_dir}/build_${arch}"
-    ac_config="--with-data-packaging=archive"
-
-    if ! $build_pkgdl && $host_cross; then
-        dir_cross="${dir_src}/${config_dir}/build_${build_arch}"
-        a=${arch}
-        if [ ! -d "${dir_cross}" ];then
-            ./libicu.sh lx64 --full
+        if ! $build_pkgdl && $host_cross; then
+            dir_cross="${dir_src}/${config_dir}/build_${build_arch}"
+            a=${arch}
+            if [ ! -d "${dir_cross}" ];then
+                ./libicu.sh native --full
+            fi
+            arch=$a
+            ac_config+=" --with-cross-build=${dir_cross}"
         fi
-        arch=$a
-        ac_config+=" --with-cross-build=${dir_cross}"
+    else
+        exit 0
     fi
+}
 
-    start
-fi
+. xbuild && start
 
 # Filelist
 # --------

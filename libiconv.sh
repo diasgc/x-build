@@ -3,13 +3,12 @@
 lib='libiconv'
 dsc='Character set conversion library'
 lic='LGPL2.1'
-vrs='1.17' src="https://ftp.gnu.org/gnu/libiconv/libiconv-${vrs}.tar.gz"
-#src='https://git.savannah.gnu.org/git/libiconv.git'
+src='https://git.savannah.gnu.org/git/libiconv.git'
 eta='90'
 cfg='ac'
 
-pc_llib="-liconv"
-pc_url="https://www.gnu.org/software/libiconv"
+#pc_llib="-liconv"
+#pc_url="https://www.gnu.org/software/libiconv"
 
 ac_config=" --enable-extra-encodings"
 ac_reconf=false
@@ -22,15 +21,16 @@ lst_pc='libiconv.pc'
 
 dev_vrs='1.17'
 
-iconv_latest_vrs(){
-	local out="$(curl https://ftp.gnu.org/gnu/libiconv/ 2>/dev/null)"
-	echo "$out" | grep -oP 'libiconv-[0-9\.]+.tar.gz' | tail -n 1 | grep -oP '[0-9]+.[0-9]+'
+on_config(){
+	vrs="$(curl https://ftp.gnu.org/gnu/libiconv/ 2>/dev/null | grep -oP 'libiconv-[0-9\.]+.tar.gz' | tail -n 1 | grep -oP '[0-9]+.[0-9]+')"
+	src="https://ftp.gnu.org/gnu/libiconv/libiconv-${vrs}.tar.gz"
 }
 
-. xbuild
+on_create_pc(){
+	build_pkgconfig --url=https://www.gnu.org/software/libiconv --libs=-liconv
+}
 
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++ +++ +++ CLANG
