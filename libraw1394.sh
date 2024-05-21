@@ -1,8 +1,9 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  +   .   .   .   .   .   .   .   .   .   .  static
-#  +   .   .   .   .   .   .   .   .   .   .  shared
-#  +   .   .   .   .   .   .   .   .   .   .  bin
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
 
 lib='libraw1394'
 apt="${lib}-dev"
@@ -20,9 +21,7 @@ lst_pc=''
 
 dev_vrs='2.0.5'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

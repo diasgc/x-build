@@ -17,17 +17,12 @@ lst_bin='webpinfo cwebp webpmux img2webp dwebp'
 lst_lic='COPYING PATENTS AUTHORS README'
 lst_pc='libwebp.pc libwebpmux.pc libwebpdemux.pc libwebpdecoder.pc'
 
-. xbuild
-
-#$host_ndk && $host_x64 && cfg="cmake"
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++  .   .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
-
 
 # Filelist
 # --------

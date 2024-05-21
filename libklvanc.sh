@@ -17,13 +17,11 @@ lst_bin='klvanc_eia708 klvanc_genscte104
          klvanc_smpte12_2 klvanc_smpte2038 klvanc_parse'
 lst_pc='libklvanc.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang
-# GNU  .   .   .   .  gcc
+# GNU  .   .   .   .  clang/gcc
 # WIN  .   .   .   .  clang/gcc
 
 # Filelist

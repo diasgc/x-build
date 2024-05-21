@@ -22,9 +22,7 @@ lst_bin=''
 
 dev_vrs='2.4.0'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

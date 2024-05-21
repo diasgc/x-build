@@ -18,9 +18,7 @@ dev_vrs='0.4.41'
 
 cmake_static='BUILD_STATIC_LIBS'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

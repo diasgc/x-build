@@ -21,8 +21,6 @@ cmake_config='-DBUILD_TOOLS=OFF -DTOOLS_ENABLE_X11=OFF
 
 dev_bra='master'
 dev_vrs='2.10'
-stb_bra=''
-stb_vrs=''
 
 lst_inc=''
 lst_lib=''
@@ -32,11 +30,4 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
-
-#source_get(){ return 0; }
-#patch_source(){ return 0; }
-#on_config_arm(){ return 0; }
-#on_config_x86x(){ return 0; }
-
-start
+. xbuild && start

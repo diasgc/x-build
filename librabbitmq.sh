@@ -13,8 +13,6 @@ eta='0'
 
 dev_bra='master'
 dev_vrs='0.15.0'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='amqp.h amqp_framing.h amqp_tcp_socket.h amqp_ssl_socket.h rabbitmq-c/*.h'
 lst_lib='librabbitmq'
@@ -24,6 +22,4 @@ lst_pc='librabbitmq.pc'
 
 eta='20'
 
-. xbuild
-
-start
+. xbuild && start

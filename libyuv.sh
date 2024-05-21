@@ -18,15 +18,14 @@ lst_bin='yuvconvert'
 lst_lic='LICENSE PATENTS OWNERS AUTHORS'
 lst_pc='libyuv.pc'
 
-. xbuild
-
 LDFLAGS+=" -ljpeg"
 
-get_version(){
-    echo $(cat ${dir_src}/include/libyuv/version.h | grep -oP 'LIBYUV_VERSION \K[0-9]+')
+on_create_pc(){
+    vrs=$(grep -oP 'LIBYUV_VERSION \K[0-9]+' "${dir_src}/include/libyuv/version.h")
+    build_pkgconfig --libs=-lyuv --libs_private=-lpthread,-ljpeg
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

@@ -6,32 +6,21 @@ dsc='LC3 and LC3 Plus are audio codecs designed for low-latency audio transport.
 lic='Apache License 2.0'
 src="https://github.com/google/liblc3.git"
 cfg='meson'
-eta='0'
 
 dev_bra='master'
 dev_vrs='1.1.0'
-stb_bra=''
-stb_vrs=''
 
-lst_inc=''
-lst_lib=''
+lst_inc='lc3_private.h lc3.h lc3_cpp.h'
+lst_lib='liblc3'
 lst_bin=''
-lst_lic='LICENSE AUTHORS'
-lst_pc=''
+lst_lic=''
+lst_pc='lc3.pc'
 
-eta='20'
+eta='2'
 
-. xbuild
+. xbuild && start
 
 # cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
-
-
-#source_get(){ return 0; }
-#patch_source(){ return 0; }
-#on_config_arm(){ return 0; }
-#on_config_x86x(){ return 0; }
-
-start
+# NDK  +   .   .   .  clang
+# GNU  +   .   .   .  clang/gcc
+# WIN  +   .   .   .  clang/gcc

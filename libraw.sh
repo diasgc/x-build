@@ -1,7 +1,8 @@
 #!/bin/bash
+
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang
-# GNU  .   .   .   .  gcc
+# GNU  .   .   .   .  clang/gcc
 # WIN  .   .   .   .  clang/gcc
 
 lib='libraw'
@@ -29,10 +30,7 @@ lst_pc='libraw.pc libraw_r.pc'
 
 eta='20'
 
-. xbuild
+ac_config='--disable-examples --disable-openmp'
 
-CFG='--disable-examples --disable-openmp'
-
-
-start
+. xbuild && start
 

@@ -8,24 +8,25 @@ cfg='ac'
 cfg_cmd='./bootstrap'
 tls='help2man'
 eta='35'
-pc_llib="-ltdl"
-pc_url="https://savannah.gnu.org/git/?group=libtool"
+#pc_llib="-ltdl"
+#pc_url="https://savannah.gnu.org/git/?group=libtool"
 
-lst_inc=''
-lst_lib=''
-lst_bin=''
-lst_lic='COPYING AUTHORS'
-lst_pc=''
+lst_inc='ltdl.h libltdl/lt_error.h libltdl/lt_dlloader.h libltdl/lt_system.h'
+lst_lib='libltdl'
+lst_bin='libtoolize libtool'
+lst_lic=''
+lst_pc='libtool.pc'
 mki='install'
 
 dev_bra='main'
-dev_vrs='2.4.6'
-stb_bra=''
-stb_vrs=''
+dev_vrs='2.5.0.1'
 
-. xbuild
+on_create_pc(){
+    vrs="$(sed 's/-.*//' "${dir_src}"/.version)"
+    build_pkgconfig --libs=-ltdl --url=https://savannah.gnu.org/git/?group=libtool
+}
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

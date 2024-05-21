@@ -20,9 +20,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS README.md'
 lst_pc='librsync.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

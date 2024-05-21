@@ -19,14 +19,14 @@ lst_bin='srt-live-transmit srt-ffplay srt-tunnel srt-file-transmit'
 lst_lic='LICENSE'
 lst_pc='srt.pc haisrt.pc'
 
-. xbuild
-
-$build_static || cmake_config+=' -DENABLE_STATIC=OFF'
-$build_shared || cmake_config+=' -DENABLE_SHARED=OFF'
-
 WFLAGS='-Wno-deprecated-declarations'
 
-start
+on_config(){
+    $build_static || cmake_config+=' -DENABLE_STATIC=OFF'
+    $build_shared || cmake_config+=' -DENABLE_SHARED=OFF'
+}
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

@@ -15,9 +15,7 @@ eta='40'
 dev_bra='main'
 dev_vrs='0.8.9.1'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

@@ -1,12 +1,9 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-# -/+  .   .   .   .   .   .   .   .   .   .  static
-#  +   .   .   .   .   .   .   .   .   .   .  shared
-#  +   .   .   .   .   .   .   .   .   .   .  bin
 
-# ISSUES
-#  - cannot build both static and shared
-#  - no pkg-config created
+# cpu av8 av7 x86 x64
+# NDK +++ +++  .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 lib='libwebp2'
 dsc='WebP 2 is the successor of the WebP image format'
@@ -14,13 +11,22 @@ lic='TEST'
 src='https://chromium.googlesource.com/codecs/libwebp2.git'
 cfg='cmake'
 #dep='aom libavif libjpeg'
-cmake_path='lib/wp2/cmake'
+#cmake_path='lib/wp2/cmake'
 
-. xbuild
+dev_vrs='0.1.0'
 
-cmake_config="-DWP2_BUILD_EXAMPLES=OFF -DWP2_ENABLE_TESTS=OFF -DWP2_BUILD_EXTRAS=OFF"
+cmake_config="-DWP2_BUILD_EXAMPLES=OFF -DWP2_BUILD_TESTS=OFF -DWP2_ENABLE_TESTS=OFF -DWP2_BUILD_EXTRAS=ON"
 
-start
+#on_config_ndk(){
+#    cmake_config+=" -DWP2_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"
+#}
+
+on_create_pc(){
+    vrs=$(grep -oP '^  VERSION \K([0-9\.]+)' "${dir_src}/CMakeLists.txt")
+    build_pkgconfig --libs=-lwebp2
+}
+
+. xbuild && start
 
 # Filelist
 # --------

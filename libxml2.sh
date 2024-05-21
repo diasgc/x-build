@@ -25,8 +25,6 @@ lst_bin='xmllint xmlcatalog xml2-config'
 lst_lic='Copyright'
 lst_pc='libxml-2.0.pc'
 
-. xbuild
-
 before_make(){
   case $build_system in
     cmake)    sed -i 's/xdocumentationx/xx/g' cmake_install.cmake;;
@@ -38,7 +36,7 @@ on_editpack(){
   rm -rf share/doc/libxml2/examples
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

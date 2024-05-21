@@ -23,14 +23,12 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='xtrans.pc'
 
-. xbuild
-
 on_editpack(){
     ln -s share/pkgconfig/xtrans.pc lib/pkgconfig/xtrans.pc
     ln -s ${dir_install}/share/pkgconfig/xtrans.pc ${dir_install}/lib/pkgconfig/xtrans.pc
 }
 
-start
+. xbuild && start
 
 # Filelist
 # --------

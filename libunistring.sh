@@ -3,9 +3,8 @@
 lib='libunistring'
 dsc='Unicode string library'
 lic='GLP-3.0'
-vrs='1.0'
 #src='https://git.savannah.gnu.org/git/libunistring.git'
-src="https://ftp.gnu.org/gnu/libunistring/libunistring-${vrs}.tar.gz"
+url='https://ftp.gnu.org/gnu/libunistring'
 cfg='ac'
 eta='431'
 dep='libiconv'
@@ -17,18 +16,22 @@ lst_bin=''
 lst_lic='COPYING COPYING.LIB AUTHORS'
 lst_pc='libunistring'
 
-. xbuild
+on_config(){
+    #vrs='latest'
+    vrs="$(curl -s "${url}/" | grep -oP '(?<=libunistring-)([0-9\.]+)(?=.tar.gz)' | tail -n 1)"
+    src="${url}/libunistring-${vrs}.tar.gz"
+}
 
 before_make(){
     #No docs
     sed -i 's/^SUBDIRS = doc /SUBDIRS = /g' Makefile
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang
-# GNU  .   .   .   .  gcc
+# GNU  .   .   .   .  clang/gcc
 # WIN  .   .   .   .  clang/gcc
 
 # Filelist

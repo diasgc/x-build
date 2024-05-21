@@ -11,26 +11,16 @@ vrs=''
 src="https://github.com/fukuchi/libqrencode.git"
 cfg='cmake'
 dep='libpng'
-eta='0'
 
 dev_bra='master'
 dev_vrs='4.1.1'
-stb_bra=''
-stb_vrs=''
 
-lst_inc=''
-lst_lib=''
-lst_bin=''
+lst_inc='qrencode.h'
+lst_lib='libqrencode'
+lst_bin='qrencode'
 lst_lic='LICENSE AUTHORS'
-lst_pc=''
+lst_pc='libqrencode.pc'
 
 eta='20'
 
-. xbuild
-
-#source_get(){ return 0; }
-#patch_source(){ return 0; }
-#on_config_arm(){ return 0; }
-#on_config_x86x(){ return 0; }
-
-start
+. xbuild && start

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#             a8  a7  x86 x64
-# ndk-clang   ... ... ... ...
-# linux-gnu   ... ... ... ...
-# mingw-llvm  ... ... ... ...
+# cpu av8 av7 x86 x64
+# NDK  +   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
 
 lib='libusb'
 apt='libpscs-dev'
@@ -15,11 +15,12 @@ cfg='ac'
 eta='10'
 cfg_cmd='./bootstrap.sh'
 
-lst_inc=''
-lst_lib=''
+lst_inc='libusb/libusb.h'
+lst_lib='libusb-1.0'
+dev_vrs='1.0.27'
 
-. xbuild
+on_config_ndk(){
+    ac_config+="--disable-udev"
+}
 
-$host_ndk && CFG+="--disable-udev"
-
-start
+. xbuild && start

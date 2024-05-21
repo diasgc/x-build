@@ -14,9 +14,7 @@ lst_bin=''
 lst_lic='LICENSE CODEOWNERS'
 lst_pc='libsrtp2.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

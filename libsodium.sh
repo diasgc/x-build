@@ -23,9 +23,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='libsodium'
 
-. xbuild
-
-start
+. xbuild && start
 
 
 # Filelist

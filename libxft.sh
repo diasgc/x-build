@@ -16,6 +16,4 @@ lst_inc=''
 lst_lib=''
 lst_bin=''
 
-. xbuild
-
-start
+. xbuild && start

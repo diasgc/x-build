@@ -1,20 +1,23 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  .   .   .   .   .   .   .   .   .   .   .  static
-#  .   .   .   .   .   .   .   .   .   .   .  shared
-#  .   .   .   .   .   .   .   .   .   .   .  bin
-# PKGINFO-------------------------------------
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
+
 lib='libmagic'
 dsc='Image metadata library and tools'
 lic=''
-vrs='5.39'
-src="http://ftp.debian.org/debian/pool/main/f/file/file_${vrs}.orig.tar.gz"
+url='http://ftp.debian.org/debian/pool/main/f/file'
 cfg='ac'
 eta='60'
 
-. xbuild
+on_config(){
+    vrs="$(curl -s "${url}/" | grep -oP '(?<=file_)([0-9\.]+)(?=.orig.tar.gz)' | tail -n 1)"
+    src="${url}/file_${vrs}.orig.tar.gz"
+}
 
-start
+. xbuild && start
 
 # Filelist
 # --------

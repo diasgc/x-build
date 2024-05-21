@@ -26,32 +26,32 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
+on_config(){
+	cfg_cmd+=" --prefix=${dir_install} --disable-python --without-ad-dc"
 
-cfg_cmd+=" --prefix=${dir_install} --disable-python --without-ad-dc"
+	if $host_cross; then
+		cat <<-EOF >"${dir_src}/cross-answers.txt"
+			Checking uname sysname type: "${PLATFORM}"
+			Checking uname machine type: "${arch}"
+			Checking uname release type: "dontcare"
+			Checking uname version type: "dontcare"
+			Checking simple C program: "hello world"
+			rpath library support: OK
+			-Wl,--version-script support: NO
+			Checking getconf LFS_CFLAGS: NO
+			Checking for large file support without additional flags: OK
+			Checking for -D_FILE_OFFSET_BITS=64: OK
+			Checking for -D_LARGE_FILES: OK
+			Checking correct behavior of strtoll: NO
+			Checking for working strptime: NO
+			Checking for C99 vsnprintf: OK
+			Checking for HAVE_SHARED_MMAP: OK
+			Checking for HAVE_MREMAP: OK
+			Checking for HAVE_INCOHERENT_MMAP: NO
+			Checking for HAVE_SECURE_MKSTEMP: OK
+			EOF
+		cfg_cmd+=" --cross-compile --cross-answers cross-answers.txt --host=${arch} "
+	fi
+}
 
-if $host_cross; then
-    cat <<-EOF >${dir_src}/cross-answers.txt
-		Checking uname sysname type: "${PLATFORM}"
-		Checking uname machine type: "${arch}"
-		Checking uname release type: "dontcare"
-		Checking uname version type: "dontcare"
-		Checking simple C program: "hello world"
-		rpath library support: OK
-		-Wl,--version-script support: NO
-		Checking getconf LFS_CFLAGS: NO
-		Checking for large file support without additional flags: OK
-		Checking for -D_FILE_OFFSET_BITS=64: OK
-		Checking for -D_LARGE_FILES: OK
-		Checking correct behavior of strtoll: NO
-		Checking for working strptime: NO
-		Checking for C99 vsnprintf: OK
-		Checking for HAVE_SHARED_MMAP: OK
-		Checking for HAVE_MREMAP: OK
-		Checking for HAVE_INCOHERENT_MMAP: NO
-		Checking for HAVE_SECURE_MKSTEMP: OK
-		EOF
-    cfg_cmd+=" --cross-compile --cross-answers cross-answers.txt --host=${arch} "
-fi
-
-start
+. xbuild && start

@@ -14,8 +14,6 @@ cmake_bin='BUILD_EXAMPLES'
 
 dev_bra='main'
 dev_vrs='1.10.1_DEV'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='libssh2*.h'
 lst_lib='libssh2'
@@ -23,13 +21,11 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='libssh2.pc'
 
-. xbuild
-
 on_editpack(){
     $build_man || rm -rf share/man
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

@@ -22,13 +22,11 @@ lst_bin='rubberband'
 lst_lic='COPYING'
 lst_pc='rubberband.pc'
 
-. xbuild
-
 on_config(){
     $build_bin && meson_cfg+=' -Dcmdline=enabled' || meson_cfg+=' -Dcmdline=disabled'
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # cpu av8 av7 x86 x64
 # NDK +++ +++  .  +++ clang
 # GNU  .   .   .   .  gcc
@@ -22,9 +23,7 @@ lst_lib='liblzf'
 lst_bin='lzf'
 lst_lic='LICENSE'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

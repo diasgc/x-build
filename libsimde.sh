@@ -18,9 +18,7 @@ lst_bin=''
 lst_lic='COPYING'
 lst_pc='simde.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # Filelist
 # --------

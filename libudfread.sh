@@ -9,8 +9,6 @@ eta='40'
 
 dev_bra='master'
 dev_vrs='1.1.2'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='udfread/*.h'
 lst_lib='libudfread'
@@ -18,9 +16,7 @@ lst_bin=''
 lst_lic='COPYING'
 lst_pc='libudfread.pc'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

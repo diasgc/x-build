@@ -20,11 +20,10 @@ lst_pc=''
 WFLAGS='-Wno-macro-redefined'
 CFLAGS=' -O3 -flto'
 
-. xbuild
 
-CSH="--disable-shared" # error in make install with --enable-shared
+ac_config="--disable-shared" # error in make install with --enable-shared
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +F+   .   .   .  clang

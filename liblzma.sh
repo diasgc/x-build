@@ -18,12 +18,10 @@ lst_bin='xzmore xzdec xzgrep xz lzmainfo xzless lzmadec xzdiff'
 lst_lic='COPYING AUTHORS'
 lst_pc='liblzma.pc'
 
-. xbuild
-
 #ac_config="--disable-doc"
 WFLAGS="-Wno-macro-redefined"
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

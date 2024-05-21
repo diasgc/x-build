@@ -20,7 +20,11 @@ eta='110'
 #mki='install'
 #ac_bin="--disable-tools|--enable-tools"
 #ac_config='--enable-introspection=no'
-meson_cfg="-Ddocs=disabled -Dtests=disabled -Dpixbuf-loader=disabled -Dtriplet=${arch}"
+
+
+on_config(){
+    meson_cfg="-Ddocs=disabled -Dtests=disabled -Dpixbuf-loader=disabled -Dtriplet=${arch}"
+}
 
 cargo_install(){
     sudo apt install cargo libssl-dev
@@ -29,6 +33,4 @@ cargo_install(){
     #cargo install cargo-c
 }
 
-. xbuild
-
-start
+. xbuild && start
