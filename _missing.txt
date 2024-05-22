@@ -1,5 +1,0 @@
-na: /home/diasgc/Code/x-build/build.sh
-
-na: /home/diasgc/Code/x-build/xsetup.sh
-Missing: /home/diasgc/Code/x-build/xunpack.sh
-Missing: /home/diasgc/Code/x-build/zenity.sh
