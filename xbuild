@@ -210,7 +210,7 @@ function build_pkgconfig {
 			--version=*) pkgconfig_version="${1#*=}";;
 			--requires=*) pkgconfig_requires="${1#*=}";;
 			--requires-private=*) pkgconfig_requires_private="${1#*=}";;
-			--libs=*) pkgconfig_libs="${1#*=}"; pkgconfig_libs="${pkgconfig_libs//,/ }";;
+			--libs=*) pkgconfig_libs="${1#*=}";;
 			--libs-private=*) pkgconfig_libs_private="${1#*=}";;
 			--cflags=*) pkgconfig_cflags="${1#*=}";;
 		esac
@@ -231,10 +231,10 @@ function build_pkgconfig {
 		Description: ${pkgconfig_description}
 		URL: ${pkgconfig_url}
 		Version: ${pkgconfig_version}
-		Requires: ${pkgconfig_requires}
-		Requires.private: ${pkgconfig_requires_private}
-		Libs: ${pkgconfig_libs}
-		Libs.private: ${pkgconfig_libs_private}
+		Requires: ${pkgconfig_requires//,/ }
+		Requires.private: ${pkgconfig_requires_private//,/ }
+		Libs: ${pkgconfig_libs//,/ }
+		Libs.private: ${pkgconfig_libs_private//,/ }
 		Cflags: ${pkgconfig_cflags}
 
 		EOF

@@ -9,7 +9,11 @@ src='https://github.com/Blosc/c-blosc2.git'
 cfg='cmake'
 eta='399'
 
-dev_vrs='2.0.5'
+cmake_static='BUILD_STATIC' # default ON
+cmake_shared='BUILD_SHARED' # default ON
+cmake_config='-DBUILD_TESTS=OFF'
+
+dev_vrs='2.14.5.dev'
 
 lst_inc='blosc2.h blosc2/*.h'
 lst_lib='libblosc2'
@@ -17,7 +21,13 @@ lst_bin=''
 lst_lic='LICENSE.txt LICENSES/*.txt'
 lst_pc='blosc2.pc'
 
-WFLAGS='-Wno-pointer-sign -Wno-int-conversion'
+cmake_definitions+=( -Wno-pointer-sign -Wno-int-conversion -Wno-unused-function )
+
+on_config(){
+    if ! $build_bin; then
+        cmake_config+=' -DBUILD_EXAMPLES=OFF -DBUILD_PLUGINS=OFF -DBUILD_BENCHMARKS=OFF'
+    fi
+}
 
 . xbuild && start
 

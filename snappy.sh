@@ -22,7 +22,7 @@ lst_lic='COPYING AUTHORS'
 lst_pc='snappy.pc'
 
 dev_bra='master'
-dev_vrs='1.2.0'
+dev_vrs='1.2.1'
 
 . xbuild && start
 
