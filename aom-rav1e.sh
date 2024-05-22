@@ -25,8 +25,6 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
-
 WFLAGS+="-Wno-dev"
 
-start
+. xbuild && start

@@ -18,16 +18,16 @@ lst_bin='numademo memhog migspeed numastat numactl migratepages'
 lst_lic='LICENSE.GPL2 LICENSE.LGPL2.1'
 lst_pc='numa.pc'
 
-. xbuild
-
-$host_mingw && doErr "Non-posix OS cannot use LUMA. Exiting...\n"
+on_config_mingw(){
+  doErr "Non-posix OS cannot use LUMA. Exiting...\n"
+}
 
 source_config(){
   NOCONFIGURE=1 ./autogen.sh
   autoconf -i
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

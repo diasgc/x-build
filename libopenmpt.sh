@@ -29,10 +29,14 @@ lst_pc=''
 
 . xbuild
 
-# get the latest release
-libopenmpt_latest=$(git ls-remote --tags --sort "v:refname" ${src} | grep 'libopenmpt' | tail -n1 | rev | awk -v FS='/' '{print $1}' | rev)
-vrs=${libopenmpt_latest/libopenmpt\-/}
-# change source for autotools build
-src="https://lib.openmpt.org/files/libopenmpt/src/${libopenmpt_latest}+release.autotools.tar.gz"
+on_config(){
+    vrs=$(curl -s https://lib.openmpt.org/files/libopenmpt/src/ | grep -oP 'libopenmpt-\K([0-9\.]+)\+release.autotools.tar.gz' | tail -n 1)
+    # get the latest release
+    libopenmpt_latest=$(git ls-remote --tags --sort "v:refname" ${src} | grep 'libopenmpt' | tail -n1 | rev | awk -v FS='/' '{print $1}' | rev)
+    vrs=${libopenmpt_latest/libopenmpt\-/}
+    # change source for autotools build
+    src="https://lib.openmpt.org/files/libopenmpt/src/${libopenmpt_latest}+release.autotools.tar.gz"
+
+}
 
 start

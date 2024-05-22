@@ -30,11 +30,7 @@ on_config_ndk(){
     LDFLAGS="-llog"
 }
 
-. xbuild
-
-
-
-start
+. xbuildv && start
 
 #!/bin/bash
 # cpu av8 av7 x86 x64
