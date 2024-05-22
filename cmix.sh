@@ -19,6 +19,8 @@ lst_pc=''
 
 dev_vrs='19'
 
+cmake_config='-DINSTALL_DOCS=OFF'
+
 . xbuild && start
 
 #             a8  a7  x86 x64

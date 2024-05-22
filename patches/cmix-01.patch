@@ -1,6 +1,44 @@
+--- src/predictor.cpp	2024-05-22 22:09:17.162523745 +0100
++++ src/predictor.cpp	2024-05-22 22:08:57.939821780 +0100
+@@ -6,7 +6,9 @@
+ #include "models/ppmd.h"
+ #include "models/bracket.h"
+ #include "models/paq8.h"
++#if defined(__x86_64__)
+ #include "models/fxcmv1.h"
++#endif
+ #include "mixer/lstm.h"
+ #include "contexts/context-hash.h"
+ #include "contexts/bracket-context.h"
+@@ -26,7 +28,9 @@
+   srand(0xDEADBEEF);
+ 
+   AddBracket();
++#if defined(__x86_64__)
+   AddFXCM();
++#endif
+   AddPAQ8();
+   AddPPMD();
+   AddWord();
+@@ -73,12 +77,13 @@
+   unsigned int index = GetNumModels() - 1;
+   auxiliary_.push_back(index);
+ }
+-
++#if defined(__x86_64__)
+ void Predictor::AddFXCM() {
+   FXCM* fxcm = new FXCM();
+   AddModel(fxcm);
+   AddAuxiliary();
+ }
++#endif
+ 
+ void Predictor::AddPAQ8() {
+   PAQ8* paq = new PAQ8(11);
+
 --- CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
-+++ CMakeLists.txt	2022-03-29 12:39:22.993614300 +0100
-@@ -0,0 +1,144 @@
++++ CMakeLists.txt	2024-05-22 22:13:59.600805939 +0100
+@@ -0,0 +1,147 @@
 +cmake_minimum_required(VERSION 3.5)
 +
 +project(cmix 
@@ -54,7 +92,6 @@
 +    src/models/match.h
 +    src/models/model.h
 +    src/models/paq8.h
-+    src/models/paq8hp.h
 +    src/models/ppmd.h
 +    src/predictor.h
 +    src/preprocess/dictionary.h
@@ -89,7 +126,6 @@
 +    src/models/indirect.cpp
 +    src/models/match.cpp
 +    src/models/paq8.cpp
-+    src/models/paq8hp.cpp
 +    src/models/ppmd.cpp
 +    src/predictor.cpp
 +    src/preprocess/dictionary.cpp
@@ -98,6 +134,11 @@
 +    src/states/nonstationary.cpp
 +    src/states/run-map.cpp
 +)
++
++if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
++    set(cmix_src ${cmix_src} src/models/fxcmv1.cpp)
++    set(cmix_hdrs ${cmix_hdrs} src/models/fxcmv1.h)
++endif()
 +
 +# Libraries
 +add_library(cmix_o OBJECT ${cmix_src})
@@ -145,6 +186,7 @@
 +
 +# Licence, Docs and Manuals
 +install(FILES COPYING README DESTINATION ${CMAKE_INSTALL_DOCDIR})
+
 --- cmix.pc.in	1970-01-01 01:00:00.000000000 +0100
 +++ cmix.pc.in	2022-03-29 12:31:24.153614300 +0100
 @@ -0,0 +1,14 @@
