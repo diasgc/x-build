@@ -34,17 +34,18 @@ lst_lic=''
 lst_pc=''
 pc_llib=void
 
-. xbuild
-
 build_strip=false
 MAKE_EXECUTABLE=ninja
-dir_build="${dir_src}"
-cmake_bdir="-G Ninja -S runtimes -B build_${arch}"
-cmake_config+=" -DLLVM_ENABLE_RUNTIMES=$(str_concat ';' "${runtimes[@]}")"
-mkf="-C build_${arch} $(echo "${runtimes[@]//lib/ }")"
-mki="-C build_${arch} $(echo "${runtimes[@]//lib/install-}")"
 
-start
+on_config(){
+    dir_build="${dir_src}"
+    cmake_bdir="-G Ninja -S runtimes -B build_${arch}"
+    cmake_config+=" -DLLVM_ENABLE_RUNTIMES=$(str_concat ';' "${runtimes[@]}")"
+    mkf="-C build_${arch} $(echo "${runtimes[@]//lib/ }")"
+    mki="-C build_${arch} $(echo "${runtimes[@]//lib/install-}")"
+}
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

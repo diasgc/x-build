@@ -13,8 +13,6 @@ eta='30'
 
 dev_bra='master'
 dev_vrs='1.9.5'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='lz4.h lz4frame.h lz4frame_static.h lz4hc.h'
 lst_lib='liblz4'

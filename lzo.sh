@@ -11,8 +11,6 @@ eta='10'
 
 dev_bra='master'
 dev_vrs='2.10'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='lzo/*.h'
 lst_lib='liblzo2'

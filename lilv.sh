@@ -27,8 +27,6 @@ lst_pc='lilv-0.pc'
 
 eta='20'
 
-. xbuild
-
 LDFLAGS+=" -liconv"
 
-start
+. xbuild && start

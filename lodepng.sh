@@ -8,11 +8,11 @@ cfg='mk'
 dep='sdl2'
 eta='10'
 
-. xbuild
+. xbuild && start
 
-pushvar_f CXXFLAGS $(./sdl2.sh --get cflags)
-pushvar_f LDFLAGS $(./sdl2.sh --get ldstatic)
-start
+#pushvar_f CXXFLAGS $(./sdl2.sh --get cflags)
+#pushvar_f LDFLAGS $(./sdl2.sh --get ldstatic)
+
 
 # cpu av8 av7 x86 x64
 # NDK ... ... ... ... CLANG
