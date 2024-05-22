@@ -14,8 +14,6 @@ pkg='xproto'
 
 dev_bra='master'
 dev_vrs='2021.5'
-stb_bra=''
-stb_vrs=''
 
 lst_inc=''
 lst_lib=''
@@ -23,14 +21,12 @@ lst_bin=''
 lst_lic='COPYING* AUTHORS'
 lst_pc=''
 
-. xbuild
-
 on_editpack(){
     ln -s share/pkgconfig/${pkg}.pc lib/pkgconfig/${pkg}.pc
     ln -s ${dir_install}/share/pkgconfig/${pkg}.pc ${dir_install}/lib/pkgconfig/${pkg}.pc
 }
 
-start
+. xbuild && start
 
 
 # Filelist

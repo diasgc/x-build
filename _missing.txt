@@ -1,14 +1,5 @@
 na: /home/diasgc/Code/x-build/build.sh
-na: /home/diasgc/Code/x-build/fftwf.sh
-na: /home/diasgc/Code/x-build/fftwl.sh
-na: /home/diasgc/Code/x-build/fftwq.sh
 
-Missing: /home/diasgc/Code/x-build/spirv-headers.sh
-Missing: /home/diasgc/Code/x-build/tree.sh
-Missing: /home/diasgc/Code/x-build/xcb-proto.sh
-Missing: /home/diasgc/Code/x-build/xcb-pthread-stubs.sh
-Missing: /home/diasgc/Code/x-build/xorg-macros.sh
-Missing: /home/diasgc/Code/x-build/xorgproto.sh
-Missing: /home/diasgc/Code/x-build/xsetup.sh
+na: /home/diasgc/Code/x-build/xsetup.sh
 Missing: /home/diasgc/Code/x-build/xunpack.sh
 Missing: /home/diasgc/Code/x-build/zenity.sh

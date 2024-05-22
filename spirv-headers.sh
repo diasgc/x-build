@@ -14,8 +14,6 @@ eta='0'
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
 
 lst_inc=''
 lst_lib=''
@@ -25,10 +23,9 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
-
-if [ $host_ndk ]; then
+on_config_ndk(){
     CXXFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/third_party/spirv-tools/external/spirv-headers"
-else
-    start
-fi
+    exit
+}
+
+. xbuild && start

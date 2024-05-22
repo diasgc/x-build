@@ -16,7 +16,6 @@ API=26
 OBJS="tree.o unix.o html.o xml.o json.o hash.o color.o file.o"
 CFLAGS+=' -std=c11 -O3 -flto -Wall' LDFLAGS+=" -s"
 
-. xbuild
 # todo clean & simplify
 
 on_config(){
@@ -48,4 +47,4 @@ build_all(){
     popd >/dev/null 
 }
 
-start
+. xbuild && start

@@ -16,13 +16,13 @@ lst_pc=''
 
 dev_bra='master'
 dev_vrs='1.12'
-stb_bra=''
-stb_vrs=''
 
-. xbuild
-ac_config="--with-python_prefix=${dir_install}"
-export PYTHON_PREFIX=${dir_install}
-start
+on_config(){
+    ac_config="--with-python_prefix=${dir_install}"
+    export PYTHON_PREFIX=${dir_install}
+}
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang
