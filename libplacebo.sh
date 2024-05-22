@@ -10,8 +10,6 @@ tls='python3-mako'
 
 dev_bra='main'
 dev_vrs='7.349.0'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='libplacebo/*.h libplacebo/utils/*.h'
 lst_lib='libplacebo'
@@ -19,21 +17,23 @@ lst_bin=''
 lst_lic='LICENSE'
 lst_pc=''
 
-. xbuild
-
 meson_cfg="-Ddemos=false"
 
-case $host_os in
-    android) dep='glslang vulkan' meson_cfg+=" -Dvulkan-registry=${dir_install}/share/vulkan/registry/vk.xml";;
-    gnu) LD="bfd";;
-esac
+on_config_ndk(){
+    dep='glslang vulkan'
+    meson_cfg+=" -Dvulkan-registry=${dir_install}/share/vulkan/registry/vk.xml";;
+}
+
+on_config(){
+    $use_clang || LD="bfd"
+}
 
 patch_source(){
     cd $dir_src
     do_log 'submodule' git submodule update --init
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

@@ -14,8 +14,6 @@ cmake_config="-DLIBRESSL_TESTS=OFF -DENABLE_NC=ON -DENABLE_EXTRATESTS=OFF"
 
 dev_bra='master'
 dev_vrs='3.9.0'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='tls.h openssl/*.h'
 lst_lib='libcrypto libtls libssl'
@@ -23,13 +21,11 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='libssl.pc libtls.pc libcrypto.pc openssl.pc'
 
-. xbuild
-
 source_patch(){
   doAutogen ${dir_src} # do not remove
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

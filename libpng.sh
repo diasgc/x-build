@@ -25,9 +25,7 @@ lst_pc='libpng16.pc'
 
 eta='20'
 
-. xbuild
-
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

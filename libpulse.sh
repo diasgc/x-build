@@ -16,13 +16,19 @@ lst_bin='pacat pactl pa-info padsp'
 lst_lic='LICENSE GPL LGPL'
 lst_pc='libpulse.pc libpulse-simple.pc libpulse-mainloop-glib.pc'
 
-. xbuild
-
 #meson_cfg="-Ddaemon=false -Ddoxygen=false -Dman=false -Dtests=false -Dglib=enabled -Ddatabase=simple -Dconsolekit=disabled -Dtcpwrap=disabled"
-meson_cfg="-Ddaemon=false -Dclient=false -Ddoxygen=false -Dgcov=false -Dman=false -Dtests=false -Ddatabase=simple"
-#$host_ndk && meson_cfg+=" -Dalsa=disabled -Dx11=disabled -Dgtk=disabled -Dopenssl=disabled -Dgsettings=disabled" && LIBS="-landroid-glob -landroid-execinfo"
-$clang && LDFLAGS+=" -Wl,--undefined-version"
-$host_ndk && LDFLAGS+=" -landroid-glob -landroid-execinfo"
+meson_cfg="-Ddaemon=false -Dclient=false -Ddoxygen=false -Dgcov=false -Dman=false -Dtests=false -Ddatabase=simple" 
+
+on_config(){
+    $use_clang && LDFLAGS+=" -Wl,--undefined-version"    
+}
+on_config_ndk(){
+    #meson_cfg+=" -Dalsa=disabled -Dx11=disabled -Dgtk=disabled -Dopenssl=disabled -Dgsettings=disabled"
+    #LIBS="-landroid-glob -landroid-execinfo"
+    LDFLAGS+=" -landroid-glob -landroid-execinfo"
+    CFLAGS+=' -D__ANDROID__'
+    #CPPFLAGS+=' -Wl,-Bstatic'
+}
 
 LDFLAGS+=" -liconv"
 
@@ -60,15 +66,14 @@ meson_cfg+=' -Dalsa=disabled
 -Dx11=disabled
 -Denable-smoother-2=false'
 
-$host_arm && meson_cfg+=" -Datomic-arm-linux-helpers=true -Datomic-arm-memory-barrier=true"
-$host_ndk && CFLAGS+=' -D__ANDROID__'
-#$host_ndk && CPPFLAGS+=' -Wl,-Bstatic'
-
+on_config_arm(){
+    meson_cfg+=" -Datomic-arm-linux-helpers=true -Datomic-arm-memory-barrier=true" 
+}
 on_editpack(){
     rm -rf share/locale
 }
 
-start
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK -++  .   .   .  clang

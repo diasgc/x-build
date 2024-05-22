@@ -19,15 +19,15 @@ pc_llibs="-lomp -lomptarget"
 dev_bra='master'
 dev_vrs=''
 
-. xbuild
-
-$use_clang && WFLAGS='-Wno-unused-variable -Wno-nonnull'
-
 # openmp does not support static build
 build_static=false
 build_shared=true
 
-start
+on_config(){
+    $use_clang && WFLAGS='-Wno-unused-variable -Wno-nonnull'
+}
+
+. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang
