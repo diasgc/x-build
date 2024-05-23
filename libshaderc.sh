@@ -27,7 +27,7 @@ lst_pc=''
 eta='20'
 
 on_config(){
-    if [ $host_ndk ]; then
+    if $host_ndk; then
         CXXFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/shaderc/libshaderc/include"
         exit 0
     else

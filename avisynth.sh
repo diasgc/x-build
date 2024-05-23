@@ -8,17 +8,34 @@ cfg='cmake'
 
 cmake_config="-DHEADERS_ONLY=OFF"
 
-lst_inc='avisynth/*.h'
-lst_lib='libavisynth avisynth/libconvertstacked avisynth/libshibatch avisynth/libtimestretch'
+lst_inc='avisynth/avisynth.h
+ avisynth/avisynth_c.h
+ avisynth/avs/config.h
+ avisynth/avs/capi.h
+ avisynth/avs/minmax.h
+ avisynth/avs/cpuid.h
+ avisynth/avs/posix.h
+ avisynth/avs/types.h
+ avisynth/avs/filesystem.h
+ avisynth/avs/win.h
+ avisynth/avs/alignment.h
+ avisynth/avs/version.h
+ avisynth/avs/arch.h'
+lst_lib='libavisynth
+ avisynth/libconvertstacked
+ avisynth/libshibatch
+ avisynth/libtimestretch'
 lst_bin=''
 lst_lic=''
 lst_pc='avisynth.pc'
 
+dev_vrs='3.7.3'
 eta=240
 
 on_build_bin(){
     cmake_config+=" -DENABLE_PLUGINS=ON"
 }
+
 on_config_mingw(){
     # dont pass LT_SYS_LIBRARY_PATH to avoid redefinition error
     unset PKG_CONFIG_LIBDIR

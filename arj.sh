@@ -3,8 +3,7 @@
 lib='arj'
 dsc='Open Source ARJ archiver'
 lic='GLP-2.0'
-src='http://deb.debian.org/debian/pool/main/a/arj/arj_3.10.22.orig.tar.gz'
-#src='https://git.code.sf.net/p/arj/git'
+src='https://git.code.sf.net/p/arj/git'
 cfg='cmake'
 eta='60'
 cmake_cmakelists='arj.cmake'
@@ -12,6 +11,13 @@ cmake_cmakelists='arj.cmake'
 lst_inc=''
 lst_lib=''
 lst_bin=''
+
+on_config(){
+    url='http://deb.debian.org/debian/pool/main/a/arj/'
+    vrs=$(curl -s ${url} | grep -oP 'arj_\K([0-9\.]+).orig.tar.gz' | tail -n1)
+    src="${url}arj_${vrs}"
+    vrs=${vrs/\.orig\.tar\.gz/}
+}
 
 . xbuild && start
 
