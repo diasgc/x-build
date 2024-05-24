@@ -418,8 +418,8 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
         NDK_RELEASE=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po 'BaseRevision.=.\K([0-9\.]+)')
         printf "${CH}%-20s: ${C0}%s " '  version' ${ndk_release}
         ndk_release_list=($(wget -qO- https://developer.android.com/ndk/downloads | grep -oP '(?<=ndkVersion..)\d+\.\d+\.\d+.*(?=")'))
-        ndk_release_latest=${ndk_release_list[-1]}
-        if [ "${ndk_relase}" == "${ndk_release_latest}" ]; then
+        ndk_release_latest="${ndk_release_list[-1]}"
+        if [ "${ndk_release}" = "${ndk_release_latest}" ]; then
             echo -e "(updated)"
         else
             echo -e "${CY1} latest is ${ndk_release_latest}${C0}"
