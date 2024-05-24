@@ -141,6 +141,76 @@ xv_x86_mingw="10"
 
 main(){
 
+	if [ -z "$ISRUNNING" ]; then
+		showBanner
+		export ISRUNNING=1
+	fi
+	if [ -n "${sudo}" ] && ! ${sudo} -n true 2>/dev/null; then
+		echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
+	fi
+
+	# check build type and set defaults if no cst0 cst1 csh0 or csh1 value provided
+	case $cfg in
+		cm|ccm|cmake|ccmake) build_system=cmake
+
+			[ -n "$cstk" ] && cst0="-D${cstk}=OFF" cst1="-D${cstk}=ON"
+			[ -n "$cshk" ] && csh0="-D${cshk}=OFF" csh1="-D${cshk}=ON"
+			
+			! $build_shared && [ -z "$cst1" ] && cst1="-DBUILD_SHARED_LIBS=OFF"
+			[ -z "$csh1" ] && csh1="-DBUILD_SHARED_LIBS=ON"
+			
+			$build_static && ! $build_shared && CSH="${cst1} ${csh0}"
+			$build_shared && ! $build_static && CSH="${csh1} ${cst0}"
+			$build_static && $build_shared && CSH="${cst1} ${csh1}"
+			
+			[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
+
+			;;
+		ab|am|ac|ar|ag|auto*) build_system=automake
+			[ -z "$cst0" ] && cst0="--disable-static"
+			[ -z "$cst1" ] && cst1="--enable-static"
+			[ -z "$csh0" ] && csh0="--disable-shared"
+			[ -z "$csh1" ] && csh1="--enable-shared"
+			$build_static && ! $build_shared && CSH="${cst1} ${csh0}"
+			$build_shared && ! $build_static && CSH="${csh1} ${cst0}"
+			$build_static && $build_shared && CSH="${cst1} ${csh1}"
+			[ -n "$cbk" ] && {
+			case $cbk in
+				--enable-*) cb0="${cbk}=0"; cb1="${cbk}=1";;
+				able-*) cb0="--dis${cbk}"; cb1="--en${cbk}";;
+				with-*) cb0="--without-${cbk:5}"; cb1="--${cbk}";;
+				*) cb0="--enable-${cbk}=0" cb1="--enable-${cbk}=1";;
+			esac
+			}
+			;;
+		meson) build_system=meson
+			test -z "${meson_static}" && meson_static="-Ddefault_library=static"
+			$build_static && ! $build_shared && CSH="${meson_static}"
+			test -z "${meson_shared}" && meson_shared="-Ddefault_library=shared"
+			$build_shared && ! $build_static && CSH="${meson_shared}"
+			$build_static && $build_shared && CSH="-Ddefault_library=both"
+			;;
+		mk|make) build_system=make;;
+		other) build_system=other;;
+		*) unset build_system;;
+	esac
+
+	if [ -z "${CBN}" ];then
+		$build_bin && CBN="${cb1}" || CBN="${cb0}"
+	fi
+
+	# reset presets, we don't need them anymore
+	unset cst0 cst1 csh0 csh1 cb0 cb1 cstk cshk cbk
+
+	: "${MAKE_EXECUTABLE:=make}"
+
+	export arch update retry \
+	build_shared build_static build_bin build_system \
+	dir_install \
+	CSH CBN LIBSDIR PLATFORM CPU ABI EABI \
+	host_arch host_64 host_eabi host_vnd host_arm host_os \
+	mingw_posix MAKE_EXECUTABLE cmake_includes
+
 
 	# exit if missing vars lib arch or src
 	if [ -z "${lib}" ]; then
@@ -1810,44 +1880,26 @@ while [ $1 ];do
 		$wx86 )		set_target '10' 'i686' '' 'w64' 'mingw32' '' 'x86' '32' $CB0 $CB1;;
 		$wx64 )		set_target '11' 'x86_64' '' 'w64' 'mingw32' '' 'x86_64' '64' $CB0 $CB1;;
 
-		--full)    	build_shared=true
-					build_static=true
-					build_bin=true
-					build_dist=true
-					dep_build="--full"
-					;;
-
 		--break)    shift; set_break $1;;
 
 		$optVrs)	shift; vrs=$1;;
 
-		--bra*)     shift; export bra=$1;;
 		--shared)   build_shared=true; build_static=false;;
 		--static)   build_static=true; build_shared=false;;
-		--both)     build_static=true; build_shared=true;;
 		--bin)      build_bin=true;;
 		--checkout) git_checkout=true;;
 		--no-bin)   build_bin=false;;
 		--man)      build_man=true;;
 		--dist)     build_dist=true;;
 		--cpack)    build_cpack=true;;
-		--strip)    build_strip=true;;
 		--api)      shift; export API=$1;;
 		--clang)    use_clang=true;;
 		--gcc)      use_clang=false;;
-		--tune)     shift; menu_tune $1;;
-		--cpus)     loadToolchain; $CC --print-supported-cpus; exit 0;;
-		--mcpu)		shift; export CPPFLAGS+=" -mcpu=${1}";;
-		--mtune)	shift; export CPPFLAGS+=" -mtune=${1}";;
 		--new)      shift; generate_script $@; exit 0;;
 
-		$optDnl)	build_pkgdl=true;;
-
 		--prefix)   shift; dir_install=$1;;
-		--stable)   git_stable=true;;
 		--diff)     shift; create_diff $@; exit 0;;
 		--update)   update=true;;
-		--upd-all)  update=true; req_update_deps=true;;
 		--opts)     showOpts "$(pwd)/sources/$lib"; exit 0;;
 		--checkPkg) checkPkg; exit 0;;
 		--libName)  echo "${lib}"; exit 0;;
@@ -1864,50 +1916,18 @@ while [ $1 ];do
 		--check)    shift; check_install $@; exit 0;;
 
 		--list)     shift; menu_list $@; exit 0;;
-
-		--patch)    shift;
-					case $1 in
-						# usage libname.sh --patch a [sources/libname/]path/to/newfile [sources/libname/]path/to/oldfile
-						a|add|append)       shift; patch_append $@; exit 0;;
-						m|make|e|embed)     shift; patch_embed $1; exit 0;;
-						g|get|show)         patch_get; exit 0;;
-					esac
-					;;
-
-		--skip)     shift; skip_options $@;;
-
-		--goto)     shift; menu_goto $@; exit 0;;
-
-		--git)      shift; menu_git $@; exit 0;;
-
-		--dirbuild) shift; dir_build=$1;;
-		--inline)   inline=true;;
-		--clone)    only_repo=true;;   
 		--cmake)    cfg='cmake';;
 		--ndkcmake) ndkcmake=true;;
 		--ccmake)   cfg='ccm';;
-		--nobanner) banner=false;;
-		--nodev)    nodev=true;;
-		
-		--latest-release) utils_get_latest_release; exit 0;;
 
-		* ) parse_unknown_arg "${1}"
-			;;
+		* ) parse_unknown_arg "${1}";;
 	esac
 	shift
 done
 
 fn_undef 'extraOpts'
 
-if fn_defined 'compiler_config'; then
-	compiler_config
-	fn_undef 'compiler_config'
-fi
-
-[ -z "${mingw_posix}" ] && mingw_posix=false
-
 # Set default Host
-
 if [ -z "${target_trip}" ];then
 	set_target_build
 fi
@@ -1921,14 +1941,6 @@ fi
 
 loadToolchain
 
-if [ -z "$ISRUNNING" ]; then
-	showBanner
-	export ISRUNNING=1
-fi
-if [ -n "${sudo}" ] && ! ${sudo} -n true 2>/dev/null; then
-	echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
-fi
-
 # usage: set_buildtype_key <input> <prefix> <on-val> <off-val>
 set_buildtype_key(){
 	local arr=(${1//|/ })
@@ -1938,68 +1950,6 @@ set_buildtype_key(){
 	esac
 	return 0
 }
-
-# check build type and set defaults if no cst0 cst1 csh0 or csh1 value provided
-case $cfg in
-	cm|ccm|cmake|ccmake) build_system=cmake
-
-		[ -n "$cstk" ] && cst0="-D${cstk}=OFF" cst1="-D${cstk}=ON"
-		[ -n "$cshk" ] && csh0="-D${cshk}=OFF" csh1="-D${cshk}=ON"
-		
-		! $build_shared && [ -z "$cst1" ] && cst1="-DBUILD_SHARED_LIBS=OFF"
-		[ -z "$csh1" ] && csh1="-DBUILD_SHARED_LIBS=ON"
-		
-		$build_static && ! $build_shared && CSH="${cst1} ${csh0}"
-		$build_shared && ! $build_static && CSH="${csh1} ${cst0}"
-		$build_static && $build_shared && CSH="${cst1} ${csh1}"
-		
-		[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
-
-		;;
-	ab|am|ac|ar|ag|auto*) build_system=automake
-		[ -z "$cst0" ] && cst0="--disable-static"
-		[ -z "$cst1" ] && cst1="--enable-static"
-		[ -z "$csh0" ] && csh0="--disable-shared"
-		[ -z "$csh1" ] && csh1="--enable-shared"
-		$build_static && ! $build_shared && CSH="${cst1} ${csh0}"
-		$build_shared && ! $build_static && CSH="${csh1} ${cst0}"
-		$build_static && $build_shared && CSH="${cst1} ${csh1}"
-		[ -n "$cbk" ] && {
-		case $cbk in
-			--enable-*) cb0="${cbk}=0"; cb1="${cbk}=1";;
-			able-*) cb0="--dis${cbk}"; cb1="--en${cbk}";;
-			with-*) cb0="--without-${cbk:5}"; cb1="--${cbk}";;
-			*) cb0="--enable-${cbk}=0" cb1="--enable-${cbk}=1";;
-		esac
-		}
-		;;
-	meson) build_system=meson
-		test -z "${meson_static}" && meson_static="-Ddefault_library=static"
-		$build_static && ! $build_shared && CSH="${meson_static}"
-		test -z "${meson_shared}" && meson_shared="-Ddefault_library=shared"
-		$build_shared && ! $build_static && CSH="${meson_shared}"
-		$build_static && $build_shared && CSH="-Ddefault_library=both"
-		;;
-	mk|make) build_system=make;;
-	other) build_system=other;;
-	*) unset build_system;;
-esac
-
-if [ -z "${CBN}" ];then
-	$build_bin && CBN="${cb1}" || CBN="${cb0}"
-fi
-
-# reset presets, we don't need them anymore
-unset cst0 cst1 csh0 csh1 cb0 cb1 cstk cshk cbk
-
-: "${MAKE_EXECUTABLE:=make}"
-
-export arch update retry \
-build_shared build_static build_bin build_system \
-dir_install \
-CSH CBN LIBSDIR PLATFORM CPU ABI EABI \
-host_arch host_64 host_eabi host_vnd host_arm host_os \
-mingw_posix MAKE_EXECUTABLE cmake_includes
 
 for script in "${script_list[@]}"; do
 	source "${dir_root}/src/${script}"
