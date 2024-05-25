@@ -16,7 +16,7 @@ function init {
 		./x-setup
 		source .config || doErr 'Unable to initialize config file'
 	fi
-	export is_init=true
+	export should_init=false
 }
 
 # first load .common functions and error trap
@@ -33,16 +33,12 @@ if [ -z ${vsh+x} ];then
 	trap err ERR
 fi
 
-clangv=-15
-
 sudo=$(command -v sudo)
 
-export HOST_NPROC=$(nproc)
-# defvar debug=false
 : "${host_native:=false}"
 : "${debug:=false}"
 : "${nodev:=false}"
-: "${is_init:=false}"
+: "${should_init:=true}"
 : "${pkg:=${lib}}"
 : "${apt:=${lib}}"
 : "${ac_nohost:=false}"
@@ -67,6 +63,8 @@ export HOST_NPROC=$(nproc)
 : "${vnd:=}"
 : "${ac_reconf:=true}"
 : "${cmake_build_type:=Release}"
+
+: "${MAKE_EXECUTABLE:=make}"
 
 ndk_testtc=true
 
@@ -106,89 +104,80 @@ build_package=true
 only_repo=false
 pc_filelist=
 
-shell_dstack=
-
 logtime_start=0
 logtime_end=0
 
 
 export CPPFLAGS=
 export target_trip=
+export HOST_NPROC=$(nproc)
 
 export dir_sources="${dir_root}/sources" \
        dir_cmake="${dir_root}/cmake" \
-       dir_patches="${dir_root}/patches"
+       dir_patches="${dir_root}/patches" \
+	   dir_pkgdist="${dir_root}/packages" \
+	   dir_scripts="${dir_root}/src"
 
-if [ -z "${src_dir}" ];then
-	export dir_src=${dir_sources}/${lib}
-else
-	export dir_src=${dir_sources}/${src_dir}
-fi
-export dir_pkgdist="${dir_root}/packages"
+test -d "${dir_sources}" || mkdir -p "${dir_sources}"
 
-[ -d "${dir_sources}" ] || mkdir -p ${dir_sources}
+test ${should_init} && init
 
-xv_x86_mingw="10"
-
-! $is_init && init
-
-
-
-
+function sudo_check {
+	[ -n "${sudo}" ] && ! ${sudo} -n true 2>/dev/null
+}
 
 
 
 
 main(){
 
-	if [ -z "$ISRUNNING" ]; then
-		showBanner
-		export ISRUNNING=1
+	test -z "${script_isrunning}" && showBanner
+
+	# exit if missing vars lib arch or src
+	if [ -z "${lib}" ]; then
+		echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
+		exit 0
 	fi
-	if [ -n "${sudo}" ] && ! ${sudo} -n true 2>/dev/null; then
-		echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
-	fi
+
+	test $(sudo_check) && echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
 
 	# check build type and set defaults if no cst0 cst1 csh0 or csh1 value provided
-	case $cfg in
-		cm|ccm|cmake|ccmake) build_system=cmake
-
-			[ -n "$cstk" ] && cst0="-D${cstk}=OFF" cst1="-D${cstk}=ON"
-			[ -n "$cshk" ] && csh0="-D${cshk}=OFF" csh1="-D${cshk}=ON"
-			
-			! $build_shared && [ -z "$cst1" ] && cst1="-DBUILD_SHARED_LIBS=OFF"
-			[ -z "$csh1" ] && csh1="-DBUILD_SHARED_LIBS=ON"
-			
-			$build_static && ! $build_shared && CSH="${cst1} ${csh0}"
-			$build_shared && ! $build_static && CSH="${csh1} ${cst0}"
-			$build_static && $build_shared && CSH="${cst1} ${csh1}"
+	case "${cfg}" in
+		cm|ccm|cmake|ccmake)
+			build_system=cmake
+			key_state=( 'OFF' 'ON' )
+			: "${cmake_static:=BUILD_STATIC_LIBS}"
+			: "${cmake_shared:=BUILD_SHARED_LIBS}"
+			build_link="-D${cmake_shared}=${key_state[$(bool2int ${build_shared})]}"
+			if [ ! "${cmake_static}" = "${cmake_shared}" ]; then
+				build_link+=" -D${cmake_static}=${key_state[$(bool2int ${build_static})]}"
+			fi
 			
 			[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
 
 			;;
-		ab|am|ac|ar|ag|auto*) build_system=automake
-			[ -z "$cst0" ] && cst0="--disable-static"
-			[ -z "$cst1" ] && cst1="--enable-static"
-			[ -z "$csh0" ] && csh0="--disable-shared"
-			[ -z "$csh1" ] && csh1="--enable-shared"
-			$build_static && ! $build_shared && CSH="${cst1} ${csh0}"
-			$build_shared && ! $build_static && CSH="${csh1} ${cst0}"
-			$build_static && $build_shared && CSH="${cst1} ${csh1}"
-			[ -n "$cbk" ] && {
-			case $cbk in
-				--enable-*) cb0="${cbk}=0"; cb1="${cbk}=1";;
-				able-*) cb0="--dis${cbk}"; cb1="--en${cbk}";;
-				with-*) cb0="--without-${cbk:5}"; cb1="--${cbk}";;
-				*) cb0="--enable-${cbk}=0" cb1="--enable-${cbk}=1";;
-			esac
-			}
+		ab|am|ac|ar|ag|auto*)
+			build_system=automake
+			key_state=( 'disable' 'enable' )
+			: "${ac_static:=static}"
+			: "${ac_shared:=shared}"
+			build_link="--${key_state[$(bool2int ${build_shared})]}-${ac_shared}"
+			build_link+="--${key_state[$(bool2int ${build_static})]}-${ac_static}"
+			if [ -n "$cbk" ]; then
+				case "${cbk}" in
+					--enable-*) cb0="${cbk}=0"; cb1="${cbk}=1";;
+					able-*) cb0="--dis${cbk}"; cb1="--en${cbk}";;
+					with-*) cb0="--without-${cbk:5}"; cb1="--${cbk}";;
+					*) cb0="--enable-${cbk}=0" cb1="--enable-${cbk}=1";;
+				esac
+			fi
 			;;
 		meson) build_system=meson
 			test -z "${meson_static}" && meson_static="-Ddefault_library=static"
-			$build_static && ! $build_shared && CSH="${meson_static}"
+			$build_static && ! $build_shared && build_link="${meson_static}"
 			test -z "${meson_shared}" && meson_shared="-Ddefault_library=shared"
-			$build_shared && ! $build_static && CSH="${meson_shared}"
-			$build_static && $build_shared && CSH="-Ddefault_library=both"
+			$build_shared && ! $build_static && build_link="${meson_shared}"
+			$build_static && $build_shared && build_link="-Ddefault_library=both"
 			;;
 		mk|make) build_system=make;;
 		other) build_system=other;;
@@ -200,22 +189,19 @@ main(){
 	fi
 
 	# reset presets, we don't need them anymore
-	unset cst0 cst1 csh0 csh1 cb0 cb1 cstk cshk cbk
-
-	: "${MAKE_EXECUTABLE:=make}"
+	unset cb0 cb1 cbk
 
 	export arch update retry \
-	build_shared build_static build_bin build_system \
-	dir_install \
-	CSH CBN LIBSDIR PLATFORM CPU ABI EABI \
-	host_arch host_64 host_eabi host_vnd host_arm host_os \
-	mingw_posix MAKE_EXECUTABLE cmake_includes
+		build_shared build_static build_bin build_system build_link\
+		dir_install \
+		CBN LIBSDIR PLATFORM CPU ABI EABI \
+		host_arch host_64 host_eabi host_vnd host_arm host_os \
+		mingw_posix MAKE_EXECUTABLE cmake_includes
 
-
-	# exit if missing vars lib arch or src
-	if [ -z "${lib}" ]; then
-		echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
-		return 0
+	if [ -z "${src_dir}" ];then
+		export dir_src=${dir_sources}/${lib}
+	else
+		export dir_src=${dir_sources}/${src_dir}
 	fi
 
 	inc_tab
@@ -380,14 +366,14 @@ start(){
 	check_tools $tls
 
 	local ovrs=$vrs
-	local ocsh=$CSH
+	local ocsh="${build_link}"
 	local ocbn=$CBN
-	unset vrs CSH CBN
+	unset vrs build_link CBN
 
 	build_dependencies $dep
 
 	vrs=$ovrs
-	CSH=$ocsh
+	build_link="${ocsh}"
 	CBN=$ocbn7
 
 	log_start $arch ${eta}s
@@ -399,8 +385,8 @@ start(){
 	$build_bin && echo -ne "${bss}${SSB}[bin]${C0} " || echo -ne "${bss}${CD}[bin]${C0} "
 	
 	fn_defined 'on_build_bin' && unset CBN && on_build_bin 
-	fn_defined 'on_build_static' && unset CSH && on_build_static
-	fn_defined 'on_build_shared' && unset CSH && on_build_shared 
+	fn_defined 'on_build_static' && unset build_link && on_build_static
+	fn_defined 'on_build_shared' && unset build_link && on_build_shared 
 	
 	cd ${dir_sources}
 
@@ -581,7 +567,7 @@ start(){
 			cmake_configure
 			cfg_cmd=${CMAKE_EXECUTABLE}
 			: "${cmake_bdir:=${dir_config}}"
-			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}" -Wno-dev)
+			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${build_link}" "${CBN}" "${CPACK}" -Wno-dev)
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 			;;
@@ -589,16 +575,15 @@ start(){
 		automake) # use autotools and configure executable to create makefile
 			ac_configure
 			cfg_cmd="${dir_config}/configure"
-			cfg_args+=("--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
+			cfg_args+=("--prefix=${dir_install}" "${CFG}" "${build_link}" "${CBN}")
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			;;
 
 		meson)
 			meson_configure
 			cfg_cmd='meson'
-			cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
+			cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${CFG}" "${build_link}" "${CBN}")
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
-			#do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
 			;;
 
 		make)
@@ -824,7 +809,7 @@ end_script(){
 	[ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done${C0}\n"
 	$debug && set +x
 	unset	dir_config dir_build dir_src \
-			CSH CBN exec_config vrs vnd \
+			build_link CBN exec_config vrs vnd \
 			ac_nohost ac_nopic ac_nosysroot ac_opts ac_reconf \
 			req_pcforlibs mkc mki mingw_posix \
 			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
@@ -895,18 +880,18 @@ build_dependencies(){
 	local cf
 	local ldir
 	while [ -n "${1}" ]; do
-		[ -f "./${1}.sh" ] || doErr "no script file ${1}.sh.\n  Aborting..."
+		[ -f "${dir_root}/src/${1}" ] || doErr "Unknown script for ${1}.\n  Aborting..."
 		pkgfile=$(./${1}.sh ${arch} --get pc)
 		libname=$(./${1}.sh --get libname)
 		if [ ! -f "${pkgfile}" ]; then
-			o_csh=$CSH
+			o_csh="${build_link}"
 			o_cbh=$CBH
 			$build_pkgdl && local dl="--dl" || local dl=''
-			unset CSH CBH
+			unset build_link CBH
 			
-			./${1}.sh ${arch} ${dep_build} ${dl}
+			./xb2 ${1} ${arch} ${dep_build} ${dl}
 			
-			CSH=$o_csh
+			build_link=$o_csh
 			CBH=$o_cbh
 		fi
 		if [ -f "${pkgfile}" ]; then
@@ -1413,6 +1398,31 @@ clean(){
 }
 
 
+function show_build_system_options {
+	if [ -n "${lib}" ]; then
+		dir_src="${dir_sources}/${lib}"
+	elif [ -n "${script_list[0]}" ];then
+		dir_src="${dir_sources}/${script_list[0]}"
+	else
+		echo -e "\n${CR1}No script selected. Exiting.\n\n${C0}"
+	fi
+	if [ ! -d "${dir_src}" ]; then
+		echo -e "\n${CR1}Directory ${dir_src} not found. Exiting.\n\n${C0}"
+		exit 1
+	fi
+	local dir_builds="${dir_root}/builds"
+	if [ -d "$1" ];then
+		local od=$(pwd)
+		local bdir=$(pwd)/builds
+		cd "${1}/${config_dir}"
+		[ -f CMakeLists.txt ] && ${CMAKE_EXECUTABLE} -LA | awk '{if(f)print} /-- Cache values/{f=1}' >${od}/builds/${lib}_cmake.opts && nano "${od}/builds/${lib}_cmake.opts"
+		[ -f configure ] && ./configure --help >${od}/builds/${lib}_aconf.opts && nano "${od}/builds/${lib}_aconf.opts"
+		cd $od
+	else
+		echo -e "${CD}${ind}${CR0}no configuration file found in ${CR1}${1}${CD}\n\n"
+	fi
+
+}
 
 showOpts(){
 	if [ -d "$1" ];then
@@ -1716,6 +1726,7 @@ showBanner(){
 		echo -e "$(uname -o) $(uname -m) ${C0} kernel $(uname -r)"
 		echo -e "${CW}$(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
 	fi
+	export script_isrunning=true
 }
 
 skip_options(){
@@ -1893,14 +1904,19 @@ while [ $1 ];do
 		--dist)     build_dist=true;;
 		--cpack)    build_cpack=true;;
 		--api)      shift; export API=$1;;
-		--clang)    use_clang=true;;
-		--gcc)      use_clang=false;;
+		--clang|--clang=true|--clang=on|--clang=1)
+					use_clang=true;;
+		--gcc|--clang=false|--clang=off|--clang=0)
+					use_clang=false;;
 		--new)      shift; generate_script $@; exit 0;;
 
 		--prefix)   shift; dir_install=$1;;
 		--diff)     shift; create_diff $@; exit 0;;
 		--update)   update=true;;
-		--opts)     showOpts "$(pwd)/sources/$lib"; exit 0;;
+		--opt*s|--show*opt*s)
+					dir_src="$(pwd)/sources/${script_list[0]}"
+					test -d "${dir_src}" && showOpts "${dir_src}"
+					exit 0;;
 		--checkPkg) checkPkg; exit 0;;
 		--libName)  echo "${lib}"; exit 0;;
 		--var)      shift; echo "$($1)"; exit 0;;
@@ -1940,6 +1956,12 @@ else
 fi
 
 loadToolchain
+
+# exit if missing vars lib arch or src
+if [ -z "${script_list[@]}" ]; then
+	echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
+	exit 0
+fi
 
 # usage: set_buildtype_key <input> <prefix> <on-val> <off-val>
 set_buildtype_key(){

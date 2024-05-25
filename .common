@@ -30,6 +30,8 @@ CL0="\e[38;5;34m" CL1="\e[38;5;72m" CL2="\e[38;5;114m" CL3="\e[38;5;120m"  CL4="
 # theme colors
 CT0=$CM0 CT1=$CM1 CS0=$CR0 CS1=$CR1 SSB=$C0
 
+: "${shell_dstack:=}"
+
 function trap_sigint {
   tput cnorm
   cd $(dirname $0)

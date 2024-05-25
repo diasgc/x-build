@@ -10,7 +10,7 @@ lic='BSD-3c'
 src='https://github.com/mpeg5/xevd.git'
 cfg='cmake'
 # -DSET_PROF=MAIN crashes with missing xevdm_itrans_map_tbl_neon fix in branch dev-BuildErrorsHotfix
-bra='dev-BuildErrorsHotfix'
+#bra='dev-BuildErrorsHotfix'
 
 xevd_profile='MAIN' # BASE|MAIN
 

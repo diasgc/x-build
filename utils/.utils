@@ -28,6 +28,10 @@ aptInstallBr(){
   done
 }
 
+function bool_to_int {
+	$1 && echo 1 || echo 0
+}
+
 config_guess(){
   if [ -f "${dir_config}/meson.build" ]; then
     build_system="meson"
@@ -35,15 +39,18 @@ config_guess(){
   elif [ -f "${dir_config}/CMakeLists.txt" ]; then
     build_system="cmake"
     cfg="cmake"
-  elif [ -n "$(ls ${dir_config}/configure.* 2>/dev/null)" ]; then
+  elif [ -n "$(ls ${dir_config}/configure* 2>/dev/null)" ]; then
     build_system="automake"
     cfg='ac'
     if [ -f "${dir_config}/autogen.sh" ]; then
       cfg_cmd="${dir_config}/autogen.sh"
+	  cfg='ag'
     elif [ -f "${dir_config}/bootstrap.sh" ]; then
       cfg_cmd="${dir_config}/bootstrap.sh"
     elif [ -f "${dir_config}/bootstrap" ]; then
       cfg_cmd="${dir_config}/bootstrap"
+	elif [ -f "${dir_config}/configure.ac"]; then
+	  cfg='ar'		
     elif [ ! -f "${dir_config}/configure" ]; then
       cfg_cmd="autoreconf -fiv ${dir_config}/bootstrap"
     else
