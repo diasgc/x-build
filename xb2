@@ -56,7 +56,7 @@ sudo=$(command -v sudo)
 : "${git_checkout:=false}"
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
-: "${build_pkgdl:=false}"
+: "${build_getpackage:=false}"
 : "${config_timeout:=86400}"
 : "${indent:=0}"
 : "${ind:=}"
@@ -334,9 +334,10 @@ function create_pkgconfig_file {
 }
 
 start(){
+
 	fn_defined 'on_config' && on_config
 
-	if $build_pkgdl; then
+	if $build_getpackage; then
 		local lnk=$(get_link_pkg ${arch} ${lib})
 		if [ -n "${lnk}" ]; then
 			wget_pkg_tgz ${lnk} ${dir_install}
@@ -397,7 +398,7 @@ start(){
 		fi
 	fi
 
-	local req_src_config=false
+	local require_src_config=false
 	local req_src_patch=false
 
 	# get source
@@ -435,7 +436,7 @@ start(){
 			fi
 		fi
 
-		req_src_config=true
+		require_src_config=true
 
 		$break_on_git && end_script
 
@@ -478,11 +479,9 @@ start(){
 
 	cd ${dir_config}
 
-	if [ -z "${cfg}" ]; then
-		config_guess
-	fi
+	test -z "${cfg}" && config_guess
 
-	if $req_src_config; then
+	if ${require_src_config}; then
 		# check whether to custom config source
 		if fn_defined 'source_config'; then
 			fn_log 'config' source_config
@@ -872,21 +871,31 @@ check_install(){
 	return 0
 }
 
+# usage: srcipt_getvar <script> <varname>
+# returns: value of <varname> in script <script>
+function script_getvar {
+	local out
+	if [ -n "${2}" ] && [ -f "${dir_scripts}/${1}" ]; then
+		out=$(grep -oP '^'${2}'=\K(.*)' "${dir_scripts}/${1}")
+		out="${out//\'/}"
+	fi
+	echo "${out}"
+}
 
-build_dependencies(){
-	local pkgfile=
+function build_dependencies {
+	local pkgconfig_file=
 	local o_csh
 	local o_cbh
 	local cf
 	local ldir
 	while [ -n "${1}" ]; do
 		[ -f "${dir_root}/src/${1}" ] || doErr "Unknown script for ${1}.\n  Aborting..."
-		pkgfile=$(./${1}.sh ${arch} --get pc)
+		pkgconfig_file=$(./${1}.sh ${arch} --get pc)
 		libname=$(./${1}.sh --get libname)
-		if [ ! -f "${pkgfile}" ]; then
+		if [ ! -f "${pkgconfig_file}" ]; then
 			o_csh="${build_link}"
 			o_cbh=$CBH
-			$build_pkgdl && local dl="--dl" || local dl=''
+			${build_getpackage} && local dl="--dl" || local dl=''
 			unset build_link CBH
 			
 			./xb2 ${1} ${arch} ${dep_build} ${dl}
@@ -894,11 +903,11 @@ build_dependencies(){
 			build_link=$o_csh
 			CBH=$o_cbh
 		fi
-		if [ -f "${pkgfile}" ]; then
+		if [ -f "${pkgconfig_file}" ]; then
 			local cmi=$(./${1}.sh ${arch} --get cmake_include)
 			[ -n "$cmi" ] && cmake_includes="$cmi $cmake_includes"
-			ldir="$(dirname ${pkgfile})"
-			str_contains $PKG_CONFIG_LIBDIR ${ldir} || PKG_CONFIG_LIBDIR="${ldir}:${PKG_CONFIG_LIBDIR}"
+			ldir="$(dirname ${pkgconfig_file})"
+			str_contains "${PKG_CONFIG_LIBDIR}" "${ldir}" || PKG_CONFIG_LIBDIR="${ldir}:${PKG_CONFIG_LIBDIR}"
 		fi
 		shift
 	done

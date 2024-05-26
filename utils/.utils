@@ -32,7 +32,7 @@ function bool_to_int {
 	$1 && echo 1 || echo 0
 }
 
-config_guess(){
+function config_guess {
   if [ -f "${dir_config}/meson.build" ]; then
     build_system="meson"
     cfg="meson"
