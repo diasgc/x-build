@@ -1146,7 +1146,7 @@ function curl_tar {
 	
 	test -d "${dir_src}" && rm -rf "${dir_src}"
 	mkdir "${dir_src}"
-	curl -L "${1}" 2>>"${log_file}" | tar "${args}" -C ${dir_src} --strip-components=1
+	curl -L "${1}" 2>>"${log_file}" | tar "${args}" -C ${dir_src} --strip-components=1 2>>"${log_file}
 	
 	logok "${tag}"
 }
