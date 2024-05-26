@@ -656,7 +656,7 @@ start(){
 	fi
 
 	# check whether to create pkg-config .pc file
-	if ! $skip_pc; then
+	if ! ${skip_pc}; then
 		if fn_defined 'get_version'; then
 			vrs=$(get_version)
 		fi
@@ -666,16 +666,16 @@ start(){
 			do_log 'pkgconfig' create_pkgconfig_file $pkg $pc_llib
 		elif [ -n "${pc_llibs}" ]; then
 			local p
-			for f in ${pc_llibs}; do
+			for f in "${pc_llibs}"; do
 				[ "${f::2}" == "-l" ] && p="${f:2}" || p="$f"
 				create_pkgconfig_file $p $f
 			done
 		fi
 	fi
 
-	local pcfile=${dir_install_pc}/${pkg}.pc
+	local pcfile="${dir_install_pc}/${pkg}.pc"
 	if [ ! -f "$pcfile" ] && [ -f "${dir_install}/share/pkgconfig/${lib}.pc" ]; then
-		pcfile=${dir_install}/share/pkgconfig/${lib}.pc
+		pcfile="${dir_install}/share/pkgconfig/${lib}.pc"
 	fi
 
 	if $build_cpack; then
@@ -698,7 +698,7 @@ start(){
 
 	cd ${dir_src}
 
-	$skip_pc || logver "${pcfile}"
+	${skip_pc} || logver "${pcfile}"
 
 	fn_defined 'on_end' && fn_log 'end' on_end
 
