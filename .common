@@ -63,6 +63,179 @@ THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄
 EOF
 }
 
+function log {
+	echo -ne "$CD$@$C0"
+}
+
+function logf {
+	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+}
+
+function logok {
+	echo -ne "\e[${#1}D${CT0}${1}${C0} "
+}
+
+# usage logver /path/to/pkgconfigfile.pc
+function logver {
+	if [ -f ${1} ]; then
+		echo -ne "${CT1}version $(pkg-config --modversion ${1})${C0}"
+	else
+		echo -ne "${CS0} missing ${1} ${C0}"
+	fi
+}
+
+function log_start {
+	logtime_start=$(date +%s)
+	if ! $inline; then
+		echo -ne "${CD}${inde}${C0}$(date '+%H:%M')"
+		[ $eta ] && echo -ne "-${CW}$(date '+%H:%M' --date="$eta seconds")"
+		printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
+	fi
+	echo $(date) > ${log_file}
+}
+
+function log_end {
+	if ! $inline && [ -n "${logtime_start}" ]; then
+		logtime_end=$(date +%s)
+		local secs=$((${logtime_end}-${logtime_start}))
+		local msg="${CT1} done ${CD}in $(secs2time ${secs})"
+		[ ${secs} -gt 60 ] && msg="${msg} (${secs}s)"
+		echo -e "${msg}"
+	fi
+}
+
+function log_this {
+	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+	"$@" 2>> "${log_file}" 1>> "${log_file}" || err
+	logok
+}
+
+
+function log_vars {
+	local t;
+	while [ -n "$1" ]; do
+		echo "$1=${!1}" >>"${log_file}" 2>&1
+		shift
+	done
+	echo >>"${log_file}"
+}
+
+function print_vars {
+	while [ -n "$1" ]; do
+		printf "${CC0}%-20s: ${C0}%s\n" "  ${1}" ${!1}
+		shift
+	done
+}
+
+function exit_err {
+	echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
+	if [ -f ${log_file} ];then
+		if [ -f ${dir_build}/CMakeFiles/CMakeError.log ];then
+		echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
+		cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
+		fi
+		echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
+		[ "$openlog" != "n" ] && nano ${log_file}
+	fi
+	exit 1
+}
+
+err(){
+	if [ -n "${logtime_start}" ]; then
+		logtime_end=$(date +%s)
+		echo -e "${CR1} fail ${CR0}[$(secs2time $((${logtime_end}-${logtime_start})))]${C0}\n"
+	fi
+	if [ -f "${log_file}" ];then
+		if [ -f "${dir_build}/CMakeFiles/CMakeError.log" ];then
+		  echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> "${log_file}"
+		  cat "${dir_build}/CMakeFiles/CMakeError.log" >> "${log_file}"
+		fi
+		echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
+		[ "${openlog}" != "n" ] && nano ${log_file}
+	fi
+	echo
+	exit 1
+}
+
+function do_quietly {
+	local var
+  var="${1}"
+  shift
+	echo -ne "${CD}${var}${C0}"
+	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+	"$@" >/dev/null 2>&1
+	logok "${var}"
+}
+
+function do_log {
+	local var
+  var="${1}"
+  shift
+	echo -ne "${CD}${var}${C0}"
+	log_this $@
+	logok "${var}"
+}
+
+function do_progress {
+	local var
+  var="${1}"
+  shift
+	echo -ne "${CD}${var}"
+	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+	("$@" |& tee -a ${log_file} | topct) || doErr "in ${var}:\n\n...\n$(tail -n5 ${log_file})${C0}"
+	logok "${var}"
+}
+
+function topct {
+	local sln
+	local grp
+	tput civis
+	printf "build_system: %10s; make: %7s" ${build_system} ${MAKE_EXECUTABLE} >>${log_file}
+	if [ "${build_system}" == "cmake" ] && [ "$(basename ${MAKE_EXECUTABLE})" == "make" ]; then
+		printf "%-6s"
+		while read -r ln; do
+			str_contains "${ln}" 'error: ' && printf $CR1
+			sln=$(grep -oP '\d+%' <<< $ln)
+			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
+		done
+		printf "\e[6D"
+	elif [ "$(basename ${MAKE_EXECUTABLE})" == "ninja" ]; then
+		printf "%-12s"
+		while read -r ln; do
+			str_contains $ln 'error: ' && printf $CR1
+			sln=$(grep -oP '\[\d+/\d+\]' <<< $ln)
+			[ -n "$sln" ] && printf "\e[11D%-11s" $sln
+		done
+		printf "\e[12D"
+	else
+		printf "%-6s"
+		while read -r ln; do
+			sln+="." # ·
+			[ ${#sln} -eq 5 ] && sln=''
+			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
+		done
+		printf "\e[6D"
+	fi
+	tput cnorm
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 color_table(){
   local i=16
   while [ $i -lt 52 ]; do

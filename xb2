@@ -14,7 +14,7 @@ function init {
 	[ -f ".config" ] && source .config
 	if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
 		./x-setup
-		source .config || doErr 'Unable to initialize config file'
+		source .config || exit_err 'Unable to initialize config file'
 	fi
 	export should_init=false
 }
@@ -35,24 +35,31 @@ fi
 
 sudo=$(command -v sudo)
 
+
+: "${ac_nohost:=false}"
+: "${ac_nosysroot:=false}"
+: "${ac_nopic:=false}"
+: "${ac_reconf:=true}"
+: "${API:=34}"
+: "${apt:=${lib}}"
+: "${banner:=true}"
+: "${build_strip:=false}"
+: "${build_cpack:=false}"
+
 : "${host_native:=false}"
 : "${debug:=false}"
 : "${nodev:=false}"
 : "${should_init:=true}"
-: "${pkg:=${lib}}"
-: "${apt:=${lib}}"
-: "${ac_nohost:=false}"
+
 : "${disable_shared:=false}"
-: "${ac_nosysroot:=false}"
-: "${ac_nopic:=false}"
-: "${banner:=true}"
+
+
 : "${req_update_deps:=false}"
 : "${update:=false}"
 : "${build_dist:=true}"
 : "${dep_build:=--static}"
-: "${build_strip:=false}"
-: "${build_cpack:=false}"
-: "${API:=34}"
+
+
 : "${git_checkout:=false}"
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
@@ -61,7 +68,7 @@ sudo=$(command -v sudo)
 : "${indent:=0}"
 : "${ind:=}"
 : "${vnd:=}"
-: "${ac_reconf:=true}"
+
 : "${cmake_build_type:=Release}"
 
 : "${MAKE_EXECUTABLE:=make}"
@@ -127,40 +134,26 @@ function sudo_check {
 }
 
 
+# check build system and set defaults - static and shared build options
+function config_init {
 
-
-main(){
-
-	test -z "${script_isrunning}" && showBanner
-
-	# exit if missing vars lib arch or src
-	if [ -z "${lib}" ]; then
-		echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
-		exit 0
-	fi
-
-	test $(sudo_check) && echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
-
-	# check build type and set defaults if no cst0 cst1 csh0 or csh1 value provided
+	# if no cfg provided, try to guess
+	test -z "${cfg}" && config_guess
+	test -z "${cfg}" && exit_err 'No build system found. Exiting.'
+	
 	case "${cfg}" in
 		cm|ccm|cmake|ccmake)
 			build_system=cmake
 			key_state=( 'OFF' 'ON' )
-			: "${cmake_static:=BUILD_STATIC_LIBS}"
-			: "${cmake_shared:=BUILD_SHARED_LIBS}"
 			build_link="-D${cmake_shared}=${key_state[$(bool2int ${build_shared})]}"
 			if [ ! "${cmake_static}" = "${cmake_shared}" ]; then
 				build_link+=" -D${cmake_static}=${key_state[$(bool2int ${build_static})]}"
-			fi
-			
+			fi		
 			[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
-
 			;;
 		ab|am|ac|ar|ag|auto*)
 			build_system=automake
 			key_state=( 'disable' 'enable' )
-			: "${ac_static:=static}"
-			: "${ac_shared:=shared}"
 			build_link="--${key_state[$(bool2int ${build_shared})]}-${ac_shared}"
 			build_link+="--${key_state[$(bool2int ${build_static})]}-${ac_static}"
 			if [ -n "$cbk" ]; then
@@ -190,6 +183,29 @@ main(){
 
 	# reset presets, we don't need them anymore
 	unset cb0 cb1 cbk
+}
+
+main(){
+
+	# exit if missing vars lib arch or src
+	if [ -z "${lib}" ]; then
+		echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
+		exit 0
+	fi
+
+	# show package info
+	export log_file="${dir_install}/${lib}.log"
+	
+	test -z "${script_isrunning}" && showBanner
+	test $(sudo_check) && echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
+
+	: "${pkg:=${lib}}"
+	: "${ac_static:=static}"
+	: "${ac_shared:=shared}"
+	: "${cmake_static:=BUILD_STATIC_LIBS}"
+	: "${cmake_shared:=BUILD_SHARED_LIBS}"
+
+	config_init
 
 	export arch update retry \
 		build_shared build_static build_bin build_system build_link\
@@ -215,8 +231,7 @@ main(){
 		fi
 	fi
 
-	# show package info
-	export log_file="${dir_install}/${lib}.log"
+	
 
 	if [ -z "$(check_install pc)" ]; then
 		package_showinfo
@@ -406,7 +421,7 @@ start(){
 		if ! $skip_dl; then
 			# test internet connection...
 			wget -q --spider http://google.com
-			[ ! $? -eq 0 ] && doErr 'No Internet Connection. Aborting...'
+			[ ! $? -eq 0 ] && exit_err 'No Internet Connection. Aborting...'
 			# check whether to custom get source
 			if fn_defined 'source_get'; then
 				fn_log 'get' source_get
@@ -424,14 +439,14 @@ start(){
 					tgz|txz|tlz)   wget_tarxx $src $lib;;
 					svn)           svn_clone $src $lib;;
 					hg)            hg_clone $src $lib;;
-					*)             doErr "unknown sty=$sty for $src";;
+					*)             exit_err "unknown sty=$sty for $src";;
 				esac
 			else
 				case $src in
-					*.tar.*|*.tgz) wget_tarxx $src $lib;;
+					*.tar.*|*.tgz) curl_tar $src $lib;;
 					*.git|*git.*)  git_clone $src $lib $src_opt;;
 					*svn.*)        svn_clone $src $lib;;
-					*)             doErr "Unknown source type for $src";;
+					*)             exit_err "Unknown source type for $src";;
 				esac
 			fi
 		fi
@@ -518,7 +533,7 @@ start(){
 			local fcmake="${dir_root}/cmake/$cmake_cmakelists"
 			if [ -f "${fcmake}" ]; then
 				local fcmake_dst="${dir_src}/CMakeLists.txt"
-				cp -f "${fcmake}" "${fcmake_dst}" || doErr "Unable to copy ${fcmake} to ${fcmake_dst}"
+				cp -f "${fcmake}" "${fcmake_dst}" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"
 				unset cmakelists_ext
 			fi
 		fi
@@ -596,7 +611,7 @@ start(){
 		*)	if [ -n "${cfg_cmd}" ]; then
 				do_log 'config' ${cfg_cmd} ${cfg_args[@]}
 			else
-				doErr "cfg ${cfg} unknown or cfg_cmd not defined. Use build_config to custom configure makefile"
+				exit_err "cfg ${cfg} unknown or cfg_cmd not defined. Use build_config to custom configure makefile"
 			fi
 			;;
 		esac
@@ -889,7 +904,7 @@ function build_dependencies {
 	local cf
 	local ldir
 	while [ -n "${1}" ]; do
-		[ -f "${dir_root}/src/${1}" ] || doErr "Unknown script for ${1}.\n  Aborting..."
+		[ -f "${dir_root}/src/${1}" ] || exit_err "Unknown script for ${1}.\n  Aborting..."
 		pkgconfig_file=$(./${1}.sh ${arch} --get pc)
 		libname=$(./${1}.sh --get libname)
 		if [ ! -f "${pkgconfig_file}" ]; then
@@ -1037,134 +1052,6 @@ secs2time(){
 	[ $(($1/60%60)) -eq 0 ] && printf '%ds' $(($1%60)) || printf '%dm %ds' $(($1/60%60)) $(($1%60))
 }
 
-log_start(){
-	logtime_start=$(date +%s)
-	#echo -ne "$CC1  $@: "
-	if ! $inline; then
-		echo -ne "${CD}${inde}${C0}$(date '+%H:%M')"
-		[ $eta ] && echo -ne "-${CW}$(date '+%H:%M' --date="$eta seconds")"
-		printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
-	fi
-	echo $(date) > ${log_file}
-}
-
-log_end(){
-	if ! $inline && [ -n "${logtime_start}" ]; then
-		logtime_end=$(date +%s)
-		#local pkgsize=$(du -sk ${dir_install} | cut -f1)
-		#local libsize=$(du -sk ${dir_install}/lib | cut -f1)
-		local secs=$(($logtime_end-$logtime_start))
-		local msg="${CT1} done ${CD}in $(secs2time ${secs})"
-		[ $secs -gt 60 ] && msg="$msg (${secs}s)"
-		#echo -e "$msg pkg/lib: ${pkgsize}/${libsize}kb${C0}"
-		echo -e "$msg"
-	fi
-}
-
-log(){
-	echo -ne "$CD$@$C0"
-}
-
-logf(){
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-}
-
-log_vars(){
-	local t;
-	while [ -n "$1" ]; do
-		echo "$1=${!1}" >>${log_file} 2>&1
-		shift
-	done
-	echo >>${log_file}
-}
-
-print_vars(){
-	while [ -n "$1" ]; do
-		printf "${CC0}%-20s: ${C0}%s\n" "  ${1}" ${!1}
-		shift
-	done
-}
-
-doErr(){
-	echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
-	if [ -f ${log_file} ];then
-		if [ -f ${dir_build}/CMakeFiles/CMakeError.log ];then
-		echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
-		cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
-		fi
-		echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
-		[ "$openlog" != "n" ] && nano ${log_file}
-	fi
-	exit 1
-}
-
-err(){
-	if [ -n "${logtime_start}" ]; then
-		logtime_end=$(date +%s)
-		echo -e "${CR1} fail ${CR0}[$(secs2time $(($logtime_end-$logtime_start)))]${C0}\n"
-	fi
-	if [ -f ${log_file} ];then
-		if [ -f ${dir_build}/CMakeFiles/CMakeError.log ];then
-		echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
-		cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
-		fi
-		echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
-		[ "$openlog" != "n" ] && nano ${log_file}
-	fi
-	echo
-	exit 1
-}
-
-log_this() {
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-	"$@" 2>> "${log_file}" 1>> "${log_file}" || err
-	logok
-}
-
-
-do_quietly(){
-	local var=$1; shift
-	echo -ne "${CD}${var}${C0}"
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-	"$@" >/dev/null 2>&1
-	logok $var
-}
-
-do_log() {
-	local var=$1; shift
-	echo -ne "${CD}${var}${C0}"
-	log_this $@
-	logok $var
-}
-
-do_progress() {
-	local var=$1; shift
-	echo -ne "${CD}${var}"
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-	("$@" |& tee -a ${log_file} | topct) || doErr "in ${var}:\n\n...\n$(tail -n5 ${log_file})${C0}"
-	logok $var
-}
-
-logok() {
-	echo -ne "\e[${#1}D${CT0}${1}${C0} "
-}
-
-# usage logver /path/to/pkgconfigfile.pc
-logver() {
-	if [ -f $1 ];then
-		echo -ne "${CT1}version $(pkg-config --modversion $1)${C0}"
-	else
-		echo -ne "${CS0} missing ${1} ${C0}"
-	fi
-}
-
-inline_ccmake(){
-	tput sc; ccmake $@; tput rc
-}
-
-isBottomRow(){
-	test "$(echo "lines"|tput -S)" == "$(IFS=';' read -sdR -p $'\e[6n' ROW COL && echo "${ROW#*[}")" && echo 1 || echo 0
-}
 
 # usage: do_git giturl [libname]
 do_git(){
@@ -1181,7 +1068,7 @@ do_git(){
 	cd ..
 }
 
-prt_git_progress(){
+function prt_git_progress {
 	tput civis
 	printf "%-8s"
 	local s0
@@ -1208,51 +1095,18 @@ prt_git_progress(){
 	tput cnorm
 }
 
-topct(){
-	local sln
-	local grp
-	tput civis
-	printf "build_system: %10s; make: %7s" ${build_system} ${MAKE_EXECUTABLE} >>${log_file}
-	if [ "${build_system}" == "cmake" ] && [ "$(basename ${MAKE_EXECUTABLE})" == "make" ]; then
-		printf "%-6s"
-		while read -r ln; do
-			str_contains "${ln}" 'error: ' && printf $CR1
-			sln=$(grep -oP '\d+%' <<< $ln)
-			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
-		done
-		printf "\e[6D"
-	elif [ "$(basename ${MAKE_EXECUTABLE})" == "ninja" ]; then
-		printf "%-12s"
-		while read -r ln; do
-			str_contains $ln 'error: ' && printf $CR1
-			sln=$(grep -oP '\[\d+/\d+\]' <<< $ln)
-			[ -n "$sln" ] && printf "\e[11D%-11s" $sln
-		done
-		printf "\e[12D"
-	else
-		printf "%-6s"
-		while read -r ln; do
-			sln+="." # ·
-			[ ${#sln} -eq 5 ] && sln=''
-			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
-		done
-		printf "\e[6D"
-	fi
-	tput cnorm
-}
-
-git_clone(){
+function git_clone {
 	local var="git"
 	echo -ne "${CD}${var}"
-	logf git clone --progress --verbose $src $lib $src_opt
-	git clone --progress --verbose $src $lib $src_opt |& tr '\r' '\n' | prt_git_progress
+	logf git clone --progress --verbose "${src}" "${lib}" "${src_opt}"
+	git clone --progress --verbose "${src}" "${lib}" "${src_opt}" |& tr '\r' '\n' | prt_git_progress
 	logok $var
-	test -d "$lib" && cd $lib || err
+	test -d "${lib}" && cd "${lib}" || err
 	if [ -n "${bra}" ]; then
-		do_log ${bra} git checkout ${bra}
+		do_log "${bra}" git checkout "${bra}"
 		unset bra
 	elif [ -n "${vrs}" ]; then
-		do_log ${vrs} git checkout tags/${vrs}
+		do_log "${vrs}" git checkout "tags/${vrs}"
 	fi
 	if [ -n "${sub}" ];then
 		do_log 'sub' git ${sub}
@@ -1260,74 +1114,58 @@ git_clone(){
 	cd ..
 }
 
-svn_clone(){
+# usage: svn_clone <url> <dest-dir-name>
+function svn_clone {
 	request_cmd svn subversion || err
-	#[ $(command -v svn) ] || apt_install subversion || err
 	do_log 'svn' svn checkout $1 $2
 }
 
-hg_clone(){
+# usage: hg_clone <url> <dest-dir-name>
+function hg_clone {
 	request_cmd hg mercurial || err
-	#[ $(command -v hg) ] || apt_install mercurial || err
 	do_log 'clone' hg clone $1 $2
 }
 
-set_git_version(){
-	pushdir ${dir_src}
-	local v=$(git describe --abbrev=0 --tags 2>/dev/null)
-	[ -n "$v" ] && export vrs=$v
-	popdir
-}
-
-github_latest_tgz(){
-	case $src in
-		*github.*)
-			local dst=$(echo $src | sed -e 's|\.git||g')
-			local url=$(curl -ILs -o /dev/null -w %{url_effective} "${dst}/releases/latest")
-			local file=$(curl -s $url | grep -Po '(?<=>)[^<]*' | grep -Po '.*tar.gz$')
-			echo "${url}/${file}"
-		;;
-		*gitlab.*|*code.videolan.org*)
-			local dst=$(echo $src | sed -e 's|\.git||g')
-			local v=$(git_remote_version $src)
-			echo "$dst/-/archive/${v}/${lib}-${v}.tar.gz"
-		;;
-		*.googlesource.*)
-			local tag=$(git -c 'versionsort.suffix=-' ls-remote --refs --sort='v:refname' $src | tail -n1 | cut -f1)
-			echo "$src/+archive/${tag}.tar.gz"
-		;;
+function curl_tar {
+	local tag="get"
+	local args=
+	dir_src="${dir_sources}/${2}"
+	echo -ne "${CD}${tag}${C0}"
+	echo "$(date): $@" >> "${log_file}"
+	
+	case "${1}" in
+		*.tar.lz)        request_cmd 'lzip' && args='--lzip -xv';;
+		*.tar.gz|*.tgz)  args="-xvz";;
+		*.tar.xz)        args="-xvJ";;
+		*.tar.bz2)       args="-xvj";;
 	esac
+	
+	test -d "${dir_src}" && rm -rf "${dir_src}"
+	mkdir "${dir_src}"
+	curl -L "${1}" 2>>"${log_file}" | tar "${args}" -C ${dir_src} --strip-components=1
+	
+	logok "${tag}"
 }
-
 
 # usage: wget_tarxx type url libname
-wget_tarxx(){
+function wget_tarxx {
 	local tag="get"
 	local args=
 	echo -ne "${CD}${tag}${C0}"
 	echo "$(date): $@" >> "${log_file}"
 
-	if [ -z "${sty}" ]; then
-		case $src in
-			*.tar.lz)        request_cmd 'lzip' && args='--lzip -xv';;
-			*.tar.gz|*.tgz)  args="-xvz";;
-			*.tar.xz)        args="-xvJ";;
-			*.tar.bz2)       args="-xvj";;
-		esac
-	else
-		case $sty in
-			tgz)       args="-xvz";;
-			txz)       args="-xvJ";;
-			tbz|tbz2)  args="-xvj";;
-			tlz)       args="--lzip -xv";;
-		esac
-	fi
+	case "${src}" in
+		*.tar.lz)        request_cmd 'lzip' && args='--lzip -xv';;
+		*.tar.gz|*.tgz)  args="-xvz";;
+		*.tar.xz)        args="-xvJ";;
+		*.tar.bz2)       args="-xvj";;
+	esac
 	
-	test -z "$args" && doErr "unknown compressed file format for $(basename ${src})"
+	test -z "${args}" && exit_err "unknown compressed file format for $(basename ${src})"
 
 	[ -d "tmp" ] && rm -rf tmp
 	mkdir tmp
-	wget -qO- $1 2>>${log_file} | tar --transform 's/^dbt2-0.37.50.3/dbt2/' $args -C tmp >/dev/null 2>&1 || err
+	wget -qO- $1 2>>${log_file} | tar --transform 's/^dbt2-0.37.50.3/dbt2/' "${args}" -C tmp >/dev/null 2>&1 || err
 	cd tmp
 	local nf=(*)
 	if [ ${#nf[@]} -gt 2 ]; then
@@ -1449,7 +1287,7 @@ showOpts(){
 
 
 doAutogen(){
-	[ $1 ] || doErr "missing arg in doAutogen: usage doAutogen <AUTOGEN_DIR>"
+	[ $1 ] || exit_err "missing arg in doAutogen: usage doAutogen <AUTOGEN_DIR>"
 	local var="autogen"
 	echo -ne "${CD}${var}${C0}"
 	pushdir $1
@@ -1490,7 +1328,7 @@ download(){
 
 toolchain_android(){
 	PLATFORM='Android'
-	[ -d "${ANDROID_NDK_HOME}" ] || doErr "No ANDROID NDK Toolchain found. Aborting."
+	[ -d "${ANDROID_NDK_HOME}" ] || exit_err "No ANDROID NDK Toolchain found. Aborting."
 
 	TOOLCHAIN="/usr/${arch}"
 	SYSROOT="${TOOLCHAIN}/sysroot"

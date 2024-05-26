@@ -62,6 +62,13 @@ function config_guess {
   return 0
 }
 
+set_git_version(){
+	pushdir ${dir_src}
+	local v=$(git describe --abbrev=0 --tags 2>/dev/null)
+	[ -n "$v" ] && export vrs=$v
+	popdir
+}
+
 build_packages_getdistdir(){
 	[ -f "${dir_install_pc}/${pkg}.pc" ] && vrs=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
 	[ -z "$vrs" ] && set_git_version
@@ -162,8 +169,23 @@ github_latest_release(){
 }
 
 github_latest_tgz(){
-	echo "https://github.com/intel/libvpl/archive/refs/tags/v2.10.1.tar.gz://github.com/intel/libvpl.git"
-
+	case $src in
+		*github.*)
+			local dst=$(echo $src | sed -e 's|\.git||g')
+			local url=$(curl -ILs -o /dev/null -w %{url_effective} "${dst}/releases/latest")
+			local file=$(curl -s $url | grep -Po '(?<=>)[^<]*' | grep -Po '.*tar.gz$')
+			echo "${url}/${file}"
+		;;
+		*gitlab.*|*code.videolan.org*)
+			local dst=$(echo $src | sed -e 's|\.git||g')
+			local v=$(git_remote_version $src)
+			echo "$dst/-/archive/${v}/${lib}-${v}.tar.gz"
+		;;
+		*.googlesource.*)
+			local tag=$(git -c 'versionsort.suffix=-' ls-remote --refs --sort='v:refname' $src | tail -n1 | cut -f1)
+			echo "$src/+archive/${tag}.tar.gz"
+		;;
+	esac
 }
 
 github_repo_id(){
@@ -225,7 +247,7 @@ package_showinfo(){
 		for t in ${tls}; do
 		if [ -z $(command -v ${t}) ];then
 			apt_install ${t} || {
-			echo -ne "${CR1}${t} ${C0}" && doErr "Unable to install ${t}, aborting..."
+			echo -ne "${CR1}${t} ${C0}" && exit_err "Unable to install ${t}, aborting..."
 			}
 			echo -ne "${CW}${t} "
 		fi
@@ -392,7 +414,7 @@ patch_append(){
 	local newfile=${1}
 	local oldfile
 	str_starts "${newfile}" "sources/${lib}/" && newfile="${newfile//sources\/${lib}\//}"
-	[ -f "sources/${lib}/${newfile}" ] || doErr "unable to find file sources/${lib}/${newfile}"
+	[ -f "sources/${lib}/${newfile}" ] || exit_err "unable to find file sources/${lib}/${newfile}"
 	shift
 	cd sources/${lib}
 	if [ -z "${1}" ]; then
@@ -401,7 +423,7 @@ patch_append(){
 	else
 		oldfile=${1}
 		str_starts "${oldfile}" "sources/${lib}/" && newfile="${oldfile//sources\/${lib}\//}"
-		[ -f "${oldfile}" ] || doErr "unable to find file sources/${lib}/${oldfile}"
+		[ -f "${oldfile}" ] || exit_err "unable to find file sources/${lib}/${oldfile}"
 	fi
 	diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" >>${dir_root}/sources/${lib}/xbuild.patch
 	cd ../..
@@ -410,7 +432,7 @@ patch_append(){
 
 patch_embed(){
 	if [ ! -f "sources/${lib}/xbuild.patch" ]; then
-		doErr "No sources/${lib}/xbuild.patch file to embed"
+		exit_err "No sources/${lib}/xbuild.patch file to embed"
 	fi
 	hdr="STR_PATCH"
 	case $1 in
@@ -443,7 +465,7 @@ create_diff(){
 	local b64=false
 	local newfile=${1}
 	local oldfile
-	[ -f "sources/${lib}/${newfile}" ] || doErr "unable to find file sources/${lib}/${newfile}"
+	[ -f "sources/${lib}/${newfile}" ] || exit_err "unable to find file sources/${lib}/${newfile}"
 	shift
 	pushdir sources/${lib}
 	if [ -z "${1}" ]; then
@@ -451,7 +473,7 @@ create_diff(){
 		touch sources/${lib}/${oldfile}
 	else
 		oldfile=${1}
-		[ -f "${oldfile}" ] || doErr "unable to find file sources/${lib}/${oldfile}"
+		[ -f "${oldfile}" ] || exit_err "unable to find file sources/${lib}/${oldfile}"
 	fi
 	if $b64; then
 		diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" | base64 -w 90 >>"${newfile}.patch"
