@@ -63,8 +63,30 @@ THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄
 EOF
 }
 
-function log {
+function log_unused1 {
 	echo -ne "$CD$@$C0"
+}
+
+# usage: log <logfile> [--noerr|--progress] <label> <commands....>
+function log_unused2 {
+  local noerr=false
+  local progress=false
+  while $(str_starts $1 '--');do
+    case $1 in
+      --noerr) noerr=true;;
+      --progress) progress=true;;
+    esac
+    shift
+  done
+	local label=$1; shift
+	echo -ne "${CD}${label}${C0}"
+	echo -e "\n$(time_elapsed): $@" >> "$logfile"
+  if $progress; then
+	  ("$@" |& log_progress) || err "in ${act}:\n\n...\n$(tail -n5 ${logfile}${C0})"
+  else
+	  "$@" 2>> "$logfile" 1>> "$logfile" || err
+  fi
+	echo -ne "\e[${#label}D${CT0}${label}${C0} "
 }
 
 function logf {
@@ -84,6 +106,15 @@ function logver {
 	fi
 }
 
+function log_vars {
+	local t;
+	while [ -n "$1" ]; do
+		echo "$1=${!1}" >>"${log_file}" 2>&1
+		shift
+	done
+	echo >>"${log_file}"
+}
+
 function log_start {
 	logtime_start=$(date +%s)
 	if ! $inline; then
@@ -97,7 +128,7 @@ function log_start {
 function log_end {
 	if ! $inline && [ -n "${logtime_start}" ]; then
 		logtime_end=$(date +%s)
-		local secs=$((${logtime_end}-${logtime_start}))
+		local secs=$((${logtime_end} - ${logtime_start}))
 		local msg="${CT1} done ${CD}in $(secs2time ${secs})"
 		[ ${secs} -gt 60 ] && msg="${msg} (${secs}s)"
 		echo -e "${msg}"
@@ -110,22 +141,22 @@ function log_this {
 	logok
 }
 
-
-function log_vars {
-	local t;
-	while [ -n "$1" ]; do
-		echo "$1=${!1}" >>"${log_file}" 2>&1
-		shift
-	done
-	echo >>"${log_file}"
+function log_progress {
+  printf "%-6s"
+  local sln
+  IFS=$'\n'
+  while read -r ln; do
+    # $has_logfile && \
+    printf "%-6s: %s\n" $(time_elapsed) $ln >>${logfile}
+    str_contains $ln 'error: ' && printf $CR1
+    sln=$(grep -oP '\d+%' <<< $ln)
+    [ -n "$sln" ] && printf "\e[5D%-5s" $sln
+  done
+  printf "\e[6D"
+  unset IFS
 }
 
-function print_vars {
-	while [ -n "$1" ]; do
-		printf "${CC0}%-20s: ${C0}%s\n" "  ${1}" ${!1}
-		shift
-	done
-}
+
 
 function exit_err {
 	echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
@@ -140,7 +171,7 @@ function exit_err {
 	exit 1
 }
 
-err(){
+function err{
 	if [ -n "${logtime_start}" ]; then
 		logtime_end=$(date +%s)
 		echo -e "${CR1} fail ${CR0}[$(secs2time $((${logtime_end}-${logtime_start})))]${C0}\n"
@@ -156,6 +187,19 @@ err(){
 	echo
 	exit 1
 }
+
+
+
+function print_vars {
+	while [ -n "$1" ]; do
+		printf "${CC0}%-20s: ${C0}%s\n" "  ${1}" ${!1}
+		shift
+	done
+}
+
+
+
+
 
 function do_quietly {
 	local var
@@ -182,7 +226,7 @@ function do_progress {
   shift
 	echo -ne "${CD}${var}"
 	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-	("$@" |& tee -a ${log_file} | topct) || doErr "in ${var}:\n\n...\n$(tail -n5 ${log_file})${C0}"
+	("$@" |& tee -a ${log_file} | topct) || exit_err "in ${var}:\n\n...\n$(tail -n5 ${log_file})${C0}"
 	logok "${var}"
 }
 
@@ -497,88 +541,6 @@ rm_log(){
   [ -f "${log}" ] && [ -n "$@" ] && rm -rf $@ 2>&1 >>${log}
 }
 
-log_progress(){
-  printf "%-6s"
-  local sln
-  IFS=$'\n'
-  while read -r ln; do
-    # $has_logfile && \
-    printf "%-6s: %s\n" $(time_elapsed) $ln >>${logfile}
-    str_contains $ln 'error: ' && printf $CR1
-    sln=$(grep -oP '\d+%' <<< $ln)
-    [ -n "$sln" ] && printf "\e[5D%-5s" $sln
-  done
-  printf "\e[6D"
-  unset IFS
-}
-
-# usage: log <logfile> [--noerr|--progress] <label> <commands....>
-log(){
-  local noerr=false
-  local progress=false
-  while $(str_starts $1 '--');do
-    case $1 in
-      --noerr) noerr=true;;
-      --progress) progress=true;;
-    esac
-    shift
-  done
-	local label=$1; shift
-	echo -ne "${CD}${label}${C0}"
-	echo -e "\n$(time_elapsed): $@" >> "$logfile"
-  if $progress; then
-	  ("$@" |& log_progress) || err "in ${act}:\n\n...\n$(tail -n5 ${logfile}${C0})"
-  else
-	  "$@" 2>> "$logfile" 1>> "$logfile" || err
-  fi
-	echo -ne "\e[${#label}D${CT0}${label}${C0} "
-}
-
-log_init(){
-  export logfile=${1}
-  [ -f "${1}" ] && rm -f $logfile
-  export log_timestart=$(date +%s)
-}
-
-logsc(){
-  echo -ne "  ${CC0} $1"
-  shift
-  "$@"
-  echo -e " ${CC1}done${C0}"
-}
-
-logv(){
-  while [ -n "${1}" ]; do
-    echo "$1=${!1}" >>${logfile} 2>&1
-    shift
-  done
-  echo >>${logfile}
-}
-
-log_end(){
-  log_timestop=$(date +%s)
-  local secs=$(($log_timestop-$log_timestart))
-  local msg="${CT1} done ${CD}in $(secs2time ${secs})"
-  [ $secs -gt 60 ] && msg="$msg (${secs}s)"
-  #echo -e "$msg pkg/lib: ${pkgsize}/${libsize}kb${C0}"
-  echo -e "$msg"
-}
-
-err(){
-  if [ $# -gt 0 ];then
-    echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
-    if [ -f "${logfile}" ];then
-      # todo
-      #if [ -f ${BUILD_DIR}/CMakeFiles/CMakeError.log ];then
-      #  echo -e "\n\n${BUILD_DIR}/CMakeFiles/CMakeError.log:\n" >> $logfile
-      #  cat ${BUILD_DIR}/CMakeFiles/CMakeError.log >> $logfile
-      #fi
-      echo -ne "${CY1}${ind}Open log? [Y|n]:${C0}" && read openlog
-      case $openlog in y*|Y*) nano ${logfile};; esac
-    fi
-  fi
-  exit 1
-}
 
 time_elapsed(){
   if [ -n "${log_timestart}" ] && [ ${log_timestart} -gt 0 ];then
@@ -717,7 +679,7 @@ patch_fromremote(){
 
 # usage: wget_source <src-url> <dst-dir>
 wget_source(){
-    local fn=$(basename $1) || doErr "Invalid source url '$1'"
+    local fn=$(basename $1) || exit_err "Invalid source url '$1'"
     [ -z "$2" ] && local dn=$(pwd) || local dn=$2
     case $fn in
       *.zip);;
