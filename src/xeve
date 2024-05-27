@@ -49,3 +49,5 @@ on_end(){
         test -f "${a_lib}.so" && mv -f "${a_lib}.so" "${a_lib}.so_"
     fi
 }
+
+
