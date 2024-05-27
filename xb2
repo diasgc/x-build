@@ -2,9 +2,9 @@
 # ................................................
 # X-Build util 0.4.0 2024-diasgc
 # ................................................
+#set -x
 
-
-function trap_sigint {
+function _trap_sigint {
 	tput cnorm -- normal
 	cd $(dirname $0)
 	echo -e "\n\n${CY1}  Interrupted by user${C0}\n  Log available at \e[4m${log_file}\e[24m\n\n"
@@ -63,7 +63,7 @@ sudo=$(command -v sudo)
 : "${git_checkout:=false}"
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
-: "${build_getpackage:=false}"
+: "${download_prebuilt:=false}"
 : "${config_timeout:=86400}"
 : "${indent:=0}"
 : "${ind:=}"
@@ -117,6 +117,7 @@ logtime_end=0
 
 export CPPFLAGS=
 export target_trip=
+export script_file=
 export HOST_NPROC=$(nproc)
 
 export dir_sources="${dir_root}/sources" \
@@ -194,6 +195,13 @@ main(){
 		exit 0
 	fi
 
+	if fn_defined 'extraOpts'; then
+		for cfg_arg in "${cfg_args[@]}"; do
+			extraOpts "${cfg_arg}"
+		done
+		unset extraOpts cfg_args
+	fi
+
 	# show package info
 	export log_file="${dir_install}/${lib}.log"
 	
@@ -205,8 +213,6 @@ main(){
 	: "${ac_shared:=shared}"
 	: "${cmake_static:=BUILD_STATIC_LIBS}"
 	: "${cmake_shared:=BUILD_SHARED_LIBS}"
-
-	config_init
 
 	export arch update retry \
 		build_shared build_static build_bin build_system build_link\
@@ -242,6 +248,51 @@ main(){
 	fi
 }
 
+function build_dependencies {
+	local script_file
+	local dep_link=static
+	${build_allshared} && dep_link=shared
+	while [ -n "${1}" ]; do
+		script_file="${dir_root}/src/${1}"
+		if [ -f "${script_file}" ]; then
+			./xb2 ${script_file} ${arch} ${dep_link} || exit_err "Fail to build dependency ${1}"
+		else
+			exit_err "Fail to build dependency ${1}: ${script_file} not found"
+		fi
+	done
+}
+
+function build_dependencies_old {
+	local pkgconfig_file script_file
+	local o_csh
+	local o_cbh
+	local cf
+	local ldir
+	while [ -n "${1}" ]; do
+		script_file="${dir_root}/src/${1}"
+		[ -f "${script_file}" ] || exit_err "Unknown script for ${1}.\n  Aborting..."
+		pkgconfig_file=$(./${1}.sh ${arch} --get pc)
+		libname=$(./${1}.sh --get libname)
+		if [ ! -f "${pkgconfig_file}" ]; then
+			o_csh="${build_link}"
+			o_cbh="${CBH}"
+			${download_prebuilt} && local dl="--dl" || local dl=''
+			unset build_link CBH
+			
+			./xb2 ${1} ${arch} ${dep_build} ${dl}
+			
+			build_link=$o_csh
+			CBH=$o_cbh
+		fi
+		if [ -f "${pkgconfig_file}" ]; then
+			local cmi=$(./${1}.sh ${arch} --get cmake_include)
+			[ -n "${cmi}" ] && cmake_includes="${cmi} ${cmake_includes}"
+			ldir="$(dirname ${pkgconfig_file})"
+			str_contains "${PKG_CONFIG_LIBDIR}" "${ldir}" || PKG_CONFIG_LIBDIR="${ldir}:${PKG_CONFIG_LIBDIR}"
+		fi
+		shift
+	done
+}
 
 
 # Variables
@@ -312,8 +363,9 @@ function build_pkgconfig {
 		EOF
 }
 
-# usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
+# (Depracated) usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
 function create_pkgconfig_file {
+	exit_err "'create_pkgconfig_file' depracated: replace for function 'on_create_pc' and build_pkgconfig ..."
 	[ -z "${1}" ] && pc_file=${lib} || pc_file=${1}
 	[ -z "${2}" ] && pc_llib="-l${pc_file}" || pc_llib=${2}
 	[ -z "${3}" ] && pc_prefix=${dir_install} || pc_prefix=${3}
@@ -385,7 +437,8 @@ function get_source {
 
 start(){
 	
-	if ${build_getpackage}; then
+	# download prebuilt package instead
+	if ${download_prebuilt}; then
 		local lnk=$(get_link_pkg "${arch}" "${lib}")
 		if [ -n "${lnk}" ]; then
 			wget_pkg_tgz "${lnk}" "${dir_install}"
@@ -544,6 +597,8 @@ start(){
 	fi
 
 	$break_on_patch && end_script
+
+	config_init
 
 	if [ -z "${dir_build}" ];then
 		case ${build_system} in
@@ -722,8 +777,7 @@ start(){
 	fn_defined 'on_end' && fn_log 'end' on_end
 
 	local pcvrs=$(pkg-config --modversion ${pcfile})
-	local scrpt=${dir_root}/$(basename "$0")
-	test -n "${pcvrs}" && sed -i "s/dev_vrs='.*'/dev_vrs='"${pcvrs}"'/g" ${scrpt}
+	test -n "${pcvrs}" && sed -i "s/dev_vrs='.*'/dev_vrs='"${pcvrs}"'/g" ${script_file}
 
 	end_script
 }	
@@ -851,7 +905,7 @@ check_install(){
 		# check includes
 		inc*)
 			for h in $lst_inc; do 
-				test -z "$(ls ${dir_install}/include/$h 2>/dev/null)" && echo && return 0
+				test -z "$(ls ${dir_install}/include/${h} 2>/dev/null)" && echo && return 0
 			done
 			echo 1
 			return 0
@@ -899,37 +953,6 @@ function script_getvar {
 		out="${out//\'/}"
 	fi
 	echo "${out}"
-}
-
-function build_dependencies {
-	local pkgconfig_file=
-	local o_csh
-	local o_cbh
-	local cf
-	local ldir
-	while [ -n "${1}" ]; do
-		[ -f "${dir_root}/src/${1}" ] || exit_err "Unknown script for ${1}.\n  Aborting..."
-		pkgconfig_file=$(./${1}.sh ${arch} --get pc)
-		libname=$(./${1}.sh --get libname)
-		if [ ! -f "${pkgconfig_file}" ]; then
-			o_csh="${build_link}"
-			o_cbh=$CBH
-			${build_getpackage} && local dl="--dl" || local dl=''
-			unset build_link CBH
-			
-			./xb2 ${1} ${arch} ${dep_build} ${dl}
-			
-			build_link=$o_csh
-			CBH=$o_cbh
-		fi
-		if [ -f "${pkgconfig_file}" ]; then
-			local cmi=$(./${1}.sh ${arch} --get cmake_include)
-			[ -n "$cmi" ] && cmake_includes="$cmi $cmake_includes"
-			ldir="$(dirname ${pkgconfig_file})"
-			str_contains "${PKG_CONFIG_LIBDIR}" "${ldir}" || PKG_CONFIG_LIBDIR="${ldir}:${PKG_CONFIG_LIBDIR}"
-		fi
-		shift
-	done
 }
 
 
@@ -1139,14 +1162,14 @@ function curl_tar {
 	
 	case "${1}" in
 		*.tar.lz)        request_cmd 'lzip' && args='--lzip -xv';;
-		*.tar.gz|*.tgz)  args="-xvz";;
-		*.tar.xz)        args="-xvJ";;
-		*.tar.bz2)       args="-xvj";;
+		*.tar.gz|*.tgz)  args="-xz";;
+		*.tar.xz)        args="-xJ";;
+		*.tar.bz2)       args="-xj";;
 	esac
 	
 	test -d "${dir_src}" && rm -rf "${dir_src}"
 	mkdir "${dir_src}"
-	curl -L "${1}" 2>>"${log_file}" | tar "${args}" -C ${dir_src} --strip-components=1 2>>"${log_file}
+	curl -L "${1}" 2>>"${log_file}" | tar "${args}" -C ${dir_src} --strip-components=1 2>>"${log_file}"
 	
 	logok "${tag}"
 }
@@ -1553,19 +1576,7 @@ loadToolchain(){
 		CROSS_PREFIX LT_SYS_LIBRARY_PATH CPPFLAGS LDFLAGS
 }
 
-getMinGwVersion(){
-	echo $(x86_64-w64-mingw32-gcc --version | head -n1 | grep -Eo "(GCC).+-win32" | sed 's|GCC) \(.*\)-win32|\1|')
-}
-
-errUnknownTarget(){
-	if [ $arch ];then
-		echo -e "\n${CD}${ind}${CR1}unknown target ${arch}${C0}\n" && exit 1
-	else
-		echo -e "\n${CD}${ind}${CR1}must specify a target${C0}\n" && usage && exit 1
-	fi
-}
-
-showBanner(){
+function showBanner {
 	if $banner; then
 		echo -ne "\n\n${CW}Cross Build scripts ${vsh} for Linux${C0}\n"
 		[ -n $(command -v lsb_release) ] && echo -ne "$(lsb_release -sd) "
@@ -1580,16 +1591,7 @@ showBanner(){
 	export script_isrunning=true
 }
 
-skip_options(){
-	while [ -n "${1}" ] || [ -n "${1##--*}" ]; do
-		case $1 in
-		dl|git|src) skip_dl=true;;
-		esac
-		shift
-	done
-}
-
-set_target(){
+function set_target {
 	cpu_id="${1}"
 	target_trip=("${2}" "${3}" "${4}" "${5}" "${6}" "${7}" "${8}")
 	arch="${2}-${4}-${5}${6}"
@@ -1694,8 +1696,6 @@ usage(){
 function parse_unknown_arg {
 	if [ -f "${dir_root}/src/${1}" ]; then
 		script_list+=( "$1" )
-	elif fn_defined 'extraOpts'; then
-		extraOpts $1
 	else
 		cfg_args+=("${1}")
 	fi 
@@ -1792,12 +1792,9 @@ while [ $1 ];do
 	shift
 done
 
-fn_undef 'extraOpts'
 
 # Set default Host
-if [ -z "${target_trip}" ];then
-	set_target_build
-fi
+test -z "${target_trip}" && set_target_build
 
 # is cross-compile?
 if [ "${build_arch}" == "${arch}" ]; then
@@ -1814,18 +1811,11 @@ if [ -z "${script_list[@]}" ]; then
 	exit 0
 fi
 
-# usage: set_buildtype_key <input> <prefix> <on-val> <off-val>
-set_buildtype_key(){
-	local arr=(${1//|/ })
-	case ${#arr[@]} in
-		0) echo "${2}${3} ${2}${4}";;
-		1) ;;
-	esac
-	return 0
-}
-
+# main loop
 for script in "${script_list[@]}"; do
-	source "${dir_root}/src/${script}"
+	script_file="${dir_root}/src/${script}"
+	source "${script_file}"
 	main
 	start
+
 done

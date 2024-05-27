@@ -7,7 +7,7 @@ dsc='Library for computing Fourier transforms (version 3.x)'
 lic='GPL-3.0'
 vrs='3.3.10'
 src="http://fftw.org/fftw-${vrs}.tar.gz"
-cfg='cmake'
+#cfg='cmake'
 eta='120'
 cmake_config="-DBUILD_TESTS=OFF -DENABLE_THREADS=ON -DWITH_COMBINED_THREADS=ON"
 

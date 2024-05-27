@@ -28,7 +28,7 @@ aptInstallBr(){
   done
 }
 
-function bool_to_int {
+function bool2int {
 	$1 && echo 1 || echo 0
 }
 
@@ -60,6 +60,16 @@ function config_guess {
     return 1
   fi
   return 0
+}
+
+# usage: set_buildtype_key <input> <prefix> <on-val> <off-val>
+set_buildtype_key(){
+	local arr=(${1//|/ })
+	case ${#arr[@]} in
+		0) echo "${2}${3} ${2}${4}";;
+		1) ;;
+	esac
+	return 0
 }
 
 set_git_version(){
@@ -340,7 +350,7 @@ hwinfoCountCoresReadable(){
 		"4") echo "Quad-Core";;
 		"6") echo "Hexa-Core";;
 		"8") echo "Octa-Core";;
-		*) echo "$n-Core";;
+		*) echo "$(nproc)-Core";;
 	esac
 }
 
@@ -645,57 +655,4 @@ utils_get_latest_release(){
 				;;
 		esac
 	fi
-}
-
-
-# unused
-
-ndk_assert_h_sys_soundcard(){
-	[ "$host_os" == "android" ] && \
-		[ ! -f "$SYSROOT/usr/include/sys/soundcard.h" ] && \
-		echo "#include <linux/soundcard.h>" >"$SYSROOT/usr/include/sys/soundcard.h" 
-	return 0
-}
-set_ndk_api(){
-	API=${1}
-	loadToolchain
-}
-downloadP(){
-	tput sc && echo -ne "\e[$(tput lines);0H${CY1}"
-	# wget --progress=dot $url 2>&1 | grep --line-buffered "%" | sed -u -e "s,\.,,g" | awk '{printf("\b\b\b\b%4s", $2)}'
-	wget --progress=dot $1 2>&1 | grep --line-buffered "%" | sed -u -e "s,\.,,g" | awk '{printf("\r%4s %s eta:%s  ",$2,$1,$4)}'
-	tput rc
-	echo "${C0} ok "
-}
-checkUrl(){
-	wget -S --spider $1 2>&1 | grep -q "HTTP/1.[0-9] 200 OK" && echo SUCCESS || echo FAIL
-}
-checkCmd(){
-	[ -z "$(command -v $1)"] $sudo apt -qq install $1 -y >/dev/null 2>&1
-}
-err_call(){
-	echo -e "$(
-		cat <<-EOM
-			\n${CW}tcutils $vrs
-			${C0}Cannot be called directly. Missing vars lib arch or src
-			\n
-			EOM
-	)"
-	exit 1  
-}
-prtPrc(){
-	local v=$(grep "%")
-}
-cmakeClean(){
-	pushdir $1
-	rm -rf CMakeFiles CMakeCache.txt
-	popdir
-}
-makeClean(){
-	pushdir $1
-	make clean
-	popdir
-}
-setCMake(){
-	printf "SET($2 $3)\n\n" >> $1
 }

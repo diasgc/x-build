@@ -4,6 +4,19 @@
 # Definition constants and functions
 # ................................................
 
+function trap_sigint {
+  tput cnorm
+  cd "$(dirname $0)"
+  local l
+  [ -f "${log_file}" ] && l="  Log available at ${log_file}\n"
+  echo -e "\n\n${CY1}  Interrupted by user${C0}\n${l}\n"
+  trap - SIGINT
+  exit 1
+}
+
+shopt -s extglob
+trap trap_sigint SIGINT
+
 vsh='0.3.2-main'
 
 #b="\u25ba"
@@ -32,26 +45,12 @@ CT0=$CM0 CT1=$CM1 CS0=$CR0 CS1=$CR1 SSB=$C0
 
 : "${shell_dstack:=}"
 
-function trap_sigint {
-  tput cnorm
-  cd $(dirname $0)
-  local l
-  [ -f "${log_file}" ] && l="  Log available at ${log_file}\n"
-  echo -e "\n\n${CY1}  Interrupted by user${C0}\n${l}\n"
-  trap - SIGINT
-  exit 1
-}
-
-shopt -s extglob
-trap trap_sigint SIGINT
-
 # Logger
 logtime_start=
 export dir_root=$(pwd)
 export PS1='\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;95m\]\u@\e[0;95m\h\[\033[00m\]:\[\033[01;96m\]\w\[\033[00m\]\$ '
 
-
-splash(){
+function splash {
   cat << "EOF"
 
 THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄
@@ -117,12 +116,12 @@ function log_vars {
 
 function log_start {
 	logtime_start=$(date +%s)
-	if ! $inline; then
+	if ! ${inline}; then
 		echo -ne "${CD}${inde}${C0}$(date '+%H:%M')"
 		[ $eta ] && echo -ne "-${CW}$(date '+%H:%M' --date="$eta seconds")"
 		printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
 	fi
-	echo $(date) > ${log_file}
+	echo $(date) >"${log_file}"
 }
 
 function log_end {
@@ -156,22 +155,20 @@ function log_progress {
   unset IFS
 }
 
-
-
 function exit_err {
 	echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
-	if [ -f ${log_file} ];then
-		if [ -f ${dir_build}/CMakeFiles/CMakeError.log ];then
-		echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
-		cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
+	if [ -f "${log_file}" ];then
+		if [ -f "${dir_build}/CMakeFiles/CMakeError.log" ];then
+		  echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> "${log_file}"
+		  cat "${dir_build}/CMakeFiles/CMakeError.log" >> "${log_file}"
 		fi
 		echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
-		[ "$openlog" != "n" ] && nano ${log_file}
+		[ "${openlog}" != "n" ] && nano "${log_file}"
 	fi
 	exit 1
 }
 
-function err{
+function err {
 	if [ -n "${logtime_start}" ]; then
 		logtime_end=$(date +%s)
 		echo -e "${CR1} fail ${CR0}[$(secs2time $((${logtime_end}-${logtime_start})))]${C0}\n"
@@ -188,18 +185,12 @@ function err{
 	exit 1
 }
 
-
-
 function print_vars {
-	while [ -n "$1" ]; do
+	while test -n "${1}"; do
 		printf "${CC0}%-20s: ${C0}%s\n" "  ${1}" ${!1}
 		shift
 	done
 }
-
-
-
-
 
 function do_quietly {
 	local var
@@ -262,7 +253,6 @@ function topct {
 	fi
 	tput cnorm
 }
-
 
 
 
@@ -806,8 +796,10 @@ git_version_remote(){
   version_parse "$(git_vremote $1)"
 }
 
-vrs_exclude='alpha|beta'
+
+
 git_vremote(){
+  local vrs_exclude='alpha|beta'
   local lgit=$(git ls-remote $src)
   local v=$(echo "${lgit}" | grep -oP '\d+\.\d+\.\d+.*' | grep -vP $vrs_exclude | tail -n1)
   [ -z "${v}" ] && v=$(echo "${lgit}" | grep -oP '\d+\.\d+.*' | grep -vP $vrs_exclude | tail -n1)
@@ -884,6 +876,7 @@ c_printf(){
   #set +x
   return 0
 }
+
 
 # .language
 # .homepage

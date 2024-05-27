@@ -369,6 +369,7 @@ if [ -n "${cclang}" ]; then
 	cl=(aarch64 arm i686 x86_64)
 	ab=(arm64 armhf i386 x86_64)
 	abi=(gnu gnueabihf gnu gnu)
+    cclang_args=''
 	for a in 0 1 2 3; do
 		t="${cl[$a]}-linux-${abi[$a]}"
 		if [ "${t}" != "${build_arch}" ]; then
@@ -383,8 +384,9 @@ if [ -n "${cclang}" ]; then
                 check_slink "/usr/bin/llvm-windres" "/usr/lib/${llvm_vrs}/bin/llvm-windres"
             fi
 			check_slink "/usr/${t}/bin/ld.lld" "/usr/bin/ld.lld"
-			check_wrapper_gnu "${t}" 'clang' '--start-no-unused-arguments --sysroot=/usr/'${t}' -fuse-ld=lld --end-no-unused-arguments'
-			check_wrapper_gnu "${t}" 'clang++' '--start-no-unused-arguments --sysroot=/usr/'${t}' -stdlib=libc++ -fuse-ld=lld --end-no-unused-arguments'
+            test "${ab[${a}]}" = "armhf" && cclang_args='-mfloat-abi=hard -mfpu=neon' || cclang_args='' 
+			check_wrapper_gnu "${t}" 'clang' "${cclang_args}"
+			check_wrapper_gnu "${t}" 'clang++' "${cclang_args}"
 		fi
 	done
 fi
