@@ -345,13 +345,15 @@ hwinfoCountCores(){
 }
 
 hwinfoCountCoresReadable(){
-	case $(nproc) in
+	# How to get the number of physical cores
+	local n=$(lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l)
+	case "${n}" in
 		"1") echo "Single-Core";;
 		"2") echo "Dual-Core";;
 		"4") echo "Quad-Core";;
 		"6") echo "Hexa-Core";;
 		"8") echo "Octa-Core";;
-		*) echo "$(nproc)-Core";;
+		*) echo "${n}-Core";;
 	esac
 }
 
