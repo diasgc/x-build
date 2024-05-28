@@ -97,12 +97,12 @@ cmake_build_toolchainfile(){
 		set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" ".dll.a" ".lib" ".a")
 		EOF
 	#cmake_addcpack
-  test -n "${cmake_definitions}" && echo "add_definitions("${cmake_definitions[@]}")" >>${cmake_toolchain_file}
+  	test -n "${cmake_definitions}" && echo "add_definitions("${cmake_definitions[@]}")" >>${cmake_toolchain_file}
 	test -n "${cmake_add_link_options}" && echo "add_link_options("${cmake_add_link_options}")" >>${cmake_toolchain_file}
 	test -n "${cmake_add_compile_options}" && echo "add_compile_options("${cmake_add_compile_options}")" >>${cmake_toolchain_file}
 	test -n "${cmake_cxx_flags_release}" && echo "set(CMAKE_CXX_FLAGS_RELEASE \""${cmake_cxx_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
 	test -n "${cmake_c_flags_release}" && echo "set(CMAKE_C_FLAGS_RELEASE \""${cmake_c_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
-	test -n "${cmake_include_directories}" && echo "cmake_include_directories("${cmake_include_directories[@]}")" >>${cmake_toolchain_file}
+	test -n "${cmake_include_directories}" && echo "include_directories("${cmake_include_directories[@]}")" >>${cmake_toolchain_file}
 	test -n "${WFLAGS}" && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
 	
 }

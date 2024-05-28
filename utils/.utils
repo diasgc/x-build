@@ -173,6 +173,7 @@ generate_script(){
 	#set +x
 }
 
+
 # usage github_latest_release <user/repo>
 github_latest_release(){
 	echo $(curl --silent "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 lib='boost'
-apt='libboost1.71-dev'
 dsc='Super-project for modularized Boost'
 lic='BSD-1c'
 src='https://github.com/boostorg/boost.git'
@@ -12,7 +11,7 @@ eta='1095'
 WFLAGS='-Wno-deprecated-declarations -Wno-format -Wno-implicit-const-int-float-conversion -Wno-#pragma-messages'
 
 dev_bra='master'
-dev_vrs='1.78.0'
+dev_vrs='1.85.0'
 
 lst_inc='boost/*'
 lst_lib='libboost_*'
@@ -21,9 +20,18 @@ lst_lic='LICENSE AUTHORS'
 lst_pc='boost.pc'
 
 pc_llib=null
-pc_vrs="$dev_vrs"
 
 on_config(){
+    apt="$(apt search libboost 2>/dev/null | grep -oP 'libboost[0-9\.]+\-dev' | tail -n1)"
+    if ${src_latest}; then
+        vrs="$(github_latest_release boostorg/boost)"
+        vrs="${vrs//boost-/}"
+        src="https://github.com/boostorg/boost/releases/download/${vrs}/${vrs}-cmake.tar.gz"
+    else
+        vrs="$(git_remote_version ${src})"
+        vrs="${vrs//boost-/}"
+    fi
+    pc_vrs="${vrs}"
     export CXXFLAGS="${CPPFLAGS}"
 }
 

@@ -24,6 +24,13 @@ lst_bin='aria2c'
 lst_lic='COPYING AUTHORS'
 lst_pc=''
 
+on_config(){
+    if ${src_latest}; then
+        vrs="$(github_latest_release aria2/aria2)"
+        src="https://github.com/nkoriyama/aribb24/archive/refs/tags/release-${vrs}.tar.gz"
+    fi
+}
+
 . xbuild && start
 
 # Filelist

@@ -32,6 +32,13 @@ lst_pc='avisynth.pc'
 dev_vrs='3.7.3'
 eta=240
 
+on_config(){
+    if ${src_latest}; then
+        vrs="$(github_latest_release AviSynth/AviSynthPlus)"
+        src="https://github.com/AviSynth/AviSynthPlus/archive/refs/tags/${vrs}.tar.gz"
+    fi
+}
+
 on_build_bin(){
     cmake_config+=" -DENABLE_PLUGINS=ON"
 }

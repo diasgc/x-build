@@ -562,7 +562,9 @@ git_local_version(){
 }
 
 git_remote_version(){
-  echo $(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | head -n1 | sed 's/.*\///')
+  local out="$(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | tail -n1)"
+  echo "${out##*\/}"
+  #echo $(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | head -n1 | sed 's/.*\///')
 }
 
 git_api_tojson(){

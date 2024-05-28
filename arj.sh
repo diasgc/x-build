@@ -13,10 +13,12 @@ lst_lib=''
 lst_bin=''
 
 on_config(){
-    url='http://deb.debian.org/debian/pool/main/a/arj/'
-    vrs=$(curl -s ${url} | grep -oP 'arj_\K([0-9\.]+).orig.tar.gz' | tail -n1)
-    src="${url}arj_${vrs}"
-    vrs=${vrs/\.orig\.tar\.gz/}
+    if ${src_latest}; then
+        url='http://deb.debian.org/debian/pool/main/a/arj/'
+        vrs=$(curl -s ${url} | grep -oP 'arj_\K([0-9\.]+).orig.tar.gz' | tail -n1)
+        src="${url}arj_${vrs}"
+        vrs=${vrs/\.orig\.tar\.gz/}
+    fi
 }
 
 . xbuild && start

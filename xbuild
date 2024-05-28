@@ -39,6 +39,7 @@ sudo=$(command -v sudo)
 
 export HOST_NPROC=$(nproc)
 # defvar debug=false
+: "${src_latest:=true}"
 : "${host_native:=false}"
 : "${debug:=false}"
 : "${nodev:=false}"
