@@ -6,8 +6,8 @@ lic='Apache-2.0'
 src='https://github.com/google/cpu_features.git'
 cfg='cmake'
 pkg='cpu_features'
-pc_llib='-lcpufeatures'
 
+patch='cpu_feature-01' # patch on CMakeLists.txt and ndk_compat/CMakeLists.txt
 cmake_bin='BUILD_STATIC_LIBS'
 cmake_config='-DBUILD_GMOCK=OFF -DBUILD_TESTING=OFF -DINSTALL_GTEST=OFF'
 
@@ -21,6 +21,11 @@ dev_bra='master'
 dev_vrs='0.6.0'
 stb_bra=''
 stb_vrs=''
+
+on_create_pc(){
+    #pc_llib='-lcpufeatures'
+    build_pkgconfig --libs=-lcpufeatures
+}
 
 . xbuild && start
 

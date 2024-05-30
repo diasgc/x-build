@@ -93,6 +93,18 @@ build_packages_filelist(){
 	fi
 }
 
+util_add_patch(){
+  for p in $(pwd)/patches/*.patch; do
+    p1=$(basename $p)
+    p1="${p1%-01.patch}"
+    printf "${p} -> ${p1}.sh: "
+    if [ -f "$(pwd)/${p1}.sh" ]; then
+      if [ -z "$(grep 'patch=' "$(pwd)/${p1}.sh")" ];then
+        echo "add line patch='${p1}-01' to ${p}"
+      fi
+    fi
+  done
+}
 
 build_packages_bin(){
 	set -x
@@ -382,17 +394,14 @@ prompt_remove(){
 }
 
 
-patch_check_patchdir(){
-  test $patch_skip && return 0
-  local patch_list=( $(ls -1 ${dir_patches}/${lib}*.patch 2>/dev/null) )
-  if [ -n "${patch_list[@]}" ]; then
-    pushd ${dir_src} 2>&1 >/dev/null
-    for p in ${patch_list[@]}; do
-      patch -p0 <${p} 2>&1 >${log_file}
-    done
-    popd 2>&1 >/dev/null
-  fi
-  return 0
+function patch_check_patchdir {
+  pushd "${dir_src}" 2>&1 >/dev/null
+  local f
+  for p in ${patch[@]}; do
+    f="${dir_root}/patches/${p}.patch"
+    test -f "${f}" && patch -p0 <"${f}" 2>&1 >"${log_file}"
+  done
+  popd 2>&1 >/dev/null
 }
 
 patch_check_xbpatch(){

@@ -1,4 +1,4 @@
---- CMakeLists.old	2022-01-22 22:30:44.633000000 +0000
+--- CMakeLists.txt	2022-01-22 22:30:44.633000000 +0000
 +++ CMakeLists.txt	2022-01-22 22:35:41.496402300 +0000
 @@ -128,6 +128,7 @@
  if(NOT PROCESSOR_IS_X86 AND UNIX)
@@ -42,7 +42,7 @@
    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cpu_features
    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 
---- ndk_compat/CMakeLists.old	2022-01-22 22:43:14.084000000 +0000
+--- ndk_compat/CMakeLists.txt	2022-01-22 22:43:14.084000000 +0000
 +++ ndk_compat/CMakeLists.txt	2022-01-22 22:49:21.116402300 +0000
 @@ -12,16 +12,24 @@
  # Note that following `add_cpu_features_headers_and_sources` will use

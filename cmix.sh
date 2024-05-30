@@ -7,7 +7,7 @@ url='http://www.byronknoll.com/cmix.html'
 src='https://github.com/byronknoll/cmix.git'
 cfg='cmake'
 eta='20'
-
+patch='cmix-01' # patch src/predictor.cpp and new CMakeLists.txt supports both static and shared libs
 cmake_static="BUILD_STATIC_LIBS"
 cmake_bin="BUILD_EXECUTABLES"
 

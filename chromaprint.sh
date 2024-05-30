@@ -9,8 +9,7 @@ lic='LGPL-2.1'
 cfg='cmake'
 eta='12'
 dep='fftw'
-
-cmake_static="BUILD_STATIC_LIBS"
+#patch="chromaprint-01" cmake_static="BUILD_STATIC_LIBS"
 
 lst_inc='chromaprint.h'
 lst_lib='libchromaprint'

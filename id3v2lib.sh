@@ -8,12 +8,18 @@ src='https://github.com/larsbs/id3v2lib.git'
 cfg='cmake'
 eta='10'
 cmake_static='BUILD_STATIC_LIBS'
+patch='id3v2lib-01'
 
-lst_inc=''
-lst_lib=''
+lst_inc='id3v2lib/constants.h
+ id3v2lib/frame.h
+ id3v2lib.h
+ id3v2lib/header.h
+ id3v2lib/types.h
+ id3v2lib/utils.h'
+lst_lib='libid3v2'
 lst_bin=''
 lst_lic='LICENSE README.md'
-lst_pc=''
+lst_pc='id3v2lib.pc'
 
 dev_vrs='1.0.0'
 

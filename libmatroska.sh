@@ -8,6 +8,7 @@ cfg='cmake'
 dep='libebml'
 eta='10'
 cmake_static='BUILD_STATIC_LIBS'
+patch='libmatroska-01'
 
 dev_bra='master'
 dev_vrs='1.6.3'

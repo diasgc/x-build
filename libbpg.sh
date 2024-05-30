@@ -9,6 +9,8 @@ dsc='Better Portable Graphics'
 lic='BSD'
 src='https://github.com/mirrorer/libbpg.git'
 cfg='cmake'
+patch='libbpg-01'
+src_latest=false
 eta='60'
 
 lst_inc=''

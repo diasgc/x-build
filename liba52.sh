@@ -12,9 +12,8 @@ dsc='liba52 is a free library for decoding ATSC A/52 streams'
 lic='GPL'
 src="https://liba52.sourceforge.io/files/a52dec-${vrs}.tar.gz"
 cfg='cmake'
+patch='liba52-01'
 cmake_static='BUILD_STATIC_LIBS'
-
-pc_llib='-la52'
 
 lst_inc='a52.h'
 lst_lib='liba52'
@@ -24,6 +23,10 @@ lst_pc='liba52.pc'
 eta='10'
 
 dev_vrs='0.7.4'
+
+on_create_pc(){
+    build_pkgconfig --libs=-la52
+}
 
 . xbuild && start
 

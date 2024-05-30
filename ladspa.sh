@@ -12,8 +12,7 @@ lic='LGPL'
 vrs='1.17'
 src="http://www.ladspa.org/download/ladspa_sdk_${vrs}.tgz"
 cfg='cmake'
-eta='60'
-pc_llib='-lladspa'
+patch='ladspa-01'
 cmake_static='BUILD_STATIC_LIBS'
 build_strip=false
 
@@ -23,8 +22,11 @@ cmake_config='-DBUILD_PLUGINS=OFF'
 
 dev_bra='master'
 dev_vrs='1.17'
-stb_bra=''
-stb_vrs=''
+eta='60'
+
+on_create_pc(){
+    build_pkgconfig --libs=-lladspa
+}
 
 . xbuild && start
 

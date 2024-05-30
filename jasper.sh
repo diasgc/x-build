@@ -9,7 +9,7 @@ lic='JasPer'
 src='https://github.com/mdadams/jasper.git'
 cfg='cmake'
 eta='26'
-patch_skip=true
+#patch='jasper-01'
 
 cmake_static="BUILD_STATIC_LIBS"
 cmake_bin="JAS_ENABLE_PROGRAMS"

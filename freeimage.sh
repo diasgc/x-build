@@ -12,8 +12,7 @@ lic='Other'
 src='https://svn.code.sf.net/p/freeimage/svn/FreeImage/trunk'
 cfg='cmake'
 eta='1600'
-
-pc_llib="-lfreeimage"
+patch='freeimage'
 
 cmake_static='BUILD_STATIC_LIBS'
 
@@ -22,6 +21,10 @@ lst_lib='libFreeImage'
 lst_bin=''
 lst_lic='license-fi.txt license-gplv2.txt license-gplv3.txt'
 lst_pc='freeimage.pc'
+
+on_create_pc(){
+    build_pkgconfig --libs=-lfreeimage
+}
 
 . xbuild && start
 

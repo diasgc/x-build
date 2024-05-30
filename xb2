@@ -400,39 +400,6 @@ function create_pkgconfig_file {
 	unset pc_libdir pc_incdir pc_cflags pc_libs pc_url
 }
 
-function get_source {
-	# test internet connection...
-	wget -q --spider http://google.com
-	[ ! $? -eq 0 ] && exit_err 'No Internet Connection. Aborting...'
-	# check whether to custom get source
-	if fn_defined 'source_get'; then
-		fn_log 'get' source_get
-		unset sty
-	elif [ -n "${git}" ]; then
-		src="${git}"
-		sty="git"
-	elif [ -n "${svn}" ]; then
-		src="${svn}"
-		sty="svn"
-	fi
-	if [ -n "${sty}" ]; then
-		case $sty in
-			git)           git_clone $src $lib $src_opt;;
-			tgz|txz|tlz)   wget_tarxx $src $lib;;
-			svn)           svn_clone $src $lib;;
-			hg)            hg_clone $src $lib;;
-			*)             exit_err "unknown sty=$sty for $src";;
-		esac
-	else
-		case $src in
-			*.tar.*|*.tgz) curl_tar $src $lib;;
-			*.git|*git.*)  git_clone $src $lib $src_opt;;
-			*svn.*)        svn_clone $src $lib;;
-			*)             exit_err "Unknown source type for $src";;
-		esac
-	fi
-}
-
 
 
 start(){
@@ -514,7 +481,7 @@ start(){
 
 		if fn_defined 'patch_source'; then
 			fn_log 'patch' patch_source
-		else
+		elif [ -n "${patch[@]}" ]; then
 			fn_log '' patch_check_patchdir
 		fi
 	fi
@@ -1151,27 +1118,6 @@ function svn_clone {
 function hg_clone {
 	request_cmd hg mercurial || err
 	do_log 'clone' hg clone $1 $2
-}
-
-function curl_tar {
-	local tag="get"
-	local args=
-	dir_src="${dir_sources}/${2}"
-	echo -ne "${CD}${tag}${C0}"
-	echo "$(date): $@" >> "${log_file}"
-	
-	case "${1}" in
-		*.tar.lz)        request_cmd 'lzip' && args='--lzip -xv';;
-		*.tar.gz|*.tgz)  args="-xz";;
-		*.tar.xz)        args="-xJ";;
-		*.tar.bz2)       args="-xj";;
-	esac
-	
-	test -d "${dir_src}" && rm -rf "${dir_src}"
-	mkdir "${dir_src}"
-	curl -L "${1}" 2>>"${log_file}" | tar "${args}" -C ${dir_src} --strip-components=1 2>>"${log_file}"
-	
-	logok "${tag}"
 }
 
 # usage: wget_tarxx type url libname

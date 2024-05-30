@@ -8,12 +8,21 @@ src='https://github.com/stbrumme/hash-library.git'
 cfg='cmake'
 eta='60'
 build_strip=false
+patch='hashpp-01'
 
-lst_inc=''
-lst_lib=''
+lst_inc='
+ hashpp/crc32.h
+ hashpp/hash.h
+ hashpp/hmac.h
+ hashpp/keccak.h
+ hashpp/md5.h
+ hashpp/sha1.h
+ hashpp/sha256.h
+ hashpp/sha3.h'
+lst_lib='libhashpp'
 lst_bin=''
 lst_lic='LICENSE readme.md'
-lst_pc=''
+lst_pc='hashpp.pc'
 
 dev_vrs='9'
 

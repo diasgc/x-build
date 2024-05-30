@@ -6,6 +6,7 @@ dsc='A standalone library of the Fraunhofer FDK AAC code from Android'
 lic='Other'
 src='https://github.com/mstorsjo/fdk-aac.git'
 cfg='cmake'
+patch='fdk-aac-01' # patch on libSBRdec/include/log/log.h to support android build
 eta='180'
 
 cmake_bin='BUILD_PROGRAMS'

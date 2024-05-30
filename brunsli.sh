@@ -5,9 +5,11 @@ pkg='brunslienc-c'
 dsc='Practical JPEG Repacker'
 lic='MIT'
 src='https://github.com/google/brunsli.git'
+sub='submodule update --init'
 cfg='cmake'
 eta='30'
 
+patch='brunsli-01'
 lst_inc='brunsli/*.h'
 lst_lib='libbrunslidec-c libbrunslienc-c'
 lst_bin='dbrunsli cbrunsli'
@@ -16,12 +18,13 @@ lst_pc='brunslienc-c.pc brunslidec-c.pc'
 
 dev_vrs='0.1'
 
-pc_llibs='libbrunslidec-c libbrunslienc-c'
+#pc_llibs='libbrunslidec-c libbrunslienc-c'
 
 cmake_config="-DBUILD_TESTING=OFF -DINSTALL_GTEST=OFF"
 
-source_patch(){
-    git submodule update --init
+on_create_pc(){
+    build_pkgconfig --file=brunslienc-c --libs=-lbrunslienc-c
+    build_pkgconfig --file=brunslidec-c --libs=-lbrunslidec-c
 }
 
 . xbuild && start 

@@ -346,54 +346,23 @@ start(){
 
 	# get source
 	if [ ! -d ${dir_src} ];then
-		if ! $skip_dl; then
-			# test internet connection...
-			wget -q --spider http://google.com
-			[ ! $? -eq 0 ] && doErr 'No Internet Connection. Aborting...'
-			# check whether to custom get source
-			if fn_defined 'source_get'; then
-				fn_log 'get' source_get
-				unset sty
-			elif [ -n "${git}" ]; then
-				src=$git
-				sty="git"
-			elif [ -n "${svn}" ]; then
-				src=$svn
-				sty="svn"
-			fi
-			if [ -n "${sty}" ]; then
-				case $sty in
-					git)           git_clone $src $lib $src_opt;;
-					tgz|txz|tlz)   wget_tarxx $src $lib;;
-					svn)           svn_clone $src $lib;;
-					hg)            hg_clone $src $lib;;
-					*)             doErr "unknown sty=$sty for $src";;
-				esac
-			else
-				case $src in
-					*.tar.*|*.tgz) wget_tarxx $src $lib;;
-					*.git|*git.*)  git_clone $src $lib $src_opt;;
-					*svn.*)        svn_clone $src $lib;;
-					*)             doErr "Unknown source type for $src";;
-				esac
-			fi
-		fi
+		${skip_dl} || get_source
+		
+		require_src_config=true
 
-		req_src_config=true
-
-		$break_on_git && end_script
+		${break_on_git} && end_script
 
 		test "x${cfg}" == "xcmake" && cmake_check_cmakefiles
 
 		if fn_defined 'patch_source'; then
 			fn_log 'patch' patch_source
-		else
+		elif [ -n "${patch[@]}" ]; then
 			fn_log '' patch_check_patchdir
 		fi
-
 	fi
 
-	cd ${dir_src}
+	cd "${dir_src}"
+
 	if [ -n "${bra}" ]; then
 		do_log "${bra}" git checkout ${bra}
 	elif $git_checkout; then

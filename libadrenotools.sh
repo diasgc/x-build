@@ -6,12 +6,12 @@ lib='libadrenotools'
 dsc='A library for applying rootless Adreno GPU driver modifications/replacements'
 lic='BSD-2c'
 src='https://github.com/bylaws/libadrenotools.git'
-src_opt='--recursive'
 cfg='cmake'
+src_opt='--recursive'
+#patch='libadrenotools-01'
 eta='575'
 
 cmake_static='BUILD_STATIC_LIBS'
-pc_llib='-ladrenotools'
 
 lst_inc=''
 lst_lib='libadrenotools'
@@ -20,6 +20,11 @@ lst_lic='LICENSE README.md'
 lst_pc='adrenotools.pc'
 
 dev_vrs=''
+src_latest=false
+
+on_create_pc(){
+    build_pkgconfig --libs=-ladrenotools
+}
 
 . xbuild && start
 

@@ -9,9 +9,9 @@ dsc='Perceptual JPEG encoder'
 lic='Apache-2.0'
 src='https://github.com/google/guetzli.git'
 cfg='cmake'
+patch='guetzli-01'
 dep='libpng libjpeg'
 eta='30'
-pc_llib='-lguetzli'
 
 dev_vrs='1.0.1'
 
@@ -22,6 +22,10 @@ lst_lic='LICENSE'
 lst_pc=''
 
 cmake_static='BUILD_STATIC_LIBS'
+
+on_create_pc(){
+    build_pkgconfig --libs=-lguetzli
+}
 
 . xbuild && start
 

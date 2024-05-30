@@ -4,8 +4,9 @@ lib='lib7zip'
 dsc='c++ library wrapper of 7zip'
 lic='MLP-2.0'
 src='https://github.com/stonewell/lib7zip.git'
-
 cfg='cmake'
+patch='lib7zip-01'
+
 cmake_config+='-DENABLE_TEST=OFF'
 
 eta='1095'
