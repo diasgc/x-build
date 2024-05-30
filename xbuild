@@ -1785,6 +1785,7 @@ while [ $1 ];do
 		--static)   build_static=true; build_shared=false;;
 		--both)     build_static=true; build_shared=true;;
 		--bin)      build_bin=true;;
+		--devel)    src_latest=false;;
 		--checkout) git_checkout=true;;
 		--no-bin)   build_bin=false;;
 		--man)      build_man=true;;
