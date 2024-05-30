@@ -347,12 +347,19 @@ hwinfoCountCores(){
 hwinfoCountCoresReadable(){
 	# How to get the number of physical cores
 	local n=$(lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l)
+	local c=( 0 Single Dual 3 Quad 5 Hexa 7 Octa 9 Deca )
+	if [ ${n} -gt 10 ]; then
+		echo "${n}-Core"
+	else
+		echo "${c[${n}]}-Core"
+	fi
+	return 0
 	case "${n}" in
-		"1") echo "Single-Core";;
-		"2") echo "Dual-Core";;
-		"4") echo "Quad-Core";;
-		"6") echo "Hexa-Core";;
-		"8") echo "Octa-Core";;
+		1) echo "Single-Core";;
+		2) echo "Dual-Core";;
+		4) echo "Quad-Core";;
+		6) echo "Hexa-Core";;
+		8) echo "Octa-Core";;
 		*) echo "${n}-Core";;
 	esac
 }

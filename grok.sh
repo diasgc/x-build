@@ -5,9 +5,9 @@ dsc='Worlds Leading Open Source JPEG 2000 Codec'
 lic='Other'
 src='https://github.com/GrokImageCompression/grok.git'
 cfg='cmake'
-cmake_static='BUILD_STATIC_LIBS'
 eta='35'
-cmake_config='-DBUILD_TESTING=OFF -DWITH_GTEST=OFF -DZLIBNG_ENABLE_TESTS=OFF -Dtiff-docs=OFF'
+cmake_config='-DBUILD_TESTING=OFF -DGRK_BUILD_DOC=OFF -DGRK_BUILD_CODEC=OFF' # -Dtiff-docs=OFF -Dtiff-contrib=OFF -Dtiff-tests=OFF -Dtiff-tools=OFF'
+#cmake_config+='-DGRK_BUILD_JPEG=OFF -DGRK_BUILD_LCMS2=OFF -DGRK_BUILD_LIBPNG=OFF -DGRK_BUILD_LIBTIFF=OFF'
 # (ndk-)clang is not able to compile a simple test program. (libjpeg-turbo)
 
 dev_bra='main'
@@ -20,6 +20,10 @@ lst_lib=''
 lst_bin=''
 lst_lic='LICENCE'
 lst_pc=''
+
+on_config_ndk(){
+    exit_err 'Not for Android Platform'
+}
 
 . xbuild && start
 

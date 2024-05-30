@@ -28,7 +28,7 @@ cmake_clang_toolchain(){
 		EOF
 }
 
-: "${cmake_fulltoolchain:=false}"
+: "${cmake_fulltoolchain:=true}"
 
 cmake_build_toolchainfile(){
 	export cmake_toolchain_file="${dir_build}/${arch}.cmake"
@@ -46,7 +46,7 @@ cmake_build_toolchainfile(){
 		set(CMAKE_CXX_COMPILER_AR "${AR}")
 		set(CMAKE_C_COMPILER_RANLIB "${RANLIB}")
 		set(CMAKE_CXX_COMPILER_RANLIB "${RANLIB}")
-		set(CMAKE_ASM_NASM_COMPILER "${ASM_NASM}")
+		set(CMAKE_ASM_NASM_COMPILER "${ASM_NASM}" CACHE INTERNAL "CMAKE_ASM_NASM_COMPILER")
 		set(CMAKE_OBJDUMP "${OBJDUMP}")
 		set(CMAKE_OBJCOPY "${OBJCOPY}")
 		set(CMAKE_READELF "${READELF}")
