@@ -6,7 +6,7 @@ dsc='Fraunhofer Versatile Video Encoder'
 lic='LGPL-2.1'
 src='https://github.com/fraunhoferhhi/vvenc.git'
 cfg='cmake'
-patch="vvenc-01"
+#patch="vvenc-01"
 eta='560'
 
 lst_inc='vvenc/*.h'

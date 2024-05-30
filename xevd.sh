@@ -11,7 +11,7 @@ src='https://github.com/mpeg5/xevd.git'
 cfg='cmake'
 # -DSET_PROF=MAIN crashes with missing xevdm_itrans_map_tbl_neon fix in branch dev-BuildErrorsHotfix
 bra='dev-BuildErrorsHotfix'
-
+src_latest=false # use git
 xevd_profile='MAIN' # BASE|MAIN
 
 case $xevd_profile in BASE) sfx='b';; esac
@@ -37,16 +37,14 @@ WFLAGS+="-Wno-for-loop-analysis \
  -Wno-shift-negative-value \
  -Wno-tautological-pointer-compare"
 
-source_patch(){
-    # v0.4.1-6-g418ed6d: there's a typo at src_base/neon/xevd_dbk_neon.h
-    pushd ${dir_src}
-    sed -i 's/_XEVD_DBK_NOEN_H_/_XEVD_DBK_NEON_H_/g' src_base/neon/xevd_dbk_neon.h
-    popd
-}
-
 on_config(){
     $host_native && cmake_config+=' -DXEVD_NATIVE_BUILD=ON'
     $host_arm && cmake_config+=" -DARM=TRUE"
+}
+
+build_prepare(){
+    # v0.4.1-6-g418ed6d: there's a typo at src_base/neon/xevd_dbk_neon.h
+    sed -i 's/_XEVD_DBK_NOEN_H_/_XEVD_DBK_NEON_H_/g' ${dir_src}/src_base/neon/xevd_dbk_neon.h
 }
 
 on_end(){
@@ -55,6 +53,7 @@ on_end(){
         test -f "${a_lib}.a" || ln -sf "${dir_install_lib}/xevd${sfx}/${lst_lib}.a" "${a_lib}.a"
         test -f "${a_lib}.so" && mv -f "${a_lib}.so" "${a_lib}.so_"
     fi
+    return 0
 }
 
 . xbuild && start
