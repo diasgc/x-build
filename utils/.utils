@@ -95,12 +95,15 @@ build_packages_filelist(){
 
 util_add_patch(){
   for p in $(pwd)/patches/*.patch; do
-    p1=$(basename $p)
-    p1="${p1%-01.patch}"
+    p2=$(basename $p)
+    p1="${p2%-01.patch}"
     printf "${p} -> ${p1}.sh: "
     if [ -f "$(pwd)/${p1}.sh" ]; then
       if [ -z "$(grep 'patch=' "$(pwd)/${p1}.sh")" ];then
-        echo "add line patch='${p1}-01' to ${p}"
+        echo "add line patch='${p1}-01' to ${p1}.sh"
+        sed -i 's/cfg=.*/&\npatch="'${p1}'-01"/' "$(pwd)/${p1}.sh"
+      else
+        echo "ok"
       fi
     fi
   done

@@ -10,6 +10,7 @@ dsc='zlib compression library'
 lic='Zlib'
 src='https://github.com/madler/zlib.git'
 cfg='cmake'
+patch="zlib-01"
 eta='22'
 cmake_bin="ZLIB_BUILD_EXAMPLES"
 

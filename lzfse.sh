@@ -5,6 +5,7 @@ dsc='LZFSE compression library and command line tool'
 lic='BSD-3c'
 src='https://github.com/lzfse/lzfse.git'
 cfg='cmake'
+patch="lzfse-01"
 eta='411'
 cmake_static='BUILD_STATIC_LIBS'
 

@@ -5,6 +5,7 @@ dsc='Internet Low Bitrate Codec (iLBC) library'
 lic='BSD-3c'
 src='https://github.com/TimothyGu/libilbc.git'
 cfg='cmake'
+patch="libilbc-01"
 eta='64'
 cmake_bin="examples"
 

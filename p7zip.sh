@@ -9,6 +9,7 @@ dsc='p7zip is a port of the Windows programs 7z.exe and 7za.exe provided by 7-zi
 lic='MLP-2.0'
 src='https://github.com/jinfeihan57/p7zip.git'
 cfg='make'
+patch="p7zip-01"
 eta='600'
 
 static_ldflag=-static

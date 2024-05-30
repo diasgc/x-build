@@ -11,10 +11,12 @@ lic='ISC License'
 vrs=''
 src="https://gitlab.com/lv2/lilv.git"
 cfg='meson'
+patch="lilv-01"
 dep='libiconv zix'
 eta='6'
 
 meson_cfg='-Dbindings_py=disabled -Ddocs=disabled -Dhtml=disabled -Dsinglehtml=disabled -Dtests=disabled -Dtools=disabled'
+patch="lilv-01"
 
 dev_bra='master'
 dev_vrs='0.24.25'

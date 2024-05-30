@@ -6,6 +6,7 @@ dsc='PulseAudio Client Interface'
 lic='LGPL-2.1'
 src='https://gitlab.freedesktop.org/pulseaudio/pulseaudio.git'
 cfg='meson'
+patch="libpulse-01"
 pkg='libpulse'
 eta='120'
 #API=28 # required pthread_mutexattr_setprotocol
@@ -17,7 +18,9 @@ lst_lic='LICENSE GPL LGPL'
 lst_pc='libpulse.pc libpulse-simple.pc libpulse-mainloop-glib.pc'
 
 #meson_cfg="-Ddaemon=false -Ddoxygen=false -Dman=false -Dtests=false -Dglib=enabled -Ddatabase=simple -Dconsolekit=disabled -Dtcpwrap=disabled"
+patch="libpulse-01"
 meson_cfg="-Ddaemon=false -Dclient=false -Ddoxygen=false -Dgcov=false -Dman=false -Dtests=false -Ddatabase=simple" 
+patch="libpulse-01"
 
 on_config(){
     $use_clang && LDFLAGS+=" -Wl,--undefined-version"    

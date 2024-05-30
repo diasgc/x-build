@@ -9,6 +9,7 @@ dsc='Colour AsCii Art library'
 lic='GPL'
 src='https://github.com/cacalabs/libcaca.git'
 cfg='ac'
+patch="libcaca-01"
 pkg='caca'
 eta='80'
 

@@ -7,12 +7,14 @@ src='https://github.com/korczis/ucl.git'
 url='http://www.oberhumer.com/opensource/ucl'
 
 #cfg='cmake'
+patch="ucl-01"
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='BUILD_PROGRAM'
 
 dev_vrs='1.03'
 
 cfg='ac'
+patch="ucl-01"
 pc_llib='-lucl'
 
 lst_inc='ucl/*.h'

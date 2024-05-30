@@ -5,6 +5,7 @@ dsc='Parsing gigabytes of JSON per second'
 lic='Apache-2.0'
 src='https://github.com/simdjson/simdjson.git'
 cfg='cmake'
+patch="simdjson-01"
 eta='0'
 
 cmake_static='BUILD_STATIC_LIBS'

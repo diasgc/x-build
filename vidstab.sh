@@ -7,6 +7,7 @@ dsc='Vidstab is a video stabilization library which can be plugged-in with Ffmpe
 lic='GPL-2+'
 src='https://github.com/georgmartius/vid.stab.git'
 cfg='cmake'
+patch="vidstab-01"
 eta='80'
 
 lst_inc='vid.stab/*.h'

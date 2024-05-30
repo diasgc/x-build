@@ -7,6 +7,7 @@ dsc='Pixel-manipulation library for X and cairo'
 lic='GPL-2.0'
 src='https://gitlab.freedesktop.org/pixman/pixman.git'
 cfg='meson'
+patch="pixman-01"
 #dep='libpng'
 eta='275'
 
@@ -20,8 +21,10 @@ lst_pc='pixman-1.pc'
 
 on_config(){
     meson_cfg='-Dgtk=disabled -Dlibpng=disabled -Dtests=disabled -Ddemos=disabled -Dopenmp=disabled'
+patch="pixman-01"
     $host_arm && meson_cfg+=' -Dneon=enabled'
     $host_arm64 && ac_config='--disable-arm-a64-neon' && meson_cfg='-Da64-neon=enabled'
+patch="pixman-01"
     #$host_arm32 && ac_config='--disable-arm-neon --disable-arm-simd'
     $use_clang && CFLAGS='-Wno-unknown-attributes'
 }

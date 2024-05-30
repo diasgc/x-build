@@ -6,6 +6,7 @@ dsc='Zenlib for MediaInfo'
 lic='Zlib'
 src='https://github.com/MediaArea/ZenLib.git'
 cfg='cmake'
+patch="libzen-01"
 eta='27'
 config_dir='Project/CMake'
 

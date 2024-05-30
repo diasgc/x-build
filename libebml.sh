@@ -5,6 +5,7 @@ dsc='a C++ library to parse EBML files'
 lic='LGPL-2.1'
 src="https://github.com/Matroska-Org/libebml.git"
 cfg='cmake'
+patch="libebml-01"
 eta='10'
 cmake_static='BUILD_STATIC_LIBS'
 

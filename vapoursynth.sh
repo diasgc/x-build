@@ -5,6 +5,7 @@ dsc='A video processing framework with simplicity in mind'
 lic='LGPL-2.1'
 src='https://github.com/vapoursynth/vapoursynth.git'
 #cfg='ag'
+patch="vapoursynth-01"
 cfg='ag'
 tls='python'
 dep='zimg'

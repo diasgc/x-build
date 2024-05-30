@@ -5,6 +5,7 @@ dsc='AVS3 decoder which supports AVS3-P2 baseline profile.'
 lic='Other'
 src='https://github.com/uavs3/uavs3d.git'
 cfg='cmake'
+patch="uavs3d-01"
 eta='80'
 
 cmake_static='BUILD_STATIC_LIBS'

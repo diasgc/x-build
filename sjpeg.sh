@@ -9,6 +9,7 @@ dsc='SimpleJPEG: simple jpeg encoder'
 lic='Apache2.0'
 src='https://github.com/webmproject/sjpeg.git' src_opt="--recursive"
 cfg='cmake'
+patch="sjpeg-01"
 eta='20'
 dep='libjpeg libpng'
 pc_llib='-lsjpeg'

@@ -10,6 +10,7 @@ lic='BSD 2-clause'
 src='https://github.com/zapping-vbi/zvbi.git'
 dep='libiconv'
 cfg='ag'
+patch="zvbi-01"
 eta='60'
 
 lst_inc=''

@@ -5,6 +5,7 @@ dsc='Regular expression library'
 lic='BSD-2c'
 src='https://github.com/kkos/oniguruma.git'
 cfg='cmake'
+patch="oniguruma-01"
 eta='30'
 
 dev_bra='master'

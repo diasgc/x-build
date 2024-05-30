@@ -6,6 +6,7 @@ dsc='Ogg Vorbis audio format'
 lic='BSD'
 src='https://github.com/xiph/vorbis.git'
 cfg='cmake'
+patch="vorbis-01"
 dep='ogg'
 eta='77'
 

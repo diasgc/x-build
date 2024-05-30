@@ -6,6 +6,7 @@ dsc='The SoX resampler library'
 lic='LGPL-2.1'
 src='https://git.code.sf.net/p/soxr/code.git'
 cfg='cmake'
+patch="soxr-01"
 eta='45'
 cmake_bin='BUILD_EXAMPLES'
 cmake_config='-DBUILD_TESTS=OFF -DWITH_OPENMP=OFF'

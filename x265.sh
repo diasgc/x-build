@@ -11,6 +11,7 @@ lic='GPL-2.0'
 #src='https://github.com/videolan/x265.git'
 src='https://bitbucket.org/multicoreware/x265_git.git'
 cfg='cmake'
+patch="x265-01"
 tls='yasm libnuma-dev'
 eta='130'
 cmake_bin="ENABLE_CLI"

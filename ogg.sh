@@ -6,6 +6,7 @@ dsc='Ogg media container'
 lic='BSD'
 src='https://github.com/xiph/ogg.git'
 cfg='cmake'
+patch="ogg-01"
 eta='3'
 
 #ac_bin="--disable-extra-programs|--enable-extra-programs"

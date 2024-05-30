@@ -5,6 +5,7 @@ dsc='Zopfli Compression Algorithm is a compression library programmed in C to pe
 lic='Apache-2.0'
 src='https://github.com/google/zopfli.git'
 cfg='cmake'
+patch="zopfli-01"
 eta='45'
 
 cmake_static='BUILD_STATIC_LIBS'

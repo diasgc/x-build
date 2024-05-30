@@ -6,6 +6,7 @@ dsc='Snappy is a compression/decompression library'
 lic='BSD-3c'
 src='https://github.com/google/snappy.git'
 cfg='cmake'
+patch="snappy-01"
 eta='12'
 dep='lz4 lzo'
 

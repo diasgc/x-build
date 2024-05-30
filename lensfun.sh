@@ -5,6 +5,7 @@ dsc='An open source database of photographic lenses and their characteristics'
 lic='LGPL-3.0'
 src='https://github.com/lensfun/lensfun.git'
 cfg='cmake'
+patch="lensfun-01"
 dep='glib2'
 eta='60'
 

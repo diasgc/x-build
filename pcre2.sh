@@ -7,6 +7,7 @@ dsc='New Perl Compatible Regular Expression Library'
 lic='BSD-3c'
 src='https://github.com/PhilipHazel/pcre2.git'
 cfg='cmake'
+patch="pcre2-01"
 eta='0'
 
 cmake_config='-DPCRE2_BUILD_PCRE2_32=ON 

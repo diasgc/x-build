@@ -6,6 +6,7 @@ dsc='Blarggs video game music emulation library'
 lic='LGPL-2.1'
 src='https://bitbucket.org/mpyne/game-music-emu.git'
 cfg='cmake'
+patch="libgme-01"
 eta='60'
 cmake_config='-DBUILD_TESTING=OFF -DBLARGG_BUILD_DLL=0'
 

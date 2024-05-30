@@ -6,6 +6,7 @@ lic='LGPL-2.1'
 src='https://github.com/librsync/librsync.git'
 url='librsync.sourcefrog.net'
 cfg='cmake'
+patch="librsync-01"
 dep='zlib libb2 bzip2'
 eta='0'
 

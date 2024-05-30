@@ -10,6 +10,7 @@ dsc=''
 lic='BSD-3c'
 src='https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz'
 cfg='cmake'
+patch="pcre-01"
 dep='bzip2 readline editline'
 eta='0'
 

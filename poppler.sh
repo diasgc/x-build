@@ -6,6 +6,7 @@ dsc='PDF rendering library'
 lic='GPL-2.0'
 src='https://github.com/freedesktop/poppler.git'
 cfg='cmake'
+patch="poppler-01"
 eta='240'
 dep='boost fontconfig libtiff libjpeg openjpeg lcms2'
 cmake_bin="ENABLE_UTILS"

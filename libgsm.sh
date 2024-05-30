@@ -4,9 +4,9 @@ lib='libgsm'
 apt='libgsm1-dev'
 dsc='GSM 06.10 lossy speech compression'
 lic='LGPL-2.1'
-vrs='1.0.19'
-src="http://www.quut.com/gsm/gsm-${vrs}.tar.gz"
+url='http://www.quut.com/gsm'
 cfg='cmake'
+patch="libgsm-01"
 eta='60'
 pc_llib="-lgsm"
 
@@ -14,7 +14,7 @@ cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='BUILD_TOOLS'
 
 dev_bra='master'
-dev_vrs='1.0.19'
+dev_vrs='1.0.22'
 
 lst_inc='gsm.h'
 lst_lib='libgsm'
@@ -23,6 +23,9 @@ lst_lic='COPYRIGHT'
 lst_pc='libgsm.pc'
 
 on_config(){
+    vrs="$(curl -sL ${url} | grep -oP 'gsm-[0-9\.]+.tar.gz' | tail -n1)"
+    src="${url}/${vrs}"
+    vrs="$(sed 's/gsm-//;s/.tar.gz//' <<<"${vrs}")"
     LD=${CC}
 }
 

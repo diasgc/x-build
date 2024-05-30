@@ -6,6 +6,7 @@ dsc='TagLib Audio Meta-Data Library'
 lic='LGPL-2.1 MPL'
 src='https://github.com/taglib/taglib.git'
 cfg='cmake'
+patch="taglib-01"
 eta='60'
 cmake_bin='BUILD_EXAMPLES'
 cmake_static='BUILD_STATIC_LIBS'

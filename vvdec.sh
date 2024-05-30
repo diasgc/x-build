@@ -6,6 +6,7 @@ dsc='Fraunhofer Versatile Video Decoder (VVdeC)'
 lic='LGPL-2.1'
 src='https://github.com/fraunhoferhhi/vvdec.git'
 cfg='cmake'
+patch="vvdec-01"
 eta='480'
 cmake_bin="BUILD_TOOLS"
 cmake_static="BUILD_STATIC_LIBS"
