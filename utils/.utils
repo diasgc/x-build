@@ -189,11 +189,6 @@ generate_script(){
 }
 
 
-# usage github_latest_release <user/repo>
-github_latest_release(){
-	echo $(curl --silent "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-}
-
 github_latest_tgz(){
 	case $src in
 		*github.*)

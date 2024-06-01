@@ -1,21 +1,19 @@
 #!/bin/bash
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
+# GNU  .   .   .   +  clang/gcc
+# WIN  .   .   .   +  clang/gcc
 
 lib='svt-vp9'
 dsc='SVT VP9 encoder'
 lic='Other'
-vrs=''
 src="https://github.com/OpenVisualCloud/SVT-VP9"
-cfg='@cfg@'
-eta='0'
+cfg='cmake'
+pkg='SvtVp9Enc'
+eta='15'
 
 dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='0.3.0'
 
 lst_inc=''
 lst_lib=''
@@ -25,9 +23,12 @@ lst_pc=''
 
 eta='20'
 
-#source_get(){ return 0; }
-#patch_source(){ return 0; }
-#on_config_arm(){ return 0; }
-#on_config_x86x(){ return 0; }
+src_latest=false
+WFLAGS='-Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter'
+
+on_config_ndk(){
+    # unsupported pthread_setaffinity_np on ndk
+    exit_err "Not available for Android ${arch}"
+}
 
 . xbuild && start

@@ -37,7 +37,7 @@ cmake_build_toolchainfile(){
 		set(CMAKE_SYSTEM_PROCESSOR "${cmake_system_processor}")
 		set(CMAKE_C_COMPILER ${CC})
 		set(CMAKE_CXX_COMPILER ${CXX})
-		set(CMAKE_ASM_NASM_COMPILER ${YASM})
+		set(CMAKE_ASM_NASM_COMPILER ${ASM_NASM})
 		EOF
 	$cmake_fulltoolchain && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_AR ${AR} CACHE FILEPATH Archiver)
@@ -46,7 +46,6 @@ cmake_build_toolchainfile(){
 		set(CMAKE_CXX_COMPILER_AR "${AR}")
 		set(CMAKE_C_COMPILER_RANLIB "${RANLIB}")
 		set(CMAKE_CXX_COMPILER_RANLIB "${RANLIB}")
-		set(CMAKE_ASM_NASM_COMPILER "${ASM_NASM}" CACHE INTERNAL "CMAKE_ASM_NASM_COMPILER")
 		set(CMAKE_OBJDUMP "${OBJDUMP}")
 		set(CMAKE_OBJCOPY "${OBJCOPY}")
 		set(CMAKE_READELF "${READELF}")

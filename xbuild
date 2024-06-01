@@ -1396,38 +1396,6 @@ toolchain_android(){
 	export NDK_API=${API}
 }
 
-toolchain_mingw32_old(){
-	local ltsdir
-	PLATFORM='Windows'
-	AS="${CROSS_PREFIX}as"
-	LD="${CROSS_PREFIX}ld"
-	if [ -n "${LLVM_MINGW_HOME}" ] && $use_llvm_mingw; then
-		TOOLCHAIN="${LLVM_MINGW_HOME}/bin"
-		SYSROOT="${LLVM_MINGW_HOME}/${arch}"
-		CROSS_PREFIX="${TOOLCHAIN}/${arch}-"
-		if $use_clang; then
-			CC="${CROSS_PREFIX}clang" CXX="${CC}++"
-		else
-			CC="${CROSS_PREFIX}gcc" CXX="${CROSS_PREFIX}g++"
-		fi
-		LD+=".bfd"
-		LT_SYS_LIBRARY_PATH="${LLVM_MINGW_HOME}/lib/clang/${xv_llvm_mingw}"
-		CPPFLAGS+=" -I${LLVM_MINGW_HOME}/${arch}/include"
-		LDFLAGS="-L${LT_SYS_LIBRARY_PATH}/lib -L${SYSROOT}/lib ${LDFLAGS}"
-	else
-		CROSS_PREFIX="${arch}-"
-		TOOLCHAIN="/usr/${arch}/bin"
-		SYSROOT="/usr/${arch}"
-		$mingw_posix && posix="-posix" || unset posix
-		CC="${CROSS_PREFIX}gcc${posix}"
-		CXX="${CROSS_PREFIX}g++${posix}"
-		LT_SYS_LIBRARY_PATH="/usr/lib/gcc/${arch}/${xv_x64_mingw}"
-		LDFLAGS="-L${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-	fi
-	cmake_findrootpath="${SYSROOT} ${LT_SYS_LIBRARY_PATH} ${dir_install}"
-	export RC=${CROSS_PREFIX}windres
-}
-
 toolchain_llvm_mingw(){
 	local ltsdir
 	local cargs=
@@ -1452,51 +1420,10 @@ toolchain_llvm_mingw(){
 	CPPFLAGS+=" -I${SYSROOT}/include"
 	LDFLAGS="-L${LT_SYS_LIBRARY_PATH}/lib -L${SYSROOT}/lib ${LDFLAGS}"
 	YASM=yasm
+	NASM=nasm
 	ASM_NASM=${NASM}
-	NASM=${NASM}
 	cmake_findrootpath="${SYSROOT} ${LT_SYS_LIBRARY_PATH} ${dir_install}"
 
-}
-
-toolchain_linux_old(){
-	local cross
-	local ltsdir
-	case $arch in
-		aarch64-*) cross="-cross" ltsdir=${GCC_AARCH64_REL};;
-		arm-*)     cross="-cross" ltsdir=${GCC_ARMHF_REL};;
-		i686-*)    cross="-cross" ltsdir=${GCC_I686_REL};;
-		x86_64-*)  unset cross;   ltsdir=${GCC_X86_64_REL};;
-	esac
-	if [ -n "$cross" ]; then
-		SYSROOT="/usr/${arch}"
-		CROSS_PREFIX="${arch}-"
-	else
-		SYSROOT="/usr"
-		CROSS_PREFIX=""
-	fi
-	TOOLCHAIN="${SYSROOT}/bin"
-	if $use_clang; then
-		CROSS_PREFIX="llvm-"
-		CC="clang -target ${arch}"
-		CXX="clang++ -target ${arch}"
-		AS=${CC}
-		LD="ld.lld"
-		GNU_CLANG_VERSION_FULL="$(clang -dumpversion)"
-		GNU_CLANG_VERSION_MAJOR=${GNU_CLANG_VERSION_FULL%%\.*}
-		#LDFLAGS+=" -L/usr/lib/llvm-${GNU_CLANG_VERSION_MAJOR}/lib"
-
-	else
-		CC=${CROSS_PREFIX}gcc
-		CXX=${CROSS_PREFIX}g++
-		AS=${CROSS_PREFIX}as
-		LD=${CROSS_PREFIX}ld
-	fi
-	ASM_NASM=nasm
-	# local ltsdir=$(ls -t /usr/lib/gcc${cross}/${arch} 2>/dev/null | head -n1)
-	LT_SYS_LIBRARY_PATH="${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir}"
-	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-	CPPFLAGS+=" -I${SYSROOT}/include -I${SYSROOT}/local/include"
-	cmake_findrootpath="${SYSROOT}/${arch} ${SYSROOT}/lib/gcc${cross}/${arch}/${ltsdir} ${dir_install}"
 }
 
 toolchain_linux(){
@@ -1554,20 +1481,21 @@ loadToolchain(){
 	else
 		TOOLCHAIN=/usr/bin
 		SYSROOT=/usr
-		if $use_clang; then
+		if ${use_clang}; then
 			CROSS_PREFIX=llvm-
 			CC=clang CXX=clang++ AS=${CC} LD=ld.lld
 			$host_native && CPPFLAGS="-mtune=native ${CPPFLAGS}"
 		else
-		CROSS_PREFIX=
-		CC=gcc CXX=g++ AS=as LD=ld
-		$host_native && CPPFLAGS="-march=native ${CPPFLAGS}"
+			CROSS_PREFIX=
+			CC=gcc CXX=g++ AS=as LD=ld
+			$host_native && CPPFLAGS="-march=native ${CPPFLAGS}"
 		fi
+		ASM_NASM=nasm
 	fi
 
 	AR=${CROSS_PREFIX}ar
 	NM=${CROSS_PREFIX}nm
-
+	
 	ADDR2LINE=${CROSS_PREFIX}addr2line
 	OBJCOPY=${CROSS_PREFIX}objcopy
 	OBJDUMP=${CROSS_PREFIX}objdump
@@ -1578,10 +1506,6 @@ loadToolchain(){
 	STRIP=${CROSS_PREFIX}strip
 	WINDRES=${CROSS_PREFIX}windres
 	[ -z ${GCOV+x} ] && GCOV=${CROSS_PREFIX}gcov
-
-
-	#pushvar_f CFLAGS "-I$SYSROOT/usr/include -I$SYSROOT/usr/local/include"
-	#pushvar_f CXXFLAGS "-I$SYSROOT/usr/include -I$SYSROOT/usr/local/include"
 
 	# export
 	export CMAKE_EXECUTABLE YASM PKG_CONFIG API \
