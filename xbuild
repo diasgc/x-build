@@ -55,13 +55,14 @@ export HOST_NPROC=$(nproc)
 : "${update:=false}"
 : "${build_dist:=true}"
 : "${dep_build:=--static}"
+: "${build_allshared:=false}"
 : "${build_strip:=false}"
 : "${build_cpack:=false}"
 : "${API:=34}"
 : "${git_checkout:=false}"
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
-: "${build_pkgdl:=false}"
+: "${build_download:=false}"
 : "${config_timeout:=86400}"
 : "${indent:=0}"
 : "${ind:=}"
@@ -181,106 +182,11 @@ main(){
 
 gitjson=
 
-#usage build_pkgconfig [--filename=lib.pc][--prefix=install_dir]...[--libs=-la,-lb,-lc,...]
-function build_pkgconfig {
-
-	local pkgconfig_file="${lib}.pc"
-	local pkgconfig_prefix=${dir_install}
-	local pkgconfig_exec_prefix="\${prefix}"
-	local pkgconfig_libdir="\${prefix}/lib"
-	local pkgconfig_includedir="\${prefix}/include"
-	local pkgconfig_description="${dsc}"
-	local pkgconfig_url="${url}"
-	local pkgconfig_version="${vrs}"
-	local pkgconfig_requires=
-	local pkgconfig_requires_private=
-	local pkgconfig_libs="-l${lib/lib/}"
-	local pkgconfig_libs_private=
-	local pkgconfig_cflags="-I\${includedir}"
-
-	while [ -n "${1}" ]; do
-		case "${1}" in
-			--name=*) pkgconfig_file="${1#*=}.pc";;
-			--filename=*) pkgconfig_file="${1#*=}";;
-			--prefix=*) pkgconfig_prefix="${1#*=}";;
-			--exec_prefix=*) pkgconfig_exec_prefix="${1#*=}";;
-			--libdir=*) pkgconfig_libdir="${1#*=}";;
-			--includedir=*) pkgconfig_includedir="${1#*=}";;
-			--description=*) pkgconfig_description="${1#*=}";;
-			--url=*) pkgconfig_url="${1#*=}";;
-			--version=*) pkgconfig_version="${1#*=}";;
-			--requires=*) pkgconfig_requires="${1#*=}";;
-			--requires-private=*) pkgconfig_requires_private="${1#*=}";;
-			--libs=*) pkgconfig_libs="${1#*=}";;
-			--libs-private=*) pkgconfig_libs_private="${1#*=}";;
-			--cflags=*) pkgconfig_cflags="${1#*=}";;
-		esac
-		shift
-	done
-	
-	pkgconfig_libs="-L\${libdir} ${pkgconfig_libs//,/ }"
-	pkgconfig_file="${dir_install_pc}/${pkgconfig_file}"
-	test -f "${pkgconfig_file}" && rm -f "${pkgconfig_file}"
-
-	cat <<-EOF >"${pkgconfig_file}"
-		prefix=${pkgconfig_prefix}
-		exec_prefix=${pkgconfig_exec_prefix}
-		libdir=${pkgconfig_libdir}
-		includedir=${pkgconfig_includedir}
-
-		Name: ${lib}
-		Description: ${pkgconfig_description}
-		URL: ${pkgconfig_url}
-		Version: ${pkgconfig_version}
-		Requires: ${pkgconfig_requires//,/ }
-		Requires.private: ${pkgconfig_requires_private//,/ }
-		Libs: ${pkgconfig_libs//,/ }
-		Libs.private: ${pkgconfig_libs_private//,/ }
-		Cflags: ${pkgconfig_cflags}
-
-		EOF
-}
-
-# usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
-function create_pkgconfig_file {
-	[ -z "${1}" ] && pc_file=${lib} || pc_file=${1}
-	[ -z "${2}" ] && pc_llib="-l${pc_file}" || pc_llib=${2}
-	[ -z "${3}" ] && pc_prefix=${dir_install} || pc_prefix=${3}
-	[ "${pc_llib}" == "null" ] && pc_llib=''
-	[ -z "$pc_libdir" ] && pc_libdir="/lib"
-	[ -z "$pc_incdir" ] && pc_incdir="/include"
-	[ -z "$pc_cflags" ] && pc_cflags="-I\${includedir}"
-	[ -z "$pc_libs" ] && pc_libs="-L\${libdir}"
-	[ -z "$pc_url" ] && pc_url=$(dirname $src)
-	fn_defined 'get_version' && get_version && pc_vrs=$vrs
-	[ -z "$pc_vrs" ] && {
-	[ -d "${dir_src}/.git" ] && pc_vrs=$(git_getversion ${dir_src}) || pc_vrs=$vrs
-	}
-	cat <<-EOF >${dir_install_pc}/${pc_file}.pc
-		prefix=${pc_prefix}
-		exec_prefix=\${prefix}
-		libdir=\${exec_prefix}${pc_libdir}
-		includedir=\${prefix}${pc_incdir}
-
-		Name: ${lib}
-		Description: ${dsc}
-		URL: ${pc_url}
-		Version: ${pc_vrs}
-		Requires: ${pc_requires}
-		Requires.private: ${pc_requiresprivate}
-		Libs: ${pc_libs} ${pc_llib}
-		Libs.private: ${pc_libsprivate}
-		Cflags: ${pc_cflags}
-
-		EOF
-	pc_filelist="${pc_file}.pc ${pc_filelist}"
-	unset pc_libdir pc_incdir pc_cflags pc_libs pc_url
-}
-
 start(){
+
 	fn_defined 'on_config' && on_config
 
-	if $build_pkgdl; then
+	if ${build_download}; then
 		local lnk=$(get_link_pkg ${arch} ${lib})
 		if [ -n "${lnk}" ]; then
 			wget_pkg_tgz ${lnk} ${dir_install}
@@ -341,8 +247,8 @@ start(){
 		fi
 	fi
 
-	local req_src_config=false
-	local req_src_patch=false
+	local require_src_config=false
+	local require_src_patch=false
 
 	# get source
 	if [ ! -d ${dir_src} ];then
@@ -395,7 +301,7 @@ start(){
 		config_guess
 	fi
 
-	if $req_src_config; then
+	if $require_src_config; then
 		# check whether to custom config source
 		if fn_defined 'source_config'; then
 			fn_log 'config' source_config
@@ -418,10 +324,10 @@ start(){
 					;;
 			esac
 		fi
-		req_src_patch=true
+		require_src_patch=true
 	fi
 
-	if $req_src_patch; then
+	if $require_src_patch; then
 		# check if has auto patch embeded in source: depracated
 		patch_check_xbpatch
 		# check if has patch function in source
@@ -542,11 +448,11 @@ start(){
 	if fn_defined 'on_make'; then
 		fn_log 'make' on_make
 	elif ! $skip_make; then
-		do_progress 'make' ${MAKE_EXECUTABLE} ${mkf} -j${HOST_NPROC} || err
+		do_progress 'make' "${MAKE_EXECUTABLE}" ${mkf} -j${HOST_NPROC} || err
 		unset skip_make
 	fi
 
-	$break_on_make && end_script
+	${break_on_make} && end_script
 	
 
 
@@ -555,10 +461,10 @@ start(){
 	fi
 
 	# strip libs
-	if ! $host_mingw; then
+	if ! ${host_mingw}; then
 		if fn_defined 'on_strip'; then
 			fn_log 'strip' on_strip
-		elif $build_strip; then
+		elif ${build_strip}; then
 			do_log 'strip' doStrip
 		fi
 	fi
@@ -566,15 +472,14 @@ start(){
 	if fn_defined 'on_install'; then
 		fn_log 'install' on_install
 	else
-		cd $dir_build
-		do_log 'install' ${MAKE_EXECUTABLE} ${mki}
+		cd "${dir_build}"
+		do_log 'install' "${MAKE_EXECUTABLE}" ${mki}
 	fi
 
 	# check whether to create pkg-config .pc file
-	if ! $skip_pc; then
-		if fn_defined 'get_version'; then
-			vrs=$(get_version)
-		fi
+	if ! ${skip_pc}; then
+		fn_defined 'get_version' && vrs="$(get_version)"
+		
 		if fn_defined 'on_create_pc'; then
 			fn_log 'pkgconfig' on_create_pc
 		elif [ -n "$pc_llib" ]; then
@@ -589,11 +494,12 @@ start(){
 	fi
 
 	local pcfile=${dir_install_pc}/${pkg}.pc
-	if [ ! -f "$pcfile" ] && [ -f "${dir_install}/share/pkgconfig/${lib}.pc" ]; then
-		pcfile=${dir_install}/share/pkgconfig/${lib}.pc
+
+	if [ ! -f "${pcfile}" ] && [ -f "${dir_install}/share/pkgconfig/${lib}.pc" ]; then
+		pcfile="${dir_install}/share/pkgconfig/${lib}.pc"
 	fi
 
-	if $build_cpack; then
+	if ${build_cpack}; then
 		if [ -z "${CPACK}" ]; then
 			if fn_defined 'on_pack'; then
 				fn_log 'pack' on_pack
@@ -605,17 +511,17 @@ start(){
 				fi
 			fi
 		else
-			cd ${dir_build}
-			vrs=$(pkg-config ${pcfile} --modversion)
+			cd "${dir_build}"
+			vrs="$(pkg-config ${pcfile} --modversion)"
 			do_log 'cpack' cpack -G DEB -P "${lib}_${vrs}_${arch}"
 		fi
 	fi
 
 	cd ${dir_src}
 
-	$skip_pc || logver "${pcfile}"
+	${skip_pc} || logver "${pcfile}"
 
-	fn_defined 'on_end' && fn_log 'end' on_end
+	fn_defined 'on_end' && fn_log '' on_end
 
 	local pcvrs=$(pkg-config --modversion ${pcfile})
 	local scrpt=${dir_root}/$(basename "$0")
@@ -628,12 +534,12 @@ start(){
 meson_configure(){
 	export cfg_file="${dir_config}/${arch}.meson"
 	test -f "${cfg_file}"  && rm ${cfg_file}
-	$host_clang || LD="bfd"
+	${host_clang} || LD="bfd"
 	if [ -n "${meson_bin}" ]; then
 		arr=(${meson_bin//|/ })
 		case ${#arr[@]} in
-			1) $build_bin && CBN="-D${arr[0]}=true" || CBN="-D${arr[0]}=false";;
-			2) $build_bin && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
+			1) ${build_bin} && CBN="-D${arr[0]}=true" || CBN="-D${arr[0]}=false";;
+			2) ${build_bin} && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
 		esac
 	fi
 	meson_create_toolchain ${cfg_file}
@@ -787,8 +693,22 @@ check_install(){
 }
 
 
-build_dependencies(){
-	local pkgfile=
+function build_dependencies {
+	local dep_args="${arch}"
+	local dep_file
+	dep_args+=" $(bool2str ${build_allshared} shared static)"
+	while [ -n "${1}" ]; do
+		dep_file="${dir_root}/${1}.sh"
+		test -f "${dep_file}" || exit_err "Fail to build dependency ${1}. ${dep_file} not found."
+
+		${dep_file} ${dep_args}
+		
+		shift
+	done
+}
+
+build_dependencies_old(){
+	local pkgfile
 	local o_csh
 	local o_cbh
 	local cf
@@ -800,7 +720,7 @@ build_dependencies(){
 		if [ ! -f "${pkgfile}" ]; then
 			o_csh=$CSH
 			o_cbh=$CBH
-			$build_pkgdl && local dl="--dl" || local dl=''
+			${build_download} && local dl="--dl" || local dl=''
 			unset CSH CBH
 			
 			./${1}.sh ${arch} ${dep_build} ${dl}
@@ -1725,7 +1645,7 @@ while [ $1 ];do
 		--mtune)	shift; export CPPFLAGS+=" -mtune=${1}";;
 		--new)      shift; generate_script $@; exit 0;;
 
-		$optDnl)	build_pkgdl=true;;
+		$optDnl)	build_download=true;;
 
 		--prefix)   shift; dir_install=$1;;
 		--stable)   git_stable=true;;
@@ -1816,16 +1736,6 @@ fi
 if [ -n "${sudo}" ] && ! ${sudo} -n true 2>/dev/null; then
 	echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
 fi
-
-# usage: set_buildtype_key <input> <prefix> <on-val> <off-val>
-set_buildtype_key(){
-	local arr=(${1//|/ })
-	case ${#arr[@]} in
-		0) echo "${2}${3} ${2}${4}";;
-		1) ;;
-	esac
-	return 0
-}
 
 # check build type and set defaults if no cst0 cst1 csh0 or csh1 value provided
 case $cfg in

@@ -5,7 +5,7 @@ apt="${lib}-dev"
 dsc='Library for tuning for Non Uniform Memory Access machines (linux)'
 lic='GPL-2.0'
 src='https://github.com/numactl/numactl.git'
-cfg='ac'
+cfg='ar'
 eta='90'
 pkg='numa'
 eta='30'
@@ -23,8 +23,9 @@ on_config_mingw(){
 }
 
 source_config(){
-  NOCONFIGURE=1 ./autogen.sh
-  autoconf -i
+  #NOCONFIGURE=1 ./autogen.sh
+  #autoconf -i
+  do_log 'ar' autoreconf -fiv
 }
 
 . xbuild && start

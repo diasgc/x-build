@@ -63,7 +63,7 @@ sudo=$(command -v sudo)
 : "${git_checkout:=false}"
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
-: "${download_prebuilt:=false}"
+: "${build_download:=false}"
 : "${config_timeout:=86400}"
 : "${indent:=0}"
 : "${ind:=}"
@@ -259,6 +259,7 @@ function build_dependencies {
 		else
 			exit_err "Fail to build dependency ${1}: ${script_file} not found"
 		fi
+		shift
 	done
 }
 
@@ -276,7 +277,7 @@ function build_dependencies_old {
 		if [ ! -f "${pkgconfig_file}" ]; then
 			o_csh="${build_link}"
 			o_cbh="${CBH}"
-			${download_prebuilt} && local dl="--dl" || local dl=''
+			${build_download} && local dl="--dl" || local dl=''
 			unset build_link CBH
 			
 			./xb2 ${1} ${arch} ${dep_build} ${dl}
@@ -405,7 +406,7 @@ function create_pkgconfig_file {
 start(){
 	
 	# download prebuilt package instead
-	if ${download_prebuilt}; then
+	if ${build_download}; then
 		local lnk=$(get_link_pkg "${arch}" "${lib}")
 		if [ -n "${lnk}" ]; then
 			wget_pkg_tgz "${lnk}" "${dir_install}"

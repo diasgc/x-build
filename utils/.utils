@@ -28,8 +28,16 @@ aptInstallBr(){
   done
 }
 
+# usage bool2int <condition>
+# returns 1 for true and 0 for false
 function bool2int {
 	$1 && echo 1 || echo 0
+}
+
+# usage bool2str <condition> <string-true> <string-false>
+# returns string-true for true and string-false for false
+function bool2str {
+	${1} && echo "${2}" || echo "${3}"
 }
 
 function config_guess {

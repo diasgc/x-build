@@ -1,7 +1,7 @@
 #!/bin/bash
 # cpu av8 av7 x86 x64
 # NDK ++.  .   .   .  clang
-# GNU ...  .   .   .  gcc
+# GNU ...  .   .   .  clang/gcc
 # WIN ...  .   .   .  clang/gcc
 
 lib='tinyxml2'
@@ -15,6 +15,8 @@ eta='10'
 lst_inc='tinyxml2.h'
 lst_lib='libtinyxml2'
 lst_bin=''
+
+dev_vrs='10.0.0'
 
 . xbuild && start
 
