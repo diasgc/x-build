@@ -9,7 +9,7 @@ dsc='An open-source VVC encoder based on Kvazaar'
 lic='BSD 3-Clause New" or "Revised"'
 src="https://github.com/ultravideo/uvg266.git"
 cfg='cmake'
-src_latest=false
+src_rel=false
 eta='0'
 cmake_config='-DBUILD_TESTS=OFF'
 

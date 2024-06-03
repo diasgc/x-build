@@ -33,7 +33,7 @@ dev_vrs='3.7.3'
 eta=240
 
 on_config(){
-    if ${src_latest}; then
+    if ${src_rel}; then
         vrs="$(github_latest_release AviSynth/AviSynthPlus)"
         src="https://github.com/AviSynth/AviSynthPlus/archive/refs/tags/${vrs}.tar.gz"
     fi

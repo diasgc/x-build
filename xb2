@@ -250,8 +250,7 @@ main(){
 
 function build_dependencies {
 	local script_file
-	local dep_link=static
-	${build_allshared} && dep_link=shared
+	local dep_link="$(bool2str ${build_allshared} shared static)"
 	while [ -n "${1}" ]; do
 		script_file="${dir_root}/src/${1}"
 		if [ -f "${script_file}" ]; then

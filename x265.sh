@@ -10,7 +10,7 @@ dsc='x265 is an open source HEVC encoder'
 lic='GPL-2.0'
 tls='yasm libnuma-dev'
 src='https://bitbucket.org/multicoreware/x265_git.git' # mirror at 'https://github.com/videolan/x265.git'
-src_latest=false
+src_rel=false
 config_dir='source'
 
 cfg='cmake'
@@ -55,7 +55,7 @@ set_x265_releasefile(){
 }
 
 on_config(){
-    ${src_latest} && set_x265_releasefile
+    ${src_rel} && set_x265_releasefile
     if ${host_mingw}; then
         cmake_add_compile_options+=( -Wno-sign-compare )
         cmake_config+=" -DENABLE_PIC=OFF"

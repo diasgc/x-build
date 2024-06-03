@@ -51,27 +51,24 @@ export dir_root=$(pwd)
 export PS1='\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;95m\]\u@\e[0;95m\h\[\033[00m\]:\[\033[01;96m\]\w\[\033[00m\]\$ '
 
 function splash {
-  cat << "EOF"
-
-THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄
-     ▄▀▄ ▀▀ █▀▀▄ █  █  █  █   █  █ 
-    ▀   ▀   ▀▀▀  ▀▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀ 
-
-   A cross-build script collection
-    
-EOF
+  echo
+  printf "${CB6}THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄\n"
+  printf "${CB1}     ▄▀▄ ▀▀ █▀▀▄ █  █  █  █   █  █\n"
+  printf "${CB0}    ▀   ▀   ▀▀▀  ▀▀▀▀ ▀▀▀ ▀▀▀ ▀▀▀ \n\n"
+  printf "${CW}   A cross complile build system\n\n${C0}"
 }
 
-
 function get_source {
-	# test internet connection...
+  
+  # test internet connection
 	wget -q --spider http://google.com
 	[ ! $? -eq 0 ] && exit_err 'No Internet Connection. Aborting...'
+
 	# check whether to custom get source
 	if fn_defined 'source_get'; then
 		fn_log 'get' source_get
 		unset sty
-  elif ${src_latest}; then
+  elif ${src_rel}; then
     local s="${src%\.git}"
     s=( ${s//\// } )
     case "${s[1]}" in

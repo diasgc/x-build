@@ -20,7 +20,7 @@ lst_lic='LICENSE README.md'
 lst_pc='adrenotools.pc'
 
 dev_vrs=''
-src_latest=false
+src_rel=false
 
 on_create_pc(){
     build_pkgconfig --libs=-ladrenotools

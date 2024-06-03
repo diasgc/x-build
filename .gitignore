@@ -2,6 +2,7 @@ builds/*
 FFmpeg/*
 sources/*
 packages/*
+dist/*
 llvm-gnu/*
 utils/lz-string
 .config

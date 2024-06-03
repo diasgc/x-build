@@ -23,7 +23,7 @@ pc_llib=null
 
 on_config(){
     apt="$(apt search libboost 2>/dev/null | grep -oP 'libboost[0-9\.]+\-dev' | tail -n1)"
-    if ${src_latest}; then
+    if ${src_rel}; then
         vrs="$(github_latest_release boostorg/boost)"
         vrs="${vrs//boost-/}"
         src="https://github.com/boostorg/boost/releases/download/${vrs}/${vrs}-cmake.tar.gz"

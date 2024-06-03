@@ -28,7 +28,7 @@ on_create_pc(){
 }
 
 on_config(){
-  test ${src_latest} && github_set_src_release 'k0dai/density'
+  test ${src_rel} && github_set_src_release 'k0dai/density'
   return 0
 }
 

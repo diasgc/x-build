@@ -8,7 +8,7 @@ lib='xeve'
 dsc='eXtra-fast Essential Video Encoder, MPEG-5 EVC (Essential Video Coding)'
 lic='Other'
 src='https://github.com/mpeg5/xeve.git'
-src_latest=false # use git
+src_rel=false # use git
 cfg='cmake'
 
 xeve_profile='MAIN' # BASE|MAIN

@@ -11,7 +11,7 @@ src='https://github.com/mpeg5/xevd.git'
 cfg='cmake'
 # -DSET_PROF=MAIN crashes with missing xevdm_itrans_map_tbl_neon fix in branch dev-BuildErrorsHotfix
 bra='dev-BuildErrorsHotfix'
-src_latest=false # use git
+src_rel=false # use git
 xevd_profile='MAIN' # BASE|MAIN
 
 case $xevd_profile in BASE) sfx='b';; esac

@@ -23,7 +23,7 @@ lst_pc=''
 
 eta='20'
 
-src_latest=false
+src_rel=false
 WFLAGS='-Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter'
 
 on_config_ndk(){

@@ -26,7 +26,7 @@ lst_pc='aribb24.pc'
 WFLAGS="-Wno-pointer-to-int-cast -Wno-unused-command-line-argument"
 
 on_config(){
-    if ${src_latest}; then
+    if ${src_rel}; then
         vrs="$(github_latest_release nkoriyama/aribb24)"
         src="https://github.com/nkoriyama/aribb24/archive/refs/tags/${vrs}.tar.gz"
     fi

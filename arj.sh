@@ -13,7 +13,7 @@ lst_lib=''
 lst_bin=''
 
 on_config(){
-    if ${src_latest}; then
+    if ${src_rel}; then
         url='http://deb.debian.org/debian/pool/main/a/arj/'
         vrs=$(curl -s ${url} | grep -oP 'arj_\K([0-9\.]+).orig.tar.gz' | tail -n1)
         src="${url}arj_${vrs}"

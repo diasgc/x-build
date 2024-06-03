@@ -39,7 +39,7 @@ sudo=$(command -v sudo)
 
 export HOST_NPROC=$(nproc)
 # defvar debug=false
-: "${src_latest:=true}"
+: "${src_rel:=true}"
 : "${host_native:=false}"
 : "${debug:=false}"
 : "${nodev:=false}"
@@ -99,12 +99,12 @@ build_shared=false
 build_static=true
 build_bin=false
 build_man=false
+build_package=true
 
 build_usepkgflags=false
 git_stable=false
 ndkcmake=false
 
-build_package=true
 only_repo=false
 pc_filelist=
 
@@ -119,18 +119,18 @@ export target_trip=
 
 export dir_sources="${dir_root}/sources" \
        dir_cmake="${dir_root}/cmake" \
-       dir_patches="${dir_root}/patches"
+       dir_patches="${dir_root}/patches" \
+	   dir_pkgdist="${dir_root}/dist"
 
-if [ -z "${src_dir}" ];then
-	export dir_src=${dir_sources}/${lib}
-else
-	export dir_src=${dir_sources}/${src_dir}
-fi
-export dir_pkgdist="${dir_root}/packages"
+export dir_src="${dir_sources}/$(bool2str [ -z "${src_dir}" ] ${lib} ${src_dir} )"
+#if [ -z "${src_dir}" ];then
+#	export dir_src=${dir_sources}/${lib}
+#else
+#	export dir_src=${dir_sources}/${src_dir}
+#fi
+export 
 
 [ -d "${dir_sources}" ] || mkdir -p ${dir_sources}
-
-xv_x86_mingw="10"
 
 ! $is_init && init
 
@@ -184,8 +184,7 @@ gitjson=
 
 start(){
 
-	fn_defined 'on_config' && on_config
-
+	# Should we download the package instead of building it?
 	if ${build_download}; then
 		local lnk=$(get_link_pkg ${arch} ${lib})
 		if [ -n "${lnk}" ]; then
@@ -196,8 +195,26 @@ start(){
 		fi
 	fi
 
+	fn_defined 'on_config' && on_config
+
+	case ${target_trip[3]} in
+		android) fn_defined 'on_config_ndk'   && fn_log '' on_config_ndk;;
+		gnu)     fn_defined 'on_config_gnu'   && fn_log '' on_config_gnu;;
+		mingw32) fn_defined 'on_config_mingw' && fn_log '' on_config_mingw;;
+	esac
+
+	if ${host_arm}; then 
+		fn_defined 'on_config_arm' && fn_log '' on_config_arm
+	else
+		fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
+	fi
+
+	fn_defined 'on_build_bin' && unset CBN && on_build_bin 
+	fn_defined 'on_build_static' && unset CSH && on_build_static
+	fn_defined 'on_build_shared' && unset CSH && on_build_shared
+
 	# check whether to update source of main lib and dependencies
-	if $update; then
+	if ${update}; then
 		[ -d "${dir_src}" ] && rm -rf "${dir_src}" 2>/dev/null
 		! $req_update_deps && update=false
 	else
@@ -233,10 +250,6 @@ start(){
 	$build_static && bss="${SSB}[static]" || bss="${CD}[static]"
 	$build_shared && bss="${bss}${SSB}[shared]" || bss="${bss}${CD}[shared]"
 	$build_bin && echo -ne "${bss}${SSB}[bin]${C0} " || echo -ne "${bss}${CD}[bin]${C0} "
-	
-	fn_defined 'on_build_bin' && unset CBN && on_build_bin 
-	fn_defined 'on_build_static' && unset CSH && on_build_static
-	fn_defined 'on_build_shared' && unset CSH && on_build_shared 
 	
 	cd ${dir_sources}
 
@@ -278,18 +291,6 @@ start(){
 
 	case $src in *git*) echo -ne "${CT0}[$(git describe --tags 2>/dev/null)]${CD} ";; esac
 	
-	case ${target_trip[3]} in
-		android) fn_defined 'on_config_ndk'   && fn_log '' on_config_ndk;;
-		gnu)     fn_defined 'on_config_gnu'   && fn_log '' on_config_gnu;;
-		mingw32) fn_defined 'on_config_mingw' && fn_log '' on_config_mingw;;
-	esac
-
-	if $host_arm; then 
-		fn_defined 'on_config_arm' && fn_log '' on_config_arm
-	else
-		fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
-	fi
-
 	# default dir_config is dir_src
 	: "${dir_config:=${dir_src}}"
 	# check if defined custom dir_config location (config_dir)
@@ -301,7 +302,7 @@ start(){
 		config_guess
 	fi
 
-	if $require_src_config; then
+	if ${require_src_config}; then
 		# check whether to custom config source
 		if fn_defined 'source_config'; then
 			fn_log 'config' source_config
@@ -381,7 +382,7 @@ start(){
 	if fn_defined 'build_config'; then
 		build_config
 		unset -f build_config
-	else case $build_system in
+	else case "${build_system}" in
 		cmake)
 			cmake_configure
 			cfg_cmd=${CMAKE_EXECUTABLE}
@@ -423,7 +424,7 @@ start(){
 		esac
 	fi
 
-	$break_on_config && end_script
+	${break_on_config} && end_script
 
 	if fn_defined 'before_make'; then
 		fn_log 'preparing' before_make
@@ -538,8 +539,8 @@ meson_configure(){
 	if [ -n "${meson_bin}" ]; then
 		arr=(${meson_bin//|/ })
 		case ${#arr[@]} in
-			1) ${build_bin} && CBN="-D${arr[0]}=true" || CBN="-D${arr[0]}=false";;
-			2) ${build_bin} && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
+			1) CBN="-D${arr[0]}=$(bool2str ${build_bin} true false)";;
+			2) CBN="-D$(bool2str ${build_bin} ${arr[1]} ${arr[0]})";;
 		esac
 	fi
 	meson_create_toolchain ${cfg_file}
@@ -568,8 +569,8 @@ ac_configure() {
 	if [ -n "${ac_bin}" ]; then
 		arr=(${ac_bin//|/ })
 		case ${#arr[@]} in
-			1) $build_bin && CBN="${arr[0]}=1" || CBN="${arr[0]}=0";;
-			2) $build_bin && CBN="${arr[1]}" || CBN="${arr[0]}";;
+			1) CBN=$(bool2str ${build_bin} "${arr[0]}=1" "${arr[0]}=0");;
+			2) CBN=$(bool2str ${build_bin} "${arr[1]}" "${arr[0]}");;
 		esac
 	fi
 
@@ -649,7 +650,7 @@ make_findtarget(){
 
 check_install(){
 	local ext=''
-	case $1 in
+	case "${1}" in
 		# check includes
 		inc*)
 			for h in $lst_inc; do 
@@ -1629,7 +1630,7 @@ while [ $1 ];do
 		--static)   build_static=true; build_shared=false;;
 		--both)     build_static=true; build_shared=true;;
 		--bin)      build_bin=true;;
-		--devel)    src_latest=false;;
+		--devel)    src_rel=false;;
 		--checkout) git_checkout=true;;
 		--no-bin)   build_bin=false;;
 		--man)      build_man=true;;
