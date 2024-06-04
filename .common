@@ -87,9 +87,9 @@ function get_source {
     return 0
   fi
 	case "${src}" in
-			*.tar.*|*.tgz) curl_tar  "${git}" "${lib}";;
-			*.git|*git*)   git_clone "${git}" "${lib}" "${src_opt}";;
-			*svn.*)        svn_clone "${git}" "${lib}";;
+			*.tar.*|*.tgz) curl_tar  "${src}" "${lib}";;
+			*.git|*git*)   git_clone "${src}" "${lib}" "${src_opt}";;
+			*svn.*)        svn_clone "${src}" "${lib}";;
 			*)             exit_err "Unknown source type for ${src}";;
   esac
 }

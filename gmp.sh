@@ -41,7 +41,9 @@ before_make(){
 }
 
 on_config(){
-  vrs=$(curl -qsL 'https://gmplib.org/download/gmp/' | grep )
+  vrs="$(curl -qsL 'https://gmplib.org/download/gmp/' | grep -oP 'gmp-[0-9\.]+.tar.gz' | tail -n1)"
+  src="https://gmplib.org/download/gmp/${vrs}"
+  vrs="$(sed 's/gmp-//;s/\.tar.gz//' <<<${vrs})"
   ABI="${host_bits}"
   $host_mingw && ac_config+=" --enable-fat"
 }

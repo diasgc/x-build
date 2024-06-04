@@ -3,7 +3,6 @@
 # X-Build util 0.4.0 2024-diasgc
 # ................................................
 
-
 function trap_sigint {
 	tput cnorm -- normal
 	cd $(dirname $0)
@@ -122,13 +121,12 @@ export dir_sources="${dir_root}/sources" \
        dir_patches="${dir_root}/patches" \
 	   dir_pkgdist="${dir_root}/dist"
 
-export dir_src="${dir_sources}/$(bool2str [ -z "${src_dir}" ] ${lib} ${src_dir} )"
-#if [ -z "${src_dir}" ];then
-#	export dir_src=${dir_sources}/${lib}
-#else
-#	export dir_src=${dir_sources}/${src_dir}
-#fi
-export 
+#export dir_src="${dir_sources}/$(bool2str [ -z "${src_dir}" ] ${lib} ${src_dir} )"
+if [ -z "${src_dir}" ];then
+	export dir_src=${dir_sources}/${lib}
+else
+	export dir_src=${dir_sources}/${src_dir}
+fi
 
 [ -d "${dir_sources}" ] || mkdir -p ${dir_sources}
 
