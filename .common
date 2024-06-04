@@ -17,7 +17,7 @@ function trap_sigint {
 shopt -s extglob
 trap trap_sigint SIGINT
 
-vsh='0.3.2-main'
+vsh='1.2.0-main'
 
 #b="\u25ba"
 b="\u2605"
@@ -87,12 +87,43 @@ function get_source {
     return 0
   fi
 	case "${src}" in
-			*.tar.*|*.tgz) curl_tar $src $lib;;
-			*.git|*git*)   git_clone $src $lib $src_opt;;
-			*svn.*)        svn_clone $src $lib;;
-      *.hg)          src="${src%\.hg}" && hg_clone $src $lib;;
-			*)             exit_err "Unknown source type for $src";;
+			*.tar.*|*.tgz) curl_tar  "${git}" "${lib}";;
+			*.git|*git*)   git_clone "${git}" "${lib}" "${src_opt}";;
+			*svn.*)        svn_clone "${git}" "${lib}";;
+			*)             exit_err "Unknown source type for ${src}";;
   esac
+}
+
+# git_clone <source> <libname/destfolder> <options>
+function git_clone {
+  local g1="${1}"; shift
+  local g2="${2}"; shift
+	echo -ne "${CD}git"
+	logf git clone --progress --verbose "${g1}" "${g2}" "$@"
+	git clone --progress --verbose "${g1}" "${g2}" "$@" |& tr '\r' '\n' | prt_git_progress
+	logok "git"
+	test -d "${lib}" && cd ${lib} || err
+	if [ -n "${bra}" ]; then
+		do_log ${bra} git checkout ${bra}
+		unset bra
+	elif [ -n "${vrs}" ]; then
+		do_log ${vrs} git checkout tags/${vrs}
+	fi
+	if [ -n "${sub}" ];then
+		do_log 'sub' git ${sub}
+	fi
+	cd ..
+}
+
+function svn_clone {
+	request_cmd svn subversion || err
+	do_log 'svn' svn checkout $1 $2
+}
+
+function hg_clone {
+	request_cmd hg mercurial || err
+
+	do_log 'clone' hg clone $1 $2
 }
 
 function curl_tar {
@@ -114,6 +145,58 @@ function curl_tar {
 	curl -sL "${1}" 2>>"${log_file}" | tar "${args}" -C ${dir_src} --strip-components=1 2>>"${log_file}"
 	
 	logok "${tag}"
+}
+
+# git_latest_tgz <git-url>
+function git_latest_tgz {
+  local src="${1}"
+	case "${src}" in
+		*github.*)
+			local dst="$(echo ${src} | sed -e 's|\.git||g')"
+			local url=$(curl -ILs -o /dev/null -w %{url_effective} "${dst}/releases/latest")
+			local file=$(curl -s ${url} | grep -Po '(?<=>)[^<]*' | grep -Po '.*tar.gz$')
+			echo "${url}/${file}"
+		;;
+		*gitlab.*|*code.videolan.org*)
+			local dst="$(echo ${src} | sed -e 's|\.git||g')"
+			local v="$(git_remote_version ${src})"
+			echo "${dst}/-/archive/${v}/${lib}-${v}.tar.gz"
+		;;
+		*.googlesource.*)
+			local tag="$(git -c 'versionsort.suffix=-' ls-remote --refs --sort='v:refname' ${src} | tail -n1 | cut -f1)"
+			echo "${src}/+archive/${tag}.tar.gz"
+		;;
+	esac
+}
+
+# usage: github_set_src_release <git_id> <prefix> <ext>
+#   git_id: user/repo
+#   prefix: prefix for name of source file (default none)
+#   ext: extension for source file (default tar.gz)
+function github_set_src_release {
+  local git_id="${1}"
+  local pfx="${2}"
+  local ext="${3}"
+  if [ -n "${git_id}" ]; then
+    test -z "${ext}" && ext="tar.gz"
+    vrs="$(github_latest_release ${git_id})"
+    src="https://github.com/${git_id}/archive/refs/tags/${pfx}${vrs}.${ext}"
+  fi
+  return 0
+}
+
+# TODO
+function gitlab_set_src_release {
+  vrs=''
+  src="https://gitlab.com/${git_id}/-/archive/${vrs}/lilv-${vrs}.${ext}"
+}
+
+# usage github_latest_release <user/repo id> or <git url>
+function github_latest_release {
+  # extract id from url, in case it is not already given
+  local s="$(sed 's,https://github\.com/,,;s,\.git$,,' <<<${1})"
+  # get version tag name
+	echo $(curl --silent "https://api.github.com/repos/${s}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 }
 
 #usage build_pkgconfig [--filename=lib.pc][--prefix=install_dir]...[--libs=-la,-lb,-lc,...]
@@ -697,31 +780,6 @@ url_dom(){
   echo "$1" | awk -F/ '{print $3}'
 }
 
-# usage: github_set_src_release <git_id> <prefix> <ext>
-#   git_id: user/repo
-#   prefix: prefix for name of source file (default none)
-#   ext: extension for source file (default tar.gz)
-function github_set_src_release {
-  local git_id="${1}"
-  local pfx="${2}"
-  local ext="${3}"
-  if [ -n "${git_id}" ]; then
-    test -z "${ext}" && ext="tar.gz"
-    vrs="$(github_latest_release ${git_id})"
-    src="https://github.com/${git_id}/archive/refs/tags/${pfx}${vrs}.${ext}"
-  fi
-  return 0
-}
-
-function gitlab_set_src_release {
-  vrs=''
-  src="https://gitlab.com/${git_id}/-/archive/${vrs}/lilv-${vrs}.${ext}"
-}
-
-# usage github_latest_release <user/repo>
-github_latest_release(){
-	echo $(curl --silent "https://api.github.com/repos/$1/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-}
 
 git_vendor(){
   echo "$1" | awk -F/ '{print $4}'

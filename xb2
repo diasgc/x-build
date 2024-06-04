@@ -1089,37 +1089,6 @@ function prt_git_progress {
 	tput cnorm
 }
 
-function git_clone {
-	local var="git"
-	echo -ne "${CD}${var}"
-	logf git clone --progress --verbose "${src}" "${lib}" "${src_opt}"
-	git clone --progress --verbose "${src}" "${lib}" "${src_opt}" |& tr '\r' '\n' | prt_git_progress
-	logok $var
-	test -d "${lib}" && cd "${lib}" || err
-	if [ -n "${bra}" ]; then
-		do_log "${bra}" git checkout "${bra}"
-		unset bra
-	elif [ -n "${vrs}" ]; then
-		do_log "${vrs}" git checkout "tags/${vrs}"
-	fi
-	if [ -n "${sub}" ];then
-		do_log 'sub' git ${sub}
-	fi
-	cd ..
-}
-
-# usage: svn_clone <url> <dest-dir-name>
-function svn_clone {
-	request_cmd svn subversion || err
-	do_log 'svn' svn checkout $1 $2
-}
-
-# usage: hg_clone <url> <dest-dir-name>
-function hg_clone {
-	request_cmd hg mercurial || err
-	do_log 'clone' hg clone $1 $2
-}
-
 # usage: wget_tarxx type url libname
 function wget_tarxx {
 	local tag="get"

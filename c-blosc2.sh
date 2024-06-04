@@ -6,6 +6,7 @@ apt='libblosc-dev'
 dsc='A fast, compressed, persistent binary data store library for C.'
 lic='BSD-3c'
 src='https://github.com/Blosc/c-blosc2.git'
+url='https://www.blosc.org'
 cfg='cmake'
 eta='399'
 

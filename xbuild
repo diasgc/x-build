@@ -1067,37 +1067,6 @@ topct(){
 	tput cnorm
 }
 
-git_clone(){
-	local var="git"
-	echo -ne "${CD}${var}"
-	logf git clone --progress --verbose $src $lib $src_opt
-	git clone --progress --verbose $src $lib $src_opt |& tr '\r' '\n' | prt_git_progress
-	logok $var
-	test -d "$lib" && cd $lib || err
-	if [ -n "${bra}" ]; then
-		do_log ${bra} git checkout ${bra}
-		unset bra
-	elif [ -n "${vrs}" ]; then
-		do_log ${vrs} git checkout tags/${vrs}
-	fi
-	if [ -n "${sub}" ];then
-		do_log 'sub' git ${sub}
-	fi
-	cd ..
-}
-
-svn_clone(){
-	request_cmd svn subversion || err
-	#[ $(command -v svn) ] || apt_install subversion || err
-	do_log 'svn' svn checkout $1 $2
-}
-
-hg_clone(){
-	request_cmd hg mercurial || err
-	#[ $(command -v hg) ] || apt_install mercurial || err
-	do_log 'clone' hg clone $1 $2
-}
-
 set_git_version(){
 	pushdir ${dir_src}
 	local v=$(git describe --abbrev=0 --tags 2>/dev/null)
@@ -1105,73 +1074,7 @@ set_git_version(){
 	popdir
 }
 
-github_latest_tgz(){
-	case $src in
-		*github.*)
-			local dst=$(echo $src | sed -e 's|\.git||g')
-			local url=$(curl -ILs -o /dev/null -w %{url_effective} "${dst}/releases/latest")
-			local file=$(curl -s $url | grep -Po '(?<=>)[^<]*' | grep -Po '.*tar.gz$')
-			echo "${url}/${file}"
-		;;
-		*gitlab.*|*code.videolan.org*)
-			local dst=$(echo $src | sed -e 's|\.git||g')
-			local v=$(git_remote_version $src)
-			echo "$dst/-/archive/${v}/${lib}-${v}.tar.gz"
-		;;
-		*.googlesource.*)
-			local tag=$(git -c 'versionsort.suffix=-' ls-remote --refs --sort='v:refname' $src | tail -n1 | cut -f1)
-			echo "$src/+archive/${tag}.tar.gz"
-		;;
-	esac
-}
 
-
-# usage: wget_tarxx type url libname
-wget_tarxx(){
-	local tag="get"
-	local args=
-	echo -ne "${CD}${tag}${C0}"
-	echo "$(date): $@" >> "${log_file}"
-
-	if [ -z "${sty}" ]; then
-		case $src in
-			*.tar.lz)        request_cmd 'lzip' && args='--lzip -xv';;
-			*.tar.gz|*.tgz)  args="-xvz";;
-			*.tar.xz)        args="-xvJ";;
-			*.tar.bz2)       args="-xvj";;
-		esac
-	else
-		case $sty in
-			tgz)       args="-xvz";;
-			txz)       args="-xvJ";;
-			tbz|tbz2)  args="-xvj";;
-			tlz)       args="--lzip -xv";;
-		esac
-	fi
-	
-	test -z "$args" && doErr "unknown compressed file format for $(basename ${src})"
-
-	[ -d "tmp" ] && rm -rf tmp
-	mkdir tmp
-	wget -qO- $1 2>>${log_file} | tar --transform 's/^dbt2-0.37.50.3/dbt2/' $args -C tmp >/dev/null 2>&1 || err
-	cd tmp
-	local nf=(*)
-	if [ ${#nf[@]} -gt 2 ]; then
-		[ -d "../${2}" ] && rm -rf "../${2}"
-		mkdir ../${2}
-		mv * ../${2}
-	else
-		mv * $2 && mv $2 ..
-	fi
-	cd ..
-	rm -rf tmp
-
-	#if [ ! -f "${2}" ];then
-	#  local fname=$(basename $src | sed -E 's/[0-9\.-_].*//')
-	#  mv ${fname}* $2
-	#fi
-	logok $tag
-}
 
 wget_pkg_tgz(){
 	local tag="$(basename ${1})"
