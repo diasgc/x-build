@@ -3,6 +3,7 @@
 # X-Build util 0.4.0 2024-diasgc
 # ................................................
 
+#set -x
 function trap_sigint {
 	tput cnorm -- normal
 	cd $(dirname $0)

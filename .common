@@ -96,12 +96,12 @@ function get_source {
 
 # git_clone <source> <libname/destfolder> <options>
 function git_clone {
-  local g1="${1}"; shift
-  local g2="${2}"; shift
-	echo -ne "${CD}git"
-	logf git clone --progress --verbose "${g1}" "${g2}" "$@"
-	git clone --progress --verbose "${g1}" "${g2}" "$@" |& tr '\r' '\n' | prt_git_progress
-	logok "git"
+  #set -x
+  local t="git"
+	echo -ne "${CD}${t}"
+	logf git clone --progress --verbose ${src} ${lib} ${src_opt}
+	git clone --progress --verbose ${src} ${lib} ${src_opt} |& tr '\r' '\n' | prt_git_progress
+	logok "${t}"
 	test -d "${lib}" && cd ${lib} || err
 	if [ -n "${bra}" ]; then
 		do_log ${bra} git checkout ${bra}
