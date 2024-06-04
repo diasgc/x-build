@@ -68,37 +68,31 @@ function get_source {
 	if fn_defined 'source_get'; then
 		fn_log 'get' source_get
 		unset sty
+    return 0
   elif ${src_rel}; then
     local s="${src%\.git}"
     s=( ${s//\// } )
     case "${s[1]}" in
       github.com) github_set_src_release "${s[2]}/${s[3]}" "${src_prf}" "${src_ext}";;
-      gitlab.com) 
+      gitlab.com) ;; # TODO
     esac
 	elif [ -n "${git}" ]; then
-		src="${git}"
-		sty="git"
+		git_clone "${git}" "${lib}" "${src_opt}"
+		return 0
 	elif [ -n "${svn}" ]; then
-		src="${svn}"
-		sty="svn"
-	fi
-	if [ -n "${sty}" ]; then
-		case $sty in
-			git)           git_clone $src $lib $src_opt;;
-			tgz|txz|tlz)   curl_tar $src $lib;;
-			svn)           svn_clone $src $lib;;
-			hg)            hg_clone $src $lib;;
-			*)             exit_err "unknown sty=$sty for $src";;
-		esac
-	else
-		case "${src}" in
+		svn_clone "${svn}" "${lib}"
+		return 0
+	elif [ -n "${hg}" ]; then
+    hg_clone "${hg}" "${lib}"
+    return 0
+  fi
+	case "${src}" in
 			*.tar.*|*.tgz) curl_tar $src $lib;;
 			*.git|*git*)   git_clone $src $lib $src_opt;;
 			*svn.*)        svn_clone $src $lib;;
       *.hg)          src="${src%\.hg}" && hg_clone $src $lib;;
 			*)             exit_err "Unknown source type for $src";;
-		esac
-	fi
+  esac
 }
 
 function curl_tar {
@@ -417,8 +411,10 @@ function topct {
 
 
 
-
-
+# usage: sourceforge_json <projectname>
+sourceforge_json(){
+  curl -qsL "https://sourceforge.net/projects/${1}/best_release.json"
+}
 
 
 

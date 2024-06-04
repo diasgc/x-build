@@ -23,8 +23,7 @@ stb_vrs=''
 
 on_config_mingw(){
     doErr 'Unavailable for mingw'
-    src='https://svn.code.sf.net/p/mingweditline/code/'
-    sty='svn'
+    svn='https://svn.code.sf.net/p/mingweditline/code/'
     cfg='cmake'
 }
 

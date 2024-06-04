@@ -5,7 +5,7 @@ apt='libgmp-dev'
 dsc='GNU Multiple Precision Arithmetic Library'
 lic='LGPL-3.0 License'
 url='https://gmplib.org/'
-src='https://gmplib.org/repo/gmp/.hg'
+hg='https://gmplib.org/repo/gmp/'
 tls='mercurial'
 cfg='ac'
 eta='272'
@@ -41,6 +41,7 @@ before_make(){
 }
 
 on_config(){
+  vrs=$(curl -qsL 'https://gmplib.org/download/gmp/' | grep )
   ABI="${host_bits}"
   $host_mingw && ac_config+=" --enable-fat"
 }

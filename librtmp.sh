@@ -7,7 +7,7 @@
 lib='librtmp'
 dsc='rtmpdump is a toolkit for RTMP streams. All forms of RTMP are supported, including rtmp://, rtmpt://, rtmpe://, rtmpte://, and rtmps://.'
 lic='GLP-2.0'
-src='git://git.ffmpeg.org/rtmpdump' sty='git'
+git='git://git.ffmpeg.org/rtmpdump'
 dep='zlib openssl'
 eta='0'
 

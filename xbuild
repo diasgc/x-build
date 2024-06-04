@@ -152,7 +152,7 @@ main(){
 	inc_tab
 
 	if [ -z "${lic}" ] || [ -z "${dsc}" ];then
-		gitjson=$(git_api_tojson $src)
+		gitjson="$(git_api_tojson ${src})"
 		if [ -n "${gitjson}" ];then
 			#echo -ne "${CY1}${b}${C0}"
 			: "${lic:=$(echo "$gitjson" | jq .licence)}"
