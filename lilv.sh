@@ -8,7 +8,6 @@ lib='lilv'
 pkg='lilv-0'
 dsc='LV2 host library'
 lic='ISC License'
-vrs=''
 src="https://gitlab.com/lv2/lilv.git"
 cfg='meson'
 patch="lilv-01"

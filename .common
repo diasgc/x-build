@@ -73,6 +73,7 @@ function get_source {
     s=( ${s//\// } )
     case "${s[1]}" in
       github.com) github_set_src_release "${s[2]}/${s[3]}" "${src_prf}" "${src_ext}";;
+      gitlab.com) 
     esac
 	elif [ -n "${git}" ]; then
 		src="${git}"
@@ -714,6 +715,11 @@ function github_set_src_release {
     src="https://github.com/${git_id}/archive/refs/tags/${pfx}${vrs}.${ext}"
   fi
   return 0
+}
+
+function gitlab_set_src_release {
+  vrs=''
+  src="https://gitlab.com/${git_id}/-/archive/${vrs}/lilv-${vrs}.${ext}"
 }
 
 # usage github_latest_release <user/repo>
