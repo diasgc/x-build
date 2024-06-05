@@ -73,7 +73,7 @@ function get_source {
     local s="${src%\.git}"
     s=( ${s//\// } )
     case "${s[1]}" in
-      github.com) github_get_latest_tarball "${src}" && return 0;;
+      github.com) github_get_latest_tarball "${src}" "${lib}" && return 0;;
       gitlab.com) ;; # TODO
     esac
 	elif [ -n "${git}" ]; then
@@ -132,7 +132,7 @@ function github_get_latest_tarball {
   local json=$(curl --silent "https://api.github.com/repos/${s}/releases/latest")
   vrs=$(jq -r .tag_name <<<${json})
   local tarball_url=$(jq -r .tarball_url <<<${json})
-	dir_src="${dir_sources}/${lib}"
+	dir_src="${dir_sources}/${2}"
   local tag="get ${vrs}"
   echo -ne "${CD}${tag}${C0}"
   test -d "${dir_src}" && rm -rf "${dir_src}"
