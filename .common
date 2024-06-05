@@ -180,7 +180,7 @@ function github_set_src_release {
   if [ -n "${git_id}" ]; then
     test -z "${ext}" && ext="tar.gz"
     vrs="$(github_latest_release ${git_id})"
-    src="https://github.com/${git_id}/archive/refs/tags/${pfx}${vrs}.${ext}"
+    test -n "${vrs}" && src="https://github.com/${git_id}/archive/refs/tags/${pfx}${vrs}.${ext}"
   fi
   return 0
 }
@@ -566,26 +566,19 @@ banner(){
     echo -e "${CW}  $(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
 }
 
-fn_defined(){
-  [ "$(type -t $1)" = 'function' ]
+function fn_defined {
+  [ -n "${1}" ] && [ "$(type -t $1)" = 'function' ]
 }
 
-fn_undef(){
+function fn_undef {
   unset -f $1
 }
 
-fn_log(){
-  if [ -z "$1" ]; then
-    $2
-  else
-    do_log "$1" $2
-  fi
+function fn_log {
+  test -z "${1}" && ${2} || do_log "${1}" ${2}
   unset -f $2
 }
 
-isfn_defined(){
-  [ "$(type -t $1)" = 'function' ]
-}
 
 git_getversion(){
   [ -d "${1}" ] && git --git-dir=${1}/.git --work-tree=${1} describe --abbrev=0 --tags || git describe --abbrev=0 --tags
