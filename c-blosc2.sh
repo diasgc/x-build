@@ -14,7 +14,7 @@ cmake_static='BUILD_STATIC' # default ON
 cmake_shared='BUILD_SHARED' # default ON
 cmake_config='-DBUILD_TESTS=OFF'
 
-dev_vrs='2.14.5.dev'
+dev_vrs='2.14.4'
 
 lst_inc='blosc2.h blosc2/*.h'
 lst_lib='libblosc2'
