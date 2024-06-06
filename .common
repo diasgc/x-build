@@ -1,6 +1,6 @@
 #!/bin/bash
 # ................................................
-# Commons 0.3.2-dev 2021-diasgc
+# Commons 1.2.0-dev 2021-diasgc
 # Definition constants and functions
 # ................................................
 
@@ -69,8 +69,10 @@ function get_source {
 		fn_log 'get' source_get
 		unset sty
     return 0
+  # check if source is already a tarball
   case "${src}" in
-    *.tar.gz)     curl_targz "${src}" "${lib}" && return 0;;
+    *.tar.gz)      curl_targz "${src}" "${lib}" && return 0;;
+    *.tar.*|*.zip) curl_tar "${src}" "${lib}" && return 0;;
   esac
   if ${src_rel}; then
     case "${src}" in
