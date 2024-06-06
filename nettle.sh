@@ -19,7 +19,7 @@ lst_bin='pkcs1-conv nettle-lfib-stream nettle-hash nettle-pbkdf2 sexp-conv'
 lst_lic='COPYINGv2 COPYINGv3 COPYING.LESSERv3'
 lst_pc='hogweed.pc nettle.pc'
 
-dev_vrs='3.9.1'
+dev_vrs='3.10'
 
 on_config(){
   $host_arm && CFG+=" --enable-arm-neon" || CFG+=" --enable-x86-sha-ni --enable-x86-aesni"

@@ -69,11 +69,16 @@ function get_source {
 		fn_log 'get' source_get
 		unset sty
     return 0
+  fi
+  
   # check if source is already a tarball
   case "${src}" in
     *.tar.gz)      curl_targz "${src}" "${lib}" && return 0;;
     *.tar.*|*.zip) curl_tar "${src}" "${lib}" && return 0;;
   esac
+  
+  # git sub command requires git to apply
+  test -n "${sub}" && src_rel=false
   if ${src_rel}; then
     case "${src}" in
       *github.com*) github_get_latest_tarball "${src}" "${lib}" && return 0;;
@@ -113,8 +118,10 @@ function git_clone {
 		do_log ${vrs} git checkout tags/${vrs}
 	fi
 	if [ -n "${sub}" ];then
-		do_log 'sub' git ${sub}
+		do_log 'sub' git ${sub} |& tr '\r' '\n' | prt_git_progress
 	fi
+  vrs="$(git tag -l | tail -n1)"
+  echo -ne "${CT0}[${vrs}]${CD} "
 	cd ..
 }
 
@@ -137,16 +144,22 @@ function github_get_latest_tarball {
   local json=$(curl --silent "https://api.github.com/repos/${s}/releases/latest")
   local tarball_url=$(jq -r .tarball_url <<<${json})
   if [ "${tarball_url}" = "null" ]; then
-    git_clone ${src} ${lib} ${src_opt}
-    return 0
+    json=$(curl -sL "https://api.github.com/repos/${s}/tags")
+    tarball_url=$(jq -r .[0].tarball_url <<<${json})
+    if [ "${tarball_url}" = "null" ]; then
+      git_clone ${src} ${lib} ${src_opt}
+      return 0
+    fi
+    vrs=$(jq -r .[0].name <<<${json})
+  else
+    vrs=$(jq -r .tag_name <<<${json})
   fi
-  vrs=$(jq -r .tag_name <<<${json})
 	dir_src="${dir_sources}/${2}"
   local tag="get ${vrs}"
   echo -ne "${CD}${tag}${C0}"
   test -d "${dir_src}" && rm -rf "${dir_src}"
 	mkdir "${dir_src}"
-	curl -sL "${tarball_url}" -w %{url_effective} 2>>"${log_file}" | tar -xz -C ${dir_src} --strip-components=1 2>>"${log_file}"
+	curl -sL ${tarball_url} -w %{url_effective} 2>>"${log_file}" | tar -xz -C ${dir_src} --strip-components=1 2>>"${log_file}"
 	logok "${tag}"
 }
 
@@ -187,7 +200,7 @@ function git_latest_tgz {
   local src="${1}"
 	case "${src}" in
 		*github.*)
-			local dst="$(echo ${src} | sed -e 's|\.git||g')"
+			local dst="$(sed 's,.git$,,' <<<${src})"
 			local url=$(curl -ILs -o /dev/null -w %{url_effective} "${dst}/releases/latest")
 			local file=$(curl -s ${url} | grep -Po '(?<=>)[^<]*' | grep -Po '.*tar.gz$')
 			echo "${url}/${file}"
@@ -204,11 +217,21 @@ function git_latest_tgz {
 	esac
 }
 
-# usage: search_configfile cfgfile (ex. CMakeLists.txt, configure, meson.build)
-seach_configfile(){
-  local config_cl="$(find . -name ${1} -printf "%d %p\n"|sort -n|head -n1)"
-  config_cl="${config_cl##*./}"
+git_remote_version(){
+  local out="$(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | tail -n1)"
+  echo "${out##*\/}"
+  #echo $(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | head -n1 | sed 's/.*\///')
 }
+
+# usage: search_configfile <config-file> (ex. CMakeLists.txt, configure, meson.build)
+# returns: nearest source root location of config file
+search_configfile(){
+  local cmd="${1}"
+  local dest="$(find ${dir_src} -name ${cmd} -printf "%d %p\n"|sort -n|head -n1)"
+  dest="$(sed 's,.*'${dir_src}'/,,;s,/'${cmd}',,' <<<${dest})"
+  echo "${dir_src}/${dest}"
+}
+
 # usage: github_set_src_release <git_url> <prefix> <ext>
 #   git_url: https://github.com/user/repo.git
 #   prefix: prefix for name of source file (default none)
@@ -828,12 +851,6 @@ git_local_version(){
     cd ${d}
   fi
   echo $out
-}
-
-git_remote_version(){
-  local out="$(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | tail -n1)"
-  echo "${out##*\/}"
-  #echo $(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | head -n1 | sed 's/.*\///')
 }
 
 git_api_tojson(){

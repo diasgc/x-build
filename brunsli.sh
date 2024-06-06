@@ -16,15 +16,14 @@ lst_bin='dbrunsli cbrunsli'
 lst_lic='LICENSE'
 lst_pc='brunslienc-c.pc brunslidec-c.pc'
 
-dev_vrs='0.1'
+dev_vrs='v0.1'
 
-#pc_llibs='libbrunslidec-c libbrunslienc-c'
 
 cmake_config="-DBUILD_TESTING=OFF -DINSTALL_GTEST=OFF"
 
 on_create_pc(){
-    build_pkgconfig --file=brunslienc-c --libs=-lbrunslienc-c
-    build_pkgconfig --file=brunslidec-c --libs=-lbrunslidec-c
+    build_pkgconfig --name=brunslienc-c --libs=-lbrunslienc-c
+    build_pkgconfig --name=brunslidec-c --libs=-lbrunslidec-c
 }
 
 . xbuild && start 

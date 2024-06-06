@@ -4,6 +4,7 @@ lib='gnutls'
 dsc='GnuTLS implements the TLS/SSL (Transport Layer Security aka Secure Sockets Layer) protocol'
 lic='LGPL-2.1'
 src='https://gitlab.com/gnutls/gnutls.git'
+url='https://www.gnupg.org'
 cfg='ac'
 #cfg_cmd='./bootstrap'
 dep='libiconv gmp nettle'
@@ -12,7 +13,7 @@ ac_bin='--disable-tools|--enable-tools'
 mki='install'
 make_install='install'
 
-dev_vrs='3.6.16'
+dev_vrs='3.8.5'
 
 lst_inc='gnutls/*.h'
 lst_lib='libgnutls libgnutlsxx'
@@ -24,9 +25,16 @@ ac_config="--disable-hardware-acceleration --enable-local-libopts --with-include
 WFLAGS='-Wno-tautological-constant-compare -Wno-unused-but-set-variable -Wno-unused-function -Wno-implicit-const-int-float-conversion -Wno-implicit-const-int-float-conversion -Wno-unused-but-set-parameter'
 
 on_config(){
-    vrs="3.6.16"
-    src="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-${vrs}.tar.xz"
+    local v="$(curl -sL ${url}/ftp/gcrypt/gnutls/ | grep -oP 'v[0-9]+\.[0-9]+' | tail -n1)"
+    local f="$(curl -sL ${url}/ftp/gcrypt/gnutls/${v}/ | grep -oP 'gnutls-[0-9\.]+tar..z' | head -n1)"
+    src="${url}/ftp/gcrypt/gnutls/${v}/${f}"
+    vrs="$(sed 's,gnutls-,,;s,.tar..z,,' <<<${f})"
 }
+on_config_ndk(){
+    API=35; NDK_API=35
+}
+
+
 
 . xbuild && start
 

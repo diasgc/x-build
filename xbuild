@@ -19,27 +19,6 @@ function init {
 	export is_init=true
 }
 
-# first load .common functions and error trap
-if [ -z ${vsh+x} ];then
-	source .common
-	source ./utils/.utils
-	source ./utils/.cmake
-	set -o pipefail
-	if [ "${1}" == "--debug" ];then
-		shift
-		set -x
-		debug=true
-	fi
-	trap err ERR
-	[ -f ".config" ] && source .config
-	if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
-		./x-setup
-		source .config || doErr 'Unable to initialize config file'
-	fi
-fi
-
-clangv=-15
-
 sudo=$(command -v sudo)
 
 export HOST_NPROC=$(nproc)
@@ -64,6 +43,7 @@ export HOST_NPROC=$(nproc)
 : "${build_strip:=false}"
 : "${build_cpack:=false}"
 : "${API:=34}"
+: "${NDK_API:=34}"
 : "${git_checkout:=false}"
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
@@ -118,6 +98,24 @@ shell_dstack=
 logtime_start=0
 logtime_end=0
 
+# first load .common functions and error trap
+if [ -z ${vsh+x} ];then
+	source .common
+	source ./utils/.utils
+	source ./utils/.cmake
+	set -o pipefail
+	if [ "${1}" == "--debug" ];then
+		shift
+		set -x
+		debug=true
+	fi
+	trap err ERR
+	[ -f ".config" ] && source .config
+	if [ ! -f ".config" ] || test `expr $(date +%s) - ${config_lastupdate}` -gt $((config_timeout * timeout_days)); then
+		./x-setup
+		source .config || doErr 'Unable to initialize config file'
+	fi
+fi
 
 export CPPFLAGS=
 export target_trip=
@@ -698,7 +696,7 @@ check_install(){
 }
 
 
-function build_dependencies {
+function build_dependencies_new {
 	local dep_args="${arch}"
 	local dep_file
 	dep_args+=" $(bool2str ${build_allshared} shared static)"
@@ -712,7 +710,7 @@ function build_dependencies {
 	done
 }
 
-build_dependencies_old(){
+build_dependencies(){
 	local pkgfile
 	local o_csh
 	local o_cbh
