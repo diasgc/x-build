@@ -20,6 +20,10 @@ lst_lic='COPYING'
 lst_pc='davs2.pc'
 
 on_config(){
+    if ${src_rel}; then
+        vrs="1.7"
+        src="https://github.com/pkuvcl/davs2/archive/refs/tags/1.7.tar.gz"
+    fi
     dir_config="${dir_src}/build/linux"
     dir_build="${dir_src}/build/linux"
     mkf="STRIP="
@@ -30,7 +34,7 @@ on_config_ndk(){
     LDFLAGS="-llog"
 }
 
-. xbuildv && start
+. xbuild && start
 
 #!/bin/bash
 # cpu av8 av7 x86 x64

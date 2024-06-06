@@ -69,12 +69,14 @@ function get_source {
 		fn_log 'get' source_get
 		unset sty
     return 0
-  elif ${src_rel}; then
-    local s="${src%\.git}"
-    s=( ${s//\// } )
-    case "${s[1]}" in
-      github.com) github_get_latest_tarball "${src}" "${lib}" && return 0;;
-      gitlab.com) ;; # TODO
+  case "${src}" in
+    *.tar.gz)     curl_targz "${src}" "${lib}" && return 0;;
+  esac
+  if ${src_rel}; then
+    case "${src}" in
+      *github.com*) github_get_latest_tarball "${src}" "${lib}" && return 0;;
+      *gitlab.com*) git_clone ${src} ${lib} ${src_opt} && return 0;; # TODO
+      *.git)        git_clone ${src} ${lib} ${src_opt} && return 0;;
     esac
 	elif [ -n "${git}" ]; then
 		git_clone "${git}" "${lib}" "${src_opt}"
@@ -96,7 +98,6 @@ function get_source {
 
 # git_clone <source> <libname/destfolder> <options>
 function git_clone {
-  #set -x
   local t="git"
 	echo -ne "${CD}${t}"
 	logf git clone --progress --verbose ${src} ${lib} ${src_opt}
@@ -126,12 +127,19 @@ function hg_clone {
 	do_log 'clone' hg clone $1 $2
 }
 
+# usage: github_get_latest_tarball <git-url> <dest-dir>
+# result: from the git-url, set vrs to the latest release
+# and downloads + extracts tarball to dest-dir
 function github_get_latest_tarball {
   echo "$(date): $@" >> "${log_file}"
   local s="$(sed 's,https://github\.com/,,;s,\.git$,,' <<<${1})"
   local json=$(curl --silent "https://api.github.com/repos/${s}/releases/latest")
-  vrs=$(jq -r .tag_name <<<${json})
   local tarball_url=$(jq -r .tarball_url <<<${json})
+  if [ "${tarball_url}" = "null" ]; then
+    git_clone ${src} ${lib} ${src_opt}
+    return 0
+  fi
+  vrs=$(jq -r .tag_name <<<${json})
 	dir_src="${dir_sources}/${2}"
   local tag="get ${vrs}"
   echo -ne "${CD}${tag}${C0}"
@@ -222,20 +230,6 @@ function gitlab_set_src_release {
   src="https://gitlab.com/${git_id}/-/archive/${vrs}/lilv-${vrs}.${ext}"
 }
 
-function github_get_latest_tarball {
-  echo "$(date): $@" >> "${log_file}"
-  local s="$(sed 's,https://github\.com/,,;s,\.git$,,' <<<${1})"
-  local json=$(curl --silent "https://api.github.com/repos/${s}/releases/latest")
-  vrs=$(jq -r .tag_name <<<${json})
-  local tarball_url=$(jq -r .tarball_url <<<${json})
-	dir_src="${dir_sources}/${lib}"
-  local tag="get ${vrs}"
-  echo -ne "${CD}${tag}${C0}"
-  test -d "${dir_src}" && rm -rf "${dir_src}"
-	mkdir "${dir_src}"
-	curl -sL "${tarball_url}" 2>>"${log_file}" | tar -xz -C ${dir_src} --strip-components=1 2>>"${log_file}"
-	logok "${tag}"
-}
 # usage github_latest_release <user/repo id> or <git url>
 function github_latest_release {
   # extract id from url, in case it is not already given
