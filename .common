@@ -125,7 +125,6 @@ function svn_clone {
 
 function hg_clone {
 	request_cmd hg mercurial || err
-
 	do_log 'clone' hg clone $1 $2
 }
 

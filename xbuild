@@ -31,6 +31,11 @@ if [ -z ${vsh+x} ];then
 		debug=true
 	fi
 	trap err ERR
+	[ -f ".config" ] && source .config
+	if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
+		./x-setup
+		source .config || doErr 'Unable to initialize config file'
+	fi
 fi
 
 clangv=-15
@@ -131,7 +136,7 @@ fi
 
 [ -d "${dir_sources}" ] || mkdir -p ${dir_sources}
 
-! $is_init && init
+#! $is_init && init
 
 
 
@@ -288,7 +293,7 @@ start(){
 		unset git_checkout
 	fi
 
-	case $src in *git*) echo -ne "${CT0}[$(git describe --tags 2>/dev/null)]${CD} ";; esac
+	#case $src in *git*) echo -ne "${CT0}[$(git describe --tags 2>/dev/null)]${CD} ";; esac
 	
 	# default dir_config is dir_src
 	: "${dir_config:=${dir_src}}"
