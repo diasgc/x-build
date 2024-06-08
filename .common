@@ -248,8 +248,6 @@ function git_version_remote {
   echo "${out##*\/}"
 }
 
-
-
 git_remote_version(){
   local out="$(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | tail -n1)"
   echo "${out##*\/}"
@@ -300,8 +298,6 @@ search_configfile(){
   echo "${dir_src}/${dest}"
 }
 
-
-
 function config_guess {
   if [ -f "${dir_config}/meson.build" ]; then
     build_system="meson"
@@ -342,18 +338,16 @@ function config_init {
 	case "${cfg}" in
 		cm|ccm|cmake|ccmake)
 			build_system=cmake
-			key_state=( 'OFF' 'ON' )
-			build_link="-D${cmake_shared}=${key_state[$(bool2int ${build_shared})]}"
+			build_link="-D${cmake_shared}=$(bool2str ${build_shared} ON OFF)"
 			if [ ! "${cmake_static}" = "${cmake_shared}" ]; then
-				build_link+=" -D${cmake_static}=${key_state[$(bool2int ${build_static})]}"
+				build_link+=" -D${cmake_static}=$(bool2str ${build_static} ON OFF)"
 			fi		
 			[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
 			;;
 		ab|am|ac|ar|ag|auto*)
 			build_system=automake
-			key_state=( 'disable' 'enable' )
-			build_link="--${key_state[$(bool2int ${build_shared})]}-${ac_shared}"
-			build_link+="--${key_state[$(bool2int ${build_static})]}-${ac_static}"
+      build_link="--$(bool2str ${build_shared} enable disable)-${ac_shared}"
+      build_link+=" --$(bool2str ${build_static} enable disable)-${ac_static}"
 			if [ -n "$cbk" ]; then
 				case "${cbk}" in
 					--enable-*) cb0="${cbk}=0"; cb1="${cbk}=1";;
