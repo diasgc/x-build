@@ -9,7 +9,7 @@ dep='sndfile fftwf'
 pkg='samplerate'
 eta='54'
 
-#cbk="LIBSAMPLERATE_EXAMPLES"
+#cmake_bin="LIBSAMPLERATE_EXAMPLES"
 dev_bra='master'
 dev_vrs='0.2.2'
 

@@ -1633,11 +1633,6 @@ if [ -n "${sudo}" ] && ! ${sudo} -n true 2>/dev/null; then
 	echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
 fi
 
-: "${ac_static:=static}"
-: "${ac_shared:=shared}"
-: "${cmake_static:=BUILD_STATIC_LIBS}"
-: "${cmake_shared:=BUILD_SHARED_LIBS}"
-
 # check build type and set defaults if no cst0 cst1 csh0 or csh1 value provided
 case $cfg in
 	cm|ccm|cmake|ccmake) build_system=cmake

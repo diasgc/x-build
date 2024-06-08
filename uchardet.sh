@@ -9,14 +9,16 @@ dsc='an encoding detector library'
 lic='GPL-2'
 src='https://gitlab.freedesktop.org/uchardet/uchardet.git'
 cfg='cmake'
-eta='10'
-cbk="BUILD_BINARY"
+cmake_bin="BUILD_BINARY"
+WFLAGS='-Wno-unused-const-variable'
+
 lst_inc='uchardet/uchardet.h'
 lst_lib='libuchardet'
 lst_bin='uchardet'
 dev_vrs='0.0.8'
+eta='10'
 
-WFLAGS='-Wno-unused-const-variable'
+
 
 #$host_arm && cmake_config+=" -DCHECK_SSE2=OFF" || cmake_config+=" -DCHECK_SSE2=ON"
 

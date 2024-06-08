@@ -328,6 +328,52 @@ function config_guess {
   return 0
 }
 
+function cmake_set_buildlink {
+  : "${cmake_static:=BUILD_STATIC_LIBS}"
+  : "${cmake_shared:=BUILD_SHARED_LIBS}"
+  case "${cmake_shared}" in
+    -D*=*) ${build_shared} && CSH="${cmake_shared}";;
+    *) CSH="-D${cmake_shared}=$(bool2str ${build_shared} ON OFF)";;
+  esac
+  case "${cmake_static}" in
+    -D*=*) ${build_static} && CSH="${cmake_static}";;
+    *) CSH="-D${cmake_static}=$(bool2str ${build_static} ON OFF) ${CSH}";;
+  esac
+  if [ -n "${cmake_bin}" ]; then
+    case "${cmake_bin}" in
+      -D*=*) ${build_bin} && CBN="${cmake_bin}";;
+      *) CBN="-D${cmake_bin}=$(bool2str ${build_bin} ON OFF)";;
+    esac
+  fi
+}
+
+function am_set_buildlink {
+  : "${ac_static:=static}"
+  : "${ac_shared:=shared}"
+  CSH="--$(bool2str ${build_shared} enable disable)-${ac_shared})"
+  CSH="--$(bool2str ${build_static} enable disable)-${ac_static}) ${CSH}"
+  if [ -n "${ac_bin}" ]; then
+    case "${ac_bin}" in
+      --enable-*) CBN="${ac_bin}=$(bool2str ${build_bin} 1 0)";;
+      able-*)     CBN="--$(bool2str ${build_bin} en dis)${ac_bin}";;
+      with-*)     CBN="--$(bool2str ${build_bin} without-${ac_bin:5} ${ac_bin})";;
+      *)          CBN="--enable-${ac_bin}=$(bool2str ${build_bin} 1 0)";;
+    esac
+  fi
+}
+
+function meson_set_buildlink {
+  : "${meson_static:=-Ddefault_library=static}"
+  : "${meson_shared:=-Ddefault_library=shared}"
+  if ${build_static} && ${build_shared}; then
+    CSH="-Ddefault_library=both"
+  elif ${build_static}; then
+    CSH="${meson_static}"
+  elif ${build_shared}; then
+    CSH="${meson_shared}"
+  fi
+}
+
 # check build system and set defaults - static and shared build options
 function config_init {
 
@@ -338,32 +384,15 @@ function config_init {
 	case "${cfg}" in
 		cm|ccm|cmake|ccmake)
 			build_system=cmake
-			build_link="-D${cmake_shared}=$(bool2str ${build_shared} ON OFF)"
-			if [ ! "${cmake_static}" = "${cmake_shared}" ]; then
-				build_link+=" -D${cmake_static}=$(bool2str ${build_static} ON OFF)"
-			fi		
-			[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
+      cmake_set_buildlink
 			;;
 		ab|am|ac|ar|ag|auto*)
 			build_system=automake
-      build_link="--$(bool2str ${build_shared} enable disable)-${ac_shared}"
-      build_link+=" --$(bool2str ${build_static} enable disable)-${ac_static}"
-			if [ -n "$cbk" ]; then
-				case "${cbk}" in
-					--enable-*) cb0="${cbk}=0"; cb1="${cbk}=1";;
-					able-*) cb0="--dis${cbk}"; cb1="--en${cbk}";;
-					with-*) cb0="--without-${cbk:5}"; cb1="--${cbk}";;
-					*) cb0="--enable-${cbk}=0" cb1="--enable-${cbk}=1";;
-				esac
-			fi
+      am_set_buildlink
 			;;
 		meson)
 			build_system=meson
-			: "${meson_static:=-Ddefault_library=static}"
-			: "${meson_shared:=-Ddefault_library=shared}"
-			${build_static} && ! ${build_shared} && build_link="${meson_static}"
-			${build_shared} && ! ${build_static} && build_link="${meson_shared}"
-			${build_static} && ${build_shared} && build_link="-Ddefault_library=both"
+			meson_set_buildlink
 			;;
 		mk|make) build_system=make;;
 		other) build_system=other;;
@@ -373,9 +402,6 @@ function config_init {
 	if [ -z "${CBN}" ];then
 		$build_bin && CBN="${cb1}" || CBN="${cb0}"
 	fi
-
-	# reset presets, we don't need them anymore
-	unset cb0 cb1 cbk
 }
 
 

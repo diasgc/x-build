@@ -8,9 +8,8 @@ lic='GPL-3.0'
 git='git://git.sv.gnu.org/libcdio.git'
 cfg='ac'
 dep='libiconv'
-eta='10'
-eta='80'
-#cbk="example-progs"
+
+#ac_bin="example-progs"
 
 mkc='distclean'
 CFG="MAKE=make --enable-maintainer-mode"
@@ -23,8 +22,7 @@ lst_pc='libiso9660.pc libiso9660++.pc libcdio.pc libcdio++.pc libudf.pc'
 
 dev_bra='master'
 dev_vrs='1.3.2'
-stb_bra=''
-stb_vrs=''
+eta='10'
 
 WFLAGS="-Wno-header-guard"
 
