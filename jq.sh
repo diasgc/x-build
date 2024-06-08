@@ -23,7 +23,7 @@ stb_vrs=''
 
 on_config(){
     ac_config="--disable-maintainer-mode --disable-docs --with-oniguruma=${dir_install}"
-    unset CSH
+    unset CSH build_link
 }
 
 . xbuild && start

@@ -80,11 +80,16 @@ function get_source {
   # git sub command requires git to apply
   test -n "${sub}" && src_rel=false
   if ${src_rel}; then
-    case "${src}" in
-      *github.com*) github_get_latest_tarball "${src}" "${lib}" && return 0;;
-      *gitlab.com*) git_clone ${src} ${lib} ${src_opt} && return 0;; # TODO
-      *.git)        git_clone ${src} ${lib} ${src_opt} && return 0;;
-    esac
+    if fn_defined 'latest_release'; then
+      latest_release
+    else
+      case "${src}" in
+        *github.com*) github_get_latest_tarball "${src}" "${lib}" && return 0;;
+        *gitlab.com*) gitlab_get_latest_tarball "${src}" "${lib}" && return 0;;
+        *googlesource.com*) googlesource_get_latest_tarball "${src}" "${lib}" && return 0;;
+        *.git)        git_clone ${src} ${lib} ${src_opt} && return 0;;
+      esac
+    fi
 	elif [ -n "${git}" ]; then
 		git_clone "${git}" "${lib}" "${src_opt}"
 		return 0
@@ -163,6 +168,18 @@ function github_get_latest_tarball {
 	logok "${tag}"
 }
 
+function gitlab_get_latest_tarball {
+  vrs="$(git_version_remote ${src})"
+  src="${src%%\.git}/-/archive/${v}/${lib}-${vrs}.tar.gz"
+  curl_tar ${src} ${lib}
+}
+
+function googlesource_get_latest_tarball {
+  vrs="$(git_version_remote ${1})"
+  src="${src%%\.git}/+archive/${vrs}.tar.gz"
+  curl_tar ${src} ${lib}
+}
+
 function curl_tar {
 	local tag="get"
 	local args=
@@ -206,9 +223,8 @@ function git_latest_tgz {
 			echo "${url}/${file}"
 		;;
 		*gitlab.*|*code.videolan.org*)
-			local dst="$(echo ${src} | sed -e 's|\.git||g')"
-			local v="$(git_remote_version ${src})"
-			echo "${dst}/-/archive/${v}/${lib}-${v}.tar.gz"
+			local v="$(git_version_remote ${src})"
+			echo "${src%%\.git}/-/archive/${v}/${lib}-${v}.tar.gz"
 		;;
 		*.googlesource.*)
 			local tag="$(git -c 'versionsort.suffix=-' ls-remote --refs --sort='v:refname' ${src} | tail -n1 | cut -f1)"
@@ -217,19 +233,27 @@ function git_latest_tgz {
 	esac
 }
 
+function git_version_local(){
+  pushd ${dir_src} > /dev/null
+  local v=$(git describe --tags)
+  local out=$(grep -oP '[0-9]+\.[0-9]+\.[0-9]+' <<<${v})
+  test -z "${out}" && out=$(grep -oP '[0-9]+\.[0-9]+' <<<${v})
+  test -z "${out}" && out=${v}
+  echo "${out}"
+  popd > /dev/null
+}
+
+function git_version_remote {
+  local out="$(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | tail -n1)"
+  echo "${out##*\/}"
+}
+
+
+
 git_remote_version(){
   local out="$(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | tail -n1)"
   echo "${out##*\/}"
   #echo $(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | head -n1 | sed 's/.*\///')
-}
-
-# usage: search_configfile <config-file> (ex. CMakeLists.txt, configure, meson.build)
-# returns: nearest source root location of config file
-search_configfile(){
-  local cmd="${1}"
-  local dest="$(find ${dir_src} -name ${cmd} -printf "%d %p\n"|sort -n|head -n1)"
-  dest="$(sed 's,.*'${dir_src}'/,,;s,/'${cmd}',,' <<<${dest})"
-  echo "${dir_src}/${dest}"
 }
 
 # usage: github_set_src_release <git_url> <prefix> <ext>
@@ -261,6 +285,107 @@ function github_latest_release {
   # get version tag name
 	echo $(curl --silent "https://api.github.com/repos/${s}/releases/latest" | jq -r .tag_name)
 }
+
+git_getversion(){
+  [ -d "${1}" ] && git --git-dir=${1}/.git --work-tree=${1} describe --abbrev=0 --tags || git describe --abbrev=0 --tags
+}
+
+
+# usage: search_configfile <config-file> (ex. CMakeLists.txt, configure, meson.build)
+# returns: nearest source root location of config file
+search_configfile(){
+  local cmd="${1}"
+  local dest="$(find ${dir_src} -name ${cmd} -printf "%d %p\n"|sort -n|head -n1)"
+  dest="$(sed 's,.*'${dir_src}'/,,;s,/'${cmd}',,' <<<${dest})"
+  echo "${dir_src}/${dest}"
+}
+
+
+
+function config_guess {
+  if [ -f "${dir_config}/meson.build" ]; then
+    build_system="meson"
+    cfg="meson"
+  elif [ -f "${dir_config}/CMakeLists.txt" ]; then
+    build_system="cmake"
+    cfg="cmake"
+  elif [ -n "$(ls ${dir_config}/configure* 2>/dev/null)" ]; then
+    build_system="automake"
+    cfg='ac'
+    if [ -f "${dir_config}/autogen.sh" ]; then
+      cfg_cmd="${dir_config}/autogen.sh"
+	    cfg='ag'
+    elif [ -f "${dir_config}/bootstrap.sh" ]; then
+      cfg_cmd="${dir_config}/bootstrap.sh"
+    elif [ -f "${dir_config}/bootstrap" ]; then
+      cfg_cmd="${dir_config}/bootstrap"
+	  elif [ -f "${dir_config}/configure.ac"]; then
+	    cfg='ar'		
+    elif [ ! -f "${dir_config}/configure" ]; then
+      cfg_cmd="autoreconf -fiv ${dir_config}/bootstrap"
+    else
+      return 1
+    fi
+  else
+    return 1
+  fi
+  return 0
+}
+
+# check build system and set defaults - static and shared build options
+function config_init {
+
+	# if no cfg provided, try to guess
+	test -z "${cfg}" && config_guess
+	test -z "${cfg}" && exit_err 'No build system found. Exiting.'
+	
+	case "${cfg}" in
+		cm|ccm|cmake|ccmake)
+			build_system=cmake
+			key_state=( 'OFF' 'ON' )
+			build_link="-D${cmake_shared}=${key_state[$(bool2int ${build_shared})]}"
+			if [ ! "${cmake_static}" = "${cmake_shared}" ]; then
+				build_link+=" -D${cmake_static}=${key_state[$(bool2int ${build_static})]}"
+			fi		
+			[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
+			;;
+		ab|am|ac|ar|ag|auto*)
+			build_system=automake
+			key_state=( 'disable' 'enable' )
+			build_link="--${key_state[$(bool2int ${build_shared})]}-${ac_shared}"
+			build_link+="--${key_state[$(bool2int ${build_static})]}-${ac_static}"
+			if [ -n "$cbk" ]; then
+				case "${cbk}" in
+					--enable-*) cb0="${cbk}=0"; cb1="${cbk}=1";;
+					able-*) cb0="--dis${cbk}"; cb1="--en${cbk}";;
+					with-*) cb0="--without-${cbk:5}"; cb1="--${cbk}";;
+					*) cb0="--enable-${cbk}=0" cb1="--enable-${cbk}=1";;
+				esac
+			fi
+			;;
+		meson)
+			build_system=meson
+			: "${meson_static:=-Ddefault_library=static}"
+			: "${meson_shared:=-Ddefault_library=shared}"
+			${build_static} && ! ${build_shared} && build_link="${meson_static}"
+			${build_shared} && ! ${build_static} && build_link="${meson_shared}"
+			${build_static} && ${build_shared} && build_link="-Ddefault_library=both"
+			;;
+		mk|make) build_system=make;;
+		other) build_system=other;;
+		*) unset build_system;;
+	esac
+
+	if [ -z "${CBN}" ];then
+		$build_bin && CBN="${cb1}" || CBN="${cb0}"
+	fi
+
+	# reset presets, we don't need them anymore
+	unset cb0 cb1 cbk
+}
+
+
+
 
 #usage build_pkgconfig [--filename=lib.pc][--prefix=install_dir]...[--libs=-la,-lb,-lc,...]
 function build_pkgconfig {
@@ -408,6 +533,10 @@ function log_vars {
 		shift
 	done
 	echo >>"${log_file}"
+}
+
+function log_info {
+  echo -e "${CD}${ind}${CT0}${1}${C0} "
 }
 
 function log_start {
@@ -642,11 +771,6 @@ function fn_log {
   unset -f $2
 }
 
-
-git_getversion(){
-  [ -d "${1}" ] && git --git-dir=${1}/.git --work-tree=${1} describe --abbrev=0 --tags || git describe --abbrev=0 --tags
-}
-
 array_join(){
   local IFS="${1}" && shift
   echo "$@"
@@ -732,25 +856,6 @@ popdir(){
 # usage: set_bool <condition> <value_true> <value_false>
 set_bool(){
   $1 && echo $2 || echo $3
-}
-
-prt_progress_old(){
-  printf "%-6s"
-  while read -r ln; do
-    printf "\e[6D%-6s" $(grep -oP '\d+%' <<< $ln)
-  done
-  printf "\e[6D"
-}
-
-prt_progress(){
-  printf "%-6s"
-  local sln
-  while read -r ln; do
-    str_contains $ln 'error: ' && printf $CR1
-    sln=$(grep -oP '\d+%' <<< $ln)
-    [ -n "$sln" ] && printf "\e[5D%-5s" $sln
-  done
-  printf "\e[6D"
 }
 
 inc_tab(){
@@ -1072,19 +1177,6 @@ version_parse(){
   done
   echo "${arrv[@]:0:3}" | sed 's/ /./g'
 }
-
-git_version_local(){
-  if [ -d "${1}/.git" ]; then
-    version_parse "$(git --git-dir="${1}/.git" describe --match=?[0-9]* 2>/dev/null || git --git-dir="${1}.git" describe 2>/dev/null)"
-  fi
-  return 0
-}
-
-git_version_remote(){
-  version_parse "$(git_vremote $1)"
-}
-
-
 
 git_vremote(){
   local vrs_exclude='alpha|beta'

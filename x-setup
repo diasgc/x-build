@@ -415,7 +415,10 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
         fi
     fi
     if [ -n "${ANDROID_NDK_HOME}" ]; then
+        r="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android"
+        API="$(find ${r} -maxdepth 1 -type d | sed 's,'${r}',,' | sort | tail -n1 | sed 's,/,,')"
         printf "${CH}%-20s: ${C0}%s\n" "  found at" ${ANDROID_NDK_HOME}
+        printf "${CH}%-20s: ${C0}%s\n" "  API level" ${API}
         ndk_release=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po '\.Revision.=.\K([0-9\.\-a-zA-Z]+)')
         NDK_RELEASE=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po 'BaseRevision.=.\K([0-9\.]+)')
         printf "${CH}%-20s: ${C0}%s " '  version' ${ndk_release}
@@ -639,8 +642,7 @@ export config_lastupdate=$(date +%s) \\
     CLANG_MINGW_VERSION=${CLANG_MINGW_VERSION} \\
     LLVM_MINGW_HOME="${llvm_mingw}" \\
     ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
-    API="${API}" \\
-    NDK_API="${API}" \\
+    ANDROID_NDK_API="${API}" \\
     NDK_RELEASE="${NDK_RELEASE}" \\
     TOOLCHAIN_NDK="${TOOLCHAIN_NDK}" \\
     SYSROOT_NDK="${SYSROOT_NDK}" \\

@@ -39,7 +39,7 @@ on_config(){
 		dir_build="${dir_src}/build/generic"
 		$host_ndk && $host_x86 && CFG+=" --disable-assembly"
 		$host_clang && static_ldflag="-static";
-		unset CSH # unsupported static/shared tags
+		unset CSH build_link # unsupported static/shared tags
 	else
 		cmake_config="-DXVID_PKGCONFIG_IN=${dir_root}/cmake/pkg-config.pc.in"
 	fi

@@ -16,7 +16,7 @@ lst_lic='AUTHORS.md LICENSE.txt'
 lst_pc='libvvenc.pc'
 
 dev_bra='master'
-dev_vrs='1.11.1'
+dev_vrs='1.12.0-rc1'
 
 on_config(){
     # native clang llvm-18: missing LLVMgold.so. Workaround:_ disable lto

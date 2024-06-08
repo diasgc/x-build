@@ -27,6 +27,12 @@ on_config(){
   $host_cross || dir_install_pc=${dir_install}/lib64/pkgconfig
 }
 
+latest_release(){
+  local u=$(sed 's,\.git$,/-,' <<<${src})
+  local f="$(curl -sL ${u}/tags | grep -oP 'nettle_[0-9\.]+_release_[0-9]+.tar.gz' | head -n1)"
+  ${src_rel} && src="${u}/archive/${f%%\.tar\.gz}/nettle-${f}"
+  vrs=$(sed 's,nettle_,,;s,_release_.*\.tar\.gz$,,' <<<${f})
+}
 
 on_create_pc(){
   [ -d "${dir_install}/lib64" ] && [ ! -d "${dir_install}/lib" ] && ln -s "${dir_install}/lib64" "${dir_install}/lib"

@@ -32,7 +32,7 @@ eta='20'
 on_config_ndk(){
     CMAKE_EXECUTABLE="/home/diasgc/Android/Sdk/cmake/3.22.1/bin/cmake"
     cmake_config+=' -DFREEGLUT_GLES=ON'
-    unset CSH
+    unset CSH build_link
 }
 
 . xbuild && start

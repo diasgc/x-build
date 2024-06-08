@@ -233,7 +233,7 @@ $v3 && extlibs+=' --enable-version3'
 if $build_shared; then
      extlibs+=" --enable-shared --disable-static"
 fi
-unset CSH
+unset CSH build_link
 
 $host_arm && extopts+=' --enable-neon'
 $host_x86 && extopts+=' --disable-asm'

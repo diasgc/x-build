@@ -40,36 +40,6 @@ function bool2str {
 	${1} && echo "${2}" || echo "${3}"
 }
 
-function config_guess {
-  if [ -f "${dir_config}/meson.build" ]; then
-    build_system="meson"
-    cfg="meson"
-  elif [ -f "${dir_config}/CMakeLists.txt" ]; then
-    build_system="cmake"
-    cfg="cmake"
-  elif [ -n "$(ls ${dir_config}/configure* 2>/dev/null)" ]; then
-    build_system="automake"
-    cfg='ac'
-    if [ -f "${dir_config}/autogen.sh" ]; then
-      cfg_cmd="${dir_config}/autogen.sh"
-	  cfg='ag'
-    elif [ -f "${dir_config}/bootstrap.sh" ]; then
-      cfg_cmd="${dir_config}/bootstrap.sh"
-    elif [ -f "${dir_config}/bootstrap" ]; then
-      cfg_cmd="${dir_config}/bootstrap"
-	elif [ -f "${dir_config}/configure.ac"]; then
-	  cfg='ar'		
-    elif [ ! -f "${dir_config}/configure" ]; then
-      cfg_cmd="autoreconf -fiv ${dir_config}/bootstrap"
-    else
-      return 1
-    fi
-  else
-    return 1
-  fi
-  return 0
-}
-
 # usage: set_buildtype_key <input> <prefix> <on-val> <off-val>
 set_buildtype_key(){
 	local arr=(${1//|/ })
@@ -248,11 +218,11 @@ github_description(){
 }
 
 package_showinfo(){
-	$banner || return 0
+	${banner} || return 0
 	local dp=
 	local vs=
 	local longdesc=$(package_longdesc)
-	[ -z "$(echo $longdesc | xargs 2>/dev/null)" ] && unset longdesc
+	[ -z "$(echo ${longdesc} | xargs 2>/dev/null)" ] && unset longdesc
 
 	# Main Description
 	[ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}\e[1m${lib^^} - ${C0}${dsc}\e[0m"
@@ -274,36 +244,32 @@ package_showinfo(){
 		echo -ne "${CT0}build deps: "
 		tput sc; echo -ne "${CD}$tls "; tput rc
 		for t in ${tls}; do
-		if [ -z $(command -v ${t}) ];then
-			apt_install ${t} || {
-			echo -ne "${CR1}${t} ${C0}" && exit_err "Unable to install ${t}, aborting..."
-			}
-			echo -ne "${CW}${t} "
-		fi
+			request_cmd ${t}
 		shift
 		done
 	fi
 
 	# Build Deps
-	[ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}$dep"
+	[ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}${dep}"
 
-	if str_contains $src "git"; then
-		local vgit=$(git_version_remote $src | head -n1)
-		if [ -d ${dir_src} ];then
-		local vrep=$(git_version_local ${dir_src} | head -n1)
-		vs="${CT0}vrs: ${C0}$vrep "
-		if str_contains $vgit $vrs; then
-			vs+=" updated"
+	if [ -n "${vrs}" ]; then
+		log_info "version: ${vrs}"
+	elif [ -d "${dir_src}/.git" ]; then
+		local gitloc="$(git_version_local ${dir_src})"
+		local gitrem="$(git_remote_version ${src})"
+		if [ "${gitloc}" = "${gitrem}" ]; then
+			gitrem="updated"
 		else
-			vs+=" ${CT0}latest: ${CT1}${vgit}${C0}"
+			gitrem="latest: ${gitrem}"
 		fi
-		else
-		vs="${CT0}vrs: ${C0}${vgit}"
-		fi
+		log_info "version: ${C0}${gitloc} (${gitrem})"
+	elif str_contains ${src} "git"; then
+		local gitrem="$(git_version_remote ${src} | head -n1)"
+		log_info "version: ${C0}${gitrem}"
 	fi
-	echo -e " ${vs} ${C0}"
-	return 0
 }
+
+
 
 package_longdesc(){
 	if [ -n "${apt}" ]; then
@@ -667,7 +633,7 @@ menu_goto(){
 
 utils_get_latest_release(){
 	if fn_defined 'latest_release'; then
-		echo $(latest_release)
+		latest_release && echo "${vrs}"
 	elif [ -z "${src}" ]; then
 		echo "Unknown source ${src}"
 	else

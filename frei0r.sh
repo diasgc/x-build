@@ -21,7 +21,7 @@ dev_vrs='1.8'
 cmake_config='-DWITHOUT_GAVL=ON -DWITHOUT_OPENCV=ON -DBUILD_SHARED_LIBS=ON'
 
 on_config(){
-    unset CSH
+    unset CSH build_link
 }
 
 . xbuild && start

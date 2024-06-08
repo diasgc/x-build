@@ -48,7 +48,6 @@ sudo=$(command -v sudo)
 
 : "${host_native:=false}"
 : "${debug:=false}"
-: "${nodev:=false}"
 : "${should_init:=true}"
 
 : "${disable_shared:=false}"
@@ -135,58 +134,6 @@ function sudo_check {
 }
 
 
-# check build system and set defaults - static and shared build options
-function config_init {
-
-	# if no cfg provided, try to guess
-	test -z "${cfg}" && config_guess
-	test -z "${cfg}" && exit_err 'No build system found. Exiting.'
-	
-	case "${cfg}" in
-		cm|ccm|cmake|ccmake)
-			build_system=cmake
-			key_state=( 'OFF' 'ON' )
-			build_link="-D${cmake_shared}=${key_state[$(bool2int ${build_shared})]}"
-			if [ ! "${cmake_static}" = "${cmake_shared}" ]; then
-				build_link+=" -D${cmake_static}=${key_state[$(bool2int ${build_static})]}"
-			fi		
-			[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
-			;;
-		ab|am|ac|ar|ag|auto*)
-			build_system=automake
-			key_state=( 'disable' 'enable' )
-			build_link="--${key_state[$(bool2int ${build_shared})]}-${ac_shared}"
-			build_link+="--${key_state[$(bool2int ${build_static})]}-${ac_static}"
-			if [ -n "$cbk" ]; then
-				case "${cbk}" in
-					--enable-*) cb0="${cbk}=0"; cb1="${cbk}=1";;
-					able-*) cb0="--dis${cbk}"; cb1="--en${cbk}";;
-					with-*) cb0="--without-${cbk:5}"; cb1="--${cbk}";;
-					*) cb0="--enable-${cbk}=0" cb1="--enable-${cbk}=1";;
-				esac
-			fi
-			;;
-		meson)
-			build_system=meson
-			: "${meson_static:=-Ddefault_library=static}"
-			: "${meson_shared:=-Ddefault_library=shared}"
-			${build_static} && ! ${build_shared} && build_link="${meson_static}"
-			${build_shared} && ! ${build_static} && build_link="${meson_shared}"
-			${build_static} && ${build_shared} && build_link="-Ddefault_library=both"
-			;;
-		mk|make) build_system=make;;
-		other) build_system=other;;
-		*) unset build_system;;
-	esac
-
-	if [ -z "${CBN}" ];then
-		$build_bin && CBN="${cb1}" || CBN="${cb0}"
-	fi
-
-	# reset presets, we don't need them anymore
-	unset cb0 cb1 cbk
-}
-
 main(){
 
 	# exit if missing vars lib arch or src
@@ -265,7 +212,7 @@ function build_dependencies {
 function build_dependencies_old {
 	local pkgconfig_file script_file
 	local o_csh
-	local o_cbh
+	local o_cbn
 	local cf
 	local ldir
 	while [ -n "${1}" ]; do
@@ -275,14 +222,14 @@ function build_dependencies_old {
 		libname=$(./${1}.sh --get libname)
 		if [ ! -f "${pkgconfig_file}" ]; then
 			o_csh="${build_link}"
-			o_cbh="${CBH}"
+			o_cbn="${CBN}"
 			${build_download} && local dl="--dl" || local dl=''
-			unset build_link CBH
+			unset build_link CBN
 			
 			./xb2 ${1} ${arch} ${dep_build} ${dl}
 			
 			build_link=$o_csh
-			CBH=$o_cbh
+			CBN=$o_cbn
 		fi
 		if [ -f "${pkgconfig_file}" ]; then
 			local cmi=$(./${1}.sh ${arch} --get cmake_include)
@@ -1595,7 +1542,6 @@ usage(){
   printf "          --dist --strip --dirbuild <dir> \n\n"
   printf "${CB1}compiler: --clang*|--gcc --cpus\n"
   printf "          --tune <tune> --mcpu <mcpu> --mtune <mtune> \n\n"
-  printf "${CM1}source:   --git --clone --nodev --download|--dl --stable\n"
   printf "          --update --upd-all --refresh --retry --force --clear\n"
   printf "          --patch <add|make|get> --diff --opts\n\n"
   printf "${CM1}control:  --desc --get --list --checkPkg --libName --var <var> \n\n"
@@ -1635,8 +1581,8 @@ optVrs='@(--version|--vrs|--ver|-v)'
 optDnl='@(--download|--dl|-d)'
 optHelp='@(--help|-h)'
 
-while [ $1 ];do
-	case $1 in
+while [ ${1} ];do
+	case ${1} in
 		
 		$optHelp)	showBanner; usage; exit 0;;
 

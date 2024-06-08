@@ -5,13 +5,20 @@ apt='libgav1-dev'
 dsc='Main profile (0) & High profile (1) compliant AV1 decoder'
 lic='BSD'
 src='https://chromium.googlesource.com/codecs/libgav1.git'
+src_rel=false
 cfg='cmake'
 eta='18'
 
 dev_bra='main'
-dev_vrs='0.19.0'
+dev_vrs='0.20.0'
 
-lst_inc='gav1/*.h'
+lst_inc='gav1/decoder.h
+ gav1/decoder_buffer.h
+ gav1/status_code.h
+ gav1/frame_buffer.h
+ gav1/version.h
+ gav1/symbol_visibility.h
+ gav1/decoder_settings.h'
 lst_lib='libgav1'
 lst_bin='gav1_decode'
 lst_lic='LICENSE AUTHORS'

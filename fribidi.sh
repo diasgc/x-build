@@ -10,7 +10,7 @@ eta='60'
 meson_bin='bin'
 meson_cfg="-Db_lto=true -Ddocs=false -Dtests=false"
 
-dev_vrs='1.0.14'
+dev_vrs='1.0.15'
 
 lst_inc='fribidi/*.h'
 lst_lib='libfribidi'

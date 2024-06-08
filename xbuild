@@ -3,6 +3,10 @@
 # X-Build util 0.4.0 2024-diasgc
 # ................................................
 
+: "${banner:=true}"
+: "${config_timeout:=86400}"
+timeout_days=3
+
 #set -x
 function trap_sigint {
 	tput cnorm -- normal
@@ -10,56 +14,47 @@ function trap_sigint {
 	echo -e "\n\n${CY1}  Interrupted by user${C0}\n  Log available at \e[4m${log_file}\e[24m\n\n"
 }
 
-function init {
-	[ -f ".config" ] && source .config
-	if [ ! -f ".config" ] || test `expr $(date +%s) - $config_lastupdate` -gt $((config_timeout * timeout_days)); then
-		./x-setup
-		source .config || doErr 'Unable to initialize config file'
-	fi
-	export is_init=true
-}
-
 sudo=$(command -v sudo)
 
 export HOST_NPROC=$(nproc)
 # defvar debug=false
+
+: "${ac_nohost:=false}"
+: "${ac_nosysroot:=false}"
+: "${ac_nopic:=false}"
+: "${ac_reconf:=true}"
+
+: "${build_allshared:=false}"
+: "${build_strip:=false}"
+: "${build_dist:=true}"
+: "${build_cpack:=false}"
+: "${build_download:=false}"
+
 : "${src_rel:=true}"
 : "${host_native:=false}"
 : "${debug:=false}"
-: "${nodev:=false}"
-: "${is_init:=false}"
 : "${pkg:=${lib}}"
 : "${apt:=${lib}}"
-: "${ac_nohost:=false}"
-: "${disable_shared:=false}"
-: "${ac_nosysroot:=false}"
-: "${ac_nopic:=false}"
-: "${banner:=true}"
+
 : "${req_update_deps:=false}"
 : "${update:=false}"
-: "${build_dist:=true}"
+
 : "${dep_build:=--static}"
-: "${build_allshared:=false}"
-: "${build_strip:=false}"
-: "${build_cpack:=false}"
-: "${API:=34}"
-: "${NDK_API:=34}"
+
 : "${git_checkout:=false}"
 : "${def_build_sys:=meson}"
 : "${inline:=false}"
-: "${build_download:=false}"
-: "${config_timeout:=86400}"
+
 : "${indent:=0}"
 : "${ind:=}"
 : "${vnd:=}"
-: "${ac_reconf:=true}"
 : "${cmake_build_type:=Release}"
 
 ndk_testtc=true
 
 $req_update_deps && update=true
 pkg_fmt="tgz"
-timeout_days=3
+
 
 cmake_toolchain_file=
 mingw_posix_suffix=
@@ -117,6 +112,9 @@ if [ -z ${vsh+x} ];then
 	fi
 fi
 
+: "${API:=${ANDROID_NDK_API}}"
+: "${NDK_API:=${ANDROID_NDK_API}}"
+
 export CPPFLAGS=
 export target_trip=
 
@@ -133,8 +131,6 @@ else
 fi
 
 [ -d "${dir_sources}" ] || mkdir -p ${dir_sources}
-
-#! $is_init && init
 
 
 
@@ -696,21 +692,27 @@ check_install(){
 }
 
 
-function build_dependencies_new {
-	local dep_args="${arch}"
-	local dep_file
-	dep_args+=" $(bool2str ${build_allshared} shared static)"
+function build_dependencies {
+	local dep_args="${arch} ${dep_build} $(bool2str ${build_allshared} --shared --static) $(bool2str ${build_download} '--dl' '')"
+	local pkgfile libname old_csh old_csb
 	while [ -n "${1}" ]; do
-		dep_file="${dir_root}/${1}.sh"
-		test -f "${dep_file}" || exit_err "Fail to build dependency ${1}. ${dep_file} not found."
+		test -f "./${1}.sh" || exit_err "Fail to build dependency ${1}. Script file not found."
+		pkgfile=$(./${1}.sh ${arch} --get pc)
+		if [ ! -f "${pkgfile}" ]; then
+			old_csh=${CSH}; old_csb=${CSB}
+			unset CSH CSB
 
-		fn_log "${1}" ${dep_file} ${dep_args}
-		
+			./${1}.sh ${dep_args}
+			
+			CSH=${old_csh}; CSB=${old_csb}
+		else
+			log_info "${1}: ${C0} version $(pkg-config --modversion ${pkgfile})"
+		fi
 		shift
 	done
 }
 
-build_dependencies(){
+build_dependencies_old(){
 	local pkgfile
 	local o_csh
 	local o_cbh
@@ -865,19 +867,9 @@ secs2time(){
 	[ $(($1/60%60)) -eq 0 ] && printf '%ds' $(($1%60)) || printf '%dm %ds' $(($1/60%60)) $(($1%60))
 }
 
-log_start(){
-	logtime_start=$(date +%s)
-	#echo -ne "$CC1  $@: "
-	if ! $inline; then
-		echo -ne "${CD}${inde}${C0}$(date '+%H:%M')"
-		[ $eta ] && echo -ne "-${CW}$(date '+%H:%M' --date="$eta seconds")"
-		printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
-	fi
-	echo $(date) > ${log_file}
-}
 
 log_end(){
-	if ! $inline && [ -n "${logtime_start}" ]; then
+	if ! ${inline} && [ -n "${logtime_start}" ]; then
 		logtime_end=$(date +%s)
 		#local pkgsize=$(du -sk ${dir_install} | cut -f1)
 		#local libsize=$(du -sk ${dir_install}/lib | cut -f1)
@@ -1465,7 +1457,6 @@ usage(){
   printf "          --dist --strip --dirbuild <dir> \n\n"
   printf "${CB1}compiler: --clang*|--gcc --cpus\n"
   printf "          --tune <tune> --mcpu <mcpu> --mtune <mtune> \n\n"
-  printf "${CM1}source:   --git --clone --nodev --download|--dl --stable\n"
   printf "          --update --upd-all --refresh --retry --force --clear\n"
   printf "          --patch <add|make|get> --diff --opts\n\n"
   printf "${CM1}control:  --desc --get --list --checkPkg --libName --var <var> \n\n"
@@ -1597,7 +1588,6 @@ while [ $1 ];do
 		--ndkcmake) ndkcmake=true;;
 		--ccmake)   cfg='ccm';;
 		--nobanner) banner=false;;
-		--nodev)    nodev=true;;
 		
 		--latest-release) utils_get_latest_release; exit 0;;
 
