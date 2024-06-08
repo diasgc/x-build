@@ -18,6 +18,7 @@ sudo=$(command -v sudo)
 
 export HOST_NPROC=$(nproc)
 # defvar debug=false
+: "${debug:=false}"
 
 : "${ac_nohost:=false}"
 : "${ac_nosysroot:=false}"
@@ -29,32 +30,30 @@ export HOST_NPROC=$(nproc)
 : "${build_dist:=true}"
 : "${build_cpack:=false}"
 : "${build_download:=false}"
+: "${dep_build:=--static}"
+
+: "${def_build_sys:=meson}"
+: "${cmake_build_type:=Release}"
 
 : "${src_rel:=true}"
+: "${req_update_deps:=false}"
+: "${update:=${req_update_deps}}"
+: "${git_checkout:=false}"
+
 : "${host_native:=false}"
-: "${debug:=false}"
+
 : "${pkg:=${lib}}"
 : "${apt:=${lib}}"
 
-: "${req_update_deps:=false}"
-: "${update:=false}"
-
-: "${dep_build:=--static}"
-
-: "${git_checkout:=false}"
-: "${def_build_sys:=meson}"
 : "${inline:=false}"
-
 : "${indent:=0}"
 : "${ind:=}"
 : "${vnd:=}"
-: "${cmake_build_type:=Release}"
+: "${is_running:=false}"
 
 ndk_testtc=true
 
-$req_update_deps && update=true
 pkg_fmt="tgz"
-
 
 cmake_toolchain_file=
 mingw_posix_suffix=
@@ -1345,20 +1344,6 @@ errUnknownTarget(){
 	fi
 }
 
-showBanner(){
-	if $banner; then
-		echo -ne "\n\n${CW}Cross Build scripts ${vsh} for Linux${C0}\n"
-		[ -n $(command -v lsb_release) ] && echo -ne "$(lsb_release -sd) "
-		if [ -n "$(uname -r | grep 'microsoft')" ];then
-			echo -ne "WSL2 "
-		elif [ -n "$(uname -r | grep 'Microsoft')" ];then
-			echo -ne "WSL "
-		fi
-		echo -e "$(uname -o) $(uname -m) ${C0} kernel $(uname -r)"
-		echo -e "${CW}$(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
-	fi
-}
-
 skip_options(){
 	while [ -n "${1}" ] || [ -n "${1##--*}" ]; do
 		case $1 in
@@ -1491,7 +1476,7 @@ optHelp='@(--help|-h)'
 while [ $1 ];do
 	case $1 in
 		
-		$optHelp)	showBanner; usage; exit 0;;
+		$optHelp)	show_banner; usage; exit 0;;
 
 		native)		set_target_build; host_native=true;;
 
@@ -1625,63 +1610,16 @@ fi
 
 loadToolchain
 
-if [ -z "$ISRUNNING" ]; then
-	showBanner
-	export ISRUNNING=1
+if ${banner} && ! ${is_running}; then
+	show_banner
+	is_running=true
 fi
+
 if [ -n "${sudo}" ] && ! ${sudo} -n true 2>/dev/null; then
 	echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
 fi
 
-# check build type and set defaults if no cst0 cst1 csh0 or csh1 value provided
-case $cfg in
-	cm|ccm|cmake|ccmake) build_system=cmake
-
-		[ -n "$cstk" ] && cst0="-D${cstk}=OFF" cst1="-D${cstk}=ON"
-		[ -n "$cshk" ] && csh0="-D${cshk}=OFF" csh1="-D${cshk}=ON"
-		
-		! $build_shared && [ -z "$cst1" ] && cst1="-DBUILD_SHARED_LIBS=OFF"
-		[ -z "$csh1" ] && csh1="-DBUILD_SHARED_LIBS=ON"
-		
-		$build_static && ! $build_shared && CSH="${cst1} ${csh0}"
-		$build_shared && ! $build_static && CSH="${csh1} ${cst0}"
-		$build_static && $build_shared && CSH="${cst1} ${csh1}"
-		
-		[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
-
-		;;
-	ab|am|ac|ar|ag|auto*) build_system=automake
-		[ -z "$cst0" ] && cst0="--disable-static"
-		[ -z "$cst1" ] && cst1="--enable-static"
-		[ -z "$csh0" ] && csh0="--disable-shared"
-		[ -z "$csh1" ] && csh1="--enable-shared"
-		$build_static && ! $build_shared && CSH="${cst1} ${csh0}"
-		$build_shared && ! $build_static && CSH="${csh1} ${cst0}"
-		$build_static && $build_shared && CSH="${cst1} ${csh1}"
-		[ -n "$cbk" ] && {
-		case $cbk in
-			--enable-*) cb0="${cbk}=0"; cb1="${cbk}=1";;
-			able-*) cb0="--dis${cbk}"; cb1="--en${cbk}";;
-			with-*) cb0="--without-${cbk:5}"; cb1="--${cbk}";;
-			*) cb0="--enable-${cbk}=0" cb1="--enable-${cbk}=1";;
-		esac
-		}
-		;;
-	meson) build_system=meson
-		test -z "${meson_static}" && meson_static="-Ddefault_library=static"
-		$build_static && ! $build_shared && CSH="${meson_static}"
-		test -z "${meson_shared}" && meson_shared="-Ddefault_library=shared"
-		$build_shared && ! $build_static && CSH="${meson_shared}"
-		$build_static && $build_shared && CSH="-Ddefault_library=both"
-		;;
-	mk|make) build_system=make;;
-	other) build_system=other;;
-	*) unset build_system;;
-esac
-
-if [ -z "${CBN}" ];then
-	$build_bin && CBN="${cb1}" || CBN="${cb0}"
-fi
+config_init
 
 # reset presets, we don't need them anymore
 unset cst0 cst1 csh0 csh1 cb0 cb1 cstk cshk cbk
