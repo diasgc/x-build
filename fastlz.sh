@@ -14,6 +14,8 @@ lst_bin='6pack 6unpack'
 lst_lic='LICENSE.MIT README.md'
 lst_pc='fastlz.pc'
 
+dev_vrs=''
+
 . xbuild && start
 
 # cpu av8 av7 x86 x64

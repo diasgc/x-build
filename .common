@@ -183,7 +183,7 @@ function github_get_latest_tarball {
 
 function gitlab_get_latest_tarball {
   vrs="$(git_version_remote ${src})"
-  src="${src%%\.git}/-/archive/${v}/${lib}-${vrs}.tar.gz"
+  src="${src%%\.git}/-/archive/${v}/${vrs}.tar.gz"
   curl_tar ${src} ${lib}
 }
 

@@ -7,7 +7,7 @@
 lib='freeglut'
 dsc='Free-software/open-source alternative to the OpenGL Utility Toolkit (GLUT) library'
 lic='GLP-2.0'
-src='https://github.com/dcnieho/FreeGLUT.git'
+url='https://sourceforge.net/projects/freeglut'
 cfg='cmake'
 eta='0'
 
@@ -18,8 +18,6 @@ cmake_config='-DFREEGLUT_BUILD_DEMOS=OFF'
 
 dev_bra='main'
 dev_vrs='3.2.2'
-stb_bra=''
-stb_vrs=''
 
 lst_inc=''
 lst_lib=''
@@ -29,9 +27,16 @@ lst_pc=''
 
 eta='20'
 
+on_config(){
+    local f="$(sourceforge_json freeglut | jq -e .release.filename)"
+    vrs=$(grep -oP '[0-9]+\.[0-9]+\.[0-9]' <<<${f} | tail -n1)
+    src='https://downloads.sourceforge.net/freeglut/freeglut-'${vrs}'.tar.gz'
+}
+
 on_config_ndk(){
     CMAKE_EXECUTABLE="/home/diasgc/Android/Sdk/cmake/3.22.1/bin/cmake"
     cmake_config+=' -DFREEGLUT_GLES=ON'
+    LDFLAGS+=" -llog -landroid -lEGL -lGLESv3"
     unset CSH build_link
 }
 

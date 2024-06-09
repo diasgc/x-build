@@ -6,7 +6,7 @@ lic='LGPL-2.1'
 src='https://github.com/njh/twolame.git'
 cfg='cmake'
 eta='225'
-cmake_cmakelists='twolame.cmake'
+#cmake_cmakelists='twolame.cmake'
 
 #ac_config="--disable-maintainer-mode"
 
