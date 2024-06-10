@@ -2,7 +2,7 @@
 
 lib='libressl'
 pkg='libssl'
-apt="${pkg}-dev"
+pkg_deb="${pkg}-dev"
 dsc='Secure Sockets Layer and cryptography libraries'
 lic='GPL'
 src='https://github.com/libressl-portable/portable.git'

@@ -6,7 +6,7 @@
 
 lib='libgpg-error'
 pkg='gpg-error'
-apt='libgpg-error-dev'
+pkg_deb='libgpg-error-dev'
 dsc='Error codes used by GnuPG et al.'
 lic='GPL-2.0'
 vrs='1.49'

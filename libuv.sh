@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libuv'
-apt='libuv1-dev'
+pkg_deb='libuv1-dev'
 dsc='Cross-platform asynchronous I/O'
 lic='Other'
 src='https://github.com/libuv/libuv.git'

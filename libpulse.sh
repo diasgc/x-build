@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libpulse'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='PulseAudio Client Interface'
 lic='LGPL-2.1'
 src='https://gitlab.freedesktop.org/pulseaudio/pulseaudio.git'

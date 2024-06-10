@@ -2,7 +2,7 @@
 
 #vrs='0.98.1'
 lib='libb2'
-apt='libb2-dev'
+pkg_deb='libb2-dev'
 dsc='BLAKE2 family of hash functions'
 lic='CC0-1.0'
 src='https://github.com/BLAKE2/libb2.git'

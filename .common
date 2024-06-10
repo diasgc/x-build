@@ -45,6 +45,11 @@ CT0=$CM0 CT1=$CM1 CS0=$CR0 CS1=$CR1 SSB=$C0
 
 : "${shell_dstack:=}"
 
+case $(uname -v) in
+  *Ubuntu*) apt_install='apt -qq install -y';;
+  *) exit_err "Unknown $(uname -v) os, please provide package-install command in .common (line 50)";;
+esac
+
 # Logger
 logtime_start=
 export dir_root=$(pwd)
@@ -70,6 +75,49 @@ function show_banner {
   echo -e "${CW}$(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
   is_running=true
 }
+
+# usage bool2int <condition>
+# returns 1 for true and 0 for false
+function bool2int {
+	$1 && echo 1 || echo 0
+}
+
+# usage bool2str <condition> <string-true> <string-false>
+# returns string-true for true and string-false for false
+function bool2str {
+	${1} && echo "${2}" || echo "${3}"
+}
+
+function request_cmd {
+	local c1=${1}
+	local c2=${2}
+	test -z "${c2}" && c2=${c1}
+  if [ -z $(command -v ${c1}) ]; then
+    ${sudo} ${apt_install} ${1} -y >/dev/null 2>&1 
+  fi
+	#test -z $(command -v ${c1}) && apt_install ${c2}
+	return 0
+}
+
+function apt_install {
+	while [ "$1" != "" ];do
+		#echo -ne "  ${CT0}install $1${C0}"
+		#echo -n " "
+		stty size | {
+		read y x
+		echo -ne "${CY1}"
+		tput sc
+		tput cup "$((y - 1))" 0
+		$sudo apt -qq install ${1} -y >/dev/null 2>&1
+		echo -ne "${C0}"
+		tput rc
+		}
+		#echo -ne "${C0} ok"
+		shift
+	done
+}
+
+
 
 function get_source {
   
@@ -141,6 +189,33 @@ function git_clone {
   vrs="$(git tag -l | tail -n1)"
   echo -ne "${CT0}[${vrs}]${CD} "
 	cd ..
+}
+
+function prt_git_progress {
+	tput civis
+	printf "%-8s"
+	local s0
+	local s1
+	local n1=0
+	while read -r ln; do
+		if ! [ "${ln%\'...}" == "${ln}" ]; then
+		printf "\e[7D"
+		printf "%-40s\e[40D"
+		s1=${ln#*\'}
+		s1=${s1##*/}
+		s1=${s1%\'...}
+		printf "\e[${n1}D"
+		n1=${#s1}
+		[ $n1 -gt 0 ] && printf " %-${n1}s" $s1
+		printf "%-6s"
+		else
+		s0=$(grep -oP '\d+%' <<< $ln)
+		[ -n "$s0" ] && printf "\e[5D%-5s" $s0
+		fi
+	done
+	[ $n1 -gt 0 ] && printf "\e[${n1}D"
+	printf "\e[7D"
+	tput cnorm
 }
 
 function svn_clone {
@@ -302,6 +377,31 @@ git_getversion(){
 }
 
 
+
+
+
+function check_tools {
+	while [ -n "$1" ]; do
+		toolname=${1}
+		toolpkg=${1}
+		case "${1}" in
+			rust )      installRust && continue;;
+			libtool )   toolname=libtoolize;;
+			texinfo )   toolname=makeinfo;;
+		esac
+		request_cmd ${toolname} ${toolpkg}
+		shift
+	done
+}
+
+function install_rustc {
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  source $HOME/.cargo/env
+}
+
+function install_cargo_cbuild {
+  cargo install cargo-c --features=vendored-openssl  
+}
 # usage: search_configfile <config-file> (ex. CMakeLists.txt, configure, meson.build)
 # returns: nearest source root location of config file
 search_configfile(){
@@ -363,8 +463,8 @@ function cmake_set_buildlink {
 function am_set_buildlink {
   : "${ac_static:=static}"
   : "${ac_shared:=shared}"
-  CSH="--$(bool2str ${build_shared} enable disable)-${ac_shared})"
-  CSH="--$(bool2str ${build_static} enable disable)-${ac_static}) ${CSH}"
+  CSH="--$(bool2str ${build_shared} enable disable)-${ac_shared}"
+  CSH="--$(bool2str ${build_static} enable disable)-${ac_static} ${CSH}"
   if [ -n "${ac_bin}" ]; then
     case "${ac_bin}" in
       --enable-*) CBN="${ac_bin}=$(bool2str ${build_bin} 1 0)";;
@@ -565,7 +665,7 @@ function create_pkgconfig_file_old {
 	unset pc_libdir pc_incdir pc_cflags pc_libs pc_url
 }
 
-function log_unused1 {
+function log {
 	echo -ne "$CD$@$C0"
 }
 
@@ -623,21 +723,23 @@ function log_info {
 
 function log_start {
 	logtime_start=$(date +%s)
+  local timefmt='+%H:%M'
+  [ ${eta} -lt 60 ] && timefmt='+%H:%M:%S'
 	if ! ${inline}; then
-		echo -ne "${CD}${inde}${C0}$(date '+%H:%M')"
-		[ $eta ] && echo -ne "-${CW}$(date '+%H:%M' --date="$eta seconds")"
+		echo -ne "${CD}${inde}${C0}$(date ${timefmt})"
+		[ ${eta} -gt 0 ] && echo -ne "-${CW}$(date ${timefmt} --date="${eta} seconds")"
 		printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
 	fi
 	echo $(date) >"${log_file}"
 }
 
 function log_end {
-	if ! $inline && [ -n "${logtime_start}" ]; then
+	if ! ${inline} && [ -n "${logtime_start}" ]; then
 		logtime_end=$(date +%s)
-		local secs=$((${logtime_end} - ${logtime_start}))
-		local msg="${CT1} done ${CD}in $(secs2time ${secs})"
-		[ ${secs} -gt 60 ] && msg="${msg} (${secs}s)"
-		echo -e "${msg}"
+		local secs=$(($logtime_end-$logtime_start))
+		eta=$(secs2time ${secs})
+		echo -e "${CT1} done ${CD}in ${eta}"
+		eta="$((${eta//s/}*$(nproc)))"
 	fi
 }
 
@@ -692,6 +794,10 @@ function err {
 	exit 1
 }
 
+function secs2time {
+	[ $(($1/60%60)) -eq 0 ] && printf '%ds' $(($1%60)) || printf '%dm %ds' $(($1/60%60)) $(($1%60))
+}
+
 function print_vars {
 	while test -n "${1}"; do
 		printf "${CC0}%-20s: ${C0}%s\n" "  ${1}" ${!1}
@@ -700,9 +806,7 @@ function print_vars {
 }
 
 function do_quietly {
-	local var
-  var="${1}"
-  shift
+	local var="${1}"; shift
 	echo -ne "${CD}${var}${C0}"
 	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
 	"$@" >/dev/null 2>&1
@@ -710,25 +814,21 @@ function do_quietly {
 }
 
 function do_log {
-	local var
-  var="${1}"
-  shift
+	local var="${1}"; shift
 	echo -ne "${CD}${var}${C0}"
 	log_this $@
 	logok "${var}"
 }
 
 function do_progress {
-	local var
-  var="${1}"
-  shift
+	local var="${1}" && shift
 	echo -ne "${CD}${var}"
 	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-	("$@" |& tee -a ${log_file} | topct) || exit_err "in ${var}:\n\n...\n$(tail -n5 ${log_file})${C0}"
+	("$@" |& tee -a ${log_file} | prt_progress) || exit_err "in ${var}:\n\n...\n$(tail -n5 ${log_file})${C0}"
 	logok "${var}"
 }
 
-function topct {
+function prt_progress {
 	local sln
 	local grp
 	tput civis
@@ -1339,6 +1439,19 @@ c_printf(){
   return 0
 }
 
+
+unused_doErr(){
+	echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
+	if [ -f ${log_file} ];then
+		if [ -f ${dir_build}/CMakeFiles/CMakeError.log ];then
+		echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
+		cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
+		fi
+		echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
+		[ "$openlog" != "n" ] && nano ${log_file}
+	fi
+	exit 1
+}
 
 # .language
 # .homepage

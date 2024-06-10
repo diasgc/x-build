@@ -8,6 +8,8 @@ src="https://svn.code.sf.net/p/lame/svn/trunk/lame"
 cfg='cmake'
 dep='libiconv'
 eta='180'
+pkg_deb="libtwolame-dev"
+
 
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='INSTALL_PROGRAMS'

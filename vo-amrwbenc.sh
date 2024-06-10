@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='vo-amrwbenc'
-apt='libvo-amrwbenc-dev'
+pkg_deb='libvo-amrwbenc-dev'
 dsc='VisualOn Adaptive Multi-Rate Wideband speech codec library'
 lic='Apache-2.0'
 src='https://github.com/mstorsjo/vo-amrwbenc.git'

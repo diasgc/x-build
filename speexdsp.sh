@@ -2,7 +2,7 @@
 
 lvr='1.2.0'
 lib='speexdsp'
-apt='libspeexdsp-dev'
+pkg_deb='libspeexdsp-dev'
 dsc='Speexdsp is a speech processing library that goes along with the Speex codec'
 lic='BSD'
 src='https://github.com/xiph/speexdsp.git'

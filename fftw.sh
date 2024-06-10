@@ -2,7 +2,7 @@
 
 lib='fftw'
 pkg='fftw3'
-apt='fftw-dev'
+pkg_deb='fftw-dev'
 dsc='Library for computing Fourier transforms (version 3.x)'
 lic='GPL-3.0'
 vrs='3.3.10'

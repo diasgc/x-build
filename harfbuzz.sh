@@ -1,13 +1,14 @@
 #!/bin/bash
 
 lib='harfbuzz'
-apt='libharfbuzz-dev'
+pkg_deb='libharfbuzz-dev'
 dsc='HarfBuzz text shaping engine'
 lic='MIT'
 src='https://github.com/harfbuzz/harfbuzz.git'
 cfg='cmake'
 tls='ragel'
-#dep='freetype fontconfig glib2 cairo libicu'
+cmake_config='-DHB_HAVE_FREETYPE=ON'
+dep='freetype'
 eta='400'
 
 dev_bra='main'
@@ -27,7 +28,7 @@ cmake_definitions+=('-Wno-double-promotion')
 
 extraOpts(){
 	case $1 in
-		--full) dep='freetype fontconfig glib2 cairo libicu';;
+		--all) dep='freetype fontconfig glib2 cairo libicu';;
 	esac
 }
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libgav1'
-apt='libgav1-dev'
+pkg_deb='libgav1-dev'
 dsc='Main profile (0) & High profile (1) compliant AV1 decoder'
 lic='BSD'
 src='https://chromium.googlesource.com/codecs/libgav1.git'

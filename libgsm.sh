@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libgsm'
-apt='libgsm1-dev'
+pkg_deb='libgsm1-dev'
 dsc='GSM 06.10 lossy speech compression'
 lic='LGPL-2.1'
 url='http://www.quut.com/gsm'

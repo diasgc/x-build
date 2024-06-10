@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libde265'
-apt='libde265-dev'
+pkg_deb='libde265-dev'
 dsc='Open h.265 video codec implementation.'
 lic='LGPL-3.0'
 src='https://github.com/strukturag/libde265.git'

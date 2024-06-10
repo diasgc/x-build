@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='frei0r'
-apt='frei0r-plugins'
+pkg_deb='frei0r-plugins'
 dsc='A large collection of free and portable video plugins'
 lic='GPL-2.0'
 src='https://github.com/dyne/frei0r.git'

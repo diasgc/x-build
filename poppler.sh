@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='poppler'
-apt='libpoppler-dev'
+pkg_deb='libpoppler-dev'
 dsc='PDF rendering library'
 lic='GPL-2.0'
 src='https://github.com/freedesktop/poppler.git'

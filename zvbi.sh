@@ -2,8 +2,8 @@
 
 lib='zvbi'
 pkg='zvbi-0.2'
-apt='libzvbi-dev'
-apt="${pkg}-dev"
+pkg_deb='libzvbi-dev'
+pkg_deb="${pkg}-dev"
 dsc='VBI Capturing and Decoding Library'
 lic='BSD 2-clause'
 #src='https://github.com/OpenDMM/zvbi.git'

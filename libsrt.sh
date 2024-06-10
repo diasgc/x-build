@@ -1,17 +1,17 @@
 #!/bin/bash
 
 lib='libsrt'
-apt='libsrt-openssl-dev'
 pkg='srt'
 dsc='Secure Reliable Transport (SRT) is an open source transport technology that optimizes streaming performance across unpredictable networks, such as the Internet.'
 lic='MPL-2.0'
 src='https://github.com/Haivision/srt.git'
 cfg='cmake'
 dep='openssl'
-eta='60'
 
 dev_bra='master'
 dev_vrs='1.5.3'
+pkg_deb='libsrt-openssl-dev'
+eta='60'
 
 lst_inc='srt/*.h'
 lst_lib='libsrt'

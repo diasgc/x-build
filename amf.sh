@@ -5,7 +5,7 @@ dsc='The Advanced Media Framework (AMF) SDK'
 lic='MIT'
 src='https://github.com/GPUOpen-LibrariesAndSDKs/AMF.git'
 cfg='cmake'
-eta='0'
+tls='texinfo'
 
 lst_inc=''
 lst_lib=''

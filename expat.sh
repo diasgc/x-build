@@ -5,7 +5,7 @@ dsc='Fast streaming XML parser written in C'
 lic=''
 src='https://github.com/libexpat/libexpat.git'
 cfg='cmake'
-eta='10'
+
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='EXPAT_BUILD_TOOLS'
 cmake_config='-DEXPAT_BUILD_EXAMPLES=OFF -DEXPAT_BUILD_TESTS=OFF'
@@ -18,6 +18,8 @@ lst_pc='expat.pc'
 
 dev_bra='master'
 dev_vrs='2.6.2'
+pkg_deb="libexpat1-dev"
+eta='10'
 
 config_dir="expat"
 

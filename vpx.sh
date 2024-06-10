@@ -4,6 +4,7 @@ lib='vpx'
 dsc='WebM Project VPx codec implementation'
 lic='BSD-3c'
 src='https://chromium.googlesource.com/webm/libvpx.git'
+#src_rel=false
 cfg='ac'
 eta='240'
 mki='install'
@@ -20,10 +21,11 @@ lst_bin='vpxenc vpxdec'
 lst_lic='LICENSE PATENTS AUTHORS'
 lst_pc='vpx.pc'
 
-dev_vrs='1.14.0'
+dev_vrs='1.14.1'
 
 on_config(){
-
+  vrs='v1.14.1-rc1'
+  src='https://chromium.googlesource.com/webm/libvpx/+archive/v1.14.1-rc1.tar.gz'
   $build_shared && unset CSH #--enable-shared only supported on ELF, OS/2, and Darwin for now
 
   t2=$(arch_fromid arm64 armv7 x86 x86_64)

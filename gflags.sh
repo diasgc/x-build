@@ -5,15 +5,12 @@ dsc='A C++ library that implements commandline flags processing'
 lic='BSD-3c'
 src='https://github.com/gflags/gflags.git'
 cfg='cmake'
-eta='0'
 
 cmake_static='GFLAGS_BUILD_STATIC_LIBS'
 cmake_shared='GFLAGS_BUILD_SHARED_LIBS'
 
 dev_bra='master'
 dev_vrs='2.2.2'
-stb_bra=''
-stb_vrs=''
 
 lst_inc='gflags/*.h'
 lst_lib='libgflags libgflags_nothreads'
@@ -22,6 +19,8 @@ lst_lic='COPYING AUTHORS'
 lst_pc='gflags.pc'
 
 eta='20'
+pkg_deb="libgflags-dev"
+
 
 . xbuild && start
 

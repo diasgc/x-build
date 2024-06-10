@@ -5,7 +5,7 @@
 # WIN ...  .   .   .  clang/gcc
 
 lib='tinyxml2'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='TinyXML2 is a simple, small, efficient, C++ XML parser that can be easily integrated into other programs.'
 lic='Zlib'
 src='https://github.com/leethomason/tinyxml2.git'

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libarchive'
-apt='libarchive-dev'
+pkg_deb='libarchive-dev'
 dsc='Multi-format archive and compression library'
 lic='Other'
 src='https://github.com/libarchive/libarchive.git'

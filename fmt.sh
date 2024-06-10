@@ -7,6 +7,8 @@ url='https://fmt.dev/'
 src='https://github.com/fmtlib/fmt.git'
 cfg='cmake'
 eta='0'
+pkg_deb="librust-ufmt-write-dev"
+
 
 lst_inc='fmt/*.h'
 lst_lib='libfmt'

@@ -3,7 +3,7 @@
 #  +   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='jpegoptim'
-apt='jpegoptim'
+pkg_deb='jpegoptim'
 dsc='Utility to optimize/compress JPEG files'
 lic='GPL-2'
 src='https://github.com/tjko/jpegoptim.git'

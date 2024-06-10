@@ -2,7 +2,7 @@
 
 #vrs='1.20'
 lib='vidstab'
-apt='libvidstab-dev'
+pkg_deb='libvidstab-dev'
 dsc='Vidstab is a video stabilization library which can be plugged-in with Ffmpeg and Transcode'
 lic='GPL-2+'
 src='https://github.com/georgmartius/vid.stab.git'

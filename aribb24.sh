@@ -1,13 +1,11 @@
 #!/bin/bash
 
 lib='aribb24'
-apt='libaribb24-dev'
 dsc='A library for ARIB STD-B24, decoding JIS 8 bit characters and parsing MPEG-TS stream'
 lic='LGPL-3.0'
 src='https://github.com/nkoriyama/aribb24.git'
 cfg='cmake'
 dep='libpng bzip2'
-eta='10'
 build_strip=false
 
 cmake_bin='BUILD_EXECUTABLES'
@@ -16,6 +14,8 @@ cmake_config='-DINSTALL_DOCS=OFF'
 
 dev_bra='master'
 dev_vrs='1.0.3'
+pkg_deb='libaribb24-dev'
+eta='10'
 
 lst_inc='aribb24/*.h'
 lst_lib='libaribb24'

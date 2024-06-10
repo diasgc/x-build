@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libdvdread'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 pkg='dvdread'
 dsc='Library to read DVD disks'
 lic='GPL-2.0'

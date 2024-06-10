@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libcunit'
-apt='libcunit1-dev'
+pkg_deb='libcunit1-dev'
 dsc='C Unit Testing Framework'
 lic='BSD'
 svn='https://svn.code.sf.net/p/cunit/code/trunk'

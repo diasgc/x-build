@@ -7,11 +7,12 @@ src='https://github.com/libsndfile/libsamplerate.git'
 cfg='cmake'
 dep='sndfile fftwf'
 pkg='samplerate'
-eta='54'
 
 #cmake_bin="LIBSAMPLERATE_EXAMPLES"
 dev_bra='master'
 dev_vrs='0.2.2'
+pkg_deb='libsamplerate0-dev'
+eta='54'
 
 lst_inc='samplerate.h'
 lst_lib='libsamplerate'

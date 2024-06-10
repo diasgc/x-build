@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='gmp'
-apt='libgmp-dev'
+pkg_deb='libgmp-dev'
 dsc='GNU Multiple Precision Arithmetic Library'
 lic='LGPL-3.0 License'
 url='https://gmplib.org/'

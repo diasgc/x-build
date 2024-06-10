@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libbs2b'
-apt='libbs2b-dev'
+pkg_deb='libbs2b-dev'
 dsc='Bauer stereophonic-to-binaural DSP'
 lic='MIT'
 src='https://github.com/alexmarsev/libbs2b.git'

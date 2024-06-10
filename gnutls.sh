@@ -9,6 +9,8 @@ cfg='ac'
 #cfg_cmd='./bootstrap'
 dep='libiconv gmp nettle'
 eta='690'
+pkg_deb="libsrt-gnutls-dev"
+
 ac_bin='--disable-tools|--enable-tools'
 mki='install'
 make_install='install'

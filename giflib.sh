@@ -5,7 +5,7 @@
 # WIN +++ +++  .   .  clang/gcc
 
 lib='giflib'
-apt='libgif-dev'
+pkg_deb='libgif-dev'
 dsc='Library for manipulating GIF files'
 lic='other'
 git='https://git.code.sf.net/p/giflib/code'

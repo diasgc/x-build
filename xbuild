@@ -43,7 +43,7 @@ export HOST_NPROC=$(nproc)
 : "${host_native:=false}"
 
 : "${pkg:=${lib}}"
-: "${apt:=${lib}}"
+: "${pkg_deb:=${lib}-dev}"
 
 : "${inline:=false}"
 : "${indent:=0}"
@@ -81,10 +81,8 @@ build_man=false
 build_package=true
 
 build_usepkgflags=false
-git_stable=false
 ndkcmake=false
 
-only_repo=false
 pc_filelist=
 
 shell_dstack=
@@ -107,7 +105,7 @@ if [ -z ${vsh+x} ];then
 	[ -f ".config" ] && source .config
 	if [ ! -f ".config" ] || test `expr $(date +%s) - ${config_lastupdate}` -gt $((config_timeout * timeout_days)); then
 		./x-setup
-		source .config || doErr 'Unable to initialize config file'
+		source .config || exit_err 'Unable to initialize config file'
 	fi
 fi
 
@@ -120,7 +118,8 @@ export target_trip=
 export dir_sources="${dir_root}/sources" \
        dir_cmake="${dir_root}/cmake" \
        dir_patches="${dir_root}/patches" \
-	   dir_pkgdist="${dir_root}/dist"
+	   dir_pkgdist="${dir_root}/dist" \
+	   this_script=${dir_root}/$(basename "$0")
 
 #export dir_src="${dir_sources}/$(bool2str [ -z "${src_dir}" ] ${lib} ${src_dir} )"
 if [ -z "${src_dir}" ];then
@@ -131,43 +130,6 @@ fi
 
 [ -d "${dir_sources}" ] || mkdir -p ${dir_sources}
 
-
-
-
-
-
-
-
-main(){
-
-	# exit if missing vars lib arch or src
-	if [ -z "${lib}" ]; then
-		echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
-		return 0
-	fi
-
-	inc_tab
-
-	if [ -z "${lic}" ] || [ -z "${dsc}" ];then
-		gitjson="$(git_api_tojson ${src})"
-		if [ -n "${gitjson}" ];then
-			#echo -ne "${CY1}${b}${C0}"
-			: "${lic:=$(echo "$gitjson" | jq .licence)}"
-			: "${dsc:=$(echo "$gitjson" | jq .description)}"
-		fi
-	fi
-
-	# show package info
-	export log_file="${dir_install}/${lib}.log"
-
-	if [ -z "$(check_install pc)" ]; then
-		package_showinfo
-	elif $update || $retry || $git_checkout; then
-		package_showinfo
-	else
-		end_script    
-	fi
-}
 
 
 
@@ -186,13 +148,15 @@ start(){
 		local lnk=$(get_link_pkg ${arch} ${lib})
 		if [ -n "${lnk}" ]; then
 			wget_pkg_tgz ${lnk} ${dir_install}
-			$skip_pc || logver "${dir_install_pc}/${pkg}.pc"
+			${skip_pc} || logver "${dir_install_pc}/${pkg}.pc"
 			end_script
 			exit 0
 		fi
 	fi
 
-	fn_defined 'on_config' && on_config
+
+	# Configure variables
+	fn_defined 'on_config' && fn_log '' on_config
 
 	case ${target_trip[3]} in
 		android) fn_defined 'on_config_ndk'   && fn_log '' on_config_ndk;;
@@ -206,16 +170,19 @@ start(){
 		fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
 	fi
 
-	fn_defined 'on_build_bin' && unset CBN && on_build_bin 
-	fn_defined 'on_build_static' && unset CSH && on_build_static
-	fn_defined 'on_build_shared' && unset CSH && on_build_shared
+	fn_defined 'on_build_bin' && unset CBN && fn_log '' on_build_bin 
+	fn_defined 'on_build_static' && unset CSH && fn_log '' on_build_static
+	fn_defined 'on_build_shared' && unset CSH && fn_log '' on_build_shared
+
+
+
 
 	# check whether to update source of main lib and dependencies
 	if ${update}; then
 		[ -d "${dir_src}" ] && rm -rf "${dir_src}" 2>/dev/null
-		! $req_update_deps && update=false
+		! ${req_update_deps} && update=false
 	else
-		! $git_checkout && ! $retry && [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
+		! ${git_checkout} && ! ${retry} && [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
 	fi
 
 	# Reset LOGFILE
@@ -227,27 +194,25 @@ start(){
 	export PKG_CONFIG_PATH=
 
 	# check build tools
-	check_tools $tls
+	check_tools ${tls}
 
 	local ovrs=$vrs
 	local ocsh=$CSH
 	local ocbn=$CBN
 	unset vrs CSH CBN
 
-	build_dependencies $dep
+	build_dependencies ${dep}
 
 	vrs=$ovrs
 	CSH=$ocsh
-	CBN=$ocbn7
+	CBN=$ocbn
 
-	log_start $arch ${eta}s
+	log_start ${arch} "$((${eta}/$(nproc)))s"
 
-	local bss=
-	
-	$build_static && bss="${SSB}[static]" || bss="${CD}[static]"
-	$build_shared && bss="${bss}${SSB}[shared]" || bss="${bss}${CD}[shared]"
-	$build_bin && echo -ne "${bss}${SSB}[bin]${C0} " || echo -ne "${bss}${CD}[bin]${C0} "
-	
+	echo -ne "$(bool2str ${build_static} ${SSB} ${CD})[static]"
+	echo -ne "$(bool2str ${build_shared} ${SSB} ${CD})[shared]"
+	echo -ne "$(bool2str ${build_bin} ${SSB} ${CD})[bin] ${C0}"
+
 	cd ${dir_sources}
 
 
@@ -310,13 +275,13 @@ start(){
 			ab)		[ -f "${dir_config}/boostrap" ] && do_log 'bootstrap' ${dir_config}/boostrap
 					[ -f "${dir_config}/boostrap.sh" ] && do_log 'bootstrap' ${dir_config}/boostrap.sh
 					;;
-			ag) 	doAutogen ${dir_config} --noconfigure;;
-			ar) 	doAutoreconf ${dir_config};;
+			ag) 	do_am_autogen ${dir_config} --noconfigure;;
+			ar) 	do_am_autoreconf ${dir_config};;
 			am)		if [ ! -f "${dir_config}/configure" ];then
 						if [ -f "${dir_config}/autogen.sh" ];then
-							doAutogen ${dir_config} --noconfigure
+							do_am_autogen ${dir_config} --noconfigure
 						else
-							doAutoreconf ${dir_config}
+							do_am_autoreconf ${dir_config}
 						fi
 					fi
 					;;
@@ -336,7 +301,7 @@ start(){
 			local fcmake="${dir_root}/cmake/$cmake_cmakelists"
 			if [ -f "${fcmake}" ]; then
 				local fcmake_dst="${dir_src}/CMakeLists.txt"
-				cp -f "${fcmake}" "${fcmake_dst}" || doErr "Unable to copy ${fcmake} to ${fcmake_dst}"
+				cp -f "${fcmake}" "${fcmake_dst}" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"
 				unset cmakelists_ext
 			fi
 		fi
@@ -415,7 +380,7 @@ start(){
 		*)	if [ -n "${cfg_cmd}" ]; then
 				do_log 'config' ${cfg_cmd} ${cfg_args[@]}
 			else
-				doErr "cfg ${cfg} unknown or cfg_cmd not defined. Use build_config to custom configure makefile"
+				exit_err "cfg ${cfg} unknown or cfg_cmd not defined. Use build_config to custom configure makefile"
 			fi
 			;;
 		esac
@@ -521,9 +486,8 @@ start(){
 
 	fn_defined 'on_end' && fn_log '' on_end
 
-	local pcvrs=$(pkg-config --modversion ${pcfile})
-	local scrpt=${dir_root}/$(basename "$0")
-	test -n "${pcvrs}" && sed -i "s/dev_vrs='.*'/dev_vrs='"${pcvrs}"'/g" ${scrpt}
+	vrs=$(pkg-config --modversion ${pcfile})
+	test -n "${vrs}" && sed -i "s/dev_vrs='.*'/dev_vrs='"${vrs}"'/g" ${this_script}
 
 	end_script
 }	
@@ -622,17 +586,18 @@ doStrip(){
 
 end_script(){
 	log_end
+	sed -i "s/eta='.*'/eta='"${eta}"'/g" ${this_script}
 	# check if parent process is shell script
-	local parent=$(ps -o comm= $PPID)
-	[ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done${C0}\n"
-	$debug && set +x
+	local parent=$(ps -o comm= ${PPID})
+	[ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done ${C0}${lib} ${vrs}\n"
+	${debug} && set +x
 	unset	dir_config dir_build dir_src \
 			CSH CBN exec_config vrs vnd \
 			ac_nohost ac_nopic ac_nosysroot ac_opts ac_reconf \
 			req_pcforlibs mkc mki mingw_posix \
 			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
 	dec_tab
-	echo
+	echo -e "${C0}${ind}"
 	exit 0
 }
 
@@ -671,7 +636,7 @@ check_install(){
 		# check pkgconfig
 		pc|pkgconfig)
 			[ -z "${lst_pc}" ] && echo && return 0
-			for h in $lst_pc; do 
+			for h in ${lst_pc}; do 
 				test -z "$(ls "${dir_install}/lib/pkgconfig/${h}" 2>/dev/null)" && echo && return 0
 			done
 			echo 1
@@ -718,7 +683,7 @@ build_dependencies_old(){
 	local cf
 	local ldir
 	while [ -n "${1}" ]; do
-		[ -f "./${1}.sh" ] || doErr "no script file ${1}.sh.\n  Aborting..."
+		[ -f "./${1}.sh" ] || exit_err "no script file ${1}.sh.\n  Aborting..."
 		pkgfile=$(./${1}.sh ${arch} --get pc)
 		libname=$(./${1}.sh --get libname)
 		if [ ! -f "${pkgfile}" ]; then
@@ -801,273 +766,22 @@ cmake_create_toolchain(){
 cargo_create_toolchain(){
 cat <<-EOF >>cargo-config.toml
 	[target.aarch64-linux-android]
-	ar = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-	linker = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android${API}-clang"
+	ar = "/usr/aarch64-linux-android/bin/llvm-ar"
+	linker = "/usr/aarch64-linux-android/bin/clang"
 
 	[target.arm-linux-androideabi]
-	ar = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-	linker = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi${API}-clang"
+	ar = "/usr/arm-linux-androideabi/bin/llvm-ar"
+	linker = "/usr/arm-linux-androideabi/bin/clang"
 
 	[target.i686-linux-android]
-	ar = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-	linker = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android${API}-clang"
+	ar = "/usr/i686-linux-android/bin/llvm-ar"
+	linker = "/usr/i686-linux-android/bin/clang"
 
 	[target.x86_64-linux-android]
-	ar = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-	linker = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android${API}-clang"
+	ar = "/usr/x86_64-linux-android/bin/llvm-ar"
+	linker = "/usr/x86_64-linux-android/bin/clang"
 	EOF
 }
-
-# usage: check_tool_dependency <exe-name> <pkg-name>. returns path of exe-name
-check_tool_dependency(){
-	local nm
-	local pk
-	if [ -n "$1" ];then
-		nm=$1
-		[ -n "$2" ] && pk=$2 || pk=$1
-		[ -z $(command -v $nm) ] && apt_install $pk
-		nm=$(command -v $nm)
-	fi
-	echo $nm
-}
-
-
-check_tools(){
-	while [ -n "$1" ]; do
-		toolname=$1
-		toolpkg=$1
-		case $1 in
-			rust )      installRust && continue;;
-			libtool )   toolname=libtoolize;;
-			texinfo )   toolname=makeinfo;;
-			autotools ) autotools_check && continue;;
-		* ) ;;
-		esac
-		request_cmd ${toolname} ${toolpkg}
-		shift
-	done
-}
-
-# usage: chkTools tools...
-autotools_check(){
-	if [ -z $(command -v automake) ];then
-		tput sc
-		$sudo apt -qq install automake autogen autoconf m4 libtool-bin -y >/dev/null 2>&1 
-		tput rc
-	fi
-}
-
-# make args...
-do_make(){
-	make $@ 2>&1 | tee -a ${log_file} | grep -Eo "\[.+%\]" 
-}
-
-secs2time(){
-	[ $(($1/60%60)) -eq 0 ] && printf '%ds' $(($1%60)) || printf '%dm %ds' $(($1/60%60)) $(($1%60))
-}
-
-
-log_end(){
-	if ! ${inline} && [ -n "${logtime_start}" ]; then
-		logtime_end=$(date +%s)
-		#local pkgsize=$(du -sk ${dir_install} | cut -f1)
-		#local libsize=$(du -sk ${dir_install}/lib | cut -f1)
-		local secs=$(($logtime_end-$logtime_start))
-		local msg="${CT1} done ${CD}in $(secs2time ${secs})"
-		[ $secs -gt 60 ] && msg="$msg (${secs}s)"
-		#echo -e "$msg pkg/lib: ${pkgsize}/${libsize}kb${C0}"
-		echo -e "$msg"
-	fi
-}
-
-log(){
-	echo -ne "$CD$@$C0"
-}
-
-logf(){
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-}
-
-log_vars(){
-	local t;
-	while [ -n "$1" ]; do
-		echo "$1=${!1}" >>${log_file} 2>&1
-		shift
-	done
-	echo >>${log_file}
-}
-
-print_vars(){
-	while [ -n "$1" ]; do
-		printf "${CC0}%-20s: ${C0}%s\n" "  ${1}" ${!1}
-		shift
-	done
-}
-
-doErr(){
-	echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
-	if [ -f ${log_file} ];then
-		if [ -f ${dir_build}/CMakeFiles/CMakeError.log ];then
-		echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
-		cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
-		fi
-		echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
-		[ "$openlog" != "n" ] && nano ${log_file}
-	fi
-	exit 1
-}
-
-err(){
-	if [ -n "${logtime_start}" ]; then
-		logtime_end=$(date +%s)
-		echo -e "${CR1} fail ${CR0}[$(secs2time $(($logtime_end-$logtime_start)))]${C0}\n"
-	fi
-	if [ -f ${log_file} ];then
-		if [ -f ${dir_build}/CMakeFiles/CMakeError.log ];then
-		echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
-		cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
-		fi
-		echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
-		[ "$openlog" != "n" ] && nano ${log_file}
-	fi
-	echo
-	exit 1
-}
-
-log_this() {
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-	"$@" 2>> "${log_file}" 1>> "${log_file}" || err
-	logok
-}
-
-
-do_quietly(){
-	local var=$1; shift
-	echo -ne "${CD}${var}${C0}"
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-	"$@" >/dev/null 2>&1
-	logok $var
-}
-
-do_log() {
-	local var=$1; shift
-	echo -ne "${CD}${var}${C0}"
-	log_this $@
-	logok $var
-}
-
-do_progress() {
-	local var=$1; shift
-	echo -ne "${CD}${var}"
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-	("$@" |& tee -a ${log_file} | topct) || doErr "in ${var}:\n\n...\n$(tail -n5 ${log_file})${C0}"
-	logok $var
-}
-
-logok() {
-	echo -ne "\e[${#1}D${CT0}${1}${C0} "
-}
-
-# usage logver /path/to/pkgconfigfile.pc
-logver() {
-	if [ -f $1 ];then
-		echo -ne "${CT1}version $(pkg-config --modversion $1)${C0}"
-	else
-		echo -ne "${CS0} missing ${1} ${C0}"
-	fi
-}
-
-inline_ccmake(){
-	tput sc; ccmake $@; tput rc
-}
-
-isBottomRow(){
-	test "$(echo "lines"|tput -S)" == "$(IFS=';' read -sdR -p $'\e[6n' ROW COL && echo "${ROW#*[}")" && echo 1 || echo 0
-}
-
-# usage: do_git giturl [libname]
-do_git(){
-	do_log 'git' git clone $1 $2
-	cd $2
-	if [ -n "${bra}" ]; then
-		do_log ${bra} git checkout ${bra}
-	elif [ -n "${vrs}" ]; then
-		do_log ${vrs} git checkout tags/${vrs}
-	fi
-	if [ -n "${sub}" ];then
-		do_log 'sub' git ${sub}
-	fi
-	cd ..
-}
-
-prt_git_progress(){
-	tput civis
-	printf "%-8s"
-	local s0
-	local s1
-	local n1=0
-	while read -r ln; do
-		if ! [ "${ln%\'...}" == "${ln}" ]; then
-		printf "\e[7D"
-		printf "%-40s\e[40D"
-		s1=${ln#*\'}
-		s1=${s1##*/}
-		s1=${s1%\'...}
-		printf "\e[${n1}D"
-		n1=${#s1}
-		[ $n1 -gt 0 ] && printf " %-${n1}s" $s1
-		printf "%-6s"
-		else
-		s0=$(grep -oP '\d+%' <<< $ln)
-		[ -n "$s0" ] && printf "\e[5D%-5s" $s0
-		fi
-	done
-	[ $n1 -gt 0 ] && printf "\e[${n1}D"
-	printf "\e[7D"
-	tput cnorm
-}
-
-topct(){
-	local sln
-	local grp
-	tput civis
-	printf "build_system: %10s; make: %7s" ${build_system} ${MAKE_EXECUTABLE} >>${log_file}
-	if [ "${build_system}" == "cmake" ] && [ "$(basename ${MAKE_EXECUTABLE})" == "make" ]; then
-		printf "%-6s"
-		while read -r ln; do
-			str_contains "${ln}" 'error: ' && printf $CR1
-			sln=$(grep -oP '\d+%' <<< $ln)
-			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
-		done
-		printf "\e[6D"
-	elif [ "$(basename ${MAKE_EXECUTABLE})" == "ninja" ]; then
-		printf "%-12s"
-		while read -r ln; do
-			str_contains $ln 'error: ' && printf $CR1
-			sln=$(grep -oP '\[\d+/\d+\]' <<< $ln)
-			[ -n "$sln" ] && printf "\e[11D%-11s" $sln
-		done
-		printf "\e[12D"
-	else
-		printf "%-6s"
-		while read -r ln; do
-			sln+="." # ·
-			[ ${#sln} -eq 5 ] && sln=''
-			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
-		done
-		printf "\e[6D"
-	fi
-	tput cnorm
-}
-
-set_git_version(){
-	pushdir ${dir_src}
-	local v=$(git describe --abbrev=0 --tags 2>/dev/null)
-	[ -n "$v" ] && export vrs=$v
-	popdir
-}
-
-
 
 wget_pkg_tgz(){
 	local tag="$(basename ${1})"
@@ -1078,45 +792,6 @@ wget_pkg_tgz(){
 	echo -e "\n\n" >>${log_file}
 	logok $tag
 }
-
-# Usage: wget_targz src_url dest_dir
-wget_targz(){
-	pushd $(dirname $2)
-	wget -qO- $1 2>>${log_file} | tar --transform 's/^dbt2-0.37.50.3/dbt2/' -xvz -C $2 >/dev/null 2>&1 || err
-	popd
-}
-
-wget_tar(){
-	local tag="source"
-	local args=
-	echo -ne "${CD}${tag}${C0}"
-	echo -e "\n\n$@\n----------------------------------------\n" >> "${log_file}"
-	echo "$(date): $@" >> "${log_file}"
-	case $sty in
-		tlz|tar_lz) 
-		test -z $(command -v lzip) && apt_install lzip
-		ags="--lzip -xv"
-		;;
-		tgz|tar_gz) args="-xvz";;
-		txz|tar_xz) args="-xvJ";;
-	esac
-	wget -qO- $src 2>>${log_file} | tar --transform 's/^dbt2-0.37.50.3/dbt2/' $args >/dev/null 2>&1 || err
-	mv ${1}* ${lib}
-	echo -e "----------------------------------------\n" >> "${log_file}"
-	logok $tag
-}
-
-getZip(){
-	[ -z $(command -v unzip) ] && apt_install unzip
-	log download
-	wget $1 -O tmp.zip || err
-	log extract unzip tmp.zip
-	rm tmp.zip
-	logok
-}
-
-
-
 
 clean(){
 	echo -ne "${CT0}\n\tcleaning...\n"
@@ -1136,58 +811,38 @@ showOpts(){
 		local bdir=$(pwd)/builds
 		cd "${1}/${config_dir}"
 		[ -f CMakeLists.txt ] && ${CMAKE_EXECUTABLE} -LA | awk '{if(f)print} /-- Cache values/{f=1}' >${od}/builds/${lib}_cmake.opts && nano "${od}/builds/${lib}_cmake.opts"
-		[ -f configure ] && ./configure --help >${od}/builds/${lib}_aconf.opts && nano "${od}/builds/${lib}_aconf.opts"
+		[ -f configure ] && ./configure --help >${od}/builds/${lib}_aconf.opts && nano "${od}/builds/${lib}_am.opts"
 		cd $od
 	else
 		echo -e "${CD}${ind}${CR0}no configuration file found in ${CR1}${1}${CD}\n\n"
 	fi
 }
 
+function do_am_autoreconf {
+	local tag='autoreconf'
+	echo -ne "${CD}${tag}${C0}"
+	pushdir ${1}
+	log_this autoreconf -fiv
+	popdir
+	logok ${tag}
+}
 
-
-doAutogen(){
-	[ $1 ] || doErr "missing arg in doAutogen: usage doAutogen <AUTOGEN_DIR>"
-	local var="autogen"
-	echo -ne "${CD}${var}${C0}"
-	pushdir $1
-	shift
-	case $1 in
+function do_am_autogen {
+	local tag='autoreconf'
+	echo -ne "${CD}${tag}${C0}"
+	pushdir ${1} && shift
+	case ${1} in
 		--noerr ) ./autogen.sh >>${log_file} 2>&1;;
 		--noconfigure ) NOCONFIGURE=1 log_this ./autogen.sh;;
 		* ) log_this ./autogen.sh;;
 	esac
 	popdir
-	logok $var
-}
-
-doAutoreconf(){
-	local d=${1}
-	local var="autoreconf"
-	local od=$(pwd)
-	[ -z "${d}" ] && d=${dir_config}
-	echo -ne "${CD}${var}${C0}"
-	cd $d
-	log_this autoreconf -fi
-	cd $od
-	logok $var
-}
-
-download(){
-	# bsdtar from stdin doesnt extract file +x permission
-	# wget -qO- $1 | bsdtar -xvf- >/dev/null 2>&1
-	echo -ne " ${CD}checking tools"
-	test -z $(command -v unzip) && apt_installBr unzip
-	echo -ne " ${CS0}downloading..."
-	tput sc && echo -ne "\e[$(tput lines);0H${CY1}"
-	wget --progress=dot $1 -O tmp.zip 2>&1 | grep --line-buffered "%" | sed -u -e "s,\.,,g" | awk '{printf("\r%4s %s eta:%s  ",$2,$1,$4)}'
-	tput rc
-	echo -ne "${CS0} decompressing... ${C0}"
-	unzip tmp.zip >/dev/null 2>&1 && rm tmp.zip || err
+	logok ${tag}
 }
 
 toolchain_android(){
 	PLATFORM='Android'
-	[ -d "${ANDROID_NDK_HOME}" ] || doErr "No ANDROID NDK Toolchain found. Aborting."
+	[ -d "${ANDROID_NDK_HOME}" ] || exit_err "No ANDROID NDK Toolchain found. Aborting."
 
 	TOOLCHAIN="/usr/${arch}"
 	SYSROOT="${TOOLCHAIN}/sysroot"
@@ -1394,14 +1049,14 @@ set_env(){
 	esac
 	case ${target_trip[3]} in
 		android) host_sys=linux;   host_mingw=false; host_os=android; host_ndk=true;	host_gnu=false;	host_clang=true;  PLATFORM="Android"
-		dir_install="/usr/${arch}/local"
-		;;
+		         dir_install="/usr/${arch}/local"
+		         ;;
 		gnu)     host_sys=linux;   host_mingw=false; host_os=gnu;     host_ndk=false;	host_gnu=true;	host_clang=false; PLATFORM="Linux"
-		dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
-		;;
+		         dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
+		         ;;
 		mingw32) host_sys=windows; host_mingw=true;  host_os=mingw32; host_ndk=false;	host_gnu=false;	host_clang=true;  PLATFORM="Windows"
-		dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
-		;;
+		         dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
+		         ;;
 	esac
 	#LIBSDIR="$(pwd)/builds/${PLATFORM,,}/${target_trip[5]}"
 	export dir_install
@@ -1412,7 +1067,7 @@ set_env(){
 }
 
 checkForArch(){
-	case $1 in
+	case "${1}" in
 		native)		set_target_build; host_native=true;;
 
 		$aa64 )		set_target '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6;;
@@ -1495,42 +1150,44 @@ while [ $1 ];do
 		$wx86 )		set_target '10' 'i686' '' 'w64' 'mingw32' '' 'x86' '32' $CB0 $CB1;;
 		$wx64 )		set_target '11' 'x86_64' '' 'w64' 'mingw32' '' 'x86_64' '64' $CB0 $CB1;;
 
+		--shared)   build_shared=true; build_static=false;;
+		--static)   build_static=true; build_shared=false;;
+		--both)     build_static=true; build_shared=true;;
+		--bin)      build_bin=true;;
+
 		--full)    	build_shared=true
 					build_static=true
 					build_bin=true
 					build_dist=true
 					dep_build="--full"
 					;;
+		
+		--prefix)   shift; dir_install=$1;;
+		--clang)    use_clang=true;;
+		--gcc)      use_clang=false;;
 
-		--break)    shift; set_break $1;;
+		--new)      shift; generate_script $@; exit 0;;
+		--break)    shift; set_break ${1};;
 
-		$optVrs)	shift; vrs=$1;;
-
-		--bra*)     shift; export bra=$1;;
-		--shared)   build_shared=true; build_static=false;;
-		--static)   build_static=true; build_shared=false;;
-		--both)     build_static=true; build_shared=true;;
-		--bin)      build_bin=true;;
+		$optVrs)	shift; vrs="${1}";;
 		--devel)    src_rel=false;;
+		--bra*)     shift; export bra="${1}";;
 		--checkout) git_checkout=true;;
-		--no-bin)   build_bin=false;;
+		
+		--force)    [ -f "${dir_install_pc}/${pkg}.pc" ] && rm "${dir_install_pc}/${pkg}.pc" 2>/dev/null;;
+
 		--man)      build_man=true;;
 		--dist)     build_dist=true;;
 		--cpack)    build_cpack=true;;
 		--strip)    build_strip=true;;
 		--api)      shift; export API=$1;;
-		--clang)    use_clang=true;;
-		--gcc)      use_clang=false;;
 		--tune)     shift; menu_tune $1;;
 		--cpus)     loadToolchain; $CC --print-supported-cpus; exit 0;;
 		--mcpu)		shift; export CPPFLAGS+=" -mcpu=${1}";;
 		--mtune)	shift; export CPPFLAGS+=" -mtune=${1}";;
-		--new)      shift; generate_script $@; exit 0;;
-
+		
 		$optDnl)	build_download=true;;
 
-		--prefix)   shift; dir_install=$1;;
-		--stable)   git_stable=true;;
 		--diff)     shift; create_diff $@; exit 0;;
 		--update)   update=true;;
 		--upd-all)  update=true; req_update_deps=true;;
@@ -1540,7 +1197,7 @@ while [ $1 ];do
 		--var)      shift; echo "$($1)"; exit 0;;
 		--refresh)  update=true;;
 		--retry)    retry=true;;
-		--force)    [ -f "${dir_install_pc}/${pkg}.pc" ] && rm "${dir_install_pc}/${pkg}.pc" 2>/dev/null;;
+		
 		
 		--clear)    shift; menu_clear $@; exit 0;;
 		--desc )    echo $dsc && exit 0;;
@@ -1568,7 +1225,6 @@ while [ $1 ];do
 
 		--dirbuild) shift; dir_build=$1;;
 		--inline)   inline=true;;
-		--clone)    only_repo=true;;   
 		--cmake)    cfg='cmake';;
 		--ndkcmake) ndkcmake=true;;
 		--ccmake)   cfg='ccm';;
@@ -1633,4 +1289,31 @@ CSH CBN LIBSDIR PLATFORM CPU ABI EABI \
 host_arch host_64 host_eabi host_vnd host_arm host_os \
 mingw_posix MAKE_EXECUTABLE cmake_includes
 
-main
+
+# exit if missing vars lib arch or src
+if [ -z "${lib}" ]; then
+	echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
+	return 0
+fi
+
+inc_tab
+
+if [ -z "${lic}" ] || [ -z "${dsc}" ];then
+	gitjson="$(git_api_tojson ${src})"
+	if [ -n "${gitjson}" ];then
+		#echo -ne "${CY1}${b}${C0}"
+		: "${lic:=$(echo "$gitjson" | jq .licence)}"
+		: "${dsc:=$(echo "$gitjson" | jq .description)}"
+	fi
+fi
+
+# show package info
+export log_file="${dir_install}/${lib}.log"
+
+if [ -z "$(check_install pc)" ]; then
+	package_showinfo
+elif ${update} || ${retry} || ${git_checkout}; then
+	package_showinfo
+else
+	end_script    
+fi

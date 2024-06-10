@@ -5,7 +5,7 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='libxcb'
-apt='libxcb1-dev'
+pkg_deb='libxcb1-dev'
 dsc='C interface to the X Window System protocol, which replaces the traditional Xlib interface.'
 lic='GLP-2.0'
 vrs='1.12'

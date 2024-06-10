@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libgme'
-apt='libgme-dev'
+pkg_deb='libgme-dev'
 dsc='Blarggs video game music emulation library'
 lic='LGPL-2.1'
 src='https://bitbucket.org/mpyne/game-music-emu.git'

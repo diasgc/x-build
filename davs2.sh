@@ -6,13 +6,15 @@ lic='GPL-2.0'
 src='https://github.com/pkuvcl/davs2.git'
 #src_rel=false
 cfg='ac'
-eta='40'
+
 ac_bin="--disable-cli| "
 build_static=''
 build_shared='--enable-shared'
 
 dev_bra='main'
 dev_vrs='1.6.0'
+pkg_deb="libdavs2-dev"
+eta='40'
 
 lst_inc='davs2.h davs2_config.h'
 lst_lib='libdavs2'

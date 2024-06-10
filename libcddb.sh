@@ -2,7 +2,7 @@
 
 #vrs='1.3.2'
 lib='libcddb'
-apt='libcddb2-dev'
+pkg_deb='libcddb2-dev'
 dsc='CDDB server access library'
 lic='GPL?'
 src='https://salsa.debian.org/nickg/libcddb.git'

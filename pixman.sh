@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='pixman'
-apt='libpixman-1-dev'
+pkg_deb='libpixman-1-dev'
 pkg='pixman-1'
 dsc='Pixel-manipulation library for X and cairo'
 lic='GPL-2.0'

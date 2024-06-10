@@ -9,6 +9,8 @@ dsc='OpenGL Utility Toolkit'
 lic='GLP-2.0'
 src='https://github.com/markkilgard/glut.git'
 eta='0'
+pkg_deb="librust-glutin-glx-sys-dev"
+
 
 cfg='' #missing build-system
 

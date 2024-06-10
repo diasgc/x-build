@@ -1,14 +1,12 @@
 #!/bin/bash
 
 lib='libxml2'
-apt="${lib}-dev"
 dsc='GNOME XML library'
 lic='GPL'
 src='https://gitlab.gnome.org/GNOME/libxml2.git'
 cfg='am'
 dep='liblzma'
 pkg='libxml-2.0'
-eta='90'
 
 cmake_config='-DLIBXML2_WITH_TESTS=OFF -DLIBXML2_WITH_PYTHON=OFF'
 cmake_bin='LIBXML2_WITH_PROGRAMS'
@@ -16,8 +14,8 @@ ac_config='--without-debug --without-python'
 
 dev_bra='master'
 dev_vrs='2.9.12'
-stb_bra=''
-stb_vrs='2.9.12'
+pkg_deb="${lib}-dev"
+eta='90'
 
 lst_inc='libxml2/libxml/*.h'
 lst_lib='libxml2'

@@ -11,12 +11,12 @@ src='https://github.com/aria2/aria2.git'
 url='https://aria2.github.io/'
 cfg='ar'
 dep='openssl expat libssh2 sqlite3 libcares'
-eta='600'
+
 
 dev_bra='main'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+eta='600'
+pkg_deb='libaria2-0-dev'
 
 lst_inc=''
 lst_lib=''

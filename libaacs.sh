@@ -6,7 +6,7 @@
 # mingw-llvm  ... ... ... ...
 
 lib='libaacs'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='Cross-platform open-source implementation of the AACS specification'
 lic='LGPL-2.1'
 src='https://code.videolan.org/videolan/libaacs.git'

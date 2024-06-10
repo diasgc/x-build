@@ -5,7 +5,7 @@
 # WIN  F  ... ... ... CLANG/GCC
 
 lib='libiec61883'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='An isochronous streaming media library for IEEE 1394'
 lic='LGPL-2.1'
 src='https://github.com/Distrotech/libiec61883.git'

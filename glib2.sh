@@ -2,7 +2,7 @@
 
 lib='glib2'
 pkg='glib-2.0'
-apt='libglib2.0-dev'
+pkg_deb='libglib2.0-dev'
 dsc='GLib is a library containing many useful C routines for things such as trees, hashes, lists, and strings'
 lic='LGPL-2.1'
 src='https://gitlab.gnome.org/GNOME/glib.git'

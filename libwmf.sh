@@ -2,14 +2,16 @@
 
 lvr='0.2.12'
 lib='libwmf'
-apt='libwmf-dev'
 dsc='Library for Converting Metafile Images'
 lic='GPL-2.0'
 src='https://github.com/caolanm/libwmf.git'
 cfg='ar'
 dep='freetype expat libpng libjpeg'
-eta='60'
 mki='install'
+
+dev_vrs=''
+pkg_deb='libwmf-dev'
+eta='60'
 
 lst_inc=''
 lst_lib=''

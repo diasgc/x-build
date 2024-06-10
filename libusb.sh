@@ -6,7 +6,7 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='libusb'
-apt='libpscs-dev'
+pkg_deb='libpscs-dev'
 pkg='libusb-1.0'
 dsc='A cross-platform library to access USB devices'
 lic='LGPL-2.1'

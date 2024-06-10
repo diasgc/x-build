@@ -1,12 +1,10 @@
 #!/bin/bash
 
 lib='libzstd'
-apt='libzstd-dev'
 dsc='Zstandard - Fast real-time compression algorithm'
 lic='BSD GPL-2.0'
 src='https://github.com/facebook/zstd.git'
 cfg='cmake'
-eta='78'
 
 cmake_static="ZSTD_BUILD_STATIC"
 cmake_shared="ZSTD_BUILD_SHARED"
@@ -15,6 +13,9 @@ cmake_bin="ZSTD_BUILD_PROGRAMS"
 config_dir='build/cmake'
 
 dev_vrs='1.5.6'
+pkg_deb='libzstd-dev'
+eta='78'
+
 lst_inc='zstd_errors.h zstd.h zdict.h'
 lst_lib='libzstd'
 lst_bin='zstdgrep zstd zstdless'

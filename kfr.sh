@@ -10,6 +10,8 @@ lic='GLP-2.0'
 src='https://github.com/kfrlib/kfr.git'
 cfg='cmake'
 eta='0'
+pkg_deb="golang-github-russross-blackfriday-v2-dev"
+
 
 lst_inc=''
 lst_lib=''
@@ -18,6 +20,8 @@ lst_lic='LICENSE.txt'
 lst_pc=''
 
 eta='20'
+pkg_deb="golang-github-russross-blackfriday-v2-dev"
+
 
 . xbuild && start
 

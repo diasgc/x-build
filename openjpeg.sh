@@ -1,7 +1,6 @@
 #!/bin/bash
 
 lib='openjpeg'
-apt='libopenjp2-7-dev'
 pkg='libopenjp2'
 dsc='OpenJPEG is an open-source JPEG 2000 codec written in C language.'
 lic='BSD-2c'
@@ -9,7 +8,6 @@ spdx_id='BSD-2-Clause'
 src='https://github.com/uclouvain/openjpeg.git'
 cfg='cmake'
 dep='lcms2 libtiff libpng'
-eta='123'
 cmake_bin='BUILD_CODEC'
 WFLAGS='-Wno-implicit-const-int-float-conversion'
 
@@ -20,6 +18,8 @@ lst_lic='LICENSE AUTHORS'
 lst_pc='libopenjp2.pc'
 
 dev_vrs='2.5.0'
+pkg_deb='libopenjp2-7-dev'
+eta='123'
 
 . xbuild && start
 

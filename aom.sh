@@ -1,16 +1,17 @@
 #!/bin/bash
 
 lib='aom'
-apt='libaom-dev'
 dsc='Alliance for Open Media AV1 codec'
 lic='BSD-2c'
 src='https://aomedia.googlesource.com/aom.git'
 cfg='cmake'
 tls='perl'
-eta='240'
+
 
 dev_bra='main'
 dev_vrs='3.9.0'
+eta='240'
+pkg_deb='libaom-dev'
 
 lst_inc='aom/*.h'
 lst_lib='libaom'

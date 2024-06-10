@@ -7,7 +7,7 @@
 
 lib='liba52'
 vrs='0.7.4'
-apt="liba52-${vrs}-dev"
+pkg_deb="liba52-${vrs}-dev"
 dsc='liba52 is a free library for decoding ATSC A/52 streams'
 lic='GPL'
 src="https://liba52.sourceforge.io/files/a52dec-${vrs}.tar.gz"

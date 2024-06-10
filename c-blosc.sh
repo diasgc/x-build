@@ -2,7 +2,6 @@
 
 lib='c-blosc'
 pkg='blosc'
-apt='libblosc-dev'
 dsc='A blocking, shuffling and loss-less compression library that can be faster than memcpy().'
 lic='Other'
 src='https://github.com/Blosc/c-blosc.git'
@@ -22,6 +21,7 @@ lst_lic='LICENSES/*'
 lst_pc='blosc.pc'
 
 dev_vrs='1.21.2'
+pkg_deb='libblosc-dev'
 
 on_config_arm(){
     cmake_config+=" -DDEACTIVATE_SSE2=ON -DDEACTIVATE_AVX2=ON"

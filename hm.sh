@@ -6,6 +6,8 @@ lic='BSD-3c'
 src='https://vcgit.hhi.fraunhofer.de/jvet/HM.git'
 cfg='cmake'
 eta='240'
+pkg_deb="rhythmbox-dev"
+
 
 lst_inc=''
 lst_lib=''

@@ -7,6 +7,8 @@ src='https://github.com/xiph/flac.git'
 cfg='cmake'
 dep='ogg libiconv'
 eta='60'
+pkg_deb="librust-symphonia-bundle-flac-dev"
+
 
 lst_inc='FLAC++/*.h FLAC/*.h'
 lst_lib='libFLAC libFLAC++'

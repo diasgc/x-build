@@ -6,6 +6,8 @@ lic='Other'
 src='https://github.com/GrokImageCompression/grok.git'
 cfg='cmake'
 eta='35'
+pkg_deb="libsigrokdecode-dev"
+
 cmake_config='-DBUILD_TESTING=OFF -DGRK_BUILD_DOC=OFF -DGRK_BUILD_CODEC=OFF' # -Dtiff-docs=OFF -Dtiff-contrib=OFF -Dtiff-tests=OFF -Dtiff-tools=OFF'
 #cmake_config+='-DGRK_BUILD_JPEG=OFF -DGRK_BUILD_LCMS2=OFF -DGRK_BUILD_LIBPNG=OFF -DGRK_BUILD_LIBTIFF=OFF'
 # (ndk-)clang is not able to compile a simple test program. (libjpeg-turbo)
@@ -22,7 +24,7 @@ lst_lic='LICENCE'
 lst_pc=''
 
 on_config_ndk(){
-    exit_err 'Not for Android Platform'
+    exit_err 'Android not supported'
 }
 
 . xbuild && start

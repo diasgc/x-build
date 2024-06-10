@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='id3v2'
-apt='id3v2-dev'
+pkg_deb='id3v2-dev'
 dsc='Command line id3v2 tag editor'
 lic='GPL-2.0'
 src='https://salsa.debian.org/debian/id3v2.git'

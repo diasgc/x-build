@@ -5,7 +5,7 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='lcms2'
-apt='liblcms2-dev'
+pkg_deb='liblcms2-dev'
 dsc='A free, open source, CMM engine. It provides fast transforms between ICC profiles'
 lic='BSD-2c'
 src='https://github.com/mm2/Little-CMS.git'

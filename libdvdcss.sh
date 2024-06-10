@@ -6,7 +6,7 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='libdvdcss'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='Library for accessing DVDs like block devices with transparent decryption'
 lic='GPL-2.0'
 src='https://code.videolan.org/videolan/libdvdcss.git'

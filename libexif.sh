@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libexif'
-apt='libexif-dev'
+pkg_deb='libexif-dev'
 dsc='A library for parsing, editing, and saving EXIF data'
 lic='LGPL-2.1'
 src='https://github.com/libexif/libexif.git'

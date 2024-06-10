@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libcares'
-apt='libc-ares2'
+pkg_deb='libc-ares2'
 dsc='A C library for asynchronous DNS requests'
 lic='MIT'
 src='https://github.com/c-ares/c-ares.git'

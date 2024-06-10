@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libdeflate'
-apt='libdeflate-dev'
+pkg_deb='libdeflate-dev'
 dsc='Fast, whole-buffer DEFLATE-based compression and decompression'
 lic='MIT'
 src="https://github.com/ebiggers/libdeflate.git"

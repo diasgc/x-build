@@ -2,7 +2,7 @@
 
 lib='libaec'
 pkg='aec'
-apt='libaec-dev'
+pkg_deb='libaec-dev'
 dsc='Adaptive Entropy Coding library'
 lic='BSD-s2c'
 src='https://gitlab.dkrz.de/k202009/libaec.git'

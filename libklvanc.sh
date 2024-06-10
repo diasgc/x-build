@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libklvanc'
-apt=''
+pkg_deb=''
 dsc='VANC Processing Framework'
 lic='LGPL-2.1'
 src='https://github.com/stoth68000/libklvanc.git'

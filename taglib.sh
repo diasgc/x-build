@@ -1,17 +1,18 @@
 #!/bin/bash
 
 lib='taglib'
-apt='libtag1v5'
 dsc='TagLib Audio Meta-Data Library'
 lic='LGPL-2.1 MPL'
 src='https://github.com/taglib/taglib.git'
 cfg='cmake'
 patch="taglib-01"
-eta='60'
 cmake_bin='BUILD_EXAMPLES'
 cmake_static='BUILD_STATIC_LIBS'
 
 dev_vrs='2.0'
+pkg_deb='libtag1-dev'
+eta='60'
+
 lst_inc='taglib/*.h'
 lst_lib='libtag libtag_c'
 lst_bin='tagreader 

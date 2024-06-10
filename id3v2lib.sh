@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='id3v2lib'
-apt='id3lib-dev'
+pkg_deb='id3lib-dev'
 dsc='id3v2lib is a library written in C to read and edit id3 tags from mp3 files'
 lic='BSD-2c'
 src='https://github.com/larsbs/id3v2lib.git'

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='soxr'
-apt='libsoxr-dev'
+pkg_deb='libsoxr-dev'
 dsc='The SoX resampler library'
 lic='LGPL-2.1'
 src='https://git.code.sf.net/p/soxr/code.git'

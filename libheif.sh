@@ -5,7 +5,7 @@
 #  +   .   .   .   +   F   .   .   .   .   .  bin
 
 lib='libheif'
-apt='libheif-dev'
+pkg_deb='libheif-dev'
 dsc='HEIF and AVIF file format decoder and encoder'
 lic='LGPL-3.0'
 src='https://github.com/strukturag/libheif.git'

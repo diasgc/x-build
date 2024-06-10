@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libnuma'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='Library for tuning for Non Uniform Memory Access machines (linux)'
 lic='GPL-2.0'
 src='https://github.com/numactl/numactl.git'

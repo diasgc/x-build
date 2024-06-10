@@ -11,12 +11,11 @@ vrs='4.20.0'
 #git="https://gitlab.com/samba-team/samba"
 src="https://download.samba.org/pub/samba/stable/samba-${vrs}.tar.gz"
 cfg='ac'
-eta='0'
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb='samba-dev'
+eta='0'
 
 lst_inc=''
 lst_lib=''

@@ -6,7 +6,7 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='libraw1394'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='Interface library for the Linux IEEE1394 drivers.'
 lic='LGPL-2.1'
 src='https://github.com/Distrotech/libraw1394.git'

@@ -3,7 +3,7 @@
 # TODO patch src/libjasper/CMakeLists.txt to support dual static-shared build
 
 lib='jasper'
-apt='jasper'
+pkg_deb='jasper'
 dsc='Image Processing/Coding Tool Kit'
 lic='JasPer'
 src='https://github.com/mdadams/jasper.git'

@@ -14,6 +14,7 @@ cmake_bin='BUILD_EXAMPLES'
 
 dev_bra='main'
 dev_vrs='1.10.1_DEV'
+pkg_deb='libssh2-1-dev'
 
 lst_inc='libssh2*.h'
 lst_lib='libssh2'

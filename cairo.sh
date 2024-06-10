@@ -1,18 +1,18 @@
 #!/bin/bash
 
 lib='cairo'
-apt='libcairo2-dev'
 dsc='Development files for the Cairo 2D graphics library'
 lic='LGPL-2.1'
-src='https://github.com/freedesktop/cairo.git'
+src='https://gitlab.freedesktop.org/cairo/cairo.git'
 cfg='meson'
 dep='zlib lzo glib2 libpng fontconfig freetype pixman'
-eta='86'
 
 meson_cfg='-Dxcb=disabled -Dxlib=disabled -Dxlib-xcb=disabled -Dtests=disabled -Dquartz=disabled -Dsymbol-lookup=disabled -Dspectre=disabled'
 
 dev_bra='master'
-dev_vrs='1.17.5'
+dev_vrs='1.18.1'
+pkg_deb='libcairo2-dev'
+eta='86'
 
 lst_inc='cairo/*.h'
 lst_lib='libcairo-gobject libcairo-script-interpreter libcairo libcairo-script-interpreter libcairo'

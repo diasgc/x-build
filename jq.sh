@@ -8,6 +8,8 @@ src='https://github.com/stedolan/jq.git'
 cfg='ar'
 dep='oniguruma'
 eta='575'
+pkg_deb="libjq-dev"
+
 pc_llib='-ljq'
 
 lst_inc='jv.h jq.h'

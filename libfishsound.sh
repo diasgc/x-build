@@ -7,7 +7,7 @@
 
 lib='libfishsound'
 pkg='fishsound'
-apt='libfishsound1-dev'
+pkg_deb='libfishsound1-dev'
 dsc='Simple API that wraps Xiph.Org audio codecs'
 lic='BSD-2c'
 src='https://gitlab.xiph.org/xiph/libfishsound.git'

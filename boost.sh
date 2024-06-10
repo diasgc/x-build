@@ -8,6 +8,8 @@ src_opt='--recursive'
 cfg='cmake'
 dep='zlib liblzma libzstd bzip2 libicu libiconv'
 eta='1095'
+pkg_deb="libxgboost-dev"
+
 WFLAGS='-Wno-deprecated-declarations -Wno-format -Wno-implicit-const-int-float-conversion -Wno-#pragma-messages'
 
 dev_bra='master'

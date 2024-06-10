@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libwebp'
-apt='webp'
+pkg_deb='webp'
 dsc='Library to encode and decode images in WebP format'
 lic='BSD'
 src='https://chromium.googlesource.com/webm/libwebp.git'

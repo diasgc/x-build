@@ -6,7 +6,7 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='libasio'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='Asio C++ Library'
 lic='Boost'
 src='https://github.com/chriskohlhoff/asio.git'

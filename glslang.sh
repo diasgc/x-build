@@ -7,6 +7,8 @@ lic='BSD-3c'
 src='https://github.com/KhronosGroup/glslang.git' vrs='13.1.1'
 cfg='cmake'
 eta='147'
+pkg_deb="glslang-dev"
+
 pc_llibs='-lglslang -lOSDependent -lHLSL -lOGLCompiler -lSPVRemapper'
 
 dev_vrs='1.3.280'

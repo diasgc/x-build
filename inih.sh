@@ -11,6 +11,8 @@ vrs=''
 src="https://github.com/benhoyt/inih.git"
 cfg='meson'
 eta='0'
+pkg_deb="libinih-dev"
+
 
 dev_bra='master'
 dev_vrs='58'
@@ -24,5 +26,7 @@ lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
 eta='20'
+pkg_deb="libinih-dev"
+
 
 . xbuild && start

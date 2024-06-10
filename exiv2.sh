@@ -11,6 +11,8 @@ src='https://github.com/Exiv2/exiv2.git'
 cfg='cmake'
 dep='libiconv expat libpng inih'
 eta='60'
+pkg_deb="libkf5kexiv2-dev"
+
 # Options
 exiv2_xmp="ON"
 exiv2_png="ON"

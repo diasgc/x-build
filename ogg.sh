@@ -1,21 +1,22 @@
 #!/bin/bash
 
 lib='ogg'
-apt='libogg0'
 dsc='Ogg media container'
 lic='BSD'
 src='https://github.com/xiph/ogg.git'
 cfg='cmake'
 patch="ogg-01"
-eta='3'
-
-#ac_bin="--disable-extra-programs|--enable-extra-programs"
 
 lst_inc='ogg/*.h'
 lst_lib='libogg'
 lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='ogg.pc'
+
+dev_bra='master'
+dev_vrs='1.3.5'
+pkg_deb='libogg-dev'
+eta='96'
 
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config='-DBUILD_TESTING=OFF -DINSTALL_DOCS=OFF'

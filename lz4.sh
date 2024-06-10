@@ -2,7 +2,7 @@
 
 lib='lz4'
 pkg='liblz4'
-apt='liblz4-dev'
+pkg_deb='liblz4-dev'
 dsc='Fast LZ compression algorithm library'
 lic='BSD-2c GPL2.0'
 src="https://github.com/lz4/lz4.git"

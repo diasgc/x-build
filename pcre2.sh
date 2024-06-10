@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='pcre2'
-apt='libpcre2-dev'
+pkg_deb='libpcre2-dev'
 pkg='libpcre2-8'
 dsc='New Perl Compatible Regular Expression Library'
 lic='BSD-3c'

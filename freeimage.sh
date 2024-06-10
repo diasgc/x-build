@@ -6,7 +6,7 @@
 # mingw-llvm  ... ... ... ...
 
 lib='freeimage'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='Open Source library to support popular graphics image formats like PNG, BMP, JPEG, TIFF'
 lic='Other'
 src='https://svn.code.sf.net/p/freeimage/svn/FreeImage/trunk'

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 lib='libtiff'
-apt="${lib}-dev"
 dsc='TIFF Library and Utilities'
 lic='GPL?'
 src='https://gitlab.com/libtiff/libtiff.git'
@@ -16,13 +15,15 @@ cmake_tiff=
 cmake_config='-Dtiff-tests=OFF -Dtiff-docs=OFF -Dtiff-contrib=OFF'
 
 dev_vrs='4.6.0'
+pkg_deb="libtiff-dev"
+eta='12'
 
 lst_inc='tiffconf.h tiffvers.h tiff.h tiffio.hxx tiffio.h'
 lst_lib='libtiffxx libtiff'
 lst_bin='tiffmedian tiffset fax2ps tiff2bw tiffdither raw2tiff tiffsplit tiff2pdf fax2tiff tiff2rgba pal2rgb tiff2ps tiffcrop tiffcmp tiffinfo tiffcp tiffdump ppm2tiff'
 lst_lic='COPYRIGHT'
 lst_pc='libtiff-4.pc'
-eta='12'
+
 
 extraOpts(){
     case $1 in

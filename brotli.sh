@@ -6,7 +6,6 @@ dsc='Lossless compression algorithm and format'
 lic='MIT'
 src='https://github.com/google/brotli.git'
 cfg='cmake'
-eta='60'
 
 lst_inc='brotli/*.h'
 lst_lib='libbrotlidec libbrotlienc libbrotlicommon
@@ -18,8 +17,8 @@ lst_pc='libbrotlidec.pc libbrotlicommon.pc libbrotlienc.pc'
 
 dev_bra='master'
 dev_vrs='1.0.9'
-stb_bra=''
-stb_vrs=''
+eta='60'
+pkg_deb="libbrotli-dev"
 
 get_version(){
     c_printf 'c/common' 'version.h' '"%d.%d.%d",

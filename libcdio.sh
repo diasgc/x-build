@@ -2,7 +2,7 @@
 
 #vrs='2.1.0'
 lib='libcdio'
-apt='libcdio-dev'
+pkg_deb='libcdio-dev'
 dsc='Portable CD-ROM I/O library'
 lic='GPL-3.0'
 git='git://git.sv.gnu.org/libcdio.git'

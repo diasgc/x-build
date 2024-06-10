@@ -6,7 +6,7 @@
 
 lib='pscs'
 pkg='libpcsclite'
-apt='libpscs-dev'
+pkg_deb='libpscs-dev'
 dsc='Middleware to access a smart card using SCard API (PC/SC)'
 lic='BSD-3c'
 src='https://salsa.debian.org/rousseau/PCSC.git'

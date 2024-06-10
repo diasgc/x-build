@@ -7,6 +7,8 @@ lic='Apache2.0'
 src='https://github.com/google/highway.git'
 cfg='cmake'
 eta='10'
+pkg_deb="libhighwayhash-dev"
+
 
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config="-DBUILD_GMOCK=OFF -DBUILD_TESTING=OFF -DHWY_EXAMPLES_TESTS_INSTALL=ON"

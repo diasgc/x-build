@@ -2,7 +2,7 @@
 
 lib='leptonica'
 pkg='lept_Release'
-apt='libleptonica-dev'
+pkg_deb='libleptonica-dev'
 dsc='An open source C library for efficient image processing and image analysis operations'
 lic='copyleft'
 src='https://github.com/DanBloomberg/leptonica.git'

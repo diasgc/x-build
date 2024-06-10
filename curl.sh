@@ -11,8 +11,13 @@ dsc='A command line tool and library for transferring data with URL syntax'
 lic='Other'
 src='https://github.com/curl/curl.git'
 cfg='ar'
-eta='130'
+
 dep='zlib libzstd brotli openssl'
+
+dev_bra='master'
+dev_vrs=''
+eta='130'
+pkg_deb=''
 
 lst_inc='curl/*.h'
 lst_lib='libcurl'

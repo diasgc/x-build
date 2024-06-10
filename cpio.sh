@@ -8,7 +8,7 @@ lib='cpio'
 dsc='CPIO implementation from the GNU project'
 lic='GLP-2.0'
 src='https://git.savannah.gnu.org/git/cpio.git'
-eta='0'
+
 
 #options:
 #  --disable-largefile     omit support for large files
@@ -27,8 +27,8 @@ eta='0'
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+eta='0'
+pkg_deb=''
 
 lst_inc=''
 lst_lib=''

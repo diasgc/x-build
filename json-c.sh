@@ -7,6 +7,8 @@ lic='MIT'
 src='https://github.com/json-c/json-c.git'
 cfg='cmake'
 eta='80'
+pkg_deb="libnewtonsoft-json-cil-dev"
+
 
 lst_inc='json-c/*.h'
 lst_lib='libjson-c'

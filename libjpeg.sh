@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libjpeg'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='JPEG image codec that uses SIMD instructions'
 lic='BSD'
 src='https://github.com/libjpeg-turbo/libjpeg-turbo.git'

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libpng'
-apt='libpng-dev'
+pkg_deb='libpng-dev'
 dsc='Portable Network Graphics support'
 lic='Other'
 src='https://git.code.sf.net/p/libpng/code.git'

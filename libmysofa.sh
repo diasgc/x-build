@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libmysofa'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='Reader for AES SOFA files to get better HRTFs'
 lic='BSD'
 src='https://github.com/hoene/libmysofa.git'

@@ -3,7 +3,7 @@
 # ERROR: /usr/bin/install: cannot stat '../bin/flite_time': No such file or directory
 
 lib='flite'
-apt='flite'
+pkg_deb='flite'
 dsc='A small fast portable speech synthesis system'
 lic='GPL-2+'
 #src='https://github.com/festvox/flite.git' cfg='ac'

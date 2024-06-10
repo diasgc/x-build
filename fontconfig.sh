@@ -8,6 +8,8 @@ cfg='meson'
 tls='gperf gettext autopoint'
 dep='libiconv freetype expat json-c libpng bzip2'
 eta='231'
+pkg_deb="librust-yeslogic-fontconfig-sys-dev"
+
 
 lst_inc='fontconfig/*.h'
 lst_lib='libfontconfig'

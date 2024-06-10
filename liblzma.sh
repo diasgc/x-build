@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='liblzma'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='General purpose data compression library'
 lic='GPL-3 LGPL-2.1'
 #vrs='v5.2.5' #stable, otherwise 5.3.2alpha will be used

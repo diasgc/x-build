@@ -7,7 +7,7 @@
 # run with --nodev option
 
 lib='sdl2'
-apt='libsdl2-dev'
+pkg_deb='libsdl2-dev'
 dsc='Simple Directmedia Layer'
 lic='BSD'
 src='https://github.com/libsdl-org/SDL.git'

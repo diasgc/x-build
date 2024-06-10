@@ -5,7 +5,7 @@
 #  -   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='libmodplug'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='The ModPlug mod file playing library.'
 lic='Public'
 src='https://github.com/Konstanty/libmodplug.git'

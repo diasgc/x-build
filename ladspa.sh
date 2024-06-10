@@ -6,7 +6,7 @@
 #  F   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='ladspa'
-apt='ladspa-sdk'
+pkg_deb='ladspa-sdk'
 dsc='Linux Audio Developers Simple Plugin API'
 lic='LGPL'
 vrs='1.17'

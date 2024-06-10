@@ -6,7 +6,7 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='libgcrypt'
-apt='libgcrypt20-dev'
+pkg_deb='libgcrypt20-dev'
 dsc='The GNU crypto library'
 lic='LGPL-2.1'
 src='https://dev.gnupg.org/source/libgcrypt.git'

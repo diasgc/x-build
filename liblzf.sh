@@ -6,8 +6,8 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='liblzf'
-apt='liblzf1'
 dsc='General purpose data compression library'
+url='http://oldhome.schmorp.de/marc/liblzf.html'
 lic='BSD-2c'
 src="http://dist.schmorp.de/liblzf/"
 cfg='cmake'
@@ -15,6 +15,7 @@ cmake_bin='BUILD_UTILITIES'
 patch='liblzf-01'
 
 dev_vrs='3.6'
+pkg_deb='liblzf-dev'
 eta='10'
 
 lst_inc='lzf.h'
@@ -23,7 +24,7 @@ lst_bin='lzf'
 lst_lic='LICENSE'
 
 on_create_pc(){
-    build_pkgconfig --libs=-llzf --url=http://oldhome.schmorp.de/marc/liblzf.html
+    build_pkgconfig --libs=-llzf
 }
 
 on_config(){

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='fdk-aac'
-apt='fdkaac'
+pkg_deb='fdkaac'
 dsc='A standalone library of the Fraunhofer FDK AAC code from Android'
 lic='Other'
 src='https://github.com/mstorsjo/fdk-aac.git'

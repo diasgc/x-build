@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='vorbis'
-apt='libvorbis0a'
+pkg_deb='libvorbis0a'
 dsc='Ogg Vorbis audio format'
 lic='BSD'
 src='https://github.com/xiph/vorbis.git'

@@ -2,7 +2,7 @@
 
 lib='openexr'
 pkg='OpenEXR'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='Specification and reference implementation of the EXR file format'
 lic='BSD-2c'
 src='https://github.com/AcademySoftwareFoundation/openexr.git' #src_opt='--recurse-submodules'

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='libzen'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='Zenlib for MediaInfo'
 lic='Zlib'
 src='https://github.com/MediaArea/ZenLib.git'

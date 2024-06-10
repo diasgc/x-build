@@ -1,14 +1,15 @@
 #!/bin/bash
 
 lib='theora'
-apt='libtheora-dev'
+pkg_deb='libtheora-dev'
 dsc='Theora video compression format'
 lic='BSD'
 src='https://github.com/xiph/theora.git'
-#bra='tags/v1.1.1'
+bra='tags/v1.1.1'
+src_rel=false
 cfg='ag'
 dep='ogg vorbis'
-eta='391'
+eta='208'
 
 dev_bra='master'
 dev_vrs='1.1.1'
@@ -21,7 +22,7 @@ lst_bin='libtheoraenc libtheoradec libtheora'
 lst_lic='COPYING LICENCE AUTHORS'
 lst_pc='theora.pc theoraenc.pc theoradec.pc'
 
-_source_config(){
+source_config(){
     # dont run configure on autogen
     sed -i 's/^cd \$olddir/exit 0;&/' autogen.sh
     ./autogen.sh

@@ -5,7 +5,6 @@
 # WIN +++ +++  .  +++ clang/gcc
 
 lib='exhale'
-apt=''
 dsc='an open-source ISO/IEC 23003-3 (USAC, xHE-AAC) encoder'
 lic='BSD-3'
 src='https://gitlab.com/ecodis/exhale.git'
@@ -14,9 +13,8 @@ eta='8'
 pc_llib="-lexhale"
 
 dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs='v1.2.1'
+dev_vrs='v1.2.1'
+pkg_deb=''
      
 lst_inc='exhaleDecl.h'
 lst_lib='libexhale'

@@ -6,7 +6,7 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='libmediainfo'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='Convenient unified display of the most relevant technical and tag data for video and audio files.'
 lic='BSD-2c'
 src='https://github.com/MediaArea/MediaInfoLib.git'

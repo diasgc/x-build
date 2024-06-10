@@ -6,7 +6,7 @@
 # mingw-llvm  ... ... ... ...
 
 lib='systemd'
-apt='systemd-dev'
+pkg_deb='systemd-dev'
 dsc='The systemd System and Service Manager'
 lic='GPL-2.0'
 src='https://github.com/systemd/systemd.git'

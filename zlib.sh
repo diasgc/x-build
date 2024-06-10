@@ -5,7 +5,7 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='zlib'
-apt='zlib1g'
+pkg_deb='zlib1g'
 dsc='zlib compression library'
 lic='Zlib'
 src='https://github.com/madler/zlib.git'

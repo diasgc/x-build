@@ -6,18 +6,16 @@
 # mingw-llvm  ... ... ... ...
 
 lib='djview'
-apt='djview4'
 dsc='Multi-format archive and compression library'
 lic='GPL'
 vrs='4.12'
 src="https://git.code.sf.net/p/djvu/djview-git"
 cfg='ac'
-eta='100'
 
 dev_bra='main'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb='djview4'
+eta='100'
 
 lst_inc=''
 lst_lib=''

@@ -1,16 +1,12 @@
 #!/bin/bash
 
 lib='snappy'
-apt='libsnappy-dev'
 dsc='Snappy is a compression/decompression library'
 lic='BSD-3c'
 src='https://github.com/google/snappy.git'
 cfg='cmake'
 patch="snappy-01"
-eta='12'
 dep='lz4 lzo'
-
-pc_llib='-lsnappy'
 
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config="-DSNAPPY_BUILD_TESTS=OFF -DSNAPPY_BUILD_BENCHMARKS=OFF"
@@ -24,7 +20,12 @@ lst_pc='snappy.pc'
 
 dev_bra='master'
 dev_vrs='1.2.1'
+pkg_deb='libsnappy-dev'
+eta='112'
 
+on_create_pc(){
+    build_pkgconfig --libs=-lspappy
+}
 . xbuild && start
 
 # cpu av8 av7 x86 x64

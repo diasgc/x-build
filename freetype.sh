@@ -2,7 +2,7 @@
 
 lib='freetype'
 pkg='freetype2'
-apt='libfreetype-dev'
+pkg_deb='libfreetype-dev'
 dsc='A free, high-quality, and portable font engine.'
 lic='BSD'
 src='https://gitlab.freedesktop.org/freetype/freetype.git'
@@ -14,8 +14,8 @@ eta='60'
 cmake_config='-DFT_DISABLE_ZLIB=TRUE -DFT_DISABLE_BZIP2=TRUE -DFT_DISABLE_PNG=TRUE -DFT_DISABLE_HARFBUZZ=TRUE -DFT_DISABLE_BROTLI=TRUE'
 
 extraOpts(){
-    case $1 in --full)
-        dep='zlib bzip2 libpng harfbuzz brotlu'
+    case $1 in --all)
+        dep='zlib bzip2 libpng harfbuzz brotli'
         cmake_config='-DFT_REQUIRE_ZLIB=TRUE -DFT_REQUIRE_BZIP2=TRUE -DFT_REQUIRE=TRUE -DFT_REQUIRE_HARFBUZZ=TRUE -DFT_REQUIRE_BROTLI=TRUE'
         ;;
     esac

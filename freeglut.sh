@@ -10,34 +10,40 @@ lic='GLP-2.0'
 url='https://sourceforge.net/projects/freeglut'
 cfg='cmake'
 eta='0'
+pkg_deb="freeglut3-dev"
 
-#config_dir='freeglut/freeglut'
-#cmake_static='FREEGLUT_BUILD_STATIC_LIBS'
-#cmake_shared='FREEGLUT_BUILD_SHARED_LIBS'
+patch='freeglut-3.4.0'
 cmake_config='-DFREEGLUT_BUILD_DEMOS=OFF'
+cmake_shared='FREEGLUT_BUILD_SHARED_LIBS'
+cmake_static='FREEGLUT_BUILD_STATIC_LIBS'
+
 
 dev_bra='main'
 dev_vrs='3.2.2'
 
-lst_inc=''
+lst_inc='GL/freeglut.h
+ GL/freeglut_ucall.h
+ GL/freeglut_ext.h
+ GL/freeglut_std.h
+ GL/glut.h'
 lst_lib=''
 lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc=''
 
 eta='20'
+pkg_deb="freeglut3-dev"
+
 
 on_config(){
-    local f="$(sourceforge_json freeglut | jq -e .release.filename)"
+    local f="$(sourceforge_json freeglut | jq -r .release.filename)"
     vrs=$(grep -oP '[0-9]+\.[0-9]+\.[0-9]' <<<${f} | tail -n1)
     src='https://downloads.sourceforge.net/freeglut/freeglut-'${vrs}'.tar.gz'
 }
 
 on_config_ndk(){
-    CMAKE_EXECUTABLE="/home/diasgc/Android/Sdk/cmake/3.22.1/bin/cmake"
-    cmake_config+=' -DFREEGLUT_GLES=ON'
-    LDFLAGS+=" -llog -landroid -lEGL -lGLESv3"
-    unset CSH build_link
+    pkg='freeglut-gles'
+    lst_lib='libfreeglut-gles.a'
 }
 
 . xbuild && start

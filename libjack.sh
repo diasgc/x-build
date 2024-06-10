@@ -5,7 +5,7 @@
 #  .   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='libjack'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='Jack Audio Connection Kit: a low-latency synchronous callback-based media server'
 lic='GPL-2.0'
 src='https://github.com/jackaudio/jack2.git'

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lib='aribb25'
-apt='libaribb24-dev'
+pkg_deb='libaribb24-dev'
 dsc='Basic implementation of the ARIB STD-B25 public standard.'
 lic='ISC'
 src='https://code.videolan.org/videolan/aribb25.git'

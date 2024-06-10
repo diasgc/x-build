@@ -6,12 +6,10 @@
 
 lib='daala'
 pkg='daalaenc'
-apt=''
 dsc='Research video codec'
 lic='BSD-2c'
 src='https://gitlab.xiph.org/xiph/daala.git'
 dep='ogg libpng'
-eta='60'
 
 ac_bin="--disable-tools|--enable-tools"
 ac_config="--disable-doc \
@@ -22,8 +20,8 @@ ac_config="--disable-doc \
 
 dev_bra='main'
 dev_vrs='0.0-1731'
-stb_bra=''
-stb_vrs=''
+pkg_deb=''
+eta='60'
 
 lst_inc='daala/*.h'
 lst_lib='libdaalaenc libdaaladec libdaalabase'

@@ -7,7 +7,7 @@
 
 lib='mega'
 pkg='libmega'
-apt="${lib}-dev"
+pkg_deb="${lib}-dev"
 dsc='MEGA cloud storage C++ SDK'
 lic='BSD-2c'
 src='https://github.com/meganz/sdk.git' #src_opt='--recurse-submodules'

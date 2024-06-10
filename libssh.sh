@@ -9,8 +9,7 @@ dsc='The SSH library'
 lic='GLP-2.0'
 src='https://git.libssh.org/projects/libssh.git'
 cfg='cmake'
-eta='170'
-bra='stable-0.9'
+#bra='stable-0.9'
 
 dep='openssl'
 dep_opt='-DWITH_GCRYP=OFF -DWITH_MBEDTLS=OFF'
@@ -18,9 +17,10 @@ dep_opt='-DWITH_GCRYP=OFF -DWITH_MBEDTLS=OFF'
 cmake_static='BUILD_STATIC_LIB'
 cmake_config='-DWITH_EXAMPLES=OFF -DUNIT_TESTING=OFF'
 
-
 dev_bra='master'
-dev_vrs='0.9.8'
+dev_vrs='0.10.6'
+pkg_deb='libssh-dev'
+eta='304'
 
 lst_inc='libssh/*.h libssh/*.hpp'
 lst_lib='libssh'  
@@ -28,7 +28,7 @@ lst_bin=''
 lst_lic='COPYING BSD AUTHORS'
 lst_pc='libssh.pc'
 
-cmake_definitions=+( "-Wno-deprecated-declarations" )
+cmake_definitions+=(-Wno-deprecated-declarations)
 
 extraOpts(){
     case $1 in
@@ -39,7 +39,15 @@ extraOpts(){
 }
 
 on_config(){
+    if ${src_rel}; then
+        vrs='0.10.6'
+        src="https://git.libssh.org/projects/libssh.git/snapshot/libssh-${vrs}.tar.gz"
+    fi
     cmake_config+=" ${dep_opt}"
+}
+
+on_config_ndk(){
+    cmake_definitions+=(-D__USE_BSD=1)
 }
 
 . xbuild && start

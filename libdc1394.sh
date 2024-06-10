@@ -6,7 +6,7 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='libdc1394'
-apt='libdc1394-dev'
+pkg_deb='libdc1394-dev'
 dsc='IIDC Camera Control Library'
 lic='LGPL-2.1'
 vrs='2.2.7'

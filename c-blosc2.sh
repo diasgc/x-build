@@ -2,19 +2,19 @@
 
 lib='c-blosc2'
 pkg='blosc2'
-apt='libblosc-dev'
 dsc='A fast, compressed, persistent binary data store library for C.'
 lic='BSD-3c'
 src='https://github.com/Blosc/c-blosc2.git'
 url='https://www.blosc.org'
 cfg='cmake'
-eta='399'
 
 cmake_static='BUILD_STATIC' # default ON
 cmake_shared='BUILD_SHARED' # default ON
 cmake_config='-DBUILD_TESTS=OFF'
 
 dev_vrs='2.14.4'
+pkg_deb='libblosc2-dev'
+eta='399'
 
 lst_inc='blosc2.h blosc2/*.h'
 lst_lib='libblosc2'
