@@ -836,9 +836,10 @@ function prt_progress {
 	if [ "${build_system}" == "cmake" ] && [ "$(basename ${MAKE_EXECUTABLE})" == "make" ]; then
 		printf "%-6s"
 		while read -r ln; do
-			str_contains "${ln}" 'error: ' && printf $CR1
-			sln=$(grep -oP '\d+%' <<< $ln)
-			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
+			str_contains "${ln}" 'error: ' && printf ${CR1}
+      str_contains "${ln}" 'warning: ' && printf ${CY6}
+			sln=$(grep -oP '\d+%' <<<${ln})
+			[ -n "$sln" ] && printf "\e[5D%-5s" ${sln}
 		done
 		printf "\e[6D"
 	elif [ "$(basename ${MAKE_EXECUTABLE})" == "ninja" ]; then

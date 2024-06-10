@@ -6,13 +6,13 @@ dsc='A blocking, shuffling and loss-less compression library that can be faster 
 lic='Other'
 src='https://github.com/Blosc/c-blosc.git'
 cfg='cmake'
-eta='100'
+eta='112'
 
-WFLAGS='-Wno-unused-variable -Wno-unused-but-set-variable'
+WFLAGS='-Wno-unused-variable -Wno-unused-but-set-variable -Wno-deprecated-non-prototype'
 
 cmake_static='BUILD_STATIC'
 cmake_shared='BUILD_SHARED'
-cmake_config='-DBUILD_TESTS=OFF'
+cmake_config='-DBUILD_TESTS=OFF -DBUILD_BENCHMARKS=OFF -DBUILD_FUZZERS=OFF'
 
 lst_inc='blosc-export.h blosc.h'
 lst_lib='libblosc'
@@ -20,12 +20,8 @@ lst_bin=''
 lst_lic='LICENSES/*'
 lst_pc='blosc.pc'
 
-dev_vrs='1.21.2'
+dev_vrs='1.21.5'
 pkg_deb='libblosc-dev'
-
-on_config_arm(){
-    cmake_config+=" -DDEACTIVATE_SSE2=ON -DDEACTIVATE_AVX2=ON"
-}
 
 . xbuild && start
 

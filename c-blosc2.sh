@@ -14,7 +14,7 @@ cmake_config='-DBUILD_TESTS=OFF'
 
 dev_vrs='2.14.4'
 pkg_deb='libblosc2-dev'
-eta='399'
+eta='240'
 
 lst_inc='blosc2.h blosc2/*.h'
 lst_lib='libblosc2'

@@ -242,8 +242,8 @@ package_showinfo(){
 
 
 package_longdesc(){
-	if [ -n "${apt}" ]; then
-		echo -e $(apt-cache show ${apt} 2>/dev/null | \
+	if [ -n "${pkg_deb}" ]; then
+		echo -e $(apt-cache show ${pkg_deb} 2>/dev/null | \
 		grep -E "Description-..^|^ " | \
 		sed $'s/\*/\u2605/g' | \
 		sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/'"${ind}"'/g'
@@ -525,7 +525,7 @@ menu_get(){
 		pc-name)    echo "${pkg}";;
 		prefix)     echo "${dir_install}";;
 		libname)    echo "${lib}";;
-		aptname)    echo "${apt}";;
+		aptname)    echo "${pkg_deb}";;
 		var)        shift; echo "${!1}";;
 		vrs_latest) echo $(github_latest_tgz); exit 0;;
 		vrs_remote) fn_defined 'vremote' && version_parse "$(vremote)" || git_version_remote $src;;
