@@ -3,22 +3,40 @@
 # X-Build util 0.4.0 2024-diasgc
 # ................................................
 
+#set -x
+
 : "${banner:=true}"
 : "${config_timeout:=86400}"
-timeout_days=3
+: "${debug:=false}"
+: "${timeout_days:=3}"
 
-#set -x
 function trap_sigint {
 	tput cnorm -- normal
 	cd $(dirname $0)
 	echo -e "\n\n${CY1}  Interrupted by user${C0}\n  Log available at \e[4m${log_file}\e[24m\n\n"
 }
 
+# first load .common functions and error trap
+if [ -z ${vsh+x} ];then
+	source .common
+	source ./utils/.utils
+	source ./utils/.cmake
+	set -o pipefail
+	if [ "${1}" == "--debug" ];then
+		shift
+		set -x
+		debug=true
+	fi
+	trap err ERR
+	[ -f ".config" ] && source .config
+	if [ ! -f ".config" ] || test `expr $(date +%s) - ${config_lastupdate}` -gt $((config_timeout * timeout_days)); then
+		./x-setup
+		source .config || exit_err 'Unable to initialize config file'
+	fi
+fi
 sudo=$(command -v sudo)
 
 export HOST_NPROC=$(nproc)
-# defvar debug=false
-: "${debug:=false}"
 
 : "${ac_nohost:=false}"
 : "${ac_nosysroot:=false}"
@@ -51,16 +69,11 @@ export HOST_NPROC=$(nproc)
 : "${vnd:=}"
 : "${is_running:=false}"
 
-ndk_testtc=true
-
 pkg_fmt="tgz"
 
-cmake_toolchain_file=
-mingw_posix_suffix=
+
 update=false
 retry=false
-use_llvm_mingw=true
-use_clang=true
 
 break_on_git=false
 break_on_patch=false
@@ -68,10 +81,8 @@ break_on_config=false
 break_on_build=false
 break_on_make=false
 
-
 skip_pc=false
 skip_dl=false
-skip_cpack=true
 
 # default build static, no shared, no executables
 build_shared=false
@@ -80,34 +91,14 @@ build_bin=false
 build_man=false
 build_package=true
 
-build_usepkgflags=false
+use_clang=true
 ndkcmake=false
+cmake_toolchain_file=
 
 pc_filelist=
 
-shell_dstack=
-
 logtime_start=0
 logtime_end=0
-
-# first load .common functions and error trap
-if [ -z ${vsh+x} ];then
-	source .common
-	source ./utils/.utils
-	source ./utils/.cmake
-	set -o pipefail
-	if [ "${1}" == "--debug" ];then
-		shift
-		set -x
-		debug=true
-	fi
-	trap err ERR
-	[ -f ".config" ] && source .config
-	if [ ! -f ".config" ] || test `expr $(date +%s) - ${config_lastupdate}` -gt $((config_timeout * timeout_days)); then
-		./x-setup
-		source .config || exit_err 'Unable to initialize config file'
-	fi
-fi
 
 : "${API:=${ANDROID_NDK_API}}"
 : "${NDK_API:=${ANDROID_NDK_API}}"
@@ -189,10 +180,15 @@ start(){
 	[ -f "${log_file}" ] && rm -f ${log_file}
 
 	# Create INSTALL_DIR and PKGCONFIG DIR
-	mkdir -p ${dir_install_pc} ${dir_install}/share/pkgconfig
-	export PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
+	#mkdir -p ${dir_install_pc} ${dir_install}/share/pkgconfig
+	#export PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
+	#[ ! -d "${dir_install_pc}" ] && mkdir -p ${dir_install_pc}
+	#[ ! -d "${dir_install}/share/pkgconfig" ] && mkdir -p ${dir_install}/share/pkgconfig
+	export PKG_CONFIG_LIBDIR
 	export PKG_CONFIG_PATH=
-
+	str_contains "${PKG_CONFIG_LIBDIR}" "${dir_install}/share/pkgconfig" && PKG_CONFIG_LIBDIR="${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
+	str_contains "${PKG_CONFIG_LIBDIR}" "${dir_install_pc}" && PKG_CONFIG_LIBDIR="${dir_install_pc}:${PKG_CONFIG_LIBDIR}"
+	
 	# check build tools
 	check_tools ${tls}
 
@@ -292,15 +288,15 @@ start(){
 		# check if has patch function in source
 		fn_defined 'source_patch' && fn_log 'patch' source_patch
 		if [ -n "${cmake_file}" ] && [ -f "${dir_root}/cmake/${cmake_file}" ]; then
-			cp -f "${dir_root}/cmake/${cmake_file}" "${fcmake_dst}" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"
+			cp -f "${dir_root}/cmake/${cmake_file}" "${dir_src}/CMakeLists.txt" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"
+			unset cmake_file
 		fi
-			local fcmake="${dir_root}/cmake/${cmake_file}"
-			if [ -f "${fcmake}" ]; then
-				local fcmake_dst="${dir_src}/CMakeLists.txt"
-				cp -f "${fcmake}" "${fcmake_dst}" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"
-				unset cmake_file
-			fi
-		fi
+		#local fcmake="${dir_root}/cmake/${cmake_file}"
+		#if [ -f "${fcmake}" ]; then
+		#	local fcmake_dst="${dir_src}/CMakeLists.txt"
+		#	cp -f "${fcmake}" "${fcmake_dst}" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"
+		#	unset cmake_file
+		#fi
 	fi
 
 	${break_on_patch} && end_script
@@ -1302,6 +1298,8 @@ if [ -z "${lic}" ] || [ -z "${dsc}" ];then
 		: "${dsc:=$(echo "$gitjson" | jq .description)}"
 	fi
 fi
+
+test ! -d "${dir_install}" && mkdir -p "${dir_install}"
 
 # show package info
 export log_file="${dir_install}/${lib}.log"

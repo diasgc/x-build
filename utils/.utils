@@ -101,7 +101,7 @@ build_packages_bin(){
 		fi
 
 		build_packages_filelist
-		case $pkg_fmt in
+		case ${pkg_fmt} in
 			tgz) tar -czvf "${xb_distdir}.tar.gz" *;;
 			tbz) tar -cvjSf "${xb_distdir}.tar.bz2" *;;
 			zip) zip -r "${xb_distdir}.zip" *;;

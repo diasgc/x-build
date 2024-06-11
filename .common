@@ -284,7 +284,7 @@ function curl_tar {
 	
 	test -d "${dir_src}" && rm -rf "${dir_src}"
 	mkdir "${dir_src}"
-	curl -sL "${1}" 2>>"${log_file}" | tar "${args}" -C ${dir_src} --strip-components=1 2>>"${log_file}"
+	curl -sL "${1}" 2>>"${log_file}" | tar "${args}" --one-top-level=${dir_src} 2>>"${log_file}"
 	
 	logok "${tag}"
 }
@@ -296,7 +296,7 @@ function curl_targz {
 	echo "$(date): $@" >> "${log_file}"
   test -d "${dir_src}" && rm -rf "${dir_src}"
 	mkdir "${dir_src}"
-	curl -sL "${1}" 2>>"${log_file}" | tar -xz -C ${dir_src} --strip-components=1 2>>"${log_file}"
+	curl -sL "${1}" 2>>"${log_file}" | tar -xz --one-top-level=${dir_src} 2>>"${log_file}"
 	logok "${tag}"
 }
 
@@ -766,10 +766,10 @@ function log_start {
 function log_end {
 	if ! ${inline} && [ -n "${logtime_start}" ]; then
 		logtime_end=$(date +%s)
-		local secs=$(($logtime_end-$logtime_start))
+		local secs=$((${logtime_end}-${logtime_start}))
 		eta=$(secs2time ${secs})
 		echo -e "${CT1} done ${CD}in ${eta}"
-		eta="$((${eta//s/}*$(nproc)))"
+		eta="$((${secs}*$(nproc)))"
 	fi
 }
 
@@ -1051,6 +1051,8 @@ popv(){
 clearv(){
   unset shell_vstack
 }
+
+shell_dstack=
 
 pushdir(){
   case $SHELL in

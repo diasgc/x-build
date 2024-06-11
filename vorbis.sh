@@ -1,16 +1,16 @@
 #!/bin/bash
 
 lib='vorbis'
-pkg_deb='libvorbis0a'
 dsc='Ogg Vorbis audio format'
 lic='BSD'
 src='https://github.com/xiph/vorbis.git'
 cfg='cmake'
 patch="vorbis-01"
 dep='ogg'
-eta='77'
 
 dev_vrs='1.3.7'
+pkg_deb='libvorbis-dev'
+eta='77'
 
 lst_inc='vorbis/*.h'
 lst_lib='libvorbisfile libvorbisenc libvorbis'

@@ -6,7 +6,11 @@ dsc='Library for SRTP (Secure Realtime Transport Protocol)'
 lic='BSD-3c'
 src='https://github.com/cisco/libsrtp.git'
 cfg='meson'
-eta='35'
+
+dev_bra='master'
+dev_vrs='2.6.0'
+pkg_deb='libsrtp2-dev'
+eta='28'
 
 lst_inc='srtp2/*.h'
 lst_lib='libsrtp2'

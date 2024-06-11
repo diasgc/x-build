@@ -6,7 +6,6 @@ lic='BSD-3c'
 src='https://chromium.googlesource.com/webm/libvpx.git'
 #src_rel=false
 cfg='ac'
-eta='240'
 mki='install'
 
 ac_opts='--no-host --no-pic --no-sysroot'
@@ -22,10 +21,14 @@ lst_lic='LICENSE PATENTS AUTHORS'
 lst_pc='vpx.pc'
 
 dev_vrs='1.14.1'
+pkg_deb='libvpx-dev'
+eta='244'
 
 on_config(){
-  vrs='v1.14.1-rc1'
-  src='https://chromium.googlesource.com/webm/libvpx/+archive/v1.14.1-rc1.tar.gz'
+  if ${src_rel}; then
+    vrs='v1.14.1-rc1'
+    src="https://chromium.googlesource.com/webm/libvpx/+archive/${vrs}.tar.gz"
+  fi
   $build_shared && unset CSH #--enable-shared only supported on ELF, OS/2, and Darwin for now
 
   t2=$(arch_fromid arm64 armv7 x86 x86_64)

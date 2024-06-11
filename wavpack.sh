@@ -6,7 +6,6 @@ lic='BSD 3-clause'
 src='https://github.com/dbry/WavPack.git'
 cfg='cmake'
 #dep='libiconv'
-eta='30'
 
 lst_inc='wavpack/wavpack.h'
 lst_lib='libwavpack'
@@ -15,6 +14,8 @@ lst_lic='COPYING AUTHORS'
 lst_pc='wavpack.pc'
 
 dev_vrs='5.7.0'
+pkg_deb='libwavpack-dev'
+eta='30'
 
 . xbuild && start
 
