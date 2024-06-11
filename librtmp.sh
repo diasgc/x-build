@@ -12,7 +12,7 @@ dep='zlib openssl'
 eta='0'
 
 cfg='cmake'
-cmake_cmakelists='librtmp.cmake'
+cmake_file='librtmp.cmake'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='BUILD_EXECUTABLES'
 

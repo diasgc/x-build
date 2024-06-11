@@ -5,8 +5,7 @@ dsc='Small & portable byte-aligned LZ77 compression'
 lic='MIT'
 src='https://github.com/ariya/FastLZ.git'
 cfg='cmake'
-eta='30'
-cmake_cmakelists='fastlz.cmake'
+cmake_file='fastlz.cmake'
 
 lst_inc='fastlz.h'
 lst_lib='libfastlz'
@@ -15,6 +14,8 @@ lst_lic='LICENSE.MIT README.md'
 lst_pc='fastlz.pc'
 
 dev_vrs=''
+pkg_deb=''
+eta='30'
 
 . xbuild && start
 

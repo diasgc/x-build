@@ -7,7 +7,7 @@ cfg='cmake'
 src='https://github.com/pkuvcl/xavs2.git' 
 eta='40'
 bin='BUILD_EXECUTABLE'
-cmake_cmakelists='xavs2.cmake'
+cmake_file='xavs2.cmake'
 
 dev_vrs='1.3.232'
 lst_inc='xavs2*.h'

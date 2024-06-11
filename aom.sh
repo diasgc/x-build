@@ -7,11 +7,10 @@ src='https://aomedia.googlesource.com/aom.git'
 cfg='cmake'
 tls='perl'
 
-
 dev_bra='main'
 dev_vrs='3.9.0'
-eta='240'
 pkg_deb='libaom-dev'
+eta='240'
 
 lst_inc='aom/*.h'
 lst_lib='libaom'
@@ -19,12 +18,12 @@ lst_bin='aomdec aomenc'
 lst_lic='LICENSE PATENTS AUTHORS'
 lst_pc='aom.pc'
 
-cmake_static='CONFIG_STATIC=0|CONFIG_STATIC=1'
+cmake_static='CONFIG_STATIC'
 cmake_bin='ENABLE_EXAMPLES'
 cmake_config='-DENABLE_TESTS=OFF
-     -DENABLE_TOOLS=OFF
-     -DENABLE_TESTDATA=OFF
-     -DENABLE_DOCS=OFF'
+ -DENABLE_TOOLS=OFF
+ -DENABLE_TESTDATA=OFF
+ -DENABLE_DOCS=OFF'
 
 #$host_arm && cmake_config+=" -DCONFIG_RUNTIME_CPU_DETECT=0 -DAS_EXECUTABLE=${AS}"
 #$host_arm64 && cmake_config+=" -DAOM_NEON_INTRIN_FLAG="

@@ -9,7 +9,7 @@ dep='libpng bzip2'
 build_strip=false
 
 cmake_bin='BUILD_EXECUTABLES'
-cmake_cmakelists='aribb24.cmake'
+cmake_file='aribb24.cmake'
 cmake_config='-DINSTALL_DOCS=OFF'
 
 dev_bra='master'

@@ -6,7 +6,7 @@ dsc='VisualOn Adaptive Multi-Rate Wideband speech codec library'
 lic='Apache-2.0'
 src='https://github.com/mstorsjo/vo-amrwbenc.git'
 cfg='cmake'
-cmake_cmakelists='vo-amrwbenc.cmake'
+cmake_file='vo-amrwbenc.cmake'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='EXAMPLE'
 

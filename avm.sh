@@ -36,8 +36,8 @@ lst_pc=''
 
 eta='20'
 
-on_config(){
-    $host_ndk && cmake_include_directories+=("${ANDROID_NDK_HOME}/sources/android/cpufeatures")
+on_config_ndk(){
+    cmake_include_directories+=("${ANDROID_NDK_HOME}/sources/android/cpufeatures")
 }
 
 . xbuild && start

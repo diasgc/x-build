@@ -6,7 +6,7 @@ lic='GLP-2.0'
 src='https://git.code.sf.net/p/arj/git'
 cfg='cmake'
 eta='60'
-cmake_cmakelists='arj.cmake'
+cmake_file='arj.cmake'
 
 lst_inc=''
 lst_lib=''

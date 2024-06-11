@@ -290,15 +290,15 @@ start(){
 		require_src_patch=true
 	fi
 
-	if $require_src_patch; then
+	if ${require_src_patch}; then
 		# check if has auto patch embeded in source: depracated
 		patch_check_xbpatch
 		# check if has patch function in source
 		if fn_defined 'source_patch'; then
 			fn_log 'patch' source_patch
 		fi
-		if [ -n "${cmake_cmakelists}" ]; then
-			local fcmake="${dir_root}/cmake/$cmake_cmakelists"
+		if [ -n "${cmake_file}" ]; then
+			local fcmake="${dir_root}/cmake/${cmake_file}"
 			if [ -f "${fcmake}" ]; then
 				local fcmake_dst="${dir_src}/CMakeLists.txt"
 				cp -f "${fcmake}" "${fcmake_dst}" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"

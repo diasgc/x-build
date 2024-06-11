@@ -500,8 +500,8 @@ start(){
 		if fn_defined 'source_patch'; then
 			fn_log 'patch' source_patch
 		fi
-		if [ -n "${cmake_cmakelists}" ]; then
-			local fcmake="${dir_root}/cmake/$cmake_cmakelists"
+		if [ -n "${cmake_file}" ]; then
+			local fcmake="${dir_root}/cmake/${cmake_file}"
 			if [ -f "${fcmake}" ]; then
 				local fcmake_dst="${dir_src}/CMakeLists.txt"
 				cp -f "${fcmake}" "${fcmake_dst}" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"

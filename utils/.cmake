@@ -108,7 +108,7 @@ cmake_build_toolchainfile(){
 
 cmake_shouldreplace_cmakelists(){
 	test ! "x${cfg}" == "xcmake" && return 0
-	test -f "${dir_config}/CMakeLists.txt" && test -z "${cmake_cmakelists}" && return 0
+	test -f "${dir_config}/CMakeLists.txt" && test -z "${cmake_file}" && return 0
 	test -f "${dir_root}/cmake/${lib}.cmake" && return 1
 }
 
@@ -204,8 +204,8 @@ cmake_check_cmakefiles(){
 	if [ -f "${dir_root}/cmake/${lib}.cmake" ]; then
 		test -f "${dir_src}/CMakeLists.txt" && mv ${dir_src}/CMakeLists.txt ${dir_src}/CMakeLists.orig
 		cp ${dir_root}/cmake/${lib}.cmake ${dir_src}/CMakeLists.txt
-	elif [ -n "${cmake_cmakelists}" ]; then
-		cp ${dir_root}/cmake/${cmake_cmakelists} ${dir_src}/CMakeLists.txt
+	elif [ -n "${cmake_file}" ]; then
+		cp ${dir_root}/cmake/${cmake_file} ${dir_src}/CMakeLists.txt
 	fi
 	return 0
 }
