@@ -21,14 +21,19 @@ lst_pc='fftw3.pc'
 
 extraOpts(){
   case $1 in
-    -f|--float ) cmake_config+=" -DENABLE_FLOAT=ON" pkg='fftwf' pc_llib='-lfftwf';;
-    -l|--long )  cmake_config+=" -DENABLE_LONG_DOUBLE=ON" pkg='fftwl' pc_llib='-lfftwl';;
-    -q|--quad )  cmake_config+=" -DENABLE_QUAD_PRECISION=ON" pkg='fftwq' pc_llib=='-lfftwq';;
+    -f|--float ) cmake_config+=" -DENABLE_FLOAT=ON" pkg='fftwf' pclib='-lfftwf';;
+    -l|--long )  cmake_config+=" -DENABLE_LONG_DOUBLE=ON" pkg='fftwl' pclib='-lfftwl';;
+    -q|--quad )  cmake_config+=" -DENABLE_QUAD_PRECISION=ON" pkg='fftwq' pclib=='-lfftwq';;
+    *) pclib=
   esac
 }
 
 on_config(){
   $host_arm || cmake_config+=" -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_AVX=ON -DENABLE_AVX2=ON"
+}
+
+on_create_pc(){
+  build_pkgconfig --libs=${pclib}
 }
 
 . xbuild && start

@@ -3,12 +3,14 @@
 lib='libunistring'
 dsc='Unicode string library'
 lic='GLP-3.0'
-#src='https://git.savannah.gnu.org/git/libunistring.git'
+src='https://git.savannah.gnu.org/git/libunistring.git'
 url='https://ftp.gnu.org/gnu/libunistring'
-cfg='ac'
-eta='431'
+cfg='ar'
 dep='libiconv'
-pc_llib='-lunistring'
+
+dev_vrs='1.2'
+pkg_deb='libunistring-dev'
+eta='1872'
 
 lst_inc='unigbrk.h uniwidth.h uniwbrk.h unitypes.h unilbrk.h unistr.h unistdio.h uniname.h uninorm.h uniconv.h unicase.h unictype.h unistring/*.h'
 lst_lib='libunistring'
@@ -17,14 +19,19 @@ lst_lic='COPYING COPYING.LIB AUTHORS'
 lst_pc='libunistring'
 
 on_config(){
-    #vrs='latest'
-    vrs="$(curl -s "${url}/" | grep -oP '(?<=libunistring-)([0-9\.]+)(?=.tar.gz)' | tail -n 1)"
-    src="${url}/libunistring-${vrs}.tar.gz"
+    if ${src_rel}; then
+        tar_stripcomponents=true
+        vrs="$(curl -s "${url}/" | grep -oP '(?<=libunistring-)([0-9\.]+)(?=.tar.gz)' | tail -n 1)"
+        src="${url}/libunistring-${vrs}.tar.gz"
+    fi
 }
 
 before_make(){
-    #No docs
     sed -i 's/^SUBDIRS = doc /SUBDIRS = /g' Makefile
+}
+
+on_create_pc(){
+    build_pkgconfig --libs=-lunistring
 }
 
 . xbuild && start

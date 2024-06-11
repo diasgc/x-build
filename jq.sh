@@ -7,10 +7,6 @@ vrs='jq-1.6' # latest
 src='https://github.com/stedolan/jq.git'
 cfg='ar'
 dep='oniguruma'
-eta='575'
-pkg_deb="libjq-dev"
-
-pc_llib='-ljq'
 
 lst_inc='jv.h jq.h'
 lst_lib='libjq'
@@ -20,12 +16,16 @@ lst_pc='jq.pc'
 
 dev_bra='main'
 dev_vrs='1.6'
-stb_bra=''
-stb_vrs=''
+eta='575'
+pkg_deb="libjq-dev"
 
 on_config(){
     ac_config="--disable-maintainer-mode --disable-docs --with-oniguruma=${dir_install}"
     unset CSH build_link
+}
+
+on_create_pc(){
+  build_pkgconfig --libs=-ljq
 }
 
 . xbuild && start

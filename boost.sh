@@ -7,8 +7,6 @@ src='https://github.com/boostorg/boost.git'
 src_opt='--recursive'
 cfg='cmake'
 dep='zlib liblzma libzstd bzip2 libicu libiconv'
-eta='1095'
-pkg_deb="libxgboost-dev"
 
 WFLAGS='-Wno-deprecated-declarations -Wno-format -Wno-implicit-const-int-float-conversion -Wno-#pragma-messages'
 
@@ -24,7 +22,7 @@ lst_pc='boost.pc'
 pc_llib=null
 
 on_config(){
-    apt="$(apt search libboost 2>/dev/null | grep -oP 'libboost[0-9\.]+\-dev' | tail -n1)"
+    pkg_deb="$(apt search libboost 2>/dev/null | grep -oP 'libboost[0-9\.]+\-dev' | tail -n1)"
     if ${src_rel}; then
         vrs="$(github_latest_release boostorg/boost)"
         vrs="${vrs//boost-/}"

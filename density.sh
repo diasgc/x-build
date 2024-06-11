@@ -7,7 +7,6 @@ src='https://github.com/k0dai/density.git'
 sub='submodule update --init --recursive'
 cfg='cmake'
 patch='density-01' # create CMakeLists.txt
-pc_llib='-ldensity'
 
 dev_bra='main'
 dev_vrs='0.14.2'

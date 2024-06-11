@@ -6,9 +6,10 @@ dsc='VANC Processing Framework'
 lic='LGPL-2.1'
 src='https://github.com/stoth68000/libklvanc.git'
 cfg='meson'
-eta='60'
 
-pc_llib="-lklvanc"
+dev_vrs=''
+pkg_deb=''
+eta='60'
 
 lst_inc='libklvanc/*.h'
 lst_lib='libklvanc'
@@ -16,6 +17,10 @@ lst_bin='klvanc_eia708 klvanc_genscte104
          klvanc_scte104 klvanc_util klvanc_afd
          klvanc_smpte12_2 klvanc_smpte2038 klvanc_parse'
 lst_pc='libklvanc.pc'
+
+on_create_pc(){
+    build_pkgconfig --libs=-lklvanc
+}
 
 . xbuild && start
 

@@ -6,18 +6,22 @@ lic='Apache-2.0'
 src='https://github.com/simdjson/simdjson.git'
 cfg='cmake'
 patch="simdjson-01"
-eta='0'
 
 cmake_static='BUILD_STATIC_LIBS'
 
-pc_llib='-lsimdjson'
-
 dev_vrs='1.0.2'
+pkg_deb=''
+eta=0
+
 lst_inc='simdjson.h'
 lst_lib='libsimdjson'
 lst_bin=''
 lst_pc='simdjson.pc'
 lst_lic='LICENSE AUTHORS README.md'
+
+on_create_pc(){
+    build_pkgconfig --libs=-lsimdjson
+}
 
 . xbuild && start
 

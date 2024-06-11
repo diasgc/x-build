@@ -10,7 +10,6 @@ lic='BSD-3'
 src='https://gitlab.com/ecodis/exhale.git'
 cfg='cmake'
 eta='8'
-pc_llib="-lexhale"
 
 dev_bra='master'
 dev_vrs='v1.2.1'
@@ -26,6 +25,9 @@ cmake_config="-DBUILD_TESTS=OFF -DCMAKE_DL_LIBS=ON"
 
 . xbuild && start
 
+on_create_pc(){
+    build_pkgconfig --lib=-lexhale
+}
 
 # Filelist
 # --------

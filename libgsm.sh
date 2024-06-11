@@ -1,20 +1,19 @@
 #!/bin/bash
 
 lib='libgsm'
-pkg_deb='libgsm1-dev'
 dsc='GSM 06.10 lossy speech compression'
 lic='LGPL-2.1'
 url='http://www.quut.com/gsm'
 cfg='cmake'
 patch="libgsm-01"
-eta='60'
-pc_llib="-lgsm"
 
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='BUILD_TOOLS'
 
 dev_bra='master'
 dev_vrs='1.0.22'
+pkg_deb='libgsm1-dev'
+eta='60'
 
 lst_inc='gsm.h'
 lst_lib='libgsm'
@@ -27,6 +26,10 @@ on_config(){
     src="${url}/${vrs}"
     vrs="$(sed 's/gsm-//;s/.tar.gz//' <<<"${vrs}")"
     LD=${CC}
+}
+
+on_create_pc(){
+  build_pkgconfig --libs=-lgsm
 }
 
 . xbuild && start

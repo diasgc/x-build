@@ -1,7 +1,6 @@
 #!/bin/bash
 
 lib='tesseract'
-pkg_deb='libtesseract-dev'
 dsc='An OCR Engine that was developed at HP Labs between 1985 and 1995... and now at Google'
 lic='Apache-2.0'
 src='https://github.com/tesseract-ocr/tesseract.git'
@@ -21,8 +20,9 @@ lst_bin='tesseract'
 lst_lic='LICENSE'
 lst_pc='tesseract.pc'
 
-dev_vrs='5.4.0'
-
+dev_vrs='5.4.1'
+pkg_deb='libtesseract-dev'
+eta=0
 
 LIBS+=' -lpng16 -lz' # by order: -lpng16 -lz -ljpeg -lgif -ltiff -lwebp -lopenjp2
 

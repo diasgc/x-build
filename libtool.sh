@@ -8,8 +8,6 @@ cfg='ac'
 cfg_cmd='./bootstrap'
 tls='help2man'
 eta='35'
-#pc_llib="-ltdl"
-#pc_url="https://savannah.gnu.org/git/?group=libtool"
 
 lst_inc='ltdl.h libltdl/lt_error.h libltdl/lt_dlloader.h libltdl/lt_system.h'
 lst_lib='libltdl'

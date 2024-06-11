@@ -4,11 +4,8 @@ lib='libiconv'
 dsc='Character set conversion library'
 lic='LGPL2.1'
 src='https://git.savannah.gnu.org/git/libiconv.git'
-eta='90'
+url='https://www.gnu.org/software/libiconv'
 cfg='ac'
-
-#pc_llib="-liconv"
-#pc_url="https://www.gnu.org/software/libiconv"
 
 ac_config=" --enable-extra-encodings"
 ac_reconf=false
@@ -20,6 +17,7 @@ lst_lic='COPYING COPYING.LIB AUTHORS'
 lst_pc='libiconv.pc'
 
 dev_vrs='1.17'
+eta='90'
 
 on_config(){
 	vrs="$(curl https://ftp.gnu.org/gnu/libiconv/ 2>/dev/null | grep -oP 'libiconv-[0-9\.]+.tar.gz' | tail -n 1 | grep -oP '[0-9]+.[0-9]+')"
@@ -27,7 +25,7 @@ on_config(){
 }
 
 on_create_pc(){
-	build_pkgconfig --url=https://www.gnu.org/software/libiconv --libs=-liconv
+	build_pkgconfig --url=${url} --libs=-liconv
 }
 
 . xbuild && start

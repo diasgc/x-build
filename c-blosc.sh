@@ -6,7 +6,7 @@ dsc='A blocking, shuffling and loss-less compression library that can be faster 
 lic='Other'
 src='https://github.com/Blosc/c-blosc.git'
 cfg='cmake'
-eta='112'
+eta='96'
 
 WFLAGS='-Wno-unused-variable -Wno-unused-but-set-variable -Wno-deprecated-non-prototype'
 

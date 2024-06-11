@@ -23,7 +23,6 @@ stb_bra=''
 stb_vrs=''
 
 on_create_pc(){
-    #pc_llib='-lcpufeatures'
     build_pkgconfig --libs=-lcpufeatures
 }
 

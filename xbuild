@@ -54,6 +54,7 @@ export HOST_NPROC=$(nproc)
 : "${cmake_build_type:=Release}"
 
 : "${src_rel:=true}"
+: "${tar_stripcomponents:=false}"
 : "${req_update_deps:=false}"
 : "${update:=${req_update_deps}}"
 : "${git_checkout:=false}"
@@ -184,10 +185,6 @@ start(){
 	#export PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
 	#[ ! -d "${dir_install_pc}" ] && mkdir -p ${dir_install_pc}
 	#[ ! -d "${dir_install}/share/pkgconfig" ] && mkdir -p ${dir_install}/share/pkgconfig
-	export PKG_CONFIG_LIBDIR
-	export PKG_CONFIG_PATH=
-	str_contains "${PKG_CONFIG_LIBDIR}" "${dir_install}/share/pkgconfig" && PKG_CONFIG_LIBDIR="${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
-	str_contains "${PKG_CONFIG_LIBDIR}" "${dir_install_pc}" && PKG_CONFIG_LIBDIR="${dir_install_pc}:${PKG_CONFIG_LIBDIR}"
 	
 	# check build tools
 	check_tools ${tls}
@@ -979,27 +976,6 @@ loadToolchain(){
 		CROSS_PREFIX LT_SYS_LIBRARY_PATH CPPFLAGS LDFLAGS
 }
 
-getMinGwVersion(){
-	echo $(x86_64-w64-mingw32-gcc --version | head -n1 | grep -Eo "(GCC).+-win32" | sed 's|GCC) \(.*\)-win32|\1|')
-}
-
-errUnknownTarget(){
-	if [ $arch ];then
-		echo -e "\n${CD}${ind}${CR1}unknown target ${arch}${C0}\n" && exit 1
-	else
-		echo -e "\n${CD}${ind}${CR1}must specify a target${C0}\n" && usage && exit 1
-	fi
-}
-
-skip_options(){
-	while [ -n "${1}" ] || [ -n "${1##--*}" ]; do
-		case $1 in
-		dl|git|src) skip_dl=true;;
-		esac
-		shift
-	done
-}
-
 set_target(){
 	cpu_id="${1}"
 	target_trip=("${2}" "${3}" "${4}" "${5}" "${6}" "${7}" "${8}")
@@ -1051,32 +1027,14 @@ set_env(){
 		         ;;
 	esac
 	#LIBSDIR="$(pwd)/builds/${PLATFORM,,}/${target_trip[5]}"
+	[ ! -d "${dir_install}" ] && mkdir -p "${dir_install}"
 	export dir_install
 	export dir_install_bin="${dir_install}/bin"
 	export dir_install_include="${dir_install}/include"
 	export dir_install_lib="${dir_install}/lib"
 	export dir_install_pc="${dir_install_lib}/pkgconfig"
-}
-
-checkForArch(){
-	case "${1}" in
-		native)		set_target_build; host_native=true;;
-
-		$aa64 )		set_target '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6;;
-		$aa32 )		set_target '1' 'arm' 'v7a' 'linux' 'android' 'eabi' 'armeabi-v7a' '32' $CG2 $CG5;;
-		$ax86 )		set_target '2' 'i686' '' 'linux' 'android' '' 'x86' '32' $CG0 $CG1;;
-		$ax64 )		set_target '3' 'x86_64' '' 'linux' 'android' '' 'x86_64' '64' $CG0 $CG1;;
-
-		$la64 )		set_target '4' 'aarch64' '' 'linux' 'gnu' '' 'aarch64' '64' $CM4 $CM6;;
-		$la32 )		set_target '5' 'arm' '' 'linux' 'gnu' 'eabihf' 'armv7' '32' $CM4 $CM6;;
-		$lx86 )		set_target '6' 'i686' '' 'linux' 'gnu' '' 'x86' '32' $CM0 $CM1;;
-		$lx64 )		set_target '7' 'x86_64' '' 'linux' 'gnu' '' 'x86_64' '64' $CM0 $CM1;;
-
-		$wa64 )		set_target '8' 'aarch64' '' 'w64' 'mingw32' '' 'arm64' '64' $CC0 $CC1;;
-		$wa32 )		set_target '9' 'arm' 'v7' 'w64' 'mingw32' '' 'armv7' '32' $CC0 $CC1;;
-		$wx86 )		set_target '10' 'i686' '' 'w64' 'mingw32' '' 'x86' '32' $CB0 $CB1;;
-		$wx64 )		set_target '11' 'x86_64' '' 'w64' 'mingw32' '' 'x86_64' '64' $CB0 $CB1;;
-	esac
+	export PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
+	export PKG_CONFIG_PATH=
 }
 
 usage(){
@@ -1209,7 +1167,7 @@ while [ $1 ];do
 					esac
 					;;
 
-		--skip)     shift; skip_options $@;;
+		--skip)     shift; menu_skip_options $@;;
 
 		--goto)     shift; menu_goto $@; exit 0;;
 

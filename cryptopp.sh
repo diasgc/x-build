@@ -21,8 +21,6 @@ dev_vrs='8.6.0'
 stb_bra=''
 stb_vrs=''
 
-pc_llib='-lcryptopp'
-
 eta='190'
 
 source_config(){
@@ -30,6 +28,10 @@ source_config(){
     for f in CMakeLists.txt cryptopp-config.cmake; do
         wget -O ${f} ${url}${f}
     done
+}
+
+on_create_pc(){
+    build_pkgconfig --libs=-lcryptopp
 }
 
 . xbuild && start

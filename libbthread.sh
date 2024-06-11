@@ -6,7 +6,6 @@ dsc='bionic library that provide some missing posix threading function'
 lic='LGPL-2.1'
 src='https://github.com/tux-mind/libbthread.git'
 cfg='ar'
-eta='0'
 
 lst_inc=''
 lst_lib=''
@@ -14,15 +13,18 @@ lst_bin=''
 lst_lic='LICENSE'
 lst_pc=''
 
-pc_llib='-lbthread'
-
 dev_bra='master'
 dev_vrs='0.2'
-stb_bra=''
-stb_vrs=''
+pkg_deb=''
+eta='0'
 
 CFLAGS="-fPIE -fPIC"
 LDFLAGS="-pie"
+
+on_create_pc(){
+  build_pkgconfig --libs=-lbthread
+}
+
 
 . xbuild && start
 

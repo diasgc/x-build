@@ -13,8 +13,6 @@ cfg='cmake'
 cmake_bin="BUILD_EXECUTABLES"
 cmake_static='BUILD_STATIC_LIBS'
 
-pc_llib='-ljbig -ljbig85'
-
 lst_inc='jbig_ar.h jbig85.h jbig.h'
 lst_lib='libjbig85 libjbig'
 lst_bin='pbmtojbg85 pbmtojbg jbgtopbm85 jbgtopbm'
@@ -22,6 +20,10 @@ lst_bin='pbmtojbg85 pbmtojbg jbgtopbm85 jbgtopbm'
 dev_vrs='v2.1'
 eta='17'
 
+on_create_pc(){
+    build_pkgconfig --name=libjbig --libs=-ljbig
+    build_pkgconfig --name=libjbig85 --libs=--ljbig85
+}
 . xbuild && start
 
 # Filelist
