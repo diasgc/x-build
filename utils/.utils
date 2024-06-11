@@ -20,26 +20,6 @@ set_buildtype_key(){
 	return 0
 }
 
-set_git_version(){
-	pushdir ${dir_src}
-	local v=$(git describe --abbrev=0 --tags 2>/dev/null)
-	[ -n "$v" ] && export vrs=$v
-	popdir
-}
-
-build_packages_getdistdir(){
-	[ -f "${dir_install_pc}/${pkg}.pc" ] && vrs=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
-	[ -z "$vrs" ] && set_git_version
-	echo "${dir_root}/packages/${lib}_${vrs}_${arch}"
-}
-
-build_packages_filelist(){
-	local scfile="${dir_root}/${lib}.sh"
-	if [ -z "$(cat $scfile | grep '# Filelist')" ]; then
-		echo -e "\n\n# Filelist\n# --------" >> $scfile
-		find ./ -type f | sed 's|^./|# |g' >> $scfile
-	fi
-}
 
 util_add_patch(){
   for p in $(pwd)/patches/*.patch; do
@@ -57,60 +37,7 @@ util_add_patch(){
   done
 }
 
-build_packages_bin(){
-	set -x
-	local xb_distdir=$(build_packages_getdistdir)
-	if fn_defined 'create_package'; then
-		fn_log 'pack' create_package ${xb_distdir}
-	else
-		if fn_defined 'build_make_package'; then
-			fn_log 'pack' build_make_package ${xb_distdir}
-		elif [ "$MAKE_EXECUTABLE" = "ninja" ];then
-			DESTDIR=${xb_distdir} ninja -C ${dir_build} install
-		else
-			[ -z "$mkd" ] && mkd="DESTDIR=${xb_distdir} install"
-			${MAKE_EXECUTABLE} $mkd
-			fi
-			[ -z "$mkd_suffix" ] && mkd_suffix=${dir_install}
-			pushdir "${xb_distdir}${mkd_suffix}"
 
-			# dont forget licence files
-			if [ -n "${lst_lic}" ]; then
-			[ -d "share/doc/${lib}" ] || mkdir -p "share/doc/${lib}"
-			for f in ${lst_lic}; do
-				[ -f "share/doc/${lib}/$f" ] || cp ${dir_src}/${f} "share/doc/${lib}/"
-			done
-		fi
-		
-		# also include .pc manually-built file
-		if fn_defined 'build_pkgconfig_file' || [ -n "$pc_llib" ]; then
-			local xb_pkgd=$(pwd)/lib/pkgconfig
-			[ ! -d "${xb_pkgd}" ] && mkdir -p $xb_pkgd
-			if [ -n "${pc_filelist}" ]; then
-				for pp in ${pc_filelist}; do
-					cp ${dir_install_pc}/${pp} ${xb_pkgd}/
-				done
-			else
-				cp ${dir_install_pc}/${pkg}.pc ${xb_pkgd}/
-			fi
-			fn_undef build_pkgconfig_file
-		fi
-
-		if fn_defined 'on_editpack'; then
-			fn_log 'edit' on_editpack
-		fi
-
-		build_packages_filelist
-		case ${pkg_fmt} in
-			tgz) tar -czvf "${xb_distdir}.tar.gz" *;;
-			tbz) tar -cvjSf "${xb_distdir}.tar.bz2" *;;
-			zip) zip -r "${xb_distdir}.zip" *;;
-		esac
-		rm -rf ${xb_distdir}
-		popdir
-	fi
-	set +x
-}
 
 #usage xbuild --new <github_url>
 generate_script(){
