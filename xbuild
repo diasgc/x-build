@@ -227,13 +227,12 @@ start(){
 
 	# get source
 	if [ ! -d ${dir_src} ];then
-		${skip_dl} || get_source
 		
+		get_source
 		require_src_config=true
-
 		${break_on_git} && end_script
 
-		test "x${cfg}" == "xcmake" && cmake_check_cmakefiles
+		test "${cfg}" == "cmake" && cmake_check_cmakefiles
 
 		if fn_defined 'patch_source'; then
 			fn_log 'patch' patch_source
@@ -260,18 +259,17 @@ start(){
 
 	cd ${dir_config}
 
-	if [ -z "${cfg}" ]; then
-		config_guess
-	fi
-
-	if ${require_src_config}; then
+	# if there is no config selected, try guess
+	test -z "${cfg}" && config_guess
+	
+	if ${require_src_config}; then	
 		# check whether to custom config source
 		if fn_defined 'source_config'; then
 			fn_log 'config' source_config
 		elif [ -n "${cfg_cmd}" ];then
 			do_log 'config' ${cfg_cmd}
 			unset cfg_cmd
-		else case $cfg in
+		else case ${cfg} in
 			ab)		[ -f "${dir_config}/boostrap" ] && do_log 'bootstrap' ${dir_config}/boostrap
 					[ -f "${dir_config}/boostrap.sh" ] && do_log 'bootstrap' ${dir_config}/boostrap.sh
 					;;
@@ -291,23 +289,21 @@ start(){
 	fi
 
 	if ${require_src_patch}; then
-		# check if has auto patch embeded in source: depracated
-		patch_check_xbpatch
 		# check if has patch function in source
-		if fn_defined 'source_patch'; then
-			fn_log 'patch' source_patch
+		fn_defined 'source_patch' && fn_log 'patch' source_patch
+		if [ -n "${cmake_file}" ] && [ -f "${dir_root}/cmake/${cmake_file}" ]; then
+			cp -f "${dir_root}/cmake/${cmake_file}" "${fcmake_dst}" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"
 		fi
-		if [ -n "${cmake_file}" ]; then
 			local fcmake="${dir_root}/cmake/${cmake_file}"
 			if [ -f "${fcmake}" ]; then
 				local fcmake_dst="${dir_src}/CMakeLists.txt"
 				cp -f "${fcmake}" "${fcmake_dst}" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"
-				unset cmakelists_ext
+				unset cmake_file
 			fi
 		fi
 	fi
 
-	$break_on_patch && end_script
+	${break_on_patch} && end_script
 
 	if [ -z "${dir_build}" ];then
 		case ${build_system} in
