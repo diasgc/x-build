@@ -5,11 +5,14 @@ dsc='An open-source encoder of AVS2-P2/IEEE1857.4 video coding standard'
 lic='GPL-2.0'
 cfg='cmake'
 src='https://github.com/pkuvcl/xavs2.git' 
-eta='40'
-bin='BUILD_EXECUTABLE'
+
+cmake_bin='BUILD_EXECUTABLE'
 cmake_file='xavs2.cmake'
 
 dev_vrs='1.3.232'
+pkg_deb=''
+eta='40'
+
 lst_inc='xavs2*.h'
 lst_lib='libxavs2'
 lst_bin='xavs2'

@@ -31,7 +31,7 @@ lst_pc='avisynth.pc'
 
 dev_vrs='3.7.3'
 pkg_deb=''
-eta=240
+eta='240'
 
 on_config(){
     if ${src_rel}; then

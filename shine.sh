@@ -9,8 +9,7 @@ eta='35'
 
 dev_bra=''
 dev_vrs='3.1.1'
-stb_bra=''
-stb_vrs=''
+pkg_deb='libshine-dev'
 
 lst_inc='shine/layer3.h'
 lst_lib='libshine'

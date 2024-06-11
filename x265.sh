@@ -41,7 +41,7 @@ cmake_add_compile_options=(
 
 extraOpts(){
     case $1 in
-        --multilib) multilib=true; eta=810;;
+        --multilib) multilib=true; eta='810';;
         --12bit) cmake_config="${cmake_config_12bit}";;
         --10bit) cmake_config="${cmake_config_10bit}";;
     esac

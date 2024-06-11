@@ -4,10 +4,11 @@ lib='xavs'
 dsc='High quality encoder and decoder of the Audio Video Standard of China (AVS)'
 lic='GPL-2.0'
 src='https://svn.code.sf.net/p/xavs/code/trunk'
-eta='30'
 cfg="ac"
 
 dev_vrs='0.1.55'
+pkg_deb=''
+eta='30'
 
 lst_inc='xavs.h'
 lst_lib='libxavs'

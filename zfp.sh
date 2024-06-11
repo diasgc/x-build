@@ -4,13 +4,10 @@ lib='zfp'
 dsc='Compressed numerical arrays that support high-speed random access'
 lic='BSD-3c'
 src='https://github.com/LLNL/zfp.git'
+url='http://oldhome.schmorp.de/marc/liblzf.html'
 cfg='cmake'
-eta='190'
 
 cmake_config="-DBUILD_TESTING=OFF -DBUILD_GMOCK=OFF"
-
-pc_url='http://oldhome.schmorp.de/marc/liblzf.html'
-pc_llib='-llzf'
 
 lst_inc='zfp*.h zfp/*.h zfpcpp.h ieeecodec.h'
 lst_lib='libzfp'
@@ -20,13 +17,16 @@ lst_pc='zfp.pc'
 
 dev_bra='master'
 dev_vrs='0.5.5'
-stb_bra=''
-stb_vrs=''
-
+pkg_deb='libzfp-dev'
+eta='190'
 dualbuild_support=false
 
 get_version(){
     vrs="$(c_printf 'include/zfp' 'version.h' '"%s",ZFP_VERSION_STRING')"
+}
+
+on_create_pc(){
+    build_pkgconfig --libs=-llzf
 }
 
 . xbuild && start

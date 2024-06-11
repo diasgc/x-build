@@ -86,7 +86,7 @@ endif()
 
 option(BUILD_STATIC_LIBS "Build static libs" ON)
 option(BUILD_SHARED_LIBS "Build shared libs" OFF)
-option(BUILD_EXECUTABLES "Build executables" ON)
+option(BUILD_EXECUTABLES "Build executables" OFF)
 option(INSTALL_DOCS      "Install Manpages"  ON)
 
 message(STATUS "${PROJECT_NAME} version ${PROJECT_VERSION}

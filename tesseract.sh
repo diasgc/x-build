@@ -22,7 +22,7 @@ lst_pc='tesseract.pc'
 
 dev_vrs='5.4.1'
 pkg_deb='libtesseract-dev'
-eta=0
+eta='1200'
 
 LIBS+=' -lpng16 -lz' # by order: -lpng16 -lz -ljpeg -lgif -ltiff -lwebp -lopenjp2
 

@@ -9,9 +9,9 @@ patch="simdjson-01"
 
 cmake_static='BUILD_STATIC_LIBS'
 
-dev_vrs='1.0.2'
+dev_vrs='v3.9.4'
 pkg_deb=''
-eta=0
+eta='112'
 
 lst_inc='simdjson.h'
 lst_lib='libsimdjson'
