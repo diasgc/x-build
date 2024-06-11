@@ -30,7 +30,7 @@ on_config(){
         vrs="${vrs//boost-/}"
         src="https://github.com/boostorg/boost/releases/download/${vrs}/${vrs}-cmake.tar.gz"
     else
-        vrs="$(git_remote_version ${src})"
+        vrs="$(git_version_remote ${src})"
         vrs="${vrs//boost-/}"
     fi
     pc_vrs="${vrs}"

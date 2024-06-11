@@ -336,34 +336,6 @@ function git_version_remote {
   echo "${out##*\/}"
 }
 
-git_remote_version(){
-  local out="$(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | tail -n1)"
-  echo "${out##*\/}"
-  #echo $(git ls-remote --tags --refs --sort="v:refname" ${1} 2>/dev/null | head -n1 | sed 's/.*\///')
-}
-
-# usage: github_set_src_release <git_url> <prefix> <ext>
-#   git_url: https://github.com/user/repo.git
-#   prefix: prefix for name of source file (default none)
-#   ext: extension for source file (default tar.gz)
-function github_set_src_release {
-  local git_id="$(sed 's,https://github.com/,,;s,.git$,,' <<<${1})"
-  local pfx="${2}"
-  local ext="${3}"
-  if [ -n "${git_id}" ]; then
-    test -z "${ext}" && ext="tar.gz"
-    vrs="$(github_latest_release ${git_id})"
-    test -n "${vrs}" && src="https://github.com/${git_id}/archive/refs/tags/${pfx}${vrs}.${ext}"
-  fi
-  return 0
-}
-
-# TODO
-function gitlab_set_src_release {
-  vrs=''
-  src="https://gitlab.com/${git_id}/-/archive/${vrs}/lilv-${vrs}.${ext}"
-}
-
 # usage github_latest_release <user/repo id> or <git url>
 function github_latest_release {
   # extract id from url, in case it is not already given
@@ -376,9 +348,67 @@ git_getversion(){
   [ -d "${1}" ] && git --git-dir=${1}/.git --work-tree=${1} describe --abbrev=0 --tags || git describe --abbrev=0 --tags
 }
 
+function package_showinfo {
+	${banner} || return 0
+	local dp=
+	local vs=
+	local longdesc=$(package_longdesc)
+	[ -z "$(echo ${longdesc} | xargs 2>/dev/null)" ] && unset longdesc
 
+	# Main Description
+	[ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}\e[1m${lib^^} - ${C0}${dsc}\e[0m"
+	[ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
 
+	# see links
+	echo -e "${CD}${ind}${CD}"
+	echo -e "${CD}${ind}${CD}see log   : \e[4m${log_file}\e[24m${C0}"
+	echo -e "${CD}${ind}${CD}    script: \e[4m${0}\e[24m${C0}"
+	echo -e "${CD}${ind}${CD}    source: \e[4m${dir_src}\e[24m${C0}"
+	echo -e "${CD}${ind}${CD}    build : \e[4m${dir_install}\e[24m${C0}"
+	echo -e "${CD}${ind}${CD}"
 
+	# Licence
+	echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "
+
+	# Build Tools
+	if [ -n "${tls}" ]; then
+		echo -ne "${CT0}build deps: "
+		tput sc; echo -ne "${CD}$tls "; tput rc
+		for t in ${tls}; do
+			request_cmd ${t}
+		shift
+		done
+	fi
+
+	# Build Deps
+	[ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}${dep}"
+
+	if [ -n "${vrs}" ]; then
+		log_info "version: ${vrs}"
+	elif [ -d "${dir_src}/.git" ]; then
+		local gitloc="$(git_version_local ${dir_src})"
+		local gitrem="$(git_version_remote ${src})"
+		if [ "${gitloc}" = "${gitrem}" ]; then
+			gitrem="updated"
+		else
+			gitrem="latest: ${gitrem}"
+		fi
+		log_info "version: ${C0}${gitloc} (${gitrem})"
+	elif str_contains ${src} "git"; then
+		local gitrem="$(git_version_remote ${src} | head -n1)"
+		log_info "version: ${C0}${gitrem}"
+	fi
+}
+
+function package_longdesc {
+	if [ -n "${pkg_deb}" ]; then
+		echo -e $(apt-cache show ${pkg_deb} 2>/dev/null | \
+		grep -E "Description-..^|^ " | \
+		sed $'s/\*/\u2605/g' | \
+		sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/'"${ind}"'/g'
+	fi
+	return 0
+}
 
 function check_tools {
 	while [ -n "$1" ]; do
@@ -1452,6 +1482,22 @@ unused_doErr(){
 		[ "$openlog" != "n" ] && nano ${log_file}
 	fi
 	exit 1
+}
+
+# usage: github_set_src_release <git_url> <prefix> <ext>
+#   git_url: https://github.com/user/repo.git
+#   prefix: prefix for name of source file (default none)
+#   ext: extension for source file (default tar.gz)
+function github_set_src_release_unused {
+  local git_id="$(sed 's,https://github.com/,,;s,.git$,,' <<<${1})"
+  local pfx="${2}"
+  local ext="${3}"
+  if [ -n "${git_id}" ]; then
+    test -z "${ext}" && ext="tar.gz"
+    vrs="$(github_latest_release ${git_id})"
+    test -n "${vrs}" && src="https://github.com/${git_id}/archive/refs/tags/${pfx}${vrs}.${ext}"
+  fi
+  return 0
 }
 
 # .language
