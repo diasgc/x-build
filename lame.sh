@@ -7,15 +7,15 @@ url='http://www.mp3dev.org'
 src="https://svn.code.sf.net/p/lame/svn/trunk/lame"
 cfg='cmake'
 dep='libiconv'
-eta='180'
-pkg_deb="libtwolame-dev"
 
-
+cmake_file='lame'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='INSTALL_PROGRAMS'
 cmake_config='-DINSTALL_MANPAGES=OFF -DINSTALL_HTML=OFF'
 
 dev_vrs='3.101'
+pkg_deb='libmp3lame-dev'
+eta='180'
 
 lst_inc='lame/lame.h'
 lst_lib='libmp3lame'

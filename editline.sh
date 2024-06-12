@@ -10,7 +10,6 @@ dsc='Port of the NetBSD Editline library (libedit)'
 lic='GLP-2.0'
 src='https://github.com/troglobit/editline.git'
 cfg='ar'
-eta='90'
 
 lst_inc='editline.h'
 lst_lib='libeditline'
@@ -18,11 +17,11 @@ lst_bin=''
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb=''
+eta='90'
 
 on_config_mingw(){
-    doErr 'Unavailable for mingw'
+    exit_err 'MINGW not supported'
     svn='https://svn.code.sf.net/p/mingweditline/code/'
     cfg='cmake'
 }

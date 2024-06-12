@@ -18,9 +18,7 @@ lst_pc='cryptopp.pc'
 
 dev_bra='master'
 dev_vrs='8.6.0'
-stb_bra=''
-stb_vrs=''
-
+pkg_deb=''
 eta='190'
 
 source_config(){

@@ -12,6 +12,8 @@ WFLAGS='-Wno-deprecated-declarations -Wno-format -Wno-implicit-const-int-float-c
 
 dev_bra='master'
 dev_vrs='1.85.0'
+pkg_deb='libboost-dev'
+eta='0'
 
 lst_inc='boost/*'
 lst_lib='libboost_*'
@@ -19,10 +21,9 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='boost.pc'
 
-pc_llib=null
+#pc_llib=null
 
 on_config(){
-    pkg_deb="$(apt search libboost 2>/dev/null | grep -oP 'libboost[0-9\.]+\-dev' | tail -n1)"
     if ${src_rel}; then
         vrs="$(github_latest_release boostorg/boost)"
         vrs="${vrs//boost-/}"
@@ -33,6 +34,10 @@ on_config(){
     fi
     pc_vrs="${vrs}"
     export CXXFLAGS="${CPPFLAGS}"
+}
+
+on_create_pc(){
+    build_package --libs= --version=${vrs}
 }
 
 . xbuild && start

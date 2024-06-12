@@ -4,23 +4,24 @@ lib='libavif'
 dsc='Library for encoding and decoding .avif files'
 lic='BSD?'
 src='https://github.com/AOMediaCodec/libavif.git'
-cfg='cmake'
 dep='libpng libjpeg libyuv aom'
 patch='libavif-01'
+
+cfg='cmake'
 cmake_bin='AVIF_BUILD_APPS'
 cmake_static='BUILD_STATIC_LIBS'
+cmake_config="-DAVIF_ENABLE_WERROR=OFF -DAVIF_BUILD_EXAMPLES=OFF -DAVIF_BUILD_TESTS=OFF -DAVIF_CODEC_AOM=ON"
+LDFLAGS+=" -lpthread"
+
+dev_vrs='1.0.4'
+pkg_deb='libavif-dev'
+eta='30'
 
 lst_inc='avif/avif.h'
 lst_lib='libavif'
 lst_bin='avifenc avifdec'
 lst_lic='LICENSE README.md'
 lst_pc='libavif.pc'
-
-dev_vrs='1.0.4'
-eta='30'
-
-cmake_config="-DAVIF_ENABLE_WERROR=OFF -DAVIF_BUILD_EXAMPLES=OFF -DAVIF_BUILD_TESTS=OFF -DAVIF_CODEC_AOM=ON"
-LDFLAGS+=" -lpthread"
 
 on_config_mingw(){
     CPPFLAGS+=" -D__USE_MINGW_ANSI_STDIO=1"

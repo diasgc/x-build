@@ -10,14 +10,16 @@ patch='density-01' # create CMakeLists.txt
 
 dev_bra='main'
 dev_vrs='0.14.2'
-rel_vrs='0.14.2'
+pkg_deb=''
+eta='30'
+
 
 lst_inc='density/*.h'
 lst_lib='libdensity'
 lst_bin='benchmark'
 lst_lic='LICENSE.md'
 lst_pc='density.pc'
-eta='30'
+
 
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config="-DBUILD_BENCHMARK=ON"

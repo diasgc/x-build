@@ -6,14 +6,12 @@
 # mingw-llvm  ... ... ... ...
 
 lib='freeimage'
-pkg_deb="${lib}-dev"
 dsc='Open Source library to support popular graphics image formats like PNG, BMP, JPEG, TIFF'
 lic='Other'
 src='https://svn.code.sf.net/p/freeimage/svn/FreeImage/trunk'
 cfg='cmake'
-eta='1600'
-patch='freeimage'
 
+cmake_file='freeimage'
 cmake_static='BUILD_STATIC_LIBS'
 
 lst_inc='FreeImage.h FreeImagePlus.h'
@@ -21,6 +19,11 @@ lst_lib='libFreeImage'
 lst_bin=''
 lst_lic='license-fi.txt license-gplv2.txt license-gplv3.txt'
 lst_pc='freeimage.pc'
+
+dev_bra='master'
+dev_vrs='3.18.0'
+pkg_deb='libfreeimage-dev'
+eta='1600'
 
 on_create_pc(){
     build_pkgconfig --libs=-lfreeimage

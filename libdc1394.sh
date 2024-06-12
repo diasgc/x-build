@@ -6,14 +6,19 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='libdc1394'
-pkg_deb='libdc1394-dev'
+
 dsc='IIDC Camera Control Library'
 lic='LGPL-2.1'
-vrs='2.2.7'
 git='https://git.code.sf.net/p/libdc1394/code'
-eta='60'
 pkg='libdc1394-2'
 cfg='cmake'
+
+cmake_file='libdc1394'
+
+dev_bra='master'
+dev_vrs='2.2.7'
+pkg_deb='libdc1394-dev'
+eta='60'
 
 on_config(){
     if ${src_rel}; then

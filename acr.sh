@@ -9,6 +9,10 @@ mki='install'
 make_install='install'
 mkf='all'
 
+dev_vrs=''
+pkg_deb=''
+eta=''
+
 lst_inc=''
 lst_lib=''
 lst_bin='amr acr acr-install acr-sh acr-cat'

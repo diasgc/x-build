@@ -5,11 +5,13 @@ dsc='Super fast fixed-point MP3 encoder.'
 lic='GLP-2.0'
 src='https://github.com/toots/shine.git'
 cfg="cmake"
-eta='35'
 
-dev_bra=''
+cmake_file='shine'
+
+dev_bra='main'
 dev_vrs='3.1.1'
 pkg_deb='libshine-dev'
+eta='35'
 
 lst_inc='shine/layer3.h'
 lst_lib='libshine'

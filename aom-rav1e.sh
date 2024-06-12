@@ -7,13 +7,13 @@
 lib='aom-rav1e'
 dsc='aom tree used in rav1e submodule'
 lic='BSD-2c'
-vrs=''
 src="https://gitlab.xiph.org/xiph/aom-rav1e.git"
 cfg='cmake'
-eta='0'
 
 dev_bra='master'
 dev_vrs=''
+pkg_deb=''
+eta='0'
 
 lst_inc=''
 lst_lib=''

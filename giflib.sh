@@ -10,10 +10,10 @@ dsc='Library for manipulating GIF files'
 lic='other'
 git='https://git.code.sf.net/p/giflib/code'
 cfg='cmake'
-eta='18'
-pkg='giflib'
 
-dev_vrs='5.2.2'
+cmake_bin='BUILD_UTILITIES'
+cmake_static='BUILD_STATIC_LIBS'
+cmake_file='giflib'
 
 lst_inc='gif_lib.h'
 lst_lib='libgiflib'
@@ -21,13 +21,10 @@ lst_bin='giftext gifsponge giffilter giffix gifecho gifbg gifhisto gifwedge gift
 lst_lic='COPYING AUTHORS'
 lst_pc='giflib.pc'
 
-cmake_bin='BUILD_UTILITIES'
-cmake_static='BUILD_STATIC_LIBS'
-
 dev_bra='main'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='5.2.2'
+pkg_deb='libgif-dev'
+eta='18'
 
 . xbuild && start
 

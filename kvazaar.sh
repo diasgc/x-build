@@ -13,9 +13,10 @@ lst_lib='libkvazaar'
 lst_bin='kvazaar'
 lst_lic='COPYING CREDITS README.md'
 lst_pc='kvazaar.pc'
-eta='70'
 
 dev_vrs='2.3.0'
+pkg_deb=''
+eta='70'
 
 on_config_ndk(){
     vrs='v2.3.0' # v2.3.1 fails to cmake find_package threads not found

@@ -12,7 +12,10 @@ lst_lib=''
 lst_bin=''
 lst_pc=''
 lst_lic='LICENSE.txt'
+
 dev_vrs='1.4.23'
+pkg_deb=''
+eta=''
 
 on_config(){
     vrs="$(c_printf 'amf/public/include/core' 'Version.h' \

@@ -4,7 +4,6 @@ lib='libass'
 dsc='LibASS is an SSA/ASS subtitles rendering library'
 lic='ISC'
 src='https://github.com/libass/libass.git'
-cfg='meson'
 dep='fribidi'
 pkg='libass'
 
@@ -16,14 +15,15 @@ lst_pc='libass.pc'
 
 dev_bra='master'
 dev_vrs='0.17.1'
+pkg_deb='libass-dev'
 eta='4'
 
 #cfg='ag'
 #ac_nosysroot=true
 #dep='freetype fontconfig fribidi libpng harfbuzz'
 
+cfg='meson'
 meson_fontconfig=disabled
-
 meson_cfg='-Dtest=false -Dprofile=false -Ddirectwrite=disabled -Dcoretext=disabled'
 
 extraOpts(){

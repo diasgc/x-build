@@ -11,9 +11,10 @@ src='https://github.com/google/guetzli.git'
 cfg='cmake'
 patch='guetzli-01'
 dep='libpng libjpeg'
-eta='30'
 
 dev_vrs='1.0.1'
+pkg_deb='guetzli'
+eta='30'
 
 lst_inc=''
 lst_lib='libguetzli'

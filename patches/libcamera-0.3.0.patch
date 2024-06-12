@@ -1,0 +1,95 @@
+--- include/libcamera/internal/media_device.h
++++ include/libcamera/internal/media_device.h
+@@ -33,7 +33,7 @@ public:
+ 	bool busy() const { return acquired_; }
+ 
+ 	bool lock();
+-	void unlock();
++	bool unlock();
+ 
+ 	int populate();
+ 	bool isValid() const { return valid_; }
+
+--- src/libcamera/media_device.cpp
++++ src/libcamera/media_device.cpp
+@@ -159,12 +159,12 @@ bool MediaDevice::lock()
+  *
+  * \sa lock()
+  */
+-void MediaDevice::unlock()
++bool MediaDevice::unlock()
+ {
+ 	if (!fd_.isValid())
+-		return;
++		return false;
+ 
+-	lockf(fd_.get(), F_ULOCK, 0);
++	return lockf(fd_.get(), F_ULOCK, 0) == 0;
+ }
+ 
+ /**
+
+--- src/apps/common/options.cpp
++++ src/apps/common/options.cpp
+@@ -879,8 +879,8 @@ OptionsParser::Options OptionsParser::parse(int argc, char **argv)
+ 	 * Allocate short and long options arrays large enough to contain all
+ 	 * options.
+ 	 */
+-	char shortOptions[optionsMap_.size() * 3 + 2];
+-	struct option longOptions[optionsMap_.size() + 1];
++	char *shortOptions = (char*)alloca(optionsMap_.size() * 3 + 2);
++	struct option *longOptions = (struct option*)alloca(optionsMap_.size() + 1);
+ 	unsigned int ids = 0;
+ 	unsigned int idl = 0;
+ 
+--- src/libcamera/ipc_unixsocket.cpp
++++ src/libcamera/ipc_unixsocket.cpp
+@@ -247,8 +247,8 @@ int IPCUnixSocket::sendData(const void *buffer, size_t length,
+ 	iov[0].iov_base = const_cast<void *>(buffer);
+ 	iov[0].iov_len = length;
+ 
+-	char buf[CMSG_SPACE(num * sizeof(uint32_t))];
+-	memset(buf, 0, sizeof(buf));
++	char *buf = (char*)malloc(CMSG_SPACE(num * sizeof(uint32_t)));
++	memset((void*)buf, 0, sizeof(buf));
+ 
+ 	struct cmsghdr *cmsg = (struct cmsghdr *)buf;
+ 	cmsg->cmsg_len = CMSG_LEN(num * sizeof(uint32_t));
+@@ -270,9 +270,11 @@ int IPCUnixSocket::sendData(const void *buffer, size_t length,
+ 		int ret = -errno;
+ 		LOG(IPCUnixSocket, Error)
+ 			<< "Failed to sendmsg: " << strerror(-ret);
++    free(buf);
+ 		return ret;
+ 	}
+ 
++  free(buf);
+ 	return 0;
+ }
+ 
+@@ -283,8 +285,8 @@ int IPCUnixSocket::recvData(void *buffer, size_t length,
+ 	iov[0].iov_base = buffer;
+ 	iov[0].iov_len = length;
+ 
+-	char buf[CMSG_SPACE(num * sizeof(uint32_t))];
+-	memset(buf, 0, sizeof(buf));
++	char *buf = (char*)malloc(CMSG_SPACE(num * sizeof(uint32_t)));
++	memset((void*)buf, 0, sizeof(buf));
+ 
+ 	struct cmsghdr *cmsg = (struct cmsghdr *)buf;
+ 	cmsg->cmsg_len = CMSG_LEN(num * sizeof(uint32_t));
+@@ -305,12 +307,14 @@ int IPCUnixSocket::recvData(void *buffer, size_t length,
+ 		if (ret != -EAGAIN)
+ 			LOG(IPCUnixSocket, Error)
+ 				<< "Failed to recvmsg: " << strerror(-ret);
++    free(buf);
+ 		return ret;
+ 	}
+ 
+ 	if (fds)
+ 		memcpy(fds, CMSG_DATA(cmsg), num * sizeof(uint32_t));
+ 
++  free(buf);
+ 	return 0;
+ }
+

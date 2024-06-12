@@ -1,19 +1,20 @@
 #!/bin/bash
 
 lib='libbluray'
+pkg='libbluray'
 dsc='Library to access Blu-Ray disks'
 lic='LGPL-2.1'
 src='https://code.videolan.org/videolan/libbluray.git'
-cfg='ar'
 dep='libxml2 freetype fontconfig libudfread liblzma'
-pkg='libbluray'
-eta='60'
 
+cfg='ar'
 ac_nosysroot=true
 ac_config="--disable-bdjava-jar --disable-examples"
 
 dev_bra='master'
 dev_vrs='1.3.4'
+pkg_deb='libbluray-dev'
+eta='60'
 
 lst_inc='libbluray/*.h'
 lst_lib='libzstd'

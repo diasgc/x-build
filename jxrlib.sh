@@ -1,6 +1,10 @@
 #!/bin/bash
 
-#vrs='v2019.10.9'
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
 lib='jxrlib'
 pkg='jpegxr'
 dsc='JPEG XR Image Codec reference implementation library released by Microsoft'
@@ -12,18 +16,29 @@ cmake_bin='BUILD_EXECUTABLES'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_file='jxrlib.cmake'
 
-lst_inc='libjxr/glue/*.h libjxr/image/*.h libjxr/common/*.h libjxr/test/*.h'
+lst_inc='jxrlib/decode.h
+ jxrlib/encode.h
+ jxrlib/ansi.h
+ jxrlib/common.h
+ jxrlib/perfTimer.h
+ jxrlib/strTransform.h
+ jxrlib/strcodec.h
+ jxrlib/windowsmediaphoto.h
+ jxrlib/xplatform_image.h
+ jxrgluelib/JXRGlue.h
+ jxrgluelib/JXRMeta.h
+ jxrgluelib/JXRTest.h'
 lst_lib='libjpegxr libjxrglue'
 lst_bin='JxrEncApp JxrDecApp'
 lst_lic='LICENSE AUTHORS'
 lst_pc='jpegxr.pc jxrglue.pc'
 
-. xbuild && start
+dev_bra='master'
+dev_vrs='v2019.10.9'
+eta='80'
+pkg_deb='libjxr-dev'
 
-# cpu av8 av7 x86 x64
-# NDK +++  .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
+. xbuild && start
 
 # Filelist
 # --------

@@ -1,5 +1,22 @@
 #!/bin/bash
 
+list_cmakefiles(){
+	for f in *.sh; do
+		if [ -f "./cmake/${f//\.sh/}.cmake" ]; then
+			p="$(grep -oP 'cmake_file=.*' ${f})"
+			if [ -z "${p}" ]; then
+				echo "$f -> cmake_file='${f//\.sh/}'"
+			else
+				echo "${f} has ${p}"
+			fi
+		fi
+	done
+}
+
+
+
+
+
 # unused
 aptInstallBr(){
   while [ -n "$1" ];do

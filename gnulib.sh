@@ -5,24 +5,23 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='gnulib'
-dsc='GNU Lib'
+dsc='GNU Portability Library'
 lic=''
 vrs=''
-src="https://git.savannah.gnu.org/git/gnulib.git"
+src='https://git.savannah.gnu.org/git/gnulib.git'
+url='https://www.gnu.org/software/gnulib/'
 cfg='ar'
-eta='0'
+
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb='gnulib'
+eta='0'
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
-
-eta='20'
 
 . xbuild && start

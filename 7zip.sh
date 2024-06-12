@@ -10,12 +10,11 @@ lic=''
 vrs='2107'
 src="https://www.7-zip.org/a/7z${vrs}-src.tar.xz"
 cfg='make'
-eta='0'
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb=''
+eta=''
 
 lst_inc=''
 lst_lib=''

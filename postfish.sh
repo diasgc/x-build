@@ -1,8 +1,8 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  F   .   .   .   F   .   .   .   .   .   .  static
-#  .   .   .   .   .   .   .   .   .   .   .  shared
-#  .   .   .   .   .   .   .   .   .   .   .  bin
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
 
 lib='postfish'
 dsc='A digital audio post-processing, restoration, filtering and mixdown tool.'
@@ -11,12 +11,12 @@ src='https://gitlab.xiph.org/xiph/postfish.git'
 cfg='cmake'
 dep='libao fftw glib gtk'
 pkg='postfish'
-eta='60'
+
+cmake_file='postfish'
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+eta='60'
 
 lst_inc=''
 lst_lib=''

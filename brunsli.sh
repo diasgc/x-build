@@ -7,7 +7,6 @@ lic='MIT'
 src='https://github.com/google/brunsli.git'
 sub='submodule update --init'
 cfg='cmake'
-eta='30'
 
 patch='brunsli-01'
 lst_inc='brunsli/*.h'
@@ -17,7 +16,8 @@ lst_lic='LICENSE'
 lst_pc='brunslienc-c.pc brunslidec-c.pc'
 
 dev_vrs='v0.1'
-
+pkg_deb=''
+eta='30'
 
 cmake_config="-DBUILD_TESTING=OFF -DINSTALL_GTEST=OFF"
 

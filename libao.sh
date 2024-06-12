@@ -1,11 +1,16 @@
 #!/bin/bash
 
 lib='libao'
+pkg='ao'
 dsc='Audio output portability library.'
 lic='GPL-2'
 src='https://gitlab.xiph.org/xiph/libao.git'
+
 cfg='ag'
-pkg='ao'
+
+dev_bra='master'
+dev_vrs='1.2.2'
+pkg_deb='libao-dev'
 eta='60'
 
 lst_inc='ao/ao.h ao/plugin.h ao/os_types.h'
@@ -13,11 +18,6 @@ lst_lib='libao'
 lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='ao.pc'
-
-dev_bra='master'
-dev_vrs='1.2.2'
-stb_bra=''
-stb_vrs=''
 
 before_make(){
 	# no docs

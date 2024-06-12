@@ -5,7 +5,6 @@ dsc='A C++ library for interacting with JSON.'
 lic='MIT'
 src='https://github.com/open-source-parsers/jsoncpp.git'
 cfg='cmake'
-eta='60'
 
 lst_inc='json/*.h'
 lst_lib='libjsoncpp'
@@ -15,8 +14,8 @@ lst_pc='jsoncpp.pc'
 
 dev_bra='master'
 dev_vrs='1.9.5'
-stb_bra=''
-stb_vrs=''
+pkg_deb='libjsoncpp-dev'
+eta='60'
 
 # -DBUILD_OBJECT_LIBS -DBUILD_SHARED_LIBS -DBUILD_STATIC_LIBS -DBUILD_TESTING -DJSONCPP_WITH_EXAMPLE
 

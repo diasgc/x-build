@@ -6,7 +6,6 @@ lic='GPL-3.0'
 url='http://www.byronknoll.com/cmix.html'
 src='https://github.com/byronknoll/cmix.git'
 cfg='cmake'
-eta='20'
 patch='cmix-01' # patch src/predictor.cpp and new CMakeLists.txt supports both static and shared libs
 cmake_static="BUILD_STATIC_LIBS"
 cmake_bin="BUILD_EXECUTABLES"
@@ -18,15 +17,18 @@ lst_lic='COPYING README'
 lst_pc=''
 
 dev_vrs='19'
+pkg_deb=''
+eta='20'
 
 cmake_config='-DINSTALL_DOCS=OFF'
 
 . xbuild && start
 
-#             a8  a7  x86 x64
-# ndk-clang   ... ... ... ...
-# linux-gnu   ... ... ... ...
-# mingw-llvm  ... ... ... ...
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
+
 
 # Filelist
 # --------

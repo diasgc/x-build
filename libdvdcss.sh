@@ -6,14 +6,16 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='libdvdcss'
-pkg_deb="${lib}-dev"
 dsc='Library for accessing DVDs like block devices with transparent decryption'
 lic='GPL-2.0'
 src='https://code.videolan.org/videolan/libdvdcss.git'
 cfg='ar'
 
+cmake_file='libdvdcss.sh'
+
 dev_bra='main'
 dev_vrs='1.4.3'
+pkg_deb=''
 eta='10'
 
 lst_inc='dvdcss/*.h'

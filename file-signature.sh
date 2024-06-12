@@ -5,9 +5,11 @@ dsc='Check file format'
 lic='MIT'
 src='https://github.com/jinhr9801/filename-extension-signature.git'
 cfg='cmake'
-eta='30'
 
 skip_pc=true
+pkg_deb=''
+eta='30'
+dev_vrs=''
 
 . xbuild && start
 

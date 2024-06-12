@@ -6,10 +6,11 @@ lic='BSD-2c'
 src='https://gitlab.xiph.org/xiph/celt.git'
 cfg='ag'
 dep='ogg'
-eta='60'
 
 dev_bra='master'
 dev_vrs='0.11.4'
+pkg_deb=''
+eta='60'
      
 lst_inc='celt/*.h'
 lst_lib='libcelt0'

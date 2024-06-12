@@ -879,9 +879,9 @@ function prt_progress {
 	elif [ "$(basename ${MAKE_EXECUTABLE})" == "ninja" ]; then
 		printf "%-12s"
 		while read -r ln; do
-			str_contains $ln 'error: ' && printf $CR1
-			sln=$(grep -oP '\[\d+/\d+\]' <<< $ln)
-			[ -n "$sln" ] && printf "\e[11D%-11s" $sln
+			str_contains "${ln}" 'error: ' && printf ${CR1}
+			sln=$(grep -oP '\[\d+/\d+\]' <<< ${ln})
+			[ -n "${sln}" ] && printf "\e[11D%-11s" ${sln}
 		done
 		printf "\e[12D"
 	else

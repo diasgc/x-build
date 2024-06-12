@@ -14,9 +14,9 @@ lic='BSD-3c'
 src='https://github.com/google/leveldb.git'
 cfg='cmake'
 dep='zlib snappy'
-eta='0'
 
 cmake_config='-DLEVELDB_BUILD_TESTS=OFF -DLEVELDB_BUILD_BENCHMARKS=OFF'
+
 lst_inc=''
 lst_lib=''
 lst_bin=''
@@ -25,6 +25,8 @@ lst_pc=''
 
 dev_bra='master'
 dev_vrs='1.23.0'
+pkg_deb='libleveldb-dev'
+eta='0'
 
 on_create_pc(){
     vrs=$(grep -oP 'leveldb VERSION \K([0-9\.]+)' "${dir_src}/CMakeLists.txt")

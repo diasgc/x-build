@@ -5,20 +5,20 @@
 # WIN  .   .   .   F   clang/gcc
 
 lib='libcaca'
+pkg='caca'
 dsc='Colour AsCii Art library'
 lic='GPL'
 src='https://github.com/cacalabs/libcaca.git'
-cfg='ac'
 patch="libcaca-01"
-pkg='caca'
-eta='80'
 
+cfg='ac'
 ac_config='--disable-doc --disable-java --disable-python --disable-ruby'
+#CPPFLAGS+=" -Wno-ignored-optimization-argument -Wno-absolute-value -Wno-unused-but-set-variable -Wno-int-conversion"
 
 dev_bra='main'
 dev_vrs='0.99.beta20'
-stb_bra='tags/v0.99.beta20'
-stb_vrs='v0.99.beta20'
+pkg_deb='libcaca-dev'
+eta='80'
 
 lst_inc='caca++.h caca.h caca0.h caca_types.h caca_conio.h'
 lst_lib='libcaca libcaca++'
@@ -37,10 +37,8 @@ source_config(){
     caca/caca0.h caca/caca0.h caca/figfont.c \
     caca/string.c
   sed -i 's/if defined(_WIN32)/if defined(_MSC_VER)/g' cxx/caca++.h
-  $use_clang && sed -i 's/-O2 -fno-strength-reduce/-O3 -flto/g' configure
+  ${use_clang} && sed -i 's/-O2 -fno-strength-reduce/-O3 -flto/g' configure
 }
-
-#CFLAGS+=" -Wno-ignored-optimization-argument -Wno-absolute-value -Wno-unused-but-set-variable -Wno-int-conversion"
 
 . xbuild && start
 

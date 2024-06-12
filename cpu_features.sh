@@ -19,8 +19,8 @@ lst_pc='cpu_features.pc'
 
 dev_bra='master'
 dev_vrs='0.6.0'
-stb_bra=''
-stb_vrs=''
+pkg_deb='libcpu-features-dev'
+eta='0'
 
 on_create_pc(){
     build_pkgconfig --libs=-lcpufeatures

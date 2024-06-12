@@ -10,7 +10,7 @@ cmake_bin='BUILD_EXECUTABLE'
 cmake_file='xavs2.cmake'
 
 dev_vrs='1.3.232'
-pkg_deb=''
+pkg_deb='libxavs2-dev'
 eta='40'
 
 lst_inc='xavs2*.h'

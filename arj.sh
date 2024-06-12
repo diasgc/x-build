@@ -5,12 +5,16 @@ dsc='Open Source ARJ archiver'
 lic='GLP-2.0'
 src='https://git.code.sf.net/p/arj/git'
 cfg='cmake'
-eta='60'
+
 cmake_file='arj.cmake'
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
+
+dev_vrs=''
+pkg_deb=''
+eta=''
 
 on_config(){
     if ${src_rel}; then

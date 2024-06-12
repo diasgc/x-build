@@ -6,7 +6,7 @@ lic='Zlib'
 url='https://create.stephan-brumme.com/hash-library/'
 src='https://github.com/stbrumme/hash-library.git'
 cfg='cmake'
-eta='60'
+
 build_strip=false
 patch='hashpp-01'
 
@@ -25,6 +25,9 @@ lst_lic='LICENSE readme.md'
 lst_pc='hashpp.pc'
 
 dev_vrs='9'
+pkg_deb=''
+eta='60'
+
 
 . xbuild && start
 

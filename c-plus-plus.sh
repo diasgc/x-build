@@ -6,7 +6,6 @@ lic='MIT'
 url='thealgorithms.github.io/c-plus-plus'
 src='https://github.com/TheAlgorithms/C-Plus-Plus.git'
 cfg='cmake'
-eta='0'
 
 lst_inc=''
 lst_lib=''
@@ -16,8 +15,8 @@ lst_pc=''
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+eta='0'
+pkg_deb=''
 
 . xbuild && start
 

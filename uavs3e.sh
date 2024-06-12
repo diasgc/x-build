@@ -9,13 +9,15 @@ dsc='AVS3 encoder which supports AVS3-P2 baseline profile.'
 lic='Other'
 src='https://github.com/uavs3/uavs3e.git'
 cfg='cmake'
-eta='0'
 patch='uavs3e-ge1ff0f3'; src_rel=false
 
 lst_inc='uavs3e/uavs3e.h uavs3e/com_api.h'
 lst_lib='libuavs3e'
 lst_bin='uavs3enc'
+
 dev_vrs='1.3.2'
+pkg_deb=''
+eta='0'
 
 cmake_config='-DCOMPILE_10BIT=1'
 

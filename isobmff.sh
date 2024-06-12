@@ -1,20 +1,20 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  F   .   .   .   +   .   .   .   .   .   .  static
-#  .   .   .   .   .   .   .   .   .   .   .  shared
-#  .   .   .   .   .   .   .   .   .   .   .  bin
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
 
 lib='isobmff'
 dsc='ISO Base Media File Format Reference Software'
 lic='?'
 src='https://github.com/MPEGGroup/isobmff.git'
 cfg='cmake'
-eta='60'
 
 dev_bra='main'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb=''
+eta='60'
+
 
 source_patch(){
     git submodule update --init --recursive

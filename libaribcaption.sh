@@ -8,13 +8,16 @@ lib='libaribcaption'
 dsc='Portable ARIB STD-B24 Caption Decoder/Renderer'
 lic='MIT License'
 src="https://github.com/xqq/libaribcaption.git"
+dep='fontconfig'
+
+
 cfg='cmake'
 cmake_shared='ARIBCC_SHARED_LIBRARY'
-dep='fontconfig'
-eta='0'
 
 dev_bra='master'
 dev_vrs='1.1.1'
+pkg_deb=''
+eta='0'
 
 lst_inc='aribcaption/*.h aribcaption/*.hpp'
 lst_lib='libaribcaption'

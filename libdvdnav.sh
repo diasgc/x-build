@@ -7,15 +7,18 @@
 lib='libdvdnav'
 dsc='Library to navigate DVD disks'
 lic='GNU General Public License v2.0'
-vrs=''
 src="https://code.videolan.org/videolan/libdvdnav.git"
 cfg='ar'
-eta='0'
+
+cmake_file='libdvdnav'
+
 dep='libdvdread'
 pkg='dvdnav'
 
 dev_bra='master'
 dev_vrs='6.1.1'
+pkg_deb='libdvdnav-dev'
+eta='0'
 
 lst_inc='dvdnav/dvdnav.h dvdnav/dvdnav_events.h dvdnav/dvd_types.h src/dvdnav/version.h'
 lst_lib='libdvdnav'

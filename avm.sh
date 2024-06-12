@@ -10,7 +10,6 @@ dsc='AVM (AOM Video Model) is the reference software for next codec from Allianc
 lic='BSD-3c'
 src="https://gitlab.com/AOMediaCodec/avm.git"
 cfg='cmake'
-eta='40'
 
 cmake_shared='CONFIG_SHARED'
 cmake_bin='ENABLE_TOOLS'
@@ -18,6 +17,8 @@ cmake_config='-DENABLE_DOCS=OFF -DENABLE_EXAMPLES=OFF -DENABLE_TESTS=OFF -DENABL
 
 dev_bra='master'
 dev_vrs='7.0.1'
+pkg_deb=''
+eta='40'
 
 lst_inc='aom/aom.h
  aom/aom_codec.h

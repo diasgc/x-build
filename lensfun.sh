@@ -7,13 +7,14 @@ src='https://github.com/lensfun/lensfun.git'
 cfg='cmake'
 patch="lensfun-01"
 dep='glib2'
-eta='60'
 
 cmake_bin='BUILD_LENSTOOL'
 cmake_static='BUILD_STATIC'
 cmake_config="-DBUILD_TESTS=OFF -DBUILD_DOC=OFF -DINSTALL_HELPER_SCRIPTS=OFF -DINSTALL_PYTHON_MODULE=OFF -DBUILD_AUXFUN=ON"
 
 dev_vrs='0.3.99'
+pkg_deb='liblensfun-dev'
+eta='60'
 
 lst_inc='lensfun/lensfun.h'
 lst_lib='liblensfun'
