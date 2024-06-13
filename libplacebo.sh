@@ -4,20 +4,16 @@ lib='libplacebo'
 dsc='Reusable library for GPU-accelerated image/video processing primitives and shaders'
 lic='LGLP-2.1'
 src='https://code.videolan.org/videolan/libplacebo.git'
-cfg='meson'
-eta='60'
+sub='submodule update --init'
 tls='python3-mako'
+
+cfg='meson'
+meson_cfg="-Ddemos=false"
 
 dev_bra='main'
 dev_vrs='7.349.0'
-
-lst_inc='libplacebo/*.h libplacebo/utils/*.h'
-lst_lib='libplacebo'
-lst_bin=''
-lst_lic='LICENSE'
-lst_pc=''
-
-meson_cfg="-Ddemos=false"
+pkg_deb='libplacebo-dev'
+eta='60'
 
 on_config_ndk(){
     dep='glslang vulkan'
@@ -28,10 +24,11 @@ on_config(){
     $use_clang || LD="bfd"
 }
 
-patch_source(){
-    cd $dir_src
-    do_log 'submodule' git submodule update --init
-}
+lst_inc='libplacebo/*.h libplacebo/utils/*.h'
+lst_lib='libplacebo'
+lst_bin=''
+lst_lic='LICENSE'
+lst_pc=''
 
 . xbuild && start
 

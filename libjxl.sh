@@ -9,18 +9,23 @@ dsc='A fast, compressed, persistent binary data store library for C.'
 lic='BSD-3c'
 src='https://github.com/libjxl/libjxl.git'
 sub='submodule update --init --recursive --depth 1 --recommend-shallow'
-cfg='cmake'
-eta='164'
 dep='highway openexr gflags lcms2'
+
+cfg='cmake'
 cmake_static='JPEGXL_STATIC'
 cmake_config="-DBUILD_TESTING=OFF -DJPEGXL_ENABLE_DOXYGEN=OFF -DJPEGXL_ENABLE_BENCHMARK=OFF -DJPEGXL_ENABLE_EXAMPLES=OFF -DJPEGXL_ENABLE_MANPAGES=OFF -DJPEGXL_ENABLE_TOOLS=OFF"
+
+dev_bra='main'
+dev_vrs='0.10.0'
+pkg_deb='libjxl-dev'
+eta='164'
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
 lst_lic='LICENSE PATENTS AUTHORS'
 lst_pc=''
-dev_vrs='0.10.0'
+
 
 on_config_ndk(){
     cmake_config+=" -DSJPEG_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"

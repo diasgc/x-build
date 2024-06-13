@@ -11,13 +11,13 @@ vrs=''
 src="https://gitlab.com/Polimi-dVRK/decklink/libdecklink.git"
 src_opt='--recursive'
 cfg='cmake'
-eta='0'
+
 dep='boost'
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb=''
+eta='0'
 
 lst_inc=''
 lst_lib=''

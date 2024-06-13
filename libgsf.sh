@@ -5,15 +5,15 @@ pkg='libgsf-1'
 dsc='The G Structured File Library'
 lic='LGPL-2.1'
 src='https://gitlab.gnome.org/GNOME/libgsf.git'
-cfg='ag'
 dep='glib2 libxml2 libiconv'
-eta='0'
+
+cfg='ag'
 ac_nosysroot=true
 
 dev_bra='main'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb='libgsf-1-dev'
+eta='0'
 
 lst_inc='libgsf-1/gsf/*.h'
 lst_lib='libgsf-1'

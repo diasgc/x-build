@@ -8,19 +8,35 @@ lib='librist'
 dsc='A library that can be used to easily add the RIST protocol to your application.'
 lic='BSD-2c'
 src='https://code.videolan.org/rist/librist.git'
-cfg='meson'
-eta='0'
 
+cfg='meson'
 cfg_bin='built_tools'
 
 dev_bra='master'
-dev_vrs=''
-stb_bra='tags/0.2.6'
-stb_vrs='0.2.6'
+dev_vrs='0.2.6'
+pkg_deb='librist-dev'
+eta='0'
 
-lst_inc=''
-lst_lib=''
-lst_bin=''
+lst_inc='librist/librist_srp.h
+ librist/urlparam.h
+ librist/udpsocket.h
+ librist/stats.h
+ librist/librist.h
+ librist/receiver.h
+ librist/peer.h
+ librist/logging.h
+ librist/opt.h
+ librist/headers.h
+ librist/version.h
+ librist/oob.h
+ librist/common.h
+ librist/librist_config.h
+ librist/sender.h'
+lst_lib='librist'
+lst_bin='ristreceiver
+ ristsender
+ rist2rist
+ ristsrppasswd'
 lst_lic='COPYING'
 lst_pc=''
 

@@ -4,15 +4,16 @@ lib='libmatroska'
 dsc='a C++ libary to parse Matroska files (.mkv and .mka)'
 lic='LGPL-2.1'
 src="https://github.com/Matroska-Org/libmatroska.git"
-cfg='cmake'
-dep='libebml'
-eta='10'
-cmake_static='BUILD_STATIC_LIBS'
 patch='libmatroska-01'
+dep='libebml'
+
+cfg='cmake'
+cmake_static='BUILD_STATIC_LIBS'
 
 dev_bra='master'
 dev_vrs='1.6.3'
-sta_rel='release-1.6.3'
+pkg_deb='libmatroska-dev'
+eta='10'
 
 lst_inc='matroska/*.h matroska/c/*.h'
 lst_lib='libmatroska'

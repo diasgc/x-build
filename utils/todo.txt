@@ -4,26 +4,7 @@ cmake: libcap.sh
 
 missing pkg_deb variable:
 
-libdecklink.sh
-libdrm.sh
-libebml.sh
-libffi.sh
-libgsf.sh
-libiconv.sh
-libicu.sh
-libid3tag.sh
-libilbc.sh
-libjbig.sh
-libjxl.sh
-liblc3.sh
-libmagic.sh
-libmatroska.sh
-libopenmpt.sh
-libplacebo.sh
-libqrencode.sh
-libraw.sh
-librist.sh
-librsync.sh
+
 librtmp.sh
 librubberband.sh
 libshaderc.sh

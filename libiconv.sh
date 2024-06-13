@@ -5,8 +5,8 @@ dsc='Character set conversion library'
 lic='LGPL2.1'
 src='https://git.savannah.gnu.org/git/libiconv.git'
 url='https://www.gnu.org/software/libiconv'
-cfg='ac'
 
+cfg='ac'
 ac_config=" --enable-extra-encodings"
 ac_reconf=false
 
@@ -17,6 +17,7 @@ lst_lic='COPYING COPYING.LIB AUTHORS'
 lst_pc='libiconv.pc'
 
 dev_vrs='1.17'
+pkg_deb=''
 eta='90'
 
 on_config(){

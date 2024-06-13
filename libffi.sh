@@ -4,10 +4,15 @@ lib='libffi'
 dsc='A portable foreign-function interface library'
 lic='Free'
 src='https://github.com/libffi/libffi.git'
-cfg='ar'
-eta='15'
+url='https://sourceware.org/libffi/'
 
+cfg='ar'
+ac_config='--enable-portable-binary --disable-docs'
+
+dev_bra=''
 dev_vrs=''
+pkg_deb='libffi-dev'
+eta='15'
 
 lst_inc='ffitarget.h ffi.h'
 lst_lib='libffi'
@@ -15,7 +20,7 @@ lst_bin=''
 lst_lic='LICENSE LICENSE-BUILDTOOLS'
 lst_pc='libffi.pc'
 
-ac_config='--enable-portable-binary --disable-docs'
+
 
 . xbuild && start
 

@@ -9,13 +9,24 @@ lib='libmagic'
 dsc='Image metadata library and tools'
 lic=''
 url='http://ftp.debian.org/debian/pool/main/f/file'
+
 cfg='ac'
+
+dev_bra='master'
+dev_vrs=''
+pkg_deb='libmagic-dev'
+pkg_pac=''
 eta='60'
 
 on_config(){
     vrs="$(curl -s "${url}/" | grep -oP '(?<=file_)([0-9\.]+)(?=.orig.tar.gz)' | tail -n 1)"
     src="${url}/file_${vrs}.orig.tar.gz"
 }
+
+lst_inc='magic.h'
+lst_lib='libmagic'
+lst_bin='file'
+lst_pc='libmagic.pc'
 
 . xbuild && start
 

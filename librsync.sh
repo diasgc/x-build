@@ -5,15 +5,16 @@ dsc='Remote delta-compression library'
 lic='LGPL-2.1'
 src='https://github.com/librsync/librsync.git'
 url='librsync.sourcefrog.net'
-cfg='cmake'
 patch="librsync-01"
 dep='zlib libb2 bzip2'
-eta='0'
 
+cfg='cmake'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config='-DINSTALL_MANFILES=OFF'
 
 dev_vrs='2.3.3'
+pkg_deb='librsync-dev'
+eta='0'
 
 lst_inc='librsync.h librsync_export.h'
 lst_lib='librsync'

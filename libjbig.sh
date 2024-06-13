@@ -9,21 +9,24 @@ dsc='JBIG1 data compression standard (ITU-T T.82) lossless image compression'
 lic='GPL'
 src='https://www.cl.cam.ac.uk/~mgk25/git/jbigkit'
 patch='libjbig-01'
+
 cfg='cmake'
 cmake_bin="BUILD_EXECUTABLES"
 cmake_static='BUILD_STATIC_LIBS'
+
+dev_bra='master'
+dev_vrs='v2.1'
+pkg_deb='libjbig-dev'
+eta='17'
+
+on_create_pc(){
+    build_pkgconfig --libs=-ljbig,-ljbig85
+}
 
 lst_inc='jbig_ar.h jbig85.h jbig.h'
 lst_lib='libjbig85 libjbig'
 lst_bin='pbmtojbg85 pbmtojbg jbgtopbm85 jbgtopbm'
 
-dev_vrs='v2.1'
-eta='17'
-
-on_create_pc(){
-    build_pkgconfig --name=libjbig --libs=-ljbig
-    build_pkgconfig --name=libjbig85 --libs=--ljbig85
-}
 . xbuild && start
 
 # Filelist

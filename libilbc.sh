@@ -4,31 +4,24 @@ lib='libilbc'
 dsc='Internet Low Bitrate Codec (iLBC) library'
 lic='BSD-3c'
 src='https://github.com/TimothyGu/libilbc.git'
-cfg='cmake'
+src_opt='--depth=1'
+sub='submodule update --init'
 patch="libilbc-01"
-eta='64'
-cmake_bin="examples"
 
+cfg='cmake'
+cmake_bin="examples"
 cmake_static='BUILD_STATIC_LIBS'
-#cfg_bin=''
 
 dev_bra='main'
 dev_vrs='3.0.4'
-stb_bra='tags/3.0.4'
-stb_vrs='3.0.4'
+pkg_dev=''
+eta='144'
 
 lst_inc='ilbc.h ilbc_export.h'
 lst_lib='libilbc'
 lst_bin='ilbc_test'
 lst_lic='COPYING AUTHORS'
 lst_pc='libilbc.pc'
-
-source_get(){
-    do_progress 'git' git clone --depth=1 $src $lib
-    cd $lib
-    do_log 'sub' git submodule update --init
-    cd ..
-}
 
 . xbuild && start
 

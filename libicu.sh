@@ -4,39 +4,28 @@
 # GNU  .   .   .  +++ gcc
 # WIN  .   .   .   .  clang/gcc
 
-<<'JHEAD'
-{
-    "lib": "libicu",
-    "pkg": "icu-io",
-    "dsc": "International Components for Unicode library",
-    "src": "https://github.com/unicode-org/icu.git",
-    "dir_config": "icu4c/source",
-    "mki": "install"
-}
-JHEAD
-
 lib='libicu'
 pkg='icu-io'
 dsc='International Components for Unicode library'
 lic='BSD'
 src='https://github.com/unicode-org/icu.git'
+url=''
+
 cfg='ac'
+ac_config='--disable-icuio --disable-layout --disable-tests --disable-samples'
 config_dir='icu4c/source'
 mki='install'
-eta='580'
 
+dev_bra=''
 dev_vrs='70.1'
-lst_inc='unicode/*.h'
-lst_lib='libicutu libicuuc libicuio libicutest libicui18n libicudata'
-lst_bin='genrb makeconv icuexportdata pkgdata gencnval gencfu gendict uconv icu-config derb genbrk icuinfo'
-lst_lic='COPYING'
-lst_pc='icu-i18n.pc icu-uc.pc icu-io.pc'
+pkg_deb='libicu-dev'
+eta='580'
 
 on_config(){
     if [ ! $host_ndk ] || [ $API -lt 31 ]; then
 
         dir_build="${dir_src}/${config_dir}/build_${arch}"
-        ac_config="--with-data-packaging=archive"
+        ac_config+=" --with-data-packaging=archive"
 
         if ! $build_pkgdl && $host_cross; then
             dir_cross="${dir_src}/${config_dir}/build_${build_arch}"
@@ -51,6 +40,12 @@ on_config(){
         exit 0
     fi
 }
+
+lst_inc='unicode/*.h'
+lst_lib='libicutu libicuuc libicuio libicutest libicui18n libicudata'
+lst_bin='genrb makeconv icuexportdata pkgdata gencnval gencfu gendict uconv icu-config derb genbrk icuinfo'
+lst_lic='COPYING'
+lst_pc='icu-i18n.pc icu-uc.pc icu-io.pc'
 
 . xbuild && start
 

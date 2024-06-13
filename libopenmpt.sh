@@ -8,26 +8,16 @@ lib='libopenmpt'
 dsc='a library to render tracker music'
 lic='BSD-3c'
 src='https://github.com/OpenMPT/openmpt.git'
-cfg='ar'
 dep='ogg vorbis flac sndfile'
-eta='0'
 
+cfg='ar'
+ac_bin='examples'
 ac_config='--without-mpg123 --without-portaudio --without-portaudiocpp --without-pulseaudio --without-sdl2 --disable-tests'
-
-ac_bin='--disable-examples|--enable-examples'
 
 dev_bra='master'
 dev_vrs='0.7.6+release.autotools'
-stb_bra=''
-stb_vrs=''
-
-lst_inc=''
-lst_lib=''
-lst_bin=''
-lst_lic='LICENSE'
-lst_pc=''
-
-. xbuild
+pkg_deb='libopenmpt-dev'
+eta='0'
 
 on_config(){
     vrs=$(curl -s https://lib.openmpt.org/files/libopenmpt/src/ | grep -oP 'libopenmpt-\K([0-9\.]+)\+release.autotools.tar.gz' | tail -n 1)
@@ -39,4 +29,10 @@ on_config(){
 
 }
 
-start
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE'
+lst_pc=''
+
+. xbuild && start
