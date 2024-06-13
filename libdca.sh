@@ -5,10 +5,11 @@ dsc='Free library to decode DTS Coherent Acoustics streams'
 lic='GLP-2.0'
 src='https://code.videolan.org/videolan/libdca.git'
 cfg='ar'
-eta='0'
 
 dev_bra='master'
 dev_vrs='0.0.7'
+pkg_deb='libdca-dev'
+eta='0'
 
 lst_inc='dts.h dca.h'
 lst_lib='libdca'

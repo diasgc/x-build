@@ -1,10 +1,9 @@
 Todo cmakelists.txt:
 cmake: libavc1394.sh
+cmake: libcap.sh
 
 missing pkg_deb variable:
-libcap.sh
-libcrypt.sh
-libdca.sh
+
 libdecklink.sh
 libdrm.sh
 libebml.sh

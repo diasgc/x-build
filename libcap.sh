@@ -9,12 +9,11 @@ dsc='Library for getting and setting POSIX.1e (formerly POSIX 6) draft 15 capabi
 lic='GLP-2.0'
 src='https://kernel.googlesource.com/pub/scm/linux/kernel/git/morgan/libcap.git'
 cfg='make'
-eta='0'
 
 dev_bra='main'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb='libcap-dev'
+eta='0'
 
 lst_inc=''
 lst_lib=''

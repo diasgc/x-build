@@ -69,6 +69,9 @@ generate_script(){
 	cp "${dir_root}/utils/script.template" ${scriptname}
 	chmod +x "${scriptname}"
 	sed -i 's,@src@,'${giturl}',g;s,@lib@,'${libname}',g' ${scriptname}
+	local pkgname="lib${libname//lib/}-dev"
+	test -z "$(apt-cache show ${pkgname} 2>/dev/null | grep ${pkgname})" && pkgname=
+	sed -i 's,@pkg_deb@,'${pkgname}',g' ${scriptname} 
 	case $giturl in
 		*github*)
 			local json=$(github_json $srcname)
