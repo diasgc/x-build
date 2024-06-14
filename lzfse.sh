@@ -4,18 +4,21 @@ lib='lzfse'
 dsc='LZFSE compression library and command line tool'
 lic='BSD-3c'
 src='https://github.com/lzfse/lzfse.git'
-cfg='cmake'
 patch="lzfse-01"
-eta='411'
+
+cfg='cmake'
 cmake_static='BUILD_STATIC_LIBS'
+
+dev_bra='master'
+dev_vrs='0.1.1'
+pkg_deb='liblzfse-dev'
+eta='411'
 
 lst_inc='lzfse.h'
 lst_lib='liblzfse'
 lst_bin='lzfse'
 lst_lic='LICENSE README.md'
 lst_pc='lzfse.pc'
-
-dev_vrs='0.1.1'
 
 . xbuild && start
 

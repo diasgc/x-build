@@ -1,28 +1,31 @@
 #!/bin/bash
 
 lib='libtool'
-dsc='A library for reading and writing audio files'
+dsc='GNU libtool'
 lic='LGPL-3.0'
 src='https://git.savannah.gnu.org/git/libtool.git'
+url='https://savannah.gnu.org/git/?group=libtool'
+tls='help2man'
+
 cfg='ac'
 cfg_cmd='./bootstrap'
-tls='help2man'
+mki='install'
+
+dev_bra='main'
+dev_vrs='2.5.0.1'
+pkg_deb=''
 eta='35'
+
+on_create_pc(){
+    test -z "${vrs}" && vrs="$(sed 's/-.*//' "${dir_src}"/.version)"
+    build_pkgconfig --libs=-ltdl
+}
 
 lst_inc='ltdl.h libltdl/lt_error.h libltdl/lt_dlloader.h libltdl/lt_system.h'
 lst_lib='libltdl'
 lst_bin='libtoolize libtool'
 lst_lic=''
 lst_pc='libtool.pc'
-mki='install'
-
-dev_bra='main'
-dev_vrs='2.5.0.1'
-
-on_create_pc(){
-    vrs="$(sed 's/-.*//' "${dir_src}"/.version)"
-    build_pkgconfig --libs=-ltdl --url=https://savannah.gnu.org/git/?group=libtool
-}
 
 . xbuild && start
 

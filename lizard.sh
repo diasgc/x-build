@@ -5,8 +5,8 @@ pkg='liblizard'
 dsc='Lizard (formerly LZ5) is an efficient compressor with very fast decompression. '
 lic='MLP-2.0'
 src='https://github.com/inikep/lizard.git'
-cfg='cmake'
 
+cfg='cmake'
 cmake_file='lizard'
 
 dev_vrs='1.0.0'

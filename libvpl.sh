@@ -9,10 +9,9 @@ pkg='vpl'
 dsc='Intel® Video Processing Library (Intel® VPL) dispatcher, tools, and examples'
 lic='MIT License'
 src="https://github.com/intel/libvpl.git"
-cfg='cmake'
 dep='libva'
-eta='0'
 
+cfg='cmake'
 cmake_config='-DBUILD_TOOLS=OFF -DTOOLS_ENABLE_X11=OFF 
     -DTOOLS_ENABLE_OPENCL=OFF -DTOOLS_ENABLE_SCREEN_CAPTURE=OFF 
     -DTOOLS_ENABLE_RENDER=OFF -DBUILD_PREVIEW=OFF
@@ -21,13 +20,13 @@ cmake_config='-DBUILD_TOOLS=OFF -DTOOLS_ENABLE_X11=OFF
 
 dev_bra='master'
 dev_vrs='2.10'
+pkg_deb='libvpl-dev'
+eta='0'
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
-
-eta='20'
 
 . xbuild && start

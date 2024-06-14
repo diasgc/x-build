@@ -4,8 +4,14 @@ lib='lodepng'
 dsc='PNG encoder and decoder in C and C++'
 lic='ZLib'
 src='https://github.com/lvandeve/lodepng.git'
-cfg='mk'
+url='http://lodev.org/lodepng/'
 dep='sdl2'
+
+cfg='make'
+
+dev_bra='master'
+dev_vrs='0.0'
+pkg_deb='liblodepng-dev'
 eta='10'
 
 . xbuild && start

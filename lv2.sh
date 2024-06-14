@@ -4,14 +4,55 @@ lib='lv2'
 dsc='An extensible audio plugin interface'
 lic='LGPL-2.1'
 git='https://gitlab.com/lv2/lv2.git'
-cfg='meson'
-pkg='lv2'
 dep='sndfile lilv'
+
+cfg='meson'
+meson_cfg='-Ddocs=disabled -Dtests=disabled -Dplugins=disabled'
+
+dev_bra='master'
+dev_vrs='1.18.11'
+pkg_deb='lv2-dev'
 eta='19'
 
-dev_vrs='1.18.11'
-
-meson_cfg='-Ddocs=disabled -Dtests=disabled -Dplugins=disabled'
+lst_inc='../lib/lv2/event.lv2/event.h
+    ../lib/lv2/event.lv2/event-helpers.h
+    ../lib/lv2/core.lv2/attributes.h
+    ../lib/lv2/core.lv2/lv2.h
+    ../lib/lv2/core.lv2/lv2_util.h
+    ../lib/lv2/resize-port.lv2/resize-port.h
+    ../lib/lv2/state.lv2/state.h
+    ../lib/lv2/morph.lv2/morph.h
+    ../lib/lv2/buf-size.lv2/buf-size.h
+    ../lib/lv2/data-access.lv2/data-access.h
+    ../lib/lv2/worker.lv2/worker.h
+    ../lib/lv2/instance-access.lv2/instance-access.h
+    ../lib/lv2/options.lv2/options.h
+    ../lib/lv2/presets.lv2/presets.h
+    ../lib/lv2/atom.lv2/forge.h
+    ../lib/lv2/atom.lv2/atom.h
+    ../lib/lv2/atom.lv2/util.h
+    ../lib/lv2/urid.lv2/urid.h
+    ../lib/lv2/parameters.lv2/parameters.h
+    ../lib/lv2/midi.lv2/midi.h
+    ../lib/lv2/port-groups.lv2/port-groups.h
+    ../lib/lv2/dynmanifest.lv2/dynmanifest.h
+    ../lib/lv2/ui.lv2/ui.h
+    ../lib/lv2/log.lv2/logger.h
+    ../lib/lv2/log.lv2/log.h
+    ../lib/lv2/units.lv2/units.h
+    ../lib/lv2/time.lv2/time.h
+    ../lib/lv2/patch.lv2/patch.h
+    ../lib/lv2/port-props.lv2/port-props.h
+    ../lib/lv2/uri-map.lv2/uri-map.h'
+lst_lib='lv2/eg-params.lv2/params.so
+    lv2/eg-fifths.lv2/fifths.so
+    lv2/eg-midigate.lv2/midigate.so
+    lv2/eg-metro.lv2/metro.so
+    lv2/eg-amp.lv2/amp.so
+    lv2/eg-sampler.lv2/sampler.so'
+lst_bin=''
+lst_lic='License.txt'
+lst_pc='lv2.pc'
 
 . xbuild && start
 

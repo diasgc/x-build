@@ -4,6 +4,12 @@ lib='libvideogfx'
 dsc='Rapid prototyping library for graphics and video processing.'
 lic='LGPL-3.0'
 src='https://github.com/farindk/libvideogfx.git'
+
+cfg='ag'
+
+dev_bra='master'
+dev_vrs=''
+pkg_deb=''
 eta='120'
 
 lst_inc=''

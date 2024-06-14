@@ -4,26 +4,26 @@ lib='libyuv'
 dsc='Libyuv is an open source project that includes YUV scaling and conversion functionality'
 lic='BSD-3c'
 src='https://chromium.googlesource.com/libyuv/libyuv.git'
-cfg='cmake'
 dep='libjpeg'
+
+cfg='cmake'
+LDFLAGS+=" -ljpeg"
+
+dev_bra='main'
+dev_vrs='1888'
+pkg_deb='libyuv-dev'
 eta='90'
 
-dev_vrs='1888'
-pc_llib='-lyuv'
-pc_libsprivate='-lpthread -ljpeg'
+on_create_pc(){
+    vrs=$(grep -oP 'LIBYUV_VERSION \K[0-9]+' "${dir_src}/include/libyuv/version.h")
+    build_pkgconfig --libs=-lyuv --libs_private=-lpthread,-ljpeg
+}
 
 lst_inc='libyuv.h libyuv/*.h'
 lst_lib='libyuv'
 lst_bin='yuvconvert'
 lst_lic='LICENSE PATENTS OWNERS AUTHORS'
 lst_pc='libyuv.pc'
-
-LDFLAGS+=" -ljpeg"
-
-on_create_pc(){
-    vrs=$(grep -oP 'LIBYUV_VERSION \K[0-9]+' "${dir_src}/include/libyuv/version.h")
-    build_pkgconfig --libs=-lyuv --libs_private=-lpthread,-ljpeg
-}
 
 . xbuild && start
 

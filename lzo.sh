@@ -6,25 +6,29 @@ dsc='LZO is a portable lossless data compression library written in ANSI C'
 lic='GPL2+'
 vrs='2.10'
 src="http://www.oberhumer.com/opensource/lzo/download/lzo-${vrs}.tar.gz"
+
 cfg='cmake'
-eta='10'
+cmake_static='ENABLE_STATIC'
+cmake_shared='ENABLE_SHARED'
 
 dev_bra='master'
 dev_vrs='2.10'
+pkg_deb='liblzo2-dev'
+eta='10'
+
+_on_build_static(){
+    cmake_config+=" -DENABLE_STATIC=ON"
+}
+
+_on_build_shared(){
+    cmake_config+=" -DENABLE_SHARED=ON"
+}
 
 lst_inc='lzo/*.h'
 lst_lib='liblzo2'
 lst_bin='../libexec/lzo/examples/*'
 lst_lic='COPYING AUTHORS'
 lst_pc='lzo2.pc'
-
-on_build_static(){
-    cmake_config+=" -DENABLE_STATIC=ON"
-}
-
-on_build_shared(){
-    cmake_config+=" -DENABLE_SHARED=ON"
-}
 
 . xbuild && start
 

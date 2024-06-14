@@ -9,7 +9,13 @@ pkg='simde'
 dsc='Implementations of SIMD instruction sets for systems which dont natively support them'
 lic='MIT'
 src='https://github.com/simd-everywhere/simde.git'
+
 cfg='meson'
+meson_cfg='-Dtests=false'
+
+dev_bra='master'
+dev_vrs='0.8.2'
+pkg_deb='libsimde-dev'
 eta='1920'
 
 lst_inc='simde/*.h simde/x86/*.h simde/mips/*.h simde/mips/msa/*.h simde/arm/*.h simde/arm/sve/*.h simde/arm/neon/*.h simde/x86/avx512/*.h simde/x86/sse4.1.h simde/x86/*.h simde/wasm/*.h'

@@ -1,18 +1,18 @@
 #!/bin/bash
 
 lib='libxau'
+pkg='xau'
 dsc='Functions for handling Xauthority files and entries.'
 lic='Other'
 src='https://gitlab.freedesktop.org/xorg/lib/libxau.git'
-cfg='ag'
-eta='0'
 dep='xorgproto'
-pkg='xau'
+
+cfg='ag'
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb='libxau-dev'
+eta='0'
 
 lst_inc='X11/Xauth.h'
 lst_lib='libXau'

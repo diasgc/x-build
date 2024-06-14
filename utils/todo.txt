@@ -1,38 +1,14 @@
 Todo cmakelists.txt:
 cmake: libavc1394.sh
 cmake: libcap.sh
+cmake: lodepng.sh
+bazel: lyra.sh
 
 missing pkg_deb variable:
 
+lzo.sh # todo src_rel
 
-librtmp.sh
-librubberband.sh
-libshaderc.sh
-libsimde.sh
-libsodium.sh
-libtdb.sh
-libtool.sh
-libudfread.sh
-libva.sh
-libvideogfx.sh
-libvpl.sh
-libwebp2.sh
-libx11.sh
-libxaac.sh
-libxau.sh
-libxdmcp.sh
-libxft.sh
-libxtrans.sh
-libyuv.sh
-libzmq.sh
-lilv.sh
-lizard.sh
-llvm.sh
-lodepng.sh
-lv2.sh
-lyra.sh
-lzfse.sh
-lzo.sh
+
 mediainfolib.sh
 mesa.sh
 mimalloc.sh

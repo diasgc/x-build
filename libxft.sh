@@ -8,8 +8,13 @@ lib='libxft'
 dsc='FreeType-based font drawing library for X'
 lic='MIT'
 src='https://gitlab.freedesktop.org/xorg/lib/libxft.git'
-cfg='ag'
 dep='fontconfig freetype libx11 libxext libxrender'
+
+cfg='ag'
+
+dev_bra='master'
+dev_vrs='2.3.8'
+pkg_deb='libxft-dev'
 eta='0'
 
 lst_inc=''

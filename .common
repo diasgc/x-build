@@ -519,6 +519,12 @@ function meson_set_buildlink {
   elif ${build_shared}; then
     CSH="${meson_shared}"
   fi
+  if [ -n "${meson_bin}" ]; then
+    case "${meson_bin}" in
+      bool:*) meson_bin="${meson_bin#bool:*}" && CBN="-D${meson_bin}=$(bool2str ${build_bin} 'true' 'false')";;
+      *) meson_bin="${meson_bin#*:*}" && CBN="-D${meson_bin}=$(bool2str ${build_bin} enabled disabled)";;
+    esac
+  fi
 }
 
 # check build system and set defaults - static and shared build options

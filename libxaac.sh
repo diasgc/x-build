@@ -11,22 +11,19 @@ lib='libxaac'
 dsc='Extended HE-AAC, the latest innovation member of the MPEG AAC codec family'
 lic='Apache-2.0'
 src="https://android.googlesource.com/platform/external/libxaac.git"
-cfg='cmake'
-eta='0'
 
+cfg='cmake'
 cmake_definitions+=('-Wno-unused-command-line-argument')
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb=''
+eta='0'
 
 lst_inc=''
 lst_lib='libxaacenc libxaacdec'
 lst_bin='xaacenc xaacdec xaac_dec_fuzzer xaac_enc_fuzzer'
 lst_lic='LICENSE OWNERS NOTICE'
 lst_pc=''
-
-eta=''
 
 . xbuild && start

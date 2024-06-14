@@ -1,16 +1,21 @@
 #!/bin/bash
 
 lib='llvm'
-dsc='High quality encoder and decoder of the Audio Video Standard of China (AVS)'
+dsc='Low-Level Virtual Machine (LLVM)'
 lic='GPL-2.0'
 src='https://github.com/llvm/llvm-project.git'
-#bra='fir-dev'
-eta='30'
 
 cfg="cmake"
 cmake_shared='LIBCXX_ENABLE_SHARED'
 cmake_static='LIBCXX_ENABLE_STATIC'
 cmake_config='-DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_DOCS=OFF'
+build_strip=false
+MAKE_EXECUTABLE=ninja
+
+dev_bra='main'
+dev_vrs='18.1.7'
+pkg_deb='llvm-dev'
+eta='30'
 
 extraOpts(){
     case $1 in
@@ -26,16 +31,7 @@ extraOpts(){
     esac
 }
 
-dev_vrs=''
-lst_inc=''
-lst_lib=''
-lst_bin=''
-lst_lic=''
-lst_pc=''
-pc_llib=void
-
-build_strip=false
-MAKE_EXECUTABLE=ninja
+#pc_llib=void
 
 on_config(){
     dir_build="${dir_src}"
@@ -44,6 +40,12 @@ on_config(){
     mkf="-C build_${arch} $(echo "${runtimes[@]//lib/ }")"
     mki="-C build_${arch} $(echo "${runtimes[@]//lib/install-}")"
 }
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic=''
+lst_pc=''
 
 . xbuild && start
 

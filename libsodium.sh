@@ -8,14 +8,14 @@ lib='libsodium'
 dsc='A modern, portable, easy to use crypto library.'
 lic='ISC'
 src='https://github.com/jedisct1/libsodium.git'
-bra='stable'
+
+cfg='ac'
 cfg_cmd="./autogen.sh -s"
-eta='144'
 
 dev_bra='master'
-dev_vrs='1.0.19'
-stb_bra=''
-stb_vrs=''
+dev_vrs='1.0.20'
+pkg_deb='libsodium-dev'
+eta='352'
 
 lst_inc='sodium.h sodium/*.h'
 lst_lib='libsodium'

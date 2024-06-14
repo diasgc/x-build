@@ -5,17 +5,17 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='libxtrans'
+pkg='xtrans'
 dsc='Abstract network code for X'
 lic='GLP-2.0'
 src='https://gitlab.freedesktop.org/xorg/lib/libxtrans.git'
+
 cfg='ag'
-eta='0'
-pkg='xtrans'
 
 dev_bra='master'
-dev_vrs=''
-stb_bra='xtrans-1.4.0'
-stb_vrs='1.4.0'
+dev_vrs='1.4.0'
+pkg_deb='xtrans-dev'
+eta='0'
 
 lst_inc='X11/xtrans/*.h'
 lst_lib=''

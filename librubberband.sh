@@ -5,26 +5,22 @@ pkg='rubberband'
 dsc='An audio time-stretching and pitch-shifting library and utility program.'
 lic='GPL-2.0'
 src='https://github.com/breakfastquay/rubberband.git'
-cfg='meson'
 dep='sndfile samplerate fftw'
-eta='49'
 
+cfg='meson'
 meson_cfg='-Dtests=disabled -Dlv2=disabled -Dladspa=disabled -Dvamp=disabled'
+meson_bin='cmdline'
 
 dev_bra='default'
 dev_vrs='3.3.0'
-stb_bra='tags/v'${dev_vrs}
-stb_vrs=${dev_vrs}
+pkg_deb='librubberband-dev'
+eta='49'
 
 lst_inc='rubberband/*.h'
 lst_lib='librubberband librubberband-jni'
 lst_bin='rubberband'
 lst_lic='COPYING'
 lst_pc='rubberband.pc'
-
-on_config(){
-    $build_bin && meson_cfg+=' -Dcmdline=enabled' || meson_cfg+=' -Dcmdline=disabled'
-}
 
 . xbuild && start
 

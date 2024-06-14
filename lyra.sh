@@ -7,22 +7,19 @@
 lib='lyra'
 dsc='A Very Low-Bitrate Codec for Speech Compression'
 lic='Apache License 2.0'
-vrs=''
 src="https://github.com/google/lyra.git"
+
 cfg='bazel'
-eta='0'
 
 dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='1.3.2'
+pkg_deb=''
+eta='0'
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
-
-eta='20'
 
 . xbuild && start

@@ -8,14 +8,14 @@ lib='libxdmcp'
 dsc='X Display Manager Control Protocol routines'
 lic='Other'
 src='https://github.com/freedesktop/libXdmcp.git'
+
 cfg='ag'
-eta='0'
-#CFG='--enable-devel-docs'
+#ac_config='--enable-devel-docs'
 
 dev_bra='master'
 dev_vrs=''
-stb_bra=''
-stb_vrs=''
+pkg_deb='libxdmcp-dev'
+eta='0'
 
 lst_inc=''
 lst_lib=''
