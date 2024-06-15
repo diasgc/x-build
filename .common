@@ -268,6 +268,11 @@ function googlesource_get_latest_tarball {
   curl_tar ${src} ${lib}
 }
 
+#usage tar_version <url-dir> <prefix>
+function tar_version {
+    echo $(curl -sL ${1} | grep -oP "${2}[0-9\.]+.tar.gz" | sed "s,${2},,;s,.tar.gz,," | sort -rV | head -n1)
+}
+
 function curl_tar {
 	local tag="get"
 	local args=
@@ -284,9 +289,16 @@ function curl_tar {
 	
 	test -d "${dir_src}" && rm -rf "${dir_src}"
 	mkdir "${dir_src}"
-	curl -sL "${1}" 2>>"${log_file}" | tar "${args}" --one-top-level=${dir_src} 2>>"${log_file}"
+	curl_tar_simple ${1} ${args}
 	
 	logok "${tag}"
+}
+
+function curl_tar_simple {
+  local args=${2}
+  test -z "${args}" && args="-xz"
+  args+=" $(bool2str ${tar_stripcomponents} --strip-components=1 --one-top-level=${dir_src})"
+  curl -sL "${1}" 2>>"${log_file}" | tar "${args}" --one-top-level=${dir_src} 2>>"${log_file}"
 }
 
 function curl_targz {

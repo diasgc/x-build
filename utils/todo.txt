@@ -11,7 +11,7 @@ lzo.sh # todo src_rel
 
 
 
-perl.sh
+
 pocketsphinx.sh
 postfish.sh
 qpdf.sh
