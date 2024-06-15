@@ -1,28 +1,30 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
 
 lib='pcre'
 pkg='libpcre'
 dsc=''
 lic='BSD-3c'
 src='https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz'
-cfg='cmake'
 patch="pcre-01"
 dep='bzip2 readline editline'
+
+cfg='cmake'
+
+dev_bra=''
+dev_vrs='8.45'
+pkg_deb=''
 eta='0'
 
 lst_inc='pcre.h pcreposix.h pcrecpparg.h pcre_scanner.h pcre_stringpiece.h pcrecpp.h'
 lst_lib='libpcreposix libpcrecpp libpcre'
 lst_bin='pcre_scanner_unittest pcrecpp_unittest pcregrep pcre-config pcretest pcre_stringpiece_unittest'
 
-on_config(){
-    $build_static && CSH="-DBUILD_SHARED_LIBS=OFF"
-}
-
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 # Filelist
 # --------

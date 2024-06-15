@@ -10,7 +10,7 @@ lzo.sh # todo src_rel
 
 
 
-pcre.sh
+
 perl.sh
 pocketsphinx.sh
 postfish.sh
