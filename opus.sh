@@ -1,24 +1,28 @@
 #!/bin/bash
 
-lvr='1.3.1-101-*'
 lib='opus'
 dsc='Opus is a codec for interactive speech and audio transmission over the Internet'
 lic='BSD'
 src='https://github.com/xiph/opus.git'
-cfg='cmake'
 dep='ogg'
-eta='60'
-#ac_nopic=true
 
+cfg='cmake'
 cmake_bin='OPUS_BUILD_PROGRAMS'
 
-lst_inc='opus/*.h'
+dev_bra='master'
+dev_vrs='1.4'
+pkg_deb='libopus-dev'
+eta='60'
+
+lst_inc='opus/opus_projection.h
+ opus/opus.h
+ opus/opus_multistream.h
+ opus/opus_types.h
+ opus/opus_defines.h'
 lst_lib='libopus'
 lst_bin=''
 lst_lic='LICENSE_PLEASE_READ.txt COPYING AUTHORS'
 lst_pc='opus.pc'
-
-dev_vrs='1.4'
 
 . xbuild && start
 

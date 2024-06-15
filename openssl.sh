@@ -1,17 +1,45 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  +   .   .   .   .   .   .   .   .   .   .  static
-#  +   .   .   .   .   .   .   .   .   .   .  shared
-#  +   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='openssl'
 dsc='TLS/SSL and crypto library'
 lic='Apache-2.0'
 src='https://github.com/openssl/openssl.git'
-cfg='other'
 tls='nasm perl'
 #dep='cryptopp'
+
+cfg='other'
+CFLAGS='-Wno-macro-redefined'
+# install no docs
+mki="install_sw"
+
+dev_bra='master'
+dev_vrs='3.3.0'
+pkg_deb='openssl'
 eta='360'
+
+on_config(){
+  dir_build="${dir_src}/build_${arch}"
+  PATH=$TOOLCHAIN/bin:$PATH
+}
+
+on_build_static(){
+  CFG+=" no-shared"
+}
+on_config_ndk(){
+  CFG="android-${target_trip[0]} -D__ANDROID_API__=${API} no-tests" && CFG="${CFG/aarch64/arm64}"
+  export ANDROID_NDK_ROOT=${ANDROID_NDK_HOME}
+}
+
+on_config_mingw(){
+  case "${arch}" in
+    x86_64-w64-mingw32 ) CFG="no-idea no-mdc2 no-rc5 mingw64 --cross-compile-prefix=x86_64-w64-mingw32-";;
+    i686-w64-mingw32 )   CFG="no-idea no-mdc2 no-rc5 mingw --cross-compile-prefix=i686-w64-mingw32-";;
+  esac
+}
+
+build_config(){
+  do_log 'config' ${dir_src}/Configure ${CFG} --prefix=${dir_install}
+}
 
 lst_inc='openssl/*.h'
 lst_lib='libssl libcrypto ossl-modules/legacy.so engines-3/*.so '
@@ -19,32 +47,12 @@ lst_bin='c_rehash openssl'
 lst_lic='LICENSE.txt AUTHORS.md'
 lst_pc='libssl.pc libcrypto.pc openssl.pc'
 
-dev_vrs='3.3.0'
-CFLAGS='-Wno-macro-redefined'
-
-# install no docs
-mki="install_sw"
-
-on_config(){
-  dir_build="${dir_src}/build_${arch}"
-  PATH=$TOOLCHAIN/bin:$PATH
-  $host_ndk && CFG="android-${target_trip[0]} -D__ANDROID_API__=$API no-tests" && CFG="${CFG/aarch64/arm64}"
-
-  case $arch in
-    x86_64-w64-mingw32 )    CFG="no-idea no-mdc2 no-rc5 mingw64 --cross-compile-prefix=x86_64-w64-mingw32-";;
-    i686-w64-mingw32 )      CFG="no-idea no-mdc2 no-rc5 mingw --cross-compile-prefix=i686-w64-mingw32-";;
-  esac
-
-  $build_shared || CFG+=" no-shared"
-  export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
-}
-
-build_config(){
-  do_log 'config' $dir_src/Configure ${CFG} --prefix=${dir_install}
-}
-
 . xbuild && start
 
+# cpu av8 av7 x86 x64
+# NDK  +   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
 
 # Filelist
 # --------

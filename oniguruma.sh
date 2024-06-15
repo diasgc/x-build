@@ -6,12 +6,12 @@ lic='BSD-2c'
 src='https://github.com/kkos/oniguruma.git'
 cfg='cmake'
 patch="oniguruma-01"
-eta='30'
+
 
 dev_bra='master'
 dev_vrs='6.9.7'
-stb_bra='tags/6.9.7.1'
-stb_vrs='6.9.7.1'
+pkg_deb=''
+eta='30'
 
 lst_inc='oniggnu.h oniguruma.h'
 lst_lib='libonig'

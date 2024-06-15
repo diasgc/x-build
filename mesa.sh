@@ -9,27 +9,27 @@ dsc='Mesa 3D graphics library'
 lic='Free'
 src='https://gitlab.freedesktop.org/mesa/mesa.git'
 tls='flex'
-cfg='meson'
 dep='libdrm'
-eta='0'
+
+cfg='meson'
 build_strip=false
 
+dev_bra='main'
 dev_vrs='22.0.1123'
-
-lst_inc=''
-lst_lib=''
-lst_bin=''
-lst_lic='LICENSE AUTHORS'
-lst_inc=''
-lst_lib=''
-lst_bin=''
-lst_pc=''
+pkg_deb=''
+eta='0'
 
 on_config_ndk(){
     meson_cfg='-Dplatforms=android -Degl-native-platform=android -Dandroid-stub=true -Dgallium-drivers=freedreno -Dvulkan-drivers=freedreno'
     CPPFLAGS+=' -D_GNU_SOURCE=1'
     export API=26 #vulkan sync_merge
 }
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE AUTHORS'
+lst_pc=''
 
 . xbuild && start
 

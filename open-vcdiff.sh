@@ -1,15 +1,17 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK +++  .   .   .  clang
-# GNU +++  .   .   .  gcc
-# WIN +++  .   .   .  clang/gcc
 
 lib='open-vcdiff'
 dsc='An encoder/decoder for the VCDIFF (RFC3284) format'
 lic='Apache-2.0'
 src='https://github.com/google/open-vcdiff.git'
 src_opt='--recursive'
+
 cfg='cmake'
+
+dev_bra='master'
+dev_vrs='0.8.4'
+pkg_deb=''
+eta='0'
 
 ls_pcf='vcdenc vcdcom vcddec'
 ls_lib='vcdenc vcdcom vcddec'
@@ -18,9 +20,13 @@ ls_inc='google/output_string.h google/vcencoder.h
         google/codetablewriter_interface.h
         google/format_extension_flags.h jsonwriter.h'
 ls_bin='vcdiff'
-eta='0'
 
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU +++  .   .   .  gcc
+# WIN +++  .   .   .  clang/gcc
 
 # Filelist
 # --------

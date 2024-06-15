@@ -4,40 +4,40 @@ lib='nettle'
 dsc='Nettle - a low-level cryptographic library'
 lic='LGPL-3.0'
 src='https://git.lysator.liu.se/nettle/nettle.git'
+dep='gmp'
+
 cfg='ac'
 cfg_cmd='./.bootstrap'
-dep='gmp'
-prp='lib64/pkgconfig/nettle.pc'
-eta='90'
-
 ac_config="--disable-documentation --disable-mini-gmp --enable-pic CC_FOR_BUILD=gcc"
 mkc='distclean'
 
-lst_inc='nettle/*.h'
-lst_lib='libhogweed libnettle'
-lst_bin='pkcs1-conv nettle-lfib-stream nettle-hash nettle-pbkdf2 sexp-conv'
-lst_lic='COPYINGv2 COPYINGv3 COPYING.LESSERv3'
-lst_pc='hogweed.pc nettle.pc'
-
+dev_bra='master'
 dev_vrs='3.10'
+pkg_deb='nettle-dev'
+eta='90'
 
 on_config(){
-  $host_arm && CFG+=" --enable-arm-neon" || CFG+=" --enable-x86-sha-ni --enable-x86-aesni"
-  ($host_ndk || $host_mingw) && CFG+=' --disable-assembler'
-  $host_cross || dir_install_pc=${dir_install}/lib64/pkgconfig
-}
-
-latest_release(){
-  local u=$(sed 's,\.git$,/-,' <<<${src})
-  local f="$(curl -sL ${u}/tags | grep -oP 'nettle_[0-9\.]+_release_[0-9]+.tar.gz' | head -n1)"
-  ${src_rel} && src="${u}/archive/${f%%\.tar\.gz}/nettle-${f}"
-  vrs=$(sed 's,nettle_,,;s,_release_.*\.tar\.gz$,,' <<<${f})
+  if ${src_rel}; then
+    local u=$(sed 's,\.git$,/-,' <<<${src})
+    local f="$(curl -sL https://git.lysator.liu.se/nettle/nettle/-/tags | grep -oP 'nettle_[0-9\.]+_release_[0-9]+.tar.gz' | head -n1)"
+    src="https://git.lysator.liu.se/nettle/nettle/-/archive/${f%%\.tar\.gz}/nettle-${f}"
+    vrs=$(sed 's,nettle_,,;s,_release_.*\.tar\.gz$,,' <<<${f})
+  fi
+  ac_config+=" $(bool2str ${host_arm} '--enable-arm-neon' '--enable-x86-sha-ni --enable-x86-aesni')"
+  ac_config+=" $(bool2str ${host_gnu} '--enable' '--disable')-assembler"
+  ${host_cross} || dir_install_pc="${dir_install}/lib64/pkgconfig"
 }
 
 on_create_pc(){
   [ -d "${dir_install}/lib64" ] && [ ! -d "${dir_install}/lib" ] && ln -s "${dir_install}/lib64" "${dir_install}/lib"
   return 0
 }
+
+lst_inc='nettle/*.h'
+lst_lib='libhogweed libnettle'
+lst_bin='pkcs1-conv nettle-lfib-stream nettle-hash nettle-pbkdf2 sexp-conv'
+lst_lic='COPYINGv2 COPYINGv3 COPYING.LESSERv3'
+lst_pc='hogweed.pc nettle.pc'
 
 . xbuild && start
 

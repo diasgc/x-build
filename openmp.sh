@@ -2,30 +2,37 @@
 # todo patch to support dual static-shared build and pc config
 
 lib='openmp'
+pkg='omp'
 dsc='LLVM-OpenMP library'
 lic='Apache-2.0'
 src='https://github.com/llvm-mirror/openmp.git'
+
 cfg='cmake'
 cmake_shared='LIBOMP_ENABLE_SHARED'
+
+# openmp does not support static build
+build_static=false
+build_shared=true
+
+on_config(){  
+    ${use_clang} && WFLAGS='-Wno-unused-variable -Wno-nonnull'
+}
+
+on_create_pc(){
+    build_pkgconfig --name=omp --libs=-lomp
+    build_pkgconfig --name=omptarget --libs=-lomptarget
+}
+
+dev_bra='master'
+dev_vrs=''
+pkg_deb='libomp-dev'
 eta='0'
 
 lst_inc='ompt.h omp.h omp-tools.h'
 lst_lib='libomp libomptarget'
 lst_bin=''
 lst_lic='LICENSE.txt'
-lst_pc=''
-pc_llibs="-lomp -lomptarget"
-
-dev_bra='master'
-dev_vrs=''
-
-# openmp does not support static build
-build_static=false
-build_shared=true
-
-on_config(){
-    $use_clang && WFLAGS='-Wno-unused-variable -Wno-nonnull'
-}
+lst_pc='omp.pc omptarget.pc'
 
 . xbuild && start
 

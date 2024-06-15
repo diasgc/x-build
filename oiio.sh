@@ -10,24 +10,23 @@ lic='BSD-3c'
 src='https://github.com/OpenImageIO/oiio.git'
 url='openimageio.readthedocs.org'
 dep='boost'
+
 cfg='cmake'
-eta='0'
+cmake_config="-DBoost_NO_WARN_NEW_VERSIONS=ON"
 
 dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='2.5.12.0'
+pkg_deb=''
+eta='0'
+
+on_config(){
+    cmake_config+=" -DUSE_SIMD=$(bool2str ${host_arm32} OFF ON)"
+}
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
-
-cmake_config="-DBoost_NO_WARN_NEW_VERSIONS=ON"
-
-on_config(){
-    $host_arm32 || cmake_config+=' -DUSE_SIMD=ON'
-}
 
 . xbuild && start

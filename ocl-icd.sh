@@ -4,25 +4,21 @@
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
-lib='libname'
+lib='ocl-icd'
 dsc='OpenCL ICD Loader'
-lic=''
-vrs=''
+lic='BSD-2c'
 src="https://github.com/OCL-dev/ocl-icd.git"
-cfg='bootstrap'
-eta='0'
+cfg='ab'
 
 dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='2.3.2'
+pkg_deb='ocl-icd-dev'
+eta='0'
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
-
-eta='20'
 
 . xbuild && start

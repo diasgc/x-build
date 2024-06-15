@@ -1,8 +1,4 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  .   .   .   .   .   .   .   .   .   .   .  static
-#  .   .   .   .   .   .   .   .   .   .   .  shared
-#  .   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='p7zip'
 dsc='p7zip is a port of the Windows programs 7z.exe and 7za.exe provided by 7-zip'
@@ -10,7 +6,6 @@ lic='MLP-2.0'
 src='https://github.com/jinfeihan57/p7zip.git'
 cfg='make'
 patch="p7zip-01"
-eta='600'
 
 static_ldflag=-static
 
@@ -37,4 +32,14 @@ create_package(){
     make install DEST_HOME=${1}
 }
 
+dev_bra='master'
+dev_vrs=''
+pkg_deb='p7zip'
+eta='0'
+
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc

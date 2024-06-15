@@ -8,25 +8,30 @@ lib='openal'
 dsc='OpenAL Soft is a software implementation of the OpenAL 3D audio API.'
 lic='GLP-2.0'
 src='https://github.com/kcat/openal-soft.git'
+
 cfg='cmake'
-eta='0'
+cmake_config="-DALSOFT_INSTALL_EXAMPLES=OFF -DALSOFT_EXAMPLES=OFF"
+WFLAGS+=" -Wno-deprecated-declarations -Wno-unused-function"
 
 dev_bra='master'
 dev_vrs='1.23.1'
+pkg_deb=' libopenal-dev'
+eta='0'
 
-lst_inc='AL/*.h'
+on_build_static(){
+    cmake_config+=' -DLIBTYPE=STATIC'
+}
+
+lst_inc='AL/al.h
+ AL/efx-creative.h
+ AL/alext.h
+ AL/alc.h
+ AL/efx.h
+ AL/efx-presets.h'
 lst_lib='libopenal'
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='openal.pc'
-
-cmake_config="-DALSOFT_INSTALL_EXAMPLES=OFF -DALSOFT_EXAMPLES=OFF"
-WFLAGS+=" -Wno-deprecated-declarations -Wno-unused-function"
-
-on_config(){
-    $build_static && cmake_config+=' -DLIBTYPE=STATIC'
-    unset CSH
-}
 
 . xbuild && start
 

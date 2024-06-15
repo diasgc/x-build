@@ -4,13 +4,23 @@ lib='miniz'
 dsc='Single C source file zlib-replacement library, originally from code.google.com/p/miniz'
 lic='GPL2+'
 src="https://github.com/richgel999/miniz.git"
+
 cfg='cmake'
-eta='10'
+cmake_config='-DBUILD_FUZZERS=OFF -DBUILD_TESTS=OFF'
+# other opts '-DAMALGAMATE_SOURCES=OFF -DBUILD_HEADER_ONLY=OFF'
+cmake_bin='BUILD_EXAMPLES'
+
 dev_bra='master'
-dev_vrs=''
+dev_vrs='3.0.2'
+pkg_deb='libminizip-dev'
+eta='10'
 
-
-lst_inc='miniz/*.h'
+lst_inc='miniz/miniz.h
+ miniz/miniz_common.h
+ miniz/miniz_export.h
+ miniz/miniz_tdef.h
+ miniz/miniz_tinfl.h
+ miniz/miniz_zip.h'
 lst_lib='libminiz'
 lst_bin=''
 lst_lic='LICENSE README'

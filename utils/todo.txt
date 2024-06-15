@@ -9,26 +9,7 @@ missing pkg_deb variable:
 lzo.sh # todo src_rel
 
 
-mediainfolib.sh
-mesa.sh
-mimalloc.sh
-miniz.sh
-mmkv.sh
-nettle.sh
-ocl-icd.sh
-oiio.sh
-oniguruma.sh
-openal.sh
-opencl.sh
-opencv.sh
-openh264.sh
-openjph.sh
-openmp.sh
-openssl.sh
-open-vcdiff.sh
-openvino.sh
-opus.sh
-p7zip.sh
+
 pcre.sh
 perl.sh
 pocketsphinx.sh

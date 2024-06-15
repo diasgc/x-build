@@ -4,24 +4,27 @@ lib='mimalloc'
 dsc='mimalloc is a compact general purpose allocator with excellent performance.'
 lic='MIT'
 src='https://github.com/microsoft/mimalloc.git'
-cfg='cmake'
-eta='64'
 
+cfg='cmake'
 cmake_shared='MI_BUILD_SHARED'
 cmake_static='MI_BUILD_STATIC'
 
-pc_llib='-lmimalloc'
-
-dev_bra=''
+dev_bra='dev'
 dev_vrs='1.7.5'
-stb_bra=''
-stb_vrs=''
+pkg_deb='libmimalloc-dev'
+eta='64'
 
-lst_inc=''
-lst_lib=''
+on_create_pc(){
+    build_pkgconfig --libs=-lmimalloc
+}
+
+lst_inc='mimalloc-1.7/mimalloc-new-delete.h
+    mimalloc-1.7/mimalloc-override.h
+    mimalloc-1.7/mimalloc.h'
+lst_lib='libmimalloc.so mimalloc-1.7/libmimalloc.a'
 lst_bin=''
 lst_lic='LICENSE'
-lst_pc=''
+lst_pc='libmimalloc.pc'
 
 . xbuild && start
 

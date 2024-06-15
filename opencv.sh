@@ -1,29 +1,30 @@
 #!/bin/bash
 
 lib='opencv'
+pkg='opencv4'
 dsc='Open Source Computer Vision Library'
 lic='GLP-2.0'
 src='https://github.com/opencv/opencv.git'
 dep='libpng libjpeg'
-cfg='cmake'
-pkg='opencv4'
-eta='860'
 
+cfg='cmake'
 cmake_config="-DOPENCV_GENERATE_PKGCONFIG=ON -DWITH_GTK=OFF -DWITH_1394=OFF -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DWITH_JPEG=ON -DBUILD_JPEG=OFF -DBUILD_JAVA=OFF"
 #cmake_config+='-DBUILD_OPENEXR=ON -DBUILD_OPENJPEG=ON -DOPENCV_ENABLE_NONFREE=OFF -DOPENCV_DNN_OPENCL=OFF'
 
 dev_bra='master'
 dev_vrs='4.9.0'
+pkg_deb='libopencv-dev'
+eta='860'
+
+on_config_ndk(){
+    cmake_config+=' -DBUILD_ANDROID_EXAMPLES=OFF -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_KOTLIN_EXTENSIONS=OFF'
+}
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
 lst_lic='LICENSE COPYRIGHT'
 lst_pc=''
-
-on_config(){
-    $host_ndk && cmake_config+=' -DBUILD_ANDROID_EXAMPLES=OFF -DBUILD_ANDROID_PROJECTS=OFF -DBUILD_KOTLIN_EXTENSIONS=OFF'
-}
 
 . xbuild && start
 
