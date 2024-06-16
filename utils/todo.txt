@@ -8,7 +8,7 @@ missing pkg_deb variable:
 
 lzo.sh # todo src_rel
 
-readline.sh
+
 rnnoise.sh
 shared-mime-info.sh
 sjpeg.sh

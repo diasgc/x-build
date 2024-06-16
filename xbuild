@@ -367,6 +367,13 @@ start(){
 			cfg_cmd='bazel'
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			;;
+		cargo)
+			cfg_cmd='cargo'
+			cfg_args+=('cinstall' '--release' "--prefix=${dir_install}" "${cargo_cfg}" "${CSH}" "${CBN}" '--verbose')
+			skip_make=true
+			skip_install=true
+			do_progress "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
+			;;
 		*)	if [ -n "${cfg_cmd}" ]; then
 				do_log 'config' ${cfg_cmd} ${cfg_args[@]}
 			else
@@ -422,9 +429,10 @@ start(){
 		fi
 	fi
 
+	: "${skip_install:=false}"
 	if fn_defined 'on_install'; then
 		fn_log 'install' on_install
-	else
+	elif ! ${skip_install}; then
 		cd "${dir_build}"
 		do_log 'install' "${MAKE_EXECUTABLE}" ${mki}
 	fi
