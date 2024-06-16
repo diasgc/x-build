@@ -365,7 +365,7 @@ start(){
 			;;
 		bazel)
 			cfg_cmd='bazel'
-			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
+			do_log "${build_system}" "${cfg_cmd}" build "${bazel_cfg}" //...
 			;;
 		cargo)
 			cfg_cmd='cargo'

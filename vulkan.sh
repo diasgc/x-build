@@ -1,28 +1,69 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
 
 lib='vulkan'
 dsc='Khronos Vulkan-Headers'
 lic='Apache-2.0'
 src='https://github.com/KhronosGroup/Vulkan-Headers.git'
 cfg='cmake'
-eta='0'
 
+# cmake option BUILD_LOADER "Build loader" ON
+# cmake BUILD_TESTS "Build tests" ON
+# cmake BUILD_LAYERS "Build layers" ON
+# cmake BUILD_DEMOS "Build demos" ON
+# cmake BUILD_VKJSON "Build vkjson" ON
+
+dev_bra='main'
 dev_vrs='1.3.204'
+pkg_deb=''
+eta='27497190384'
 
-pc_llib=' '
-lst_inc=''
+extraOpts(){
+  case "${1}" in
+    --loader)
+      src='https://github.com/KhronosGroup/Vulkan-Loader.git'
+      url='https://github.com/KhronosGroup/Vulkan-Loader'
+      pkg_deb='libvulkan-dev'
+      cmake_config='-DBUILD_TESTS=OFF -DBUILD_DEMOS=OFF' #-DBUILD_LOADER=OFF -DBUILD_VKJSON=OFF
+      dep='xcb'
+      ;;
+  esac
+}
+
+_on_config_ndk(){
+    CFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include"
+    log_info 'ndk unsupported'
+    end_script
+}
+
+lst_inc='vulkan/vulkan.hpp vulkan/vulkan_ios.h
+ vulkan/vulkan_funcs.hpp vulkan/vulkan_metal.h
+ vulkan/vulkan_structs.hpp vulkan/vulkan_xcb.h
+ vulkan/vulkan_xlib_xrandr.h vulkan/vulkan_core.h
+ vulkan/vulkan_enums.hpp vulkan/vulkan_xlib.h
+ vulkan/vulkan_win32.h vulkan/vulkan.h
+ vulkan/vulkan_raii.hpp vulkan/vulkan_android.h
+ vulkan/vulkan_vi.h vulkan/vulkan_handles.hpp
+ vulkan/vk_icd.h vulkan/vulkan_beta.h
+ vulkan/vulkan_fuchsia.h vulkan/vulkan_wayland.h
+ vulkan/vulkan_screen.h vulkan/vulkan_ggp.h
+ vulkan/vulkan_directfb.h vulkan/vk_layer.h
+ vulkan/vulkan_macos.h vulkan/vk_sdk_platform.h
+ vulkan/vk_platform.h vk_video/vulkan_video_codecs_common.h
+ vk_video/vulkan_video_codec_h264std.h
+ vk_video/vulkan_video_codec_h264std_encode.h
+ vk_video/vulkan_video_codec_h264std_decode.h
+ vk_video/vulkan_video_codec_h265std_encode.h
+ vk_video/vulkan_video_codec_h265std_decode.h
+ vk_video/vulkan_video_codec_h265std.h'
 lst_lib=''
 lst_bin=''
 
-on_config(){
-    $host_ndk && CFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include"
-}
-
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 # Filelist
 # --------

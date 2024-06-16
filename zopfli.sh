@@ -4,25 +4,27 @@ lib='zopfli'
 dsc='Zopfli Compression Algorithm is a compression library programmed in C to perform very good, but slow, deflate or zlib compression.'
 lic='Apache-2.0'
 src='https://github.com/google/zopfli.git'
-cfg='cmake'
+url="https://github.com/google/zopfli"
 patch="zopfli-01"
-eta='45'
 
+cfg='cmake'
 cmake_static='BUILD_STATIC_LIBS'
 
-pc_llibs="-lzopflipng -lzopfli"
-pc_url="https://github.com/google/zopfli"
+on_create_pc(){
+    build_pkgconfig --name=zopflipng --libs=-lzopflipng
+    build_pkgconfig --name=zopfli--libs=-lzopfli
+}
+
+dev_bra='main'
+dev_vrs='1.0.3'
+pkg_deb='libzopfli-dev'
+eta='45'
 
 lst_inc='zopflipng_lib.h zopfli.h'
 lst_lib='libzopflipng libzopfli'
 lst_bin='zopflipng zopfli'
 lst_lic='COPYING'
 lst_pc='zopfli.pc'
-
-dev_bra='main'
-dev_vrs='1.0.3'
-stb_bra=''
-stb_vrs=''
 
 . xbuild && start
 

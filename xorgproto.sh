@@ -5,15 +5,17 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='xorgproto'
+pkg='xproto'
 dsc='X Window System unified protocol definitions   '
 lic='GLP-2.0'
 src='https://gitlab.freedesktop.org/xorg/proto/xorgproto.git'
+
 cfg='ag'
-eta='0'
-pkg='xproto'
 
 dev_bra='master'
 dev_vrs='2021.5'
+pkg_deb='x11proto-dev'
+eta='0'
 
 lst_inc=''
 lst_lib=''
@@ -22,9 +24,9 @@ lst_lic='COPYING* AUTHORS'
 lst_pc=''
 
 on_editpack(){
-    ln -s share/pkgconfig/${pkg}.pc lib/pkgconfig/${pkg}.pc
-    ln -s ${dir_install}/share/pkgconfig/${pkg}.pc ${dir_install}/lib/pkgconfig/${pkg}.pc
+    ln -s ${dir_install}/share/pkgconfig/${pkg}.pc ${dir_install_pc}/${pkg}.pc
 }
+
 
 . xbuild && start
 

@@ -3,8 +3,15 @@
 lib='skcms'
 dsc='PNG encoder and decoder in C and C++'
 lic='BSD-3c'
-src='(https://skia.googlesource.com/skcms'
+src='https://skia.googlesource.com/skcms.git'
 cfg='bazel'
+tls='bazel-bootstrap'
+
+bazel_cfg='--platforms=//platform:android_arm64'
+
+dev_bra=''
+dev_vrs=''
+pkg_deb=''
 eta='10'
 
 . xbuild && start

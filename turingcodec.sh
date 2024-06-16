@@ -5,15 +5,18 @@
 #  .   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='turingcodec'
+pkg='libturing'
 dsc='HEVC software encoder optimised for fast encoding of large resolution video content'
 lic='GLP-2.0'
 src='https://github.com/bbc/turingcodec.git'
-cfg='cmake'
-pkg='libturing'
-eta='1095'
-#CFG="-DUSE_SYSTEM_BOOST=OFF"
 
-nodev=true
+cfg='cmake'
+cmake_config="-DUSE_SYSTEM_BOOST=OFF"
+
+dev_bra=''
+dev_vrs=''
+pkg_deb=''
+eta='1095'
 
 source_patch(){
     # update cmakelists version to 3.1

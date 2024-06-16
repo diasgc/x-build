@@ -5,15 +5,24 @@
 # WIN  .   .   .   +  clang/gcc
 
 lib='svt-vp9'
+pkg='SvtVp9Enc'
 dsc='SVT VP9 encoder'
 lic='Other'
 src="https://github.com/OpenVisualCloud/SVT-VP9"
+src_rel=false
+
 cfg='cmake'
-pkg='SvtVp9Enc'
-eta='15'
+cmake_definitions=( -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter )
+
+on_config_ndk(){
+    # unsupported pthread_setaffinity_np on ndk
+    exit_err "Not available for Android ${arch}"
+}
 
 dev_bra='master'
 dev_vrs='0.3.0'
+pkg_deb=''
+eta='15'
 
 lst_inc=''
 lst_lib=''
@@ -23,12 +32,7 @@ lst_pc=''
 
 eta='20'
 
-src_rel=false
-WFLAGS='-Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter'
 
-on_config_ndk(){
-    # unsupported pthread_setaffinity_np on ndk
-    exit_err "Not available for Android ${arch}"
-}
+
 
 . xbuild && start

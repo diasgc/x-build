@@ -4,8 +4,10 @@ lib='taglib'
 dsc='TagLib Audio Meta-Data Library'
 lic='LGPL-2.1 MPL'
 src='https://github.com/taglib/taglib.git'
-cfg='cmake'
+sub='submodule update --init'
 patch="taglib-01"
+
+cfg='cmake'
 cmake_bin='BUILD_EXAMPLES'
 cmake_static='BUILD_STATIC_LIBS'
 
@@ -23,10 +25,6 @@ lst_bin='tagreader
   tagwriter'
 lst_lic='COPYING.LGPL COPYING.MPL'
 lst_pc='taglib.pc taglib_c.pc'
-
-source_patch(){
-  do_log 'sub' git submodule update --init
-}
 
 . xbuild && start
 

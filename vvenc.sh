@@ -5,11 +5,15 @@ pkg='libvvenc'
 dsc='Fraunhofer Versatile Video Encoder'
 lic='LGPL-2.1'
 src='https://github.com/fraunhoferhhi/vvenc.git'
-cfg='cmake'
+src_rel=false
 #patch="vvenc-01"
-eta='560'
 
-lst_inc='vvenc/*.h'
+cfg='cmake'
+
+lst_inc='vvenc/version.h
+ vvenc/vvencDecl.h
+ vvenc/vvenc.h
+ vvenc/vvencCfg.h'
 lst_lib='libvvenc'
 lst_bin='vvencapp vvencFFapp'
 lst_lic='AUTHORS.md LICENSE.txt'
@@ -17,11 +21,12 @@ lst_pc='libvvenc.pc'
 
 dev_bra='master'
 dev_vrs='1.12.0-rc1'
+pkg_deb=''
+eta='976'
 
-on_config(){
-    # native clang llvm-18: missing LLVMgold.so. Workaround:_ disable lto
-    $host_clang && test "$host_sys" = "linux" && test -f ${SYSROOT}/lib/LLVMgold.so || cmake_config+=' -DVVENC_ENABLE_LINK_TIME_OPT=OFF' 
-    return 0
+on_config_gnu(){
+    # debian pkg llvm-18.1.3: missing LLVMgold.so. Workaround: disable lto
+    $host_clang && test -f ${SYSROOT}/lib/LLVMgold.so || cmake_config+=' -DVVENC_ENABLE_LINK_TIME_OPT=OFF' 
 }
 
 

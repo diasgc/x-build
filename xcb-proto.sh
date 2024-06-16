@@ -3,24 +3,33 @@
 lib='xcb-proto'
 dsc='XML-XCB protocol descriptions'
 lic='Other'
-#vrs='1.12'
-src='https://github.com/freedesktop/xcb-proto.git'
+src='https://gitlab.com/freedesktop/xcb-proto.git'
+url='https://xcb.freedesktop.org/'
+
 cfg='ag'
-eta='0'
+
+dev_bra='master'
+dev_vrs='1.16.0'
+pkg_deb='xcb-proto'
+eta='32'
+
+on_config(){
+    vrs='1.16.0'
+    src="https://xorg.freedesktop.org/archive/individual/proto/xcb-proto-${vrs}.tar.gz"
+    tar_stripcomponents=true
+    ac_config="--with-python_prefix=${dir_install}"
+    export PYTHON_PREFIX=${dir_install}
+}
+
+on_editpack(){
+    ln -s ${dir_install}/share/pkgconfig/${pkg}.pc ${dir_install_pc}/${pkg}.pc
+}
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
 lst_lic='COPYING'
 lst_pc=''
-
-dev_bra='master'
-dev_vrs='1.12'
-
-on_config(){
-    ac_config="--with-python_prefix=${dir_install}"
-    export PYTHON_PREFIX=${dir_install}
-}
 
 . xbuild && start
 

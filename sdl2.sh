@@ -1,21 +1,28 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK +++  .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN +++  .   .   .  clang/gcc
-
-# run with --nodev option
 
 lib='sdl2'
-pkg_deb='libsdl2-dev'
 dsc='Simple Directmedia Layer'
 lic='BSD'
 src='https://github.com/libsdl-org/SDL.git'
+bra='SDL2'
+src_rel=false
+
 cfg='cmake'
-eta='60'
-pkg='sdl3'
 cmake_static='SDL_STATIC'
 cmake_config="-DRPATH=OFF -DASAN=ON -DASSEMBLY=ON -DSDL_HIDAPI_LIBUSB=OFF"
+
+dev_bra='SDL2'
+dev_vrs='2.31.0'
+pkg_deb='libsdl2-dev'
+eta='1328'
+
+on_config(){
+    cmake_config+=" -DANDROID=$(bool2str ${host_ndk} ON OFF)"
+    cmake_config+=" -D$(bool2str ${host_mingw} CMAKE_COMPILER_IS_MINGW=TRUE SDL_STATIC_PIC=ON)"
+}
+on_config_arm(){
+    cmake_config+=" -DARMNEON=ON -DARMSIMD=ON -DMMX=OFF"
+}
 
 lst_inc='SDL2/*.h'
 lst_lib='libSDL2main libSDL2 libhidapi'
@@ -23,20 +30,12 @@ lst_bin='sdl2-config'
 lst_lic='LICENSE AUTHORS'
 lst_pc='sdl3.pc'
 
-dev_bra='master'
-dev_vrs='3.1.0'
-
-#$host_ndk && CFG+=" -DANDROID=ON"
-#$host_arm && CFG+=" -DARMNEON=ON -DARMSIMD=ON -DMMX=OFF"
-#$host_mingw && CFG+=" -DCMAKE_COMPILER_IS_MINGW=TRUE" || CFG+=" -DSDL_STATIC_PIC=ON"
-
-_source_get(){
-    pushdir $SOURCES
-    wget_tar SDL
-    popdir
-}
-
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN +++  .   .   .  clang/gcc
 
 # Filelist
 # --------

@@ -6,19 +6,24 @@
 # mingw-llvm  ... ... ... ...
 
 lib='systemd'
-pkg_deb='systemd-dev'
+
 dsc='The systemd System and Service Manager'
 lic='GPL-2.0'
 src='https://github.com/systemd/systemd.git'
-cfg='meson'
 #dep='crypt'
+
+cfg='meson'
+
+dev_bra=''
+dev_vrs=''
+pkg_deb='systemd-dev'
 eta='60'
 
 lst_inc=''
 lst_lib=''
 
 on_config(){
-    CFG="-Drootprefix=${ROOTDIR}/builds"
+    meson_cfg="-Drootprefix=${dir_root}/builds"
 }
 
 . xbuild && start

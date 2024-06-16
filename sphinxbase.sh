@@ -1,26 +1,26 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK +++  .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .  +++ clang/gcc
 
 lib='sphinxbase'
 dsc='CMU Sphinx common libraries'
 lic='BSD-2c'
 src='https://github.com/cmusphinx/sphinxbase.git'
+src_rel=false
+
 cfg='ag'
+ac_config='--without-python'
+
+on_config_ndk(){
+    LDFLAGS+=" -llog"
+}
+
+dev_bra='master'
+dev_vrs=''
+pkg_deb='libsphinxbase-dev'
 eta='48'
 
 lst_inc='sphinxbase/*.h'
 lst_lib='libsphinxad libsphinxbase'
 lst_bin='sphinx_jsgf2fsg sphinx_fe sphinx_pitch sphinx_lm_convert sphinx_lm_eval sphinx_cepview sphinx_cont_seg'
-
-ac_config='--without-python'
-
-on_config(){
-    $host_mingw && mki='install'
-    $host_ndk && LDFLAGS+=" -llog"
-}
 
 . xbuild && start
 

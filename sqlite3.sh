@@ -4,9 +4,9 @@ lib='sqlite3'
 dsc='SQLite database engine'
 lic='Other'
 src='https://github.com/sqlite/sqlite.git'
-cfg='ac'
-eta='305'
 tls='tcl'
+
+cfg='ac'
 
 lst_inc='sqlite3ext.h sqlite3.h'
 lst_lib='libsqlite3'
@@ -14,7 +14,10 @@ lst_bin='sqlite3'
 lst_lic='LICENSE.md'
 lst_pc='sqlite3.pc'
 
+dev_bra='master'
 dev_vrs='3.39.0'
+pkg_deb='libsqlite3-dev'
+eta='305'
 
 . xbuild && start
 

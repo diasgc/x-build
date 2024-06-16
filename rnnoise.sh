@@ -4,11 +4,15 @@ lib='rnnoise'
 dsc='Recurrent neural network for audio noise reduction'
 lic='BSD'
 src='https://gitlab.xiph.org/xiph/rnnoise.git'
-cfg='ag'
-eta='40'
 
-ac_bin="--disable-examples|--enable-examples"
+cfg='ag'
+ac_bin="examples"
 ac_config="--disable-doc"
+
+dev_bra=''
+dev_vrs=''
+pkg_deb=''
+eta='40'
 
 lst_inc='rnnoise.h'
 lst_lib='librnnoise'

@@ -3,45 +3,8 @@ cmake: libavc1394.sh
 cmake: libcap.sh
 cmake: lodepng.sh
 bazel: lyra.sh
-
-missing pkg_deb variable:
+bazel: skcms.sh
+cmake: thor.sh
 
 lzo.sh # todo src_rel
 
-
-rnnoise.sh
-shared-mime-info.sh
-sjpeg.sh
-skcms.sh
-sphinxbase.sh
-spirv-headers.sh
-spirv-tools.sh
-sqlite3.sh
-svtav1.sh
-svthevc.sh
-svt-vp9.sh
-tensorflow.sh
-thor.sh
-tree.sh
-turingcodec.sh
-twolame.sh
-uavs3d.sh
-uchardet.sh
-ucl.sh
-uvg266.sh
-vapoursynth.sh
-vmaf.sh
-vulkan.sh
-vvdec.sh
-vvenc.sh
-x265.sh
-xcb-proto.sh
-xcb-pthread-stubs.sh
-xevd.sh
-xeve.sh
-xorg-macros.sh
-xorgproto.sh
-zenity.sh
-zimg.sh
-zix.sh
-zopfli.sh

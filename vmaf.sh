@@ -5,25 +5,32 @@ pkg='libvmaf'
 dsc='Perceptual video quality assessment based on multi-method fusion'
 lic='BSD-2c Patent'
 src='https://github.com/Netflix/vmaf.git'
-eta='52'
-cfg='meson'
-
-lst_inc='libvmaf/*.h'
-lst_lib='libvmaf'
-lst_bin='vmaf'
-lst_lic='LICENSE'
-lst_pc='libvmaf.pc'
-
-dev_vrs='3.0.0'
 
 config_dir="libvmaf"
 build_dir='libvmaf'
 
+cfg='meson'
 meson_cfg='-Denable_docs=false -Denable_tests=false'
 
 on_config(){
-    $host_arm || meson_cfg+=' -Denable_avx512=true'
+    meson_cfg+=" -Denable_avx512=$(bool2str ${host_arm} 'false' 'true')"
 }
+
+dev_bra=''
+dev_vrs='3.0.0'
+pkg_deb=''
+eta='52'
+
+lst_inc='libvmaf/model.h
+ libvmaf/feature.h
+ libvmaf/picture.h
+ libvmaf/libvmaf.h
+ libvmaf/version.h
+ libvmaf/compute_vmaf.h'
+lst_lib='libvmaf'
+lst_bin='vmaf'
+lst_lic='LICENSE'
+lst_pc='libvmaf.pc'
 
 . xbuild && start
 
@@ -31,7 +38,6 @@ on_config(){
 # NDK +++  .   .   .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
-
 
 # Filelist
 # --------

@@ -11,25 +11,15 @@ lic='GPL-2.0'
 tls='yasm libnuma-dev'
 src='https://bitbucket.org/multicoreware/x265_git.git' # mirror at 'https://github.com/videolan/x265.git'
 src_rel=false
+#patch="x265-01"
+
 config_dir='source'
 
 cfg='cmake'
 cmake_config_10bit='-DHIGH_BIT_DEPTH=ON -DEXPORT_C_API=OFF -DENABLE_SHARED=OFF -DENABLE_CLI=OFF'
 cmake_config_12bit="${cmake_config_10bit} -DMAIN12=ON"
 multilib=false
-
-lst_inc='x265.h x265_config.h'
-lst_lib='libx265'
-lst_bin='x265'
-lst_lic='COPYING source/dynamicHDR10/LICENSE.txt'
-lst_pc='x265.pc'
-
-#patch="x265-01"
-dev_bra='master'
-dev_vrs='3.6'
-eta='130'
-
-# keeping the log clean
+# disable warnings
 cmake_add_compile_options=( 
     -Wno-absolute-value 
     -Wno-unused-but-set-variable 
@@ -38,6 +28,11 @@ cmake_add_compile_options=(
     -Wno-unused-variable 
     -Wno-bitwise-instead-of-logical
 )
+
+dev_bra='master'
+dev_vrs='3.6'
+pkg_deb='libx265-dev'
+eta='130'
 
 extraOpts(){
     case $1 in
@@ -108,6 +103,12 @@ build_config(){
     fi
     
 }
+
+lst_inc='x265.h x265_config.h'
+lst_lib='libx265'
+lst_bin='x265'
+lst_lic='COPYING source/dynamicHDR10/LICENSE.txt'
+lst_pc='x265.pc'
 
 . xbuild && start
 

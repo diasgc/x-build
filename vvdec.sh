@@ -5,20 +5,22 @@ pkg='libvvdec'
 dsc='Fraunhofer Versatile Video Decoder (VVdeC)'
 lic='LGPL-2.1'
 src='https://github.com/fraunhoferhhi/vvdec.git'
-cfg='cmake'
 patch="vvdec-01"
-eta='480'
+
+cfg='cmake'
 cmake_bin="BUILD_TOOLS"
 cmake_static="BUILD_STATIC_LIBS"
+
+dev_bra='master'
+dev_vrs='2.3.0'
+pkg_deb=''
+eta='480'
 
 lst_inc='vvdec/*.h'
 lst_lib='libvvdec'
 lst_bin='vvdecapp'
 lst_lic='AUTHORS.md LICENSE.txt'
 lst_pc='libvvdec.pc'
-
-dev_bra='master'
-dev_vrs='2.3.0'
 
 # native clang llvm-18: missing LLVMgold.so
 

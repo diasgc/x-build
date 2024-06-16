@@ -7,23 +7,28 @@ src='https://github.com/korczis/ucl.git'
 url='http://www.oberhumer.com/opensource/ucl'
 
 #cfg='cmake'
-patch="ucl-01"
-cmake_static='BUILD_STATIC_LIBS'
-cmake_bin='BUILD_PROGRAM'
-
-dev_vrs='1.03'
+#patch="ucl-01"
+#cmake_static='BUILD_STATIC_LIBS'
+#cmake_bin='BUILD_PROGRAM'
 
 cfg='ac'
-patch="ucl-01"
-pc_llib='-lucl'
+build_strip=false
 
-lst_inc='ucl/*.h'
+on_create_pc(){
+    build_pkgconfig --libs=-lucl
+}
+
+dev_vrs='1.03'
+pkg_deb='libucl-dev'
+eta='14'
+
+lst_inc='ucl/ucl.h
+ ucl/uclconf.h
+ ucl/uclutil.h'
 lst_lib='libucl'
-lst_bin=''
+lst_bin='uclpack'
 lst_lic='COPYING README'
 lst_pc='ucl.pc'
-build_strip=false
-eta='14'
 
 . xbuild && start
 
@@ -34,7 +39,6 @@ eta='14'
 
 # Filelist
 # --------
-#
 # bin/uclpack
 # include/ucl/ucl.h
 # include/ucl/uclconf.h

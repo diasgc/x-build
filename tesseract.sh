@@ -5,30 +5,26 @@ dsc='An OCR Engine that was developed at HP Labs between 1985 and 1995... and no
 lic='Apache-2.0'
 src='https://github.com/tesseract-ocr/tesseract.git'
 dep='leptonica'
-pkg='tesseract'
 
 cfg='ag'
 ac_config='--disable-debug --disable-doc --disable-graphics'
+LIBS+=' -lpng16 -lz' # by order: -lpng16 -lz -ljpeg -lgif -ltiff -lwebp -lopenjp2
 
 #cfg='cmake'
 #cmake_static='BUILD_SHARED_LIBS=OFF'
 #cmake_config='-DGRAPHICS_DISABLED=ON -DUSE_SYSTEM_ICU=ON -DDISABLE_TIFF=ON -DSW_BUILD=OFF'
+# note: leptonica built with cmake_config="-DBUILD_TESTS=OFF -DENABLE_GIF=OFF -DENABLE_ZLIB=OFF -DENABLE_PNG=OFF -DENABLE_JPEG=OFF -DENABLE_TIFF=OFF -DENABLE_WEBP=OFF -DENABLE_OPENJPEG=OFF"
+#$host_mingw && cmake_config+=' -DSW_BUILD=OFF' || cmake_config+=' -DOPENMP_BUILD=ON -DENABLE_LTO=ON'
+
+dev_vrs='5.4.1'
+pkg_deb='libtesseract-dev'
+eta='1200'
 
 lst_inc='tesseract/*.h'
 lst_lib='libtesseract'
 lst_bin='tesseract'
 lst_lic='LICENSE'
 lst_pc='tesseract.pc'
-
-dev_vrs='5.4.1'
-pkg_deb='libtesseract-dev'
-eta='1200'
-
-LIBS+=' -lpng16 -lz' # by order: -lpng16 -lz -ljpeg -lgif -ltiff -lwebp -lopenjp2
-
-# note: leptonica built with cmake_config="-DBUILD_TESTS=OFF -DENABLE_GIF=OFF -DENABLE_ZLIB=OFF -DENABLE_PNG=OFF -DENABLE_JPEG=OFF -DENABLE_TIFF=OFF -DENABLE_WEBP=OFF -DENABLE_OPENJPEG=OFF"
-
-#$host_mingw && cmake_config+=' -DSW_BUILD=OFF' || cmake_config+=' -DOPENMP_BUILD=ON -DENABLE_LTO=ON'
 
 . xbuild && start
 

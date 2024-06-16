@@ -1,24 +1,33 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
 
 lib='shared-mime-info'
 dsc='Shared MIME info spec'
 lic='GLP-2.0'
-src='https://github.com/freedesktop/xdg-shared-mime-info.git'
+src='https://gitlab.freedesktop.org/xdg/shared-mime-info.git'
 src_opt='--recursive'
 tls='itstool libxml2-utils'
 dep='libxml2 glib2'
+
 cfg='meson'
+meson_bin="bool:build-tools"
+meson_cfg='-Dbuild-tests=false'
+
+dev_bra='master'
+dev_vrs='2.4'
+pkg_deb='shared-mime-info'
 eta='0'
 
 lst_inc=''
 lst_lib=''
-lst_bin=''
+lst_bin='pdate-mime-database'
+lst_pc='shared-mime-info.pc'
 
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 # Filelist
 # --------

@@ -4,18 +4,15 @@ lib='uavs3d'
 dsc='AVS3 decoder which supports AVS3-P2 baseline profile.'
 lic='Other'
 src='https://github.com/uavs3/uavs3d.git'
-cfg='cmake'
 patch="uavs3d-01"
-eta='80'
 
+cfg='cmake'
 cmake_static='BUILD_STATIC_LIBS'
-#cfg_shared=''
-#cfg_bin=''
 
 dev_bra='master'
 dev_vrs='1.1.71'
-stb_bra='tags/v1.1'
-stb_vrs='1.1'
+pkg_deb=''
+eta='80'
 
 lst_inc='uavs3d.h'
 lst_lib='libuavs3d'

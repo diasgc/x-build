@@ -5,28 +5,30 @@
 # WIN  +   .   .   .   clang
 
 lib='svtav1'
+pkg='SvtAv1Enc'
 dsc='Scalable Video Technology for AV1 (SVT-AV1 Encoder and Decoder)'
 lic='BSD-3c AOM-Patent'
 src='https://gitlab.com/AOMediaCodec/SVT-AV1.git'
-cfg='cmake'
-pkg='SvtAv1Enc'
-eta='145'
-cmake_bin="BUILD_APPS"
 
+cfg='cmake'
+cmake_bin="BUILD_APPS"
+cmake_config="-DBUILD_TESTING=OFF"
+cmake_definitions=( -Wno-unused-command-line-argument -Wno-implicit-function-declaration )
+
+on_config_ndk() {
+    LDFLAGS+=" -llog"
+}
+
+dev_bra='master'
 dev_vrs='2.1.0'
+pkg_deb='libsvtav1-dev'
+eta='145'
 
 lst_inc='svt-av1/*.h'
 lst_lib='libSvtAv1Dec libSvtAv1Enc'
 lst_bin='SvtAv1DecApp SvtAv1EncApp'
 lst_lic='LICENSE.md LICENSE-BSD2.md PATENTS.md'
 lst_pc='SvtAv1Enc.pc SvtAv1Dec.pc'
-
-cmake_config="-DBUILD_TESTING=OFF"
-WFLAGS='-Wno-unused-command-line-argument -Wno-implicit-function-declaration'
-
-on_config(){
-    $host_ndk && LDFLAGS+=" -llog"
-}
 
 . xbuild && start
 

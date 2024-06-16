@@ -8,26 +8,16 @@ lib='xevd'
 dsc='eXtra-fast Essential Video Decoder, MPEG-5 EVC (Essential Video Coding)'
 lic='BSD-3c'
 src='https://github.com/mpeg5/xevd.git'
-cfg='cmake'
+src_rel=false # use git
+
 # -DSET_PROF=MAIN crashes with missing xevdm_itrans_map_tbl_neon fix in branch dev-BuildErrorsHotfix
 bra='dev-BuildErrorsHotfix'
-src_rel=false # use git
+
 xevd_profile='MAIN' # BASE|MAIN
-
 case $xevd_profile in BASE) sfx='b';; esac
-
 pkg="xevd${sfx}"
 
-lst_inc="xevd${sfx}/*.h"
-lst_lib="libxevs${sfx}"
-lst_bin="xevd${sfx}_app"
-lst_lic='COPYING'
-lst_pc="xevd${sfx}.pc"
-
-dev_bra='main'
-dev_vrs='0.4.1'
-stb_bra=''
-stb_vrs='0.4.1'
+cfg='cmake'
 
 cmake_config="-DSET_PROF=${xevd_profile} -DXEVD_APP_STATIC_BUILD=ON"
 WFLAGS+="-Wno-for-loop-analysis \
@@ -55,5 +45,16 @@ on_end(){
     fi
     return 0
 }
+
+dev_bra='main'
+dev_vrs='0.4.1'
+pkg_deb=''
+eta='0'
+
+lst_inc="xevd${sfx}/*.h"
+lst_lib="libxevs${sfx}"
+lst_bin="xevd${sfx}_app"
+lst_lic='COPYING'
+lst_pc="xevd${sfx}.pc"
 
 . xbuild && start

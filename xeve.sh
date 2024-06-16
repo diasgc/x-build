@@ -9,25 +9,12 @@ dsc='eXtra-fast Essential Video Encoder, MPEG-5 EVC (Essential Video Coding)'
 lic='Other'
 src='https://github.com/mpeg5/xeve.git'
 src_rel=false # use git
-cfg='cmake'
 
 xeve_profile='MAIN' # BASE|MAIN
-
 case $xeve_profile in BASE) sfx='b';; esac
-
 pkg="xeve${sfx}"
 
-lst_inc="xeveb${sfx}/*.h"
-lst_lib="libxeve${sfx}"
-lst_bin="xeve${sfx}_app"
-lst_lic='COPYING'
-lst_pc="xeve${sfx}.pc"
-
-dev_bra='main'
-dev_vrs='0.5.0'
-stb_bra=''
-stb_vrs='0.4.3'
-
+cfg='cmake'
 cmake_config="-DSET_PROF=${xeve_profile}"
 
 # supress warnings as errors
@@ -50,5 +37,16 @@ on_end(){
         test -f "${a_lib}.so" && mv -f "${a_lib}.so" "${a_lib}.so_"
     fi
 }
+
+dev_bra='main'
+dev_vrs='0.5.0'
+pkg_deb=''
+eta='0'
+
+lst_inc="xeveb${sfx}/*.h"
+lst_lib="libxeve${sfx}"
+lst_bin="xeve${sfx}_app"
+lst_lic='COPYING'
+lst_pc="xeve${sfx}.pc"
 
 . xbuild && start

@@ -4,30 +4,21 @@ lib='zimg'
 dsc='Scaling, colorspace conversion, and dithering library'
 lic='WTFPL'
 src='https://github.com/sekrit-twc/zimg.git'
+sub='submodule update --init --recursive'
+src_rel=false
+
 cfg='ag'
-eta='120'
-mki='install'
+
+dev_bra='main'
+dev_vrs='3.0.5'
+pkg_deb='libzimg-dev'
+eta='480'
 
 lst_inc='zimg.h zimg++.hpp'
 lst_lib='libzimg'
 lst_bin=''
 lst_lic='COPYING'
 lst_pc='zimg.pc'
-
-dev_bra='main'
-dev_vrs='3.0.4'
-stb_bra=''
-stb_vrs=''
-
-source_patch(){
-    git submodule update --init --recursive
-    #sed 's/Windows.h/windows.h/g' src/zimg/common/arm/cpuinfo_arm.cpp
-}
-
-on_editpack(){
-    #rm -rf share/doc/zimg/example
-    return 0
-}
 
 . xbuild && start
 

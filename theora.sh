@@ -1,26 +1,12 @@
 #!/bin/bash
 
 lib='theora'
-pkg_deb='libtheora-dev'
 dsc='Theora video compression format'
 lic='BSD'
 src='https://github.com/xiph/theora.git'
 bra='tags/v1.1.1'
 src_rel=false
-cfg='ag'
 dep='ogg vorbis'
-eta='208'
-
-dev_bra='master'
-dev_vrs='1.1.1'
-stb_bra=''
-stb_vrs=''
-
-lst_inc='theora/*.h'
-lst_lib='libvorbisfile libvorbisenc libvorbis'
-lst_bin='libtheoraenc libtheoradec libtheora'
-lst_lic='COPYING LICENCE AUTHORS'
-lst_pc='theora.pc theoraenc.pc theoradec.pc'
 
 source_config(){
     # dont run configure on autogen
@@ -28,7 +14,19 @@ source_config(){
     ./autogen.sh
 }
 
+cfg='ag'
 ac_config="--disable-doc --disable-spec --disable-examples --disable-oggtest --disable-vorbistest"
+
+dev_bra='master'
+dev_vrs='1.1.1'
+pkg_deb='libtheora-dev'
+eta='208'
+
+lst_inc='theora/*.h'
+lst_lib='libvorbisfile libvorbisenc libvorbis'
+lst_bin='libtheoraenc libtheoradec libtheora'
+lst_lic='COPYING LICENCE AUTHORS'
+lst_pc='theora.pc theoraenc.pc theoradec.pc'
 
 . xbuild && start
 

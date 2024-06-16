@@ -9,17 +9,18 @@ pkg='pthread-stubs'
 dsc='Library that provides pthread stubs that are missing from your platform libc.'
 lic='Other'
 src='https://github.com/freedesktop/xcb-pthread-stubs.git'
+
 cfg='ag'
-eta='0'
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
+lst_pc='pthread-stubs.pc'
 
 dev_bra='master'
 dev_vrs='0.4'
-stb_bra=''
-stb_vrs=''
+pkg_deb=''
+eta='0'
 
 . xbuild && start
 

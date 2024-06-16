@@ -4,14 +4,15 @@ lib='twolame'
 dsc='MPEG Audio Layer 2 (MP2) encoder'
 lic='LGPL-2.1'
 src='https://github.com/njh/twolame.git'
-cfg='cmake'
-eta='225'
-#cmake_file='twolame.cmake'
 
-#ac_config="--disable-maintainer-mode"
+cfg='cmake'
+#cmake_file='twolame.cmake'
 
 dev_bra='master'
 dev_vrs='0.4.0'
+pkg_deb='libtwolame-dev'
+eta='225'
+
 lst_inc='twolame.h'
 lst_lib='libtwolame'
 lst_bin='twolame'

@@ -9,13 +9,14 @@ dsc='Zenity'
 lic='LGPL2.1'
 vrs=''
 src="https://gitlab.gnome.org/GNOME/zenity"
+dep='libadwaita-1-dev libwebkitgtk-6.0-dev gettext help2man itstool desktop-file-utils libglib2.0-dev-bin'
+
 cfg='meson'
-eta='0'
 
 dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs=''
+dev_vrs='3.44.4'
+pkg_deb='zenity'
+eta='0'
 
 lst_inc=''
 lst_lib=''
@@ -25,14 +26,8 @@ lst_pc=''
 
 eta='20'
 
-. xbuild
+on_config(){
+    $host_cross && exit_err "Cross compiling unavailable"
+}
 
-$host_cross && doErr "Unavailable"
-dep='libadwaita-1-dev libwebkitgtk-6.0-dev gettext help2man itstool desktop-file-utils libglib2.0-dev-bin'
-
-#source_get(){ return 0; }
-#patch_source(){ return 0; }
-#on_config_arm(){ return 0; }
-#on_config_x86x(){ return 0; }
-
-start
+. xbuild && start

@@ -562,6 +562,9 @@ function config_init {
 			build_system=meson
 			meson_set_buildlink
 			;;
+    bazel)
+      build_system=bazel
+      ;;
     cargo)
       build_system=cargo
       CSH="--library-type=$(bool2str ${build_static} staticlib dylib)"
