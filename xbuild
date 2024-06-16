@@ -308,6 +308,7 @@ start(){
 	fi
 
 	[ -d "${dir_build}" ] || mkdir -p "${dir_build}"
+	
 	cd ${dir_build}
 
 	log_vars dir_src dep PKG_CONFIG_LIBDIR
@@ -331,7 +332,7 @@ start(){
 
 	local arr
 	if fn_defined 'build_config'; then
-		build_config
+		fn_log 'config' build_config
 		unset -f build_config
 	else case "${build_system}" in
 		cmake)

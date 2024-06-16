@@ -8,16 +8,6 @@ missing pkg_deb variable:
 
 lzo.sh # todo src_rel
 
-
-
-
-
-pocketsphinx.sh
-postfish.sh
-qpdf.sh
-quirc.sh
-rapidjson.sh
-rav1e.sh
 readline.sh
 rnnoise.sh
 shared-mime-info.sh

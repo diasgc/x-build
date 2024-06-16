@@ -1,6 +1,6 @@
 #!/bin/bash
 # cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
+# NDK  +   .   .   .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 
@@ -10,12 +10,11 @@ lic='BSD-2c'
 vrs=''
 src="https://github.com/xiph/rav1e.git"
 cfg='cargo'
-eta='0'
 
 dev_bra='master'
 dev_vrs='0.7.1'
-stb_bra=''
-stb_vrs=''
+pkg_deb='librav1e-dev'
+eta='528'
 
 lst_inc=''
 lst_lib=''
@@ -23,7 +22,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-eta='20'
+eta='528'
 
 build_all(){
     pushd ${dir_src}

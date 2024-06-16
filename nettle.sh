@@ -12,16 +12,17 @@ ac_config="--disable-documentation --disable-mini-gmp --enable-pic CC_FOR_BUILD=
 mkc='distclean'
 
 dev_bra='master'
-dev_vrs='3.10'
+dev_vrs='3.9.1'
 pkg_deb='nettle-dev'
-eta='90'
+eta='288'
 
 on_config(){
   if ${src_rel}; then
     local u=$(sed 's,\.git$,/-,' <<<${src})
-    local f="$(curl -sL https://git.lysator.liu.se/nettle/nettle/-/tags | grep -oP 'nettle_[0-9\.]+_release_[0-9]+.tar.gz' | head -n1)"
-    src="https://git.lysator.liu.se/nettle/nettle/-/archive/${f%%\.tar\.gz}/nettle-${f}"
+    local f="$(curl -sL $u/tags | grep -oP 'nettle_[0-9\.]+_release_[0-9]+.tar.gz' | head -n1)"
+    src="$u/archive/${f%%\.tar\.gz}/nettle-${f}"
     vrs=$(sed 's,nettle_,,;s,_release_.*\.tar\.gz$,,' <<<${f})
+    tar_stripcomponents=true
   fi
   ac_config+=" $(bool2str ${host_arm} '--enable-arm-neon' '--enable-x86-sha-ni --enable-x86-aesni')"
   ac_config+=" $(bool2str ${host_gnu} '--enable' '--disable')-assembler"

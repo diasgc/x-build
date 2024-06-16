@@ -25,10 +25,12 @@ lst_pc=''
 eta='20'
 
 patch_source(){
+    tar_stripcomponents=true
     vrs_cross="$(tar_version 'https://github.com/arsv/perl-cross/releases' 'perl-cross-')"
     src_cross="https://github.com/arsv/perl-cross/archive/refs/tags/${vrs_cross}.tar.gz"
     pushdir ${dir_sources}
-    curl_tar_simple "${src_cross}"
+    curl_tar_simple "${src_cross}" -xz
+    sed -i 's,^cnf\/configure \"\$\@\",\$\{dir_src\}\/&,' ${dir_src}/configure
     popdir
 }
 
@@ -36,10 +38,18 @@ on_config(){
     tar_stripcomponents=true
     vrs="$(tar_version 'https://www.cpan.org/src/5.0/' 'perl-')"
     src="http://www.cpan.org/src/5.0/perl-${vrs}.tar.gz"
-    if ${host_cross}; then
-        cfg='ac'
-        ac_config="--target=${arch} -Duseshrplib"
-    fi
+    #if ${host_cross}; then
+    #    cfg='ac'
+    #    unset CSH
+    #    ac_config="--target=${arch} -Duseshrplib"
+    #fi
+}
+
+build_config(){
+    args=( "--target=${arch}" "--prefix=${dir_install}" "--sysroot=${SYSROOT}" ) # "-Duseshrplib"
+    ../configure "${args[@]}"
+    # ndk issue: undefine HAS_FUTIMES in config.h
+    $host_ndk && sed -i 's,^#define HAS_FUTIMES.*,,' config.h
 }
 
 . xbuild && start

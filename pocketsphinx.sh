@@ -8,20 +8,18 @@ lib='pocketsphinx'
 dsc='Speech recognition tool'
 lic='BSD-2c'
 src='https://github.com/cmusphinx/pocketsphinx.git'
-cfg='cmake'
-eta='0'
 dep='sphinxbase'
 
+cfg='cmake'
 cmake_config='-DBUILD_TESTING=OFF'
 
-lst_inc=''
-lst_lib=''
-lst_bin=''
-
-dev_vrs='5.0.3'
-
-on_config(){
-    $host_ndk && cmake_add_link_options='-llog'
+on_config_ndk(){
+    cmake_add_link_options='-llog'
 }
+
+dev_bra='master'
+dev_vrs='5.0.3'
+pkg_deb='libpocketsphinx-dev'
+eta='0'
 
 . xbuild && start

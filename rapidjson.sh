@@ -5,25 +5,25 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='rapidjson'
+pkg='RapidJSON'
 dsc='A fast JSON parser/generator for C++ with both SAX/DOM style API'
 lic='GLP-2.0'
 src='https://github.com/Tencent/rapidjson.git'
 url='http://rapidjson.org/'
-cfg='cmake'
-eta='0'
-pkg='RapidJSON'
 
+cfg='cmake'
 cmake_config='-DRAPIDJSON_BUILD_DOC=OFF -DRAPIDJSON_BUILD_EXAMPLES=OFF -DRAPIDJSON_BUILD_TESTS=OFF'
+
+dev_bra='master'
+dev_vrs=''
+pkg_deb='rapidjson-dev'
+eta='0'
+
 lst_inc='rapidjson/*.h rapidjson/internal/*.h'
 lst_lib=''
 lst_bin=''
 lst_lic='licence.txt'
 lst_pc='RapidJSON.pc'
-
-dev_bra='master'
-dev_vrs=''
-stb_bra=''
-stb_vrs='1.1.0'
 
 . xbuild && start
 
