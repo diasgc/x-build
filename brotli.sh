@@ -5,20 +5,8 @@ pkg='libbrotlicommon'
 dsc='Lossless compression algorithm and format'
 lic='MIT'
 src='https://github.com/google/brotli.git'
+
 cfg='cmake'
-
-lst_inc='brotli/*.h'
-lst_lib='libbrotlidec libbrotlienc libbrotlicommon
-    libbrotlicommon-static libbrotlicommon-static
-    libbrotlicommon-static'
-lst_bin='brotli'
-lst_lic='LICENSE README'
-lst_pc='libbrotlidec.pc libbrotlicommon.pc libbrotlienc.pc'
-
-dev_bra='master'
-dev_vrs='1.0.9'
-eta='60'
-pkg_deb="libbrotli-dev"
 
 get_version(){
     c_printf 'c/common' 'version.h' '"%d.%d.%d",
@@ -26,6 +14,21 @@ get_version(){
         (BROTLI_VERSION>>12)&0xFF,
         BROTLI_VERSION&0xFF'
 }
+
+dev_bra='master'
+dev_vrs='1.0.9'
+eta='60'
+pkg_deb="libbrotli-dev"
+
+lst_inc='brotli/shared_dictionary.h
+ brotli/port.h brotli/types.h
+ brotli/decode.h brotli/encode.h'
+lst_lib='libbrotlidec libbrotlienc
+ libbrotlicommon libbrotlicommon-static
+ libbrotlicommon-static libbrotlicommon-static'
+lst_bin='brotli'
+lst_lic='LICENSE README'
+lst_pc='libbrotlidec.pc libbrotlicommon.pc libbrotlienc.pc'
 
 . xbuild && start
 

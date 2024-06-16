@@ -4,8 +4,13 @@ lib='wavpack'
 dsc='WavPack encode/decode library, command-line programs, and several plugins'
 lic='BSD 3-clause'
 src='https://github.com/dbry/WavPack.git'
-cfg='cmake'
 #dep='libiconv'
+
+cfg='cmake'
+
+dev_vrs='5.7.0'
+pkg_deb='libwavpack-dev'
+eta='30'
 
 lst_inc='wavpack/wavpack.h'
 lst_lib='libwavpack'
@@ -13,17 +18,12 @@ lst_bin='wavpack wvgain wvtag wvunpack'
 lst_lic='COPYING AUTHORS'
 lst_pc='wavpack.pc'
 
-dev_vrs='5.7.0'
-pkg_deb='libwavpack-dev'
-eta='30'
-
 . xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK +++ +++ +++  .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .  +++ clang/gcc
-
 
 # Filelist
 # --------

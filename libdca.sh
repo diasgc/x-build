@@ -4,7 +4,14 @@ lib='libdca'
 dsc='Free library to decode DTS Coherent Acoustics streams'
 lic='GLP-2.0'
 src='https://code.videolan.org/videolan/libdca.git'
+
 cfg='ar'
+
+on_config_ndk(){
+    test -f "${SYSROOT}/usr/include/sys/soundcard.h" || \
+		echo "#include <linux/soundcard.h>" >"$SYSROOT/usr/include/sys/soundcard.h" 
+	return 0
+}
 
 dev_bra='master'
 dev_vrs='0.0.7'
@@ -16,12 +23,6 @@ lst_lib='libdca'
 lst_bin='dcadec extract_dca dtsdec extract_dts'
 lst_lic='COPYING AUTHORS'
 lst_pc='libdca.pc libdts.pc'
-
-on_config_ndk(){
-    test -f "${SYSROOT}/usr/include/sys/soundcard.h" || \
-		echo "#include <linux/soundcard.h>" >"$SYSROOT/usr/include/sys/soundcard.h" 
-	return 0
-}
 
 . xbuild && start
 

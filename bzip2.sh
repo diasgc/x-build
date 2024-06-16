@@ -4,24 +4,24 @@ lib='bzip2'
 dsc='Lossless, block-sorting data compression'
 lic='Other'
 src='https://gitlab.com/bzip2/bzip2.git'
-cfg='cmake'
 
+cfg='cmake'
 cmake_static="ENABLE_STATIC_LIB"
 cmake_shared="ENABLE_SHARED_LIB"
 cmake_bin="ENABLE_APP"
 cmake_config="-DENABLE_EXAMPLES=OFF -DENABLE_DOCS=OFF"
-WFLAGS='-Wno-sign-conversion'
+cmake_definitions=('-Wno-sign-conversion')
+
+dev_bra='master'
+dev_vrs='1.1.0'
+eta='20'
+pkg_deb="libbz2-dev"
 
 lst_inc='bzlib.h'
 lst_lib='libbz2 libbz2_static.a'
 lst_bin='bzgrep bzdiff bzip2recover bzmore bzip2'
 lst_lic='COPYING READM.md'
 lst_pc='libbrotlidec.pc libbrotlicommon.pc libbrotlienc.pc'
-
-dev_bra='master'
-dev_vrs='1.1.0'
-eta='20'
-pkg_deb="libbz2-dev"
 
 . xbuild && start
 

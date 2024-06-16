@@ -5,20 +5,13 @@ dsc='WebM Project VPx codec implementation'
 lic='BSD-3c'
 src='https://chromium.googlesource.com/webm/libvpx.git'
 #src_rel=false
-cfg='ac'
-mki='install'
 
+cfg='ac'
 ac_opts='--no-host --no-pic --no-sysroot'
 ac_config='--disable-examples --disable-unit-tests --disable-tools --disable-docs --enable-vp9-highbitdepth --as=yasm'
   #--enable-vp8 --enable-vp9 --enable-vp9-highbitdepth --enable-vp9-temporal-denoising --enable-vp9-postproc \
   #--enable-postproc --enable-onthefly-bitpacking --enable-multi-res-encoding --enable-better-hw-compatibility \
   #--enable-webm-io --enable-libyuv --enable-experimental --enable-pic "
-
-lst_inc='vpx/*.h'
-lst_lib='libvpx'
-lst_bin='vpxenc vpxdec'
-lst_lic='LICENSE PATENTS AUTHORS'
-lst_pc='vpx.pc'
 
 dev_vrs='1.14.1'
 pkg_deb='libvpx-dev'
@@ -28,6 +21,7 @@ on_config(){
   if ${src_rel}; then
     vrs='v1.14.1-rc1'
     src="https://chromium.googlesource.com/webm/libvpx/+archive/${vrs}.tar.gz"
+    tar_stripcomponents=true
   fi
   $build_shared && unset CSH #--enable-shared only supported on ELF, OS/2, and Darwin for now
 
@@ -41,6 +35,16 @@ on_config(){
 
 }
 
+lst_inc='vpx/vpx_ext_ratectrl.h
+ vpx/vpx_codec.h vpx/vp8dx.h
+ vpx/vpx_encoder.h vpx/vpx_decoder.h
+ vpx/vp8.h vpx/vpx_integer.h
+ vpx/vp8cx.h vpx/vpx_frame_buffer.h
+ vpx/vpx_image.h'
+lst_lib='libvpx'
+lst_bin='vpxenc vpxdec'
+lst_lic='LICENSE PATENTS AUTHORS'
+lst_pc='vpx.pc'
 
 . xbuild && start
 

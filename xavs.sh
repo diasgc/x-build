@@ -4,7 +4,10 @@ lib='xavs'
 dsc='High quality encoder and decoder of the Audio Video Standard of China (AVS)'
 lic='GPL-2.0'
 src='https://svn.code.sf.net/p/xavs/code/trunk'
+
 cfg="ac"
+ac_opts='--update-config_sub --update-config_guess --no-sysroot --no-pic'
+ac_config="--disable-asm --enable-pic"
 
 dev_vrs='0.1.55'
 pkg_deb=''
@@ -15,9 +18,6 @@ lst_lib='libxavs'
 lst_bin='xavs'
 lst_lic=''
 lst_pc='xavs.pc'
-
-ac_opts='--update-config_sub --update-config_guess --no-sysroot --no-pic'
-ac_config="--disable-asm --enable-pic"
 
 . xbuild && start
 

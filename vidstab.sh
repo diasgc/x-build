@@ -2,13 +2,12 @@
 
 #vrs='1.20'
 lib='vidstab'
-pkg_deb='libvidstab-dev'
 dsc='Vidstab is a video stabilization library which can be plugged-in with Ffmpeg and Transcode'
 lic='GPL-2+'
 src='https://github.com/georgmartius/vid.stab.git'
-cfg='cmake'
 patch="vidstab-01"
-eta='80'
+
+cfg='cmake'
 
 lst_inc='vid.stab/*.h'
 lst_lib='libvidstab'
@@ -18,6 +17,8 @@ lst_pc='vidstab.pc'
 
 dev_bra='main'
 dev_vrs='1.20'
+pkg_deb='libvidstab-dev'
+eta='80'
 
 . xbuild && start
 
