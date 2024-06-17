@@ -23,7 +23,7 @@ on_config(){
     src="https://chromium.googlesource.com/webm/libvpx/+archive/${vrs}.tar.gz"
     tar_stripcomponents=true
   fi
-  $build_shared && unset CSH #--enable-shared only supported on ELF, OS/2, and Darwin for now
+  $build_shared && unset build_liblink #--enable-shared only supported on ELF, OS/2, and Darwin for now
 
   t2=$(arch_fromid arm64 armv7 x86 x86_64)
   $host_x86 && t3=$(os_fromid android linux win32) || t3=$(os_fromid android linux win64)

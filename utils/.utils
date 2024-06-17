@@ -218,17 +218,6 @@ prompt_remove(){
 	echo
 }
 
-
-function patch_check_patchdir {
-  pushd "${dir_src}" 2>&1 >/dev/null
-  local f
-  for p in ${patch[@]}; do
-    f="${dir_root}/patches/${p}.patch"
-    test -f "${f}" && patch -p0 <"${f}" 2>&1 >"${log_file}"
-  done
-  popd 2>&1 >/dev/null
-}
-
 patch_check_xbpatch(){
 	pushdir ${dir_root}
 	local matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )

@@ -218,19 +218,19 @@ cmake_configure(){
 	if [ -n "${cmake_static}" ]; then
 		arr=(${cmake_static//|/ })
 		case ${#arr[@]} in
-			1) $build_static && CSH="-D${arr[0]}=ON" || CSH="-D${arr[0]}=OFF";;
-			2) $build_static && CSH="-D${arr[0]}" || CSH="-D${arr[1]}";;
+			1) $build_static && build_liblink="-D${arr[0]}=ON" || build_liblink="-D${arr[0]}=OFF";;
+			2) $build_static && build_liblink="-D${arr[0]}" || build_liblink="-D${arr[1]}";;
 		esac
 	fi
 
 	#if [ -z "${cmake_shared}" ]; then
-	#	$build_shared && CSH+=' -DBUILD_SHARED_LIBS=ON' || CSH+=' -DBUILD_SHARED_LIBS=OFF'
+	#	$build_shared && build_liblink+=' -DBUILD_SHARED_LIBS=ON' || build_liblink+=' -DBUILD_SHARED_LIBS=OFF'
 	#else
   if [ -n "${cmake_shared}" ]; then
 		arr=(${cmake_shared//|/ })
 		case ${#arr[@]} in
-			1) $build_shared && CSH+=" -D${arr[0]}=ON" || CSH+=" -D${arr[0]}=OFF";;
-			2) $build_shared && CSH+=" -D${arr[1]}" || CSH+=" -D${arr[0]}";;
+			1) $build_shared && build_liblink+=" -D${arr[0]}=ON" || build_liblink+=" -D${arr[0]}=OFF";;
+			2) $build_shared && build_liblink+=" -D${arr[1]}" || build_liblink+=" -D${arr[0]}";;
 		esac
 	fi
 

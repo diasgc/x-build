@@ -1,13 +1,17 @@
 #!/bin/bash
 
 lib='libde265'
-pkg_deb='libde265-dev'
 dsc='Open h.265 video codec implementation.'
 lic='LGPL-3.0'
 src='https://github.com/strukturag/libde265.git'
+
 cfg='cmake'
-eta='140'
-#cfg_cmd='./autogen.sh'
+cmake_static='BUILD_STATIC_LIBS'
+cmake_config='-DENABLE_SDL=OFF'
+
+on_config(){
+  cmake_config+=" -DDISABLE_SSE=$(bool2str ${host_arm} ON OFF)"
+}
 
 lst_inc='libde265/*.h'
 lst_lib='liblibde265'
@@ -17,24 +21,8 @@ lst_pc='libde265.pc'
 
 dev_bra='main'
 dev_vrs='1.0.15'
-stb_bra=''
-stb_vrs=''
-
-cmake_static='BUILD_STATIC_LIBS'
-cmake_config='-DENABLE_SDL=OFF'
-
-on_config(){
-  if $host_arm; then
-    cmake_config+=' -DDISABLE_SSE=ON' 
-    ac_config+=" --disable-sse --disable-arm"
-  else
-    cmake_config+=' -DDISABLE_SSE=OFF'
-  fi
-
-  if [ "$build_system" == "automake" ] && $host_arm; then
-    CSH=${CSH/"--disable-shared "} #see similar https://github.com/opencv/opencv/pull/9052
-  fi
-}
+eta='140'
+pkg_deb='libde265-dev'
 
 . xbuild && start
 

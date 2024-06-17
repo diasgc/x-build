@@ -70,33 +70,33 @@ export HOST_NPROC=$(nproc)
 : "${vnd:=}"
 : "${is_running:=false}"
 
-pkg_fmt="tgz"
+: "${pkg_fmt:=tgz}"
 
+: "${break_on_git:=false}"
+: "${break_on_patch:=false}"
+: "${break_on_config:=false}"
+: "${break_on_build:=false}"
+: "${break_on_make:=false}"
 
-update=false
-retry=false
-
-break_on_git=false
-break_on_patch=false
-break_on_config=false
-break_on_build=false
-break_on_make=false
-
-skip_pc=false
-skip_dl=false
+: "${skip_pc:=false}"
+: "${skip_make:=false}"
+: "${skip_install:=false}"
+: "${skip_dl:=false}"
 
 # default build static, no shared, no executables
-build_shared=false
-build_static=true
-build_bin=false
-build_man=false
-build_package=true
+: "${build_shared:=false}"
+: "${build_static:=true}"
+: "${build_bin:=false}"
+: "${build_man:=false}"
+: "${build_package:=true}"
 
-use_clang=true
-ndkcmake=false
+: "${use_clang:=true}"
+: "${ndkcmake:=false}"
+
 cmake_toolchain_file=
-
 pc_filelist=
+update=false
+retry=false
 
 logtime_start=0
 logtime_end=0
@@ -142,12 +142,11 @@ start(){
 			wget_pkg_tgz ${lnk} ${dir_install}
 			${skip_pc} || logver "${dir_install_pc}/${pkg}.pc"
 			end_script
-			exit 0
 		fi
 	fi
 
 
-	# Configure variables
+	# Apply custom configurations
 	fn_defined 'on_config' && fn_log '' on_config
 
 	case ${target_trip[3]} in
@@ -163,11 +162,8 @@ start(){
 	fi
 
 	fn_defined 'on_build_bin' && unset CBN && fn_log '' on_build_bin 
-	fn_defined 'on_build_static' && unset CSH && fn_log '' on_build_static
-	fn_defined 'on_build_shared' && unset CSH && fn_log '' on_build_shared
-
-
-
+	fn_defined 'on_build_static' && unset build_liblink && fn_log '' on_build_static
+	fn_defined 'on_build_shared' && unset build_liblink && fn_log '' on_build_shared
 
 	# check whether to update source of main lib and dependencies
 	if ${update}; then
@@ -180,26 +176,13 @@ start(){
 	# Reset LOGFILE
 	[ -f "${log_file}" ] && rm -f ${log_file}
 
-	# Create INSTALL_DIR and PKGCONFIG DIR
-	#mkdir -p ${dir_install_pc} ${dir_install}/share/pkgconfig
-	#export PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
-	#[ ! -d "${dir_install_pc}" ] && mkdir -p ${dir_install_pc}
-	#[ ! -d "${dir_install}/share/pkgconfig" ] && mkdir -p ${dir_install}/share/pkgconfig
-	
 	# check build tools
 	check_tools ${tls}
 
-	local ovrs=$vrs
-	local ocsh=$CSH
-	local ocbn=$CBN
-	unset vrs CSH CBN
-
+	# build dependencies
 	build_dependencies ${dep}
 
-	vrs=$ovrs
-	CSH=$ocsh
-	CBN=$ocbn
-
+	# start log
 	log_start ${arch} "$((${eta}/$(nproc)))s"
 
 	echo -ne "$(bool2str ${build_static} ${SSB} ${CD})[static]"
@@ -215,47 +198,50 @@ start(){
 		fi
 	fi
 
-	local require_src_config=false
-	local require_src_patch=false
+	local request_config=false
+	local request_patch=false
 
 	# get source
-	if [ ! -d ${dir_src} ];then
+	if [ ! -d "${dir_src}" ];then
 		
 		get_source
-		require_src_config=true
+		request_config=true
 		${break_on_git} && end_script
 
-		test "${cfg}" == "cmake" && cmake_check_cmakefiles
+		# check if there is a cmake file
+		if [ -n "${cmake_file}" ] && [ -f "${dir_root}/cmake/${cmake_file}.cmake" ]; then
+			cp "${dir_root}/cmake/${cmake_file}.cmake" "${dir_src}/CMakeLists.txt"
+		fi
 
+		# apply patches from function or file
 		if fn_defined 'patch_source'; then
 			fn_log 'patch' patch_source
 		elif [ -n "${patch[@]}" ]; then
-			fn_log '' patch_check_patchdir
+			fn_log '' patch_fromfilelist
 		fi
 	fi
 
 	cd "${dir_src}"
 
+	if [ -d "${dir_src}/.git" ]
 	if [ -n "${bra}" ]; then
-		do_log "${bra}" git checkout ${bra}
-	elif $git_checkout; then
+		do_log "checkout ${bra}" git checkout ${bra}
+	elif ${git_checkout}; then
 		do_log 'checkout' git checkout
 		unset git_checkout
 	fi
 
-	#case $src in *git*) echo -ne "${CT0}[$(git describe --tags 2>/dev/null)]${CD} ";; esac
-	
 	# default dir_config is dir_src
 	: "${dir_config:=${dir_src}}"
+	
 	# check if defined custom dir_config location (config_dir)
 	[ -n "${config_dir+x}" ] && dir_config="${dir_src}/${config_dir}"
-
 	cd ${dir_config}
 
 	# if there is no config selected, try guess
 	test -z "${cfg}" && config_guess
 	
-	if ${require_src_config}; then	
+	if ${request_config}; then	
 		# check whether to custom config source
 		if fn_defined 'source_config'; then
 			fn_log 'config' source_config
@@ -278,10 +264,10 @@ start(){
 					;;
 			esac
 		fi
-		require_src_patch=true
+		request_patch=true
 	fi
 
-	if ${require_src_patch}; then
+	if ${request_patch}; then
 		# check if has patch function in source
 		fn_defined 'source_patch' && fn_log 'patch' source_patch
 		if [ -n "${cmake_file}" ] && [ -f "${dir_root}/cmake/${cmake_file}" ]; then
@@ -339,7 +325,7 @@ start(){
 			cmake_configure
 			cfg_cmd=${CMAKE_EXECUTABLE}
 			: "${cmake_bdir:=${dir_config}}"
-			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${cmake_toolchain}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}" -Wno-dev)
+			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${cmake_toolchain}" "${CFG}" "${build_liblink}" "${CBN}" "${CPACK}" -Wno-dev)
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 			;;
@@ -347,16 +333,16 @@ start(){
 		automake) # use autotools and configure executable to create makefile
 			ac_configure
 			cfg_cmd="${dir_config}/configure"
-			cfg_args+=("--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
+			cfg_args+=("--prefix=${dir_install}" "${CFG}" "${build_liblink}" "${CBN}")
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			;;
 
 		meson)
 			meson_configure
 			cfg_cmd='meson'
-			cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${CFG}" "${CSH}" "${CBN}")
+			cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${CFG}" "${build_liblink}" "${CBN}")
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
-			#do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${CSH} ${CBN}
+			#do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${build_liblink} ${CBN}
 			;;
 
 		make)
@@ -369,7 +355,7 @@ start(){
 			;;
 		cargo)
 			cfg_cmd='cargo'
-			cfg_args+=('cinstall' '--release' "--prefix=${dir_install}" "${cargo_cfg}" "${CSH}" "${CBN}" '--verbose')
+			cfg_args+=('cinstall' '--release' "--prefix=${dir_install}" "${cargo_cfg}" "${build_liblink}" "${CBN}" '--verbose')
 			skip_make=true
 			skip_install=true
 			do_progress "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
@@ -590,7 +576,7 @@ function end_script {
 	[ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done ${C0}${lib} ${vrs}\n"
 	${debug} && set +x
 	unset	dir_config dir_build dir_src \
-			CSH CBN exec_config vrs vnd \
+			build_liblink CBN exec_config vrs vnd \
 			ac_nohost ac_nopic ac_nosysroot ac_opts ac_reconf \
 			req_pcforlibs mkc mki mingw_posix \
 			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
@@ -656,17 +642,17 @@ check_install(){
 
 function build_dependencies {
 	local dep_args="${arch} ${dep_build} $(bool2str ${build_allshared} --shared --static) $(bool2str ${build_download} '--dl' '')"
-	local pkgfile libname old_csh old_csb
+	local pkgfile libname old_build_liblink old_csb
 	while [ -n "${1}" ]; do
 		test -f "./${1}.sh" || exit_err "Fail to build dependency ${1}. Script file not found."
 		pkgfile=$(./${1}.sh ${arch} --get pc)
 		if [ ! -f "${pkgfile}" ]; then
-			old_csh=${CSH}; old_csb=${CSB}
-			unset CSH CSB
+			old_build_liblink=${build_liblink}; old_csb=${CSB}
+			unset build_liblink CSB
 
 			./${1}.sh ${dep_args}
 			
-			CSH=${old_csh}; CSB=${old_csb}
+			build_liblink=${old_build_liblink}; CSB=${old_csb}
 		else
 			log_info "${1}: ${C0} version $(pkg-config --modversion ${pkgfile})"
 		fi
@@ -676,7 +662,7 @@ function build_dependencies {
 
 build_dependencies_old(){
 	local pkgfile
-	local o_csh
+	local o_build_liblink
 	local o_cbh
 	local cf
 	local ldir
@@ -685,14 +671,14 @@ build_dependencies_old(){
 		pkgfile=$(./${1}.sh ${arch} --get pc)
 		libname=$(./${1}.sh --get libname)
 		if [ ! -f "${pkgfile}" ]; then
-			o_csh=$CSH
+			o_build_liblink=$build_liblink
 			o_cbh=$CBH
 			${build_download} && local dl="--dl" || local dl=''
-			unset CSH CBH
+			unset build_liblink CBH
 			
 			./${1}.sh ${arch} ${dep_build} ${dl}
 			
-			CSH=$o_csh
+			build_liblink=$o_build_liblink
 			CBH=$o_cbh
 		fi
 		if [ -f "${pkgfile}" ]; then
@@ -799,21 +785,6 @@ clean(){
 	popdir
 	echo -e "$C0\tdone"
 	clear
-}
-
-
-
-showOpts(){
-	if [ -d "$1" ];then
-		local od=$(pwd)
-		local bdir=$(pwd)/builds
-		cd "${1}/${config_dir}"
-		[ -f CMakeLists.txt ] && ${CMAKE_EXECUTABLE} -LA | awk '{if(f)print} /-- Cache values/{f=1}' >${od}/builds/${lib}_cmake.opts && nano "${od}/builds/${lib}_cmake.opts"
-		[ -f configure ] && ./configure --help >${od}/builds/${lib}_aconf.opts && nano "${od}/builds/${lib}_am.opts"
-		cd $od
-	else
-		echo -e "${CD}${ind}${CR0}no configuration file found in ${CR1}${1}${CD}\n\n"
-	fi
 }
 
 function do_am_autoreconf {
@@ -1063,6 +1034,18 @@ usage(){
   printf "Example targeting android armv8 build shared libs and executable:\n\n\n  ${CW}${0} aa8 --shared --bin --no-strip --no-dist\n\n\n${C0}"
 }
 
+showOpts(){
+	if [ -d "$1" ];then
+		local od=$(pwd)
+		local bdir=$(pwd)/builds
+		cd "${1}/${config_dir}"
+		[ -f CMakeLists.txt ] && ${CMAKE_EXECUTABLE} -LA | awk '{if(f)print} /-- Cache values/{f=1}' >${od}/builds/${lib}_cmake.opts && nano "${od}/builds/${lib}_cmake.opts"
+		[ -f configure ] && ./configure --help >${od}/builds/${lib}_aconf.opts && nano "${od}/builds/${lib}_am.opts"
+		cd $od
+	else
+		echo -e "${CD}${ind}${CR0}no configuration file found in ${CR1}${1}${CD}\n\n"
+	fi
+}
 
 
 
@@ -1237,14 +1220,14 @@ fi
 config_init
 
 # reset presets, we don't need them anymore
-unset cst0 cst1 csh0 csh1 cb0 cb1 cstk cshk cbk
+unset cst0 cst1 build_liblink0 build_liblink1 cb0 cb1 cstk build_liblinkk cbk
 
 : "${MAKE_EXECUTABLE:=make}"
 
 export arch update retry \
 build_shared build_static build_bin build_system \
 dir_install \
-CSH CBN LIBSDIR PLATFORM CPU ABI EABI \
+build_liblink CBN LIBSDIR PLATFORM CPU ABI EABI \
 host_arch host_64 host_eabi host_vnd host_arm host_os \
 mingw_posix MAKE_EXECUTABLE cmake_includes
 

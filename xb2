@@ -211,7 +211,7 @@ function build_dependencies {
 
 function build_dependencies_old {
 	local pkgconfig_file script_file
-	local o_csh
+	local o_build_liblink
 	local o_cbn
 	local cf
 	local ldir
@@ -221,14 +221,14 @@ function build_dependencies_old {
 		pkgconfig_file=$(./${1}.sh ${arch} --get pc)
 		libname=$(./${1}.sh --get libname)
 		if [ ! -f "${pkgconfig_file}" ]; then
-			o_csh="${build_link}"
+			o_build_liblink="${build_link}"
 			o_cbn="${CBN}"
 			${build_download} && local dl="--dl" || local dl=''
 			unset build_link CBN
 			
 			./xb2 ${1} ${arch} ${dep_build} ${dl}
 			
-			build_link=$o_csh
+			build_link=$o_build_liblink
 			CBN=$o_cbn
 		fi
 		if [ -f "${pkgconfig_file}" ]; then
@@ -382,14 +382,14 @@ start(){
 	check_tools "${tls}"
 
 	local ovrs="${vrs}"
-	local ocsh="${build_link}"
+	local obuild_liblink="${build_link}"
 	local ocbn="${CBN}"
 	unset vrs build_link CBN
 
 	build_dependencies ${dep}
 
 	vrs="${ovrs}"
-	build_link="${ocsh}"
+	build_link="${obuild_liblink}"
 	CBN="${ocbn}"
 
 	log_start "${arch}" "${eta}s"

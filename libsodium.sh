@@ -47,7 +47,7 @@ lst_pc='libsodium'
 # include/sodium/crypto_secretbox_xchacha20poly1305.h
 # include/sodium/crypto_box_curve25519xsalsa20poly1305.h
 # include/sodium/crypto_sign.h
-# include/sodium/crypto_auth_hmacsha512256.h
+# include/sodium/crypto_auth_hmabuild_liblinka512256.h
 # include/sodium/crypto_onetimeauth_poly1305.h
 # include/sodium/core.h
 # include/sodium/crypto_kdf_blake2b.h
@@ -68,7 +68,7 @@ lst_pc='libsodium'
 # include/sodium/crypto_pwhash_argon2id.h
 # include/sodium/crypto_stream_salsa20.h
 # include/sodium/export.h
-# include/sodium/crypto_auth_hmacsha256.h
+# include/sodium/crypto_auth_hmabuild_liblinka256.h
 # include/sodium/crypto_stream.h
 # include/sodium/crypto_core_salsa208.h
 # include/sodium/crypto_pwhash_argon2i.h
@@ -84,7 +84,7 @@ lst_pc='libsodium'
 # include/sodium/crypto_secretstream_xchacha20poly1305.h
 # include/sodium/crypto_aead_aes256gcm.h
 # include/sodium/crypto_stream_salsa2012.h
-# include/sodium/crypto_auth_hmacsha512.h
+# include/sodium/crypto_auth_hmabuild_liblinka512.h
 # include/sodium/crypto_scalarmult.h
 # include/sodium/crypto_shorthash.h
 # include/sodium/crypto_sign_ed25519.h

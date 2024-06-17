@@ -443,6 +443,16 @@ function check_tools {
 	done
 }
 
+function patch_fromfilelist {
+  pushd "${dir_src}" 2>&1 >/dev/null
+  local f
+  for p in ${patch[@]}; do
+    f="${dir_root}/patches/${p}.patch"
+    test -f "${f}" && patch -p0 <"${f}" 2>&1 >"${log_file}"
+  done
+  popd 2>&1 >/dev/null
+}
+
 function install_rustc {
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   source $HOME/.cargo/env
@@ -494,12 +504,12 @@ function cmake_set_buildlink {
   : "${cmake_static:=BUILD_STATIC_LIBS}"
   : "${cmake_shared:=BUILD_SHARED_LIBS}"
   case "${cmake_shared}" in
-    -D*=*) ${build_shared} && CSH="${cmake_shared}";;
-    *) CSH="-D${cmake_shared}=$(bool2str ${build_shared} ON OFF)";;
+    -D*=*) ${build_shared} && build_liblink="${cmake_shared}";;
+    *) build_liblink="-D${cmake_shared}=$(bool2str ${build_shared} ON OFF)";;
   esac
   case "${cmake_static}" in
-    -D*=*) ${build_static} && CSH="${cmake_static}";;
-    *) CSH="-D${cmake_static}=$(bool2str ${build_static} ON OFF) ${CSH}";;
+    -D*=*) ${build_static} && build_liblink="${cmake_static}";;
+    *) build_liblink="-D${cmake_static}=$(bool2str ${build_static} ON OFF) ${build_liblink}";;
   esac
   if [ -n "${cmake_bin}" ]; then
     case "${cmake_bin}" in
@@ -512,8 +522,8 @@ function cmake_set_buildlink {
 function am_set_buildlink {
   : "${ac_static:=static}"
   : "${ac_shared:=shared}"
-  CSH="--$(bool2str ${build_shared} enable disable)-${ac_shared}"
-  CSH="--$(bool2str ${build_static} enable disable)-${ac_static} ${CSH}"
+  build_liblink="--$(bool2str ${build_shared} enable disable)-${ac_shared}"
+  build_liblink="--$(bool2str ${build_static} enable disable)-${ac_static} ${build_liblink}"
   if [ -n "${ac_bin}" ]; then
     case "${ac_bin}" in
       --enable-*) CBN="${ac_bin}=$(bool2str ${build_bin} 1 0)";;
@@ -528,11 +538,11 @@ function meson_set_buildlink {
   : "${meson_static:=-Ddefault_library=static}"
   : "${meson_shared:=-Ddefault_library=shared}"
   if ${build_static} && ${build_shared}; then
-    CSH="-Ddefault_library=both"
+    build_liblink="-Ddefault_library=both"
   elif ${build_static}; then
-    CSH="${meson_static}"
+    build_liblink="${meson_static}"
   elif ${build_shared}; then
-    CSH="${meson_shared}"
+    build_liblink="${meson_shared}"
   fi
   if [ -n "${meson_bin}" ]; then
     case "${meson_bin}" in
@@ -567,7 +577,7 @@ function config_init {
       ;;
     cargo)
       build_system=cargo
-      CSH="--library-type=$(bool2str ${build_static} staticlib dylib)"
+      build_liblink="--library-type=$(bool2str ${build_static} staticlib dylib)"
       ;;
 		mk|make) build_system=make;;
 		other) build_system=other;;
@@ -580,19 +590,19 @@ function config_init {
 }
 
 config_init_old(){
-  # check build type and set defaults if no cst0 cst1 csh0 or csh1 value provided
+  # check build type and set defaults if no cst0 cst1 build_liblink0 or build_liblink1 value provided
 case $cfg in
 	cm|ccm|cmake|ccmake) build_system=cmake
 
 		[ -n "$cstk" ] && cst0="-D${cstk}=OFF" cst1="-D${cstk}=ON"
-		[ -n "$cshk" ] && csh0="-D${cshk}=OFF" csh1="-D${cshk}=ON"
+		[ -n "$build_liblinkk" ] && build_liblink0="-D${build_liblinkk}=OFF" build_liblink1="-D${build_liblinkk}=ON"
 		
 		! $build_shared && [ -z "$cst1" ] && cst1="-DBUILD_SHARED_LIBS=OFF"
-		[ -z "$csh1" ] && csh1="-DBUILD_SHARED_LIBS=ON"
+		[ -z "$build_liblink1" ] && build_liblink1="-DBUILD_SHARED_LIBS=ON"
 		
-		$build_static && ! $build_shared && CSH="${cst1} ${csh0}"
-		$build_shared && ! $build_static && CSH="${csh1} ${cst0}"
-		$build_static && $build_shared && CSH="${cst1} ${csh1}"
+		$build_static && ! $build_shared && build_liblink="${cst1} ${build_liblink0}"
+		$build_shared && ! $build_static && build_liblink="${build_liblink1} ${cst0}"
+		$build_static && $build_shared && build_liblink="${cst1} ${build_liblink1}"
 		
 		[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
 
@@ -600,11 +610,11 @@ case $cfg in
 	ab|am|ac|ar|ag|auto*) build_system=automake
 		[ -z "$cst0" ] && cst0="--disable-static"
 		[ -z "$cst1" ] && cst1="--enable-static"
-		[ -z "$csh0" ] && csh0="--disable-shared"
-		[ -z "$csh1" ] && csh1="--enable-shared"
-		$build_static && ! $build_shared && CSH="${cst1} ${csh0}"
-		$build_shared && ! $build_static && CSH="${csh1} ${cst0}"
-		$build_static && $build_shared && CSH="${cst1} ${csh1}"
+		[ -z "$build_liblink0" ] && build_liblink0="--disable-shared"
+		[ -z "$build_liblink1" ] && build_liblink1="--enable-shared"
+		$build_static && ! $build_shared && build_liblink="${cst1} ${build_liblink0}"
+		$build_shared && ! $build_static && build_liblink="${build_liblink1} ${cst0}"
+		$build_static && $build_shared && build_liblink="${cst1} ${build_liblink1}"
 		[ -n "$cbk" ] && {
 		case $cbk in
 			--enable-*) cb0="${cbk}=0"; cb1="${cbk}=1";;
@@ -616,10 +626,10 @@ case $cfg in
 		;;
 	meson) build_system=meson
 		test -z "${meson_static}" && meson_static="-Ddefault_library=static"
-		$build_static && ! $build_shared && CSH="${meson_static}"
+		$build_static && ! $build_shared && build_liblink="${meson_static}"
 		test -z "${meson_shared}" && meson_shared="-Ddefault_library=shared"
-		$build_shared && ! $build_static && CSH="${meson_shared}"
-		$build_static && $build_shared && CSH="-Ddefault_library=both"
+		$build_shared && ! $build_static && build_liblink="${meson_shared}"
+		$build_static && $build_shared && build_liblink="-Ddefault_library=both"
 		;;
 	mk|make) build_system=make;;
 	other) build_system=other;;

@@ -21,7 +21,7 @@ pkg_deb="libjq-dev"
 
 on_config(){
     ac_config="--disable-maintainer-mode --disable-docs --with-oniguruma=${dir_install}"
-    unset CSH build_link
+    unset build_liblink build_link
 }
 
 on_create_pc(){

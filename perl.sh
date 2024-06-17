@@ -40,7 +40,7 @@ on_config(){
     src="http://www.cpan.org/src/5.0/perl-${vrs}.tar.gz"
     #if ${host_cross}; then
     #    cfg='ac'
-    #    unset CSH
+    #    unset build_liblink
     #    ac_config="--target=${arch} -Duseshrplib"
     #fi
 }
