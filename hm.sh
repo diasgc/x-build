@@ -4,22 +4,22 @@ lib='hm'
 dsc='WebM Project VPx codec implementation'
 lic='BSD-3c'
 src='https://vcgit.hhi.fraunhofer.de/jvet/HM.git'
+
 cfg='cmake'
+
+on_config_arm(){
+    doErr 'Unsupported arm arch'
+}
+
+dev_vrs=''
 eta='240'
 pkg_deb="rhythmbox-dev"
-
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
 lst_lic='COPYING README.md'
 lst_pc=''
-
-dev_vrs=''
-
-on_config_arm(){
-    doErr 'Unsupported arm arch'
-}
 
 . xbuild && start
 

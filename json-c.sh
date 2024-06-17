@@ -5,10 +5,9 @@ lib='json-c'
 dsc='Description: A JSON implementation in C'
 lic='MIT'
 src='https://github.com/json-c/json-c.git'
-cfg='cmake'
-eta='80'
-pkg_deb="libnewtonsoft-json-cil-dev"
 
+cfg='cmake'
+cmake_config='-DDISABLE_WERROR=ON'
 
 lst_inc='json-c/*.h'
 lst_lib='libjson-c'
@@ -18,10 +17,9 @@ lst_pc='json-c.pc'
 
 dev_bra='master'
 dev_vrs='0.17.99'
-stb_bra=''
-stb_vrs=''
+eta='80'
+pkg_deb="libnewtonsoft-json-cil-dev"
 
-cmake_config='-DDISABLE_WERROR=ON'
 
 # CMAKE OPTIONS
 # DISABLE_STATIC_FPIC	Bool	The default builds position independent code. Set this to OFF to create a shared library only.

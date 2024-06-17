@@ -4,7 +4,12 @@ lib='jsoncpp'
 dsc='A C++ library for interacting with JSON.'
 lic='MIT'
 src='https://github.com/open-source-parsers/jsoncpp.git'
+
 cfg='cmake'
+cmake_config="-DBUILD_TESTING=OFF -DJSONCPP_WITH_TESTS=OFF"
+cmake_static='BUILD_STATIC_LIBS'
+cmake_bin='JSONCPP_WITH_EXAMPLE'
+# -DBUILD_OBJECT_LIBS -DBUILD_SHARED_LIBS -DBUILD_STATIC_LIBS -DBUILD_TESTING -DJSONCPP_WITH_EXAMPLE
 
 lst_inc='json/*.h'
 lst_lib='libjsoncpp'
@@ -16,12 +21,6 @@ dev_bra='master'
 dev_vrs='1.9.5'
 pkg_deb='libjsoncpp-dev'
 eta='60'
-
-# -DBUILD_OBJECT_LIBS -DBUILD_SHARED_LIBS -DBUILD_STATIC_LIBS -DBUILD_TESTING -DJSONCPP_WITH_EXAMPLE
-
-cmake_config="-DBUILD_TESTING=OFF -DJSONCPP_WITH_TESTS=OFF"
-cmake_static='BUILD_STATIC_LIBS'
-cmake_bin='JSONCPP_WITH_EXAMPLE'
 
 . xbuild && start
 

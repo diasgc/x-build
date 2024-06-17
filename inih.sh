@@ -7,26 +7,19 @@
 lib='inih'
 dsc='Simple .INI file parser in C, good for embedded systems'
 lic='Other'
-vrs=''
 src="https://github.com/benhoyt/inih.git"
-cfg='meson'
-eta='0'
-pkg_deb="libinih-dev"
 
+cfg='meson'
 
 dev_bra='master'
 dev_vrs='58'
-stb_bra=''
-stb_vrs=''
+eta='20'
+pkg_deb="libinih-dev"
 
 lst_inc=''
 lst_lib=''
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
-
-eta='20'
-pkg_deb="libinih-dev"
-
 
 . xbuild && start
