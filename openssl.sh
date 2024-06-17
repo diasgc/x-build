@@ -8,6 +8,7 @@ tls='nasm perl'
 #dep='cryptopp'
 
 cfg='other'
+openssl_config=
 CFLAGS='-Wno-macro-redefined'
 # install no docs
 mki="install_sw"
@@ -19,30 +20,65 @@ eta='360'
 
 on_config(){
   dir_build="${dir_src}/build_${arch}"
-  PATH=$TOOLCHAIN/bin:$PATH
+  PATH="${TOOLCHAIN}/bin:${PATH}"
 }
 
-on_build_static(){
-  CFG+=" no-shared"
-}
 on_config_ndk(){
-  CFG="android-${target_trip[0]} -D__ANDROID_API__=${API} no-tests" && CFG="${CFG/aarch64/arm64}"
+  openssl_config="android-${target_trip[0]} -D__ANDROID_API__=${API} no-tests" && openssl_config="${openssl_config/aarch64/arm64}"
   export ANDROID_NDK_ROOT=${ANDROID_NDK_HOME}
 }
 
 on_config_mingw(){
   case "${arch}" in
-    x86_64-w64-mingw32 ) CFG="no-idea no-mdc2 no-rc5 mingw64 --cross-compile-prefix=x86_64-w64-mingw32-";;
-    i686-w64-mingw32 )   CFG="no-idea no-mdc2 no-rc5 mingw --cross-compile-prefix=i686-w64-mingw32-";;
+    x86_64-w64-mingw32 ) openssl_config="no-idea no-mdc2 no-rc5 mingw64 --cross-compile-prefix=x86_64-w64-mingw32-";;
+    i686-w64-mingw32 )   openssl_config="no-idea no-mdc2 no-rc5 mingw --cross-compile-prefix=i686-w64-mingw32-";;
   esac
 }
 
-build_config(){
-  do_log 'config' ${dir_src}/Configure ${CFG} --prefix=${dir_install}
+on_build_static(){
+  openssl_config+=" no-shared"
 }
 
-lst_inc='openssl/*.h'
-lst_lib='libssl libcrypto ossl-modules/legacy.so engines-3/*.so '
+build_config(){
+  do_log 'config' ${dir_src}/Configure ${openssl_config} --prefix=${dir_install}
+}
+
+lst_inc='openssl/rc5.h  openssl/rc4.h  openssl/pemerr.h
+  openssl/asn1_mac.h  openssl/provider.h  openssl/core.h  openssl/engine.h
+  openssl/dherr.h  openssl/dsaerr.h  openssl/proverr.h  openssl/pem2.h
+  openssl/ebcdic.h  openssl/asn1err.h  openssl/ui.h  openssl/core_object.h
+  openssl/encodererr.h  openssl/ssl.h  openssl/http.h  openssl/param_build.h
+  openssl/cmac.h  openssl/self_test.h  openssl/rc2.h  openssl/pem.h
+  openssl/sha.h  openssl/txt_db.h  openssl/params.h  openssl/modes.h
+  openssl/uierr.h  openssl/cast.h  openssl/ecdh.h  openssl/dh.h
+  openssl/kdferr.h  openssl/bio.h  openssl/rsa.h  openssl/cmserr.h
+  openssl/ripemd.h  openssl/conf.h  openssl/conf_api.h  openssl/rsaerr.h
+  openssl/crypto.h  openssl/err.h  openssl/ecdsa.h  openssl/opensslconf.h
+  openssl/ts.h  openssl/esserr.h  openssl/seed.h  openssl/idea.h
+  openssl/kdf.h  openssl/engineerr.h  openssl/md5.h  openssl/stack.h
+  openssl/pkcs12.h  openssl/x509v3err.h  openssl/rand.h  openssl/bnerr.h
+  openssl/des.h  openssl/x509v3.h  openssl/ocsperr.h  openssl/pkcs7.h
+  openssl/ossl_typ.h  openssl/lhash.h  openssl/fips_names.h  openssl/storeerr.h
+  openssl/mdc2.h  openssl/decoder.h  openssl/macros.h  openssl/asn1.h
+  openssl/cterr.h  openssl/md2.h  openssl/prov_ssl.h  openssl/dsa.h
+  openssl/comp.h  openssl/cms.h  openssl/ssl2.h  openssl/conferr.h
+  openssl/srtp.h  openssl/conftypes.h  openssl/x509.h  openssl/objects.h
+  openssl/sslerr_legacy.h  openssl/camellia.h  openssl/ocsp.h  openssl/ess.h
+  openssl/fipskey.h  openssl/e_os2.h  openssl/cryptoerr.h  openssl/store.h
+  openssl/buffer.h  openssl/bioerr.h  openssl/hmac.h  openssl/whrlpool.h
+  openssl/opensslv.h  openssl/core_names.h  openssl/cmperr.h  openssl/pkcs12err.h
+  openssl/sslerr.h  openssl/cmp_util.h  openssl/pkcs7err.h  openssl/safestack.h
+  openssl/randerr.h  openssl/dtls1.h  openssl/evp.h  openssl/async.h
+  openssl/asyncerr.h  openssl/md4.h  openssl/tls1.h  openssl/comperr.h
+  openssl/ct.h  openssl/srp.h  openssl/cryptoerr_legacy.h  openssl/cmp.h
+  openssl/x509_vfy.h  openssl/blowfish.h  openssl/objectserr.h  openssl/trace.h
+  openssl/httperr.h  openssl/x509err.h  openssl/configuration.h  openssl/ec.h
+  openssl/obj_mac.h  openssl/buffererr.h  openssl/aes.h  openssl/decodererr.h
+  openssl/asn1t.h  openssl/crmferr.h  openssl/encoder.h  openssl/symhacks.h
+  openssl/ecerr.h  openssl/ssl3.h  openssl/core_dispatch.h  openssl/bn.h
+  openssl/tserr.h  openssl/crmf.h  openssl/evperr.h  openssl/types.h'
+lst_lib='libssl libcrypto ossl-modules/legacy.so
+  engines-3/capi.so engines-3/padlock.so engines-3/loader_attic.so'
 lst_bin='c_rehash openssl'
 lst_lic='LICENSE.txt AUTHORS.md'
 lst_pc='libssl.pc libcrypto.pc openssl.pc'

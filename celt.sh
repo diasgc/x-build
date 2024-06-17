@@ -18,7 +18,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='celt.pc'
 
-ac_config="--enable-experimental-postfilter \
+am_config="--enable-experimental-postfilter \
      --enable-float-approx \
      --enable-fixed-point \
      --enable-custom-modes"

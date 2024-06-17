@@ -22,7 +22,7 @@ lst_pc=''
 # ndk:error ld.lld: warning: ../src/.libs/libzvbi.a: archive member 'libiconv.a' is neither ET_REL nor LLVM bitcode
 dev_vrs='0.2.42'
 
-ac_config="--disable-dependency-tracking --disable-silent-rules --without-x --disable-tests --disable-examples"
+am_config="--disable-dependency-tracking --disable-silent-rules --without-x --disable-tests --disable-examples"
 
 CPPFLAGS+=" -Wno-invalid-source-encoding \
  -Wno-tautological-pointer-compare \
@@ -34,7 +34,7 @@ CPPFLAGS+=" -Wno-invalid-source-encoding \
 LDFLAGS+=" -liconv"
 
 on_config(){
-    $host_ndk && ac_config+=' --disable-nls'
+    $host_ndk && am_config+=' --disable-nls'
 }
 
 . xbuild && start

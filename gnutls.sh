@@ -5,26 +5,16 @@ dsc='GnuTLS implements the TLS/SSL (Transport Layer Security aka Secure Sockets 
 lic='LGPL-2.1'
 src='https://gitlab.com/gnutls/gnutls.git'
 url='https://www.gnupg.org'
+dep='libiconv gmp nettle'
+
 cfg='ac'
 #cfg_cmd='./bootstrap'
-dep='libiconv gmp nettle'
-eta='690'
-pkg_deb="libsrt-gnutls-dev"
+am_bin='tools'
+am_config="--disable-hardware-acceleration --enable-local-libopts --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-doc --disable-manpages --disable-guile --disable-tests"
+WFLAGS='-Wno-tautological-constant-compare -Wno-unused-but-set-variable -Wno-unused-function -Wno-implicit-const-int-float-conversion -Wno-implicit-const-int-float-conversion -Wno-unused-but-set-parameter'
 
-ac_bin='--disable-tools|--enable-tools'
 mki='install'
 make_install='install'
-
-dev_vrs='3.8.5'
-
-lst_inc='gnutls/*.h'
-lst_lib='libgnutls libgnutlsxx'
-lst_bin='gnutls-serv srptool psktool gnutls-cli ocsptool certtool gnutls-cli-debug'
-lst_lic='LICENSE'
-lst_pc='gnutls.pc'
-
-ac_config="--disable-hardware-acceleration --enable-local-libopts --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-doc --disable-manpages --disable-guile --disable-tests"
-WFLAGS='-Wno-tautological-constant-compare -Wno-unused-but-set-variable -Wno-unused-function -Wno-implicit-const-int-float-conversion -Wno-implicit-const-int-float-conversion -Wno-unused-but-set-parameter'
 
 on_config(){
     local v="$(curl -sL ${url}/ftp/gcrypt/gnutls/ | grep -oP 'v[0-9]+\.[0-9]+' | tail -n1)"
@@ -32,11 +22,20 @@ on_config(){
     src="${url}/ftp/gcrypt/gnutls/${v}/${f}"
     vrs="$(sed 's,gnutls-,,;s,.tar..z,,' <<<${f})"
 }
+
 on_config_ndk(){
     API=35; NDK_API=35
 }
 
+dev_vrs='3.8.5'
+eta='690'
+pkg_deb="libsrt-gnutls-dev"
 
+lst_inc='gnutls/*.h'
+lst_lib='libgnutls libgnutlsxx'
+lst_bin='gnutls-serv srptool psktool gnutls-cli ocsptool certtool gnutls-cli-debug'
+lst_lic='LICENSE'
+lst_pc='gnutls.pc'
 
 . xbuild && start
 

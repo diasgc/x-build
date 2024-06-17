@@ -7,7 +7,7 @@ src='https://github.com/tesseract-ocr/tesseract.git'
 dep='leptonica'
 
 cfg='ag'
-ac_config='--disable-debug --disable-doc --disable-graphics'
+am_config='--disable-debug --disable-doc --disable-graphics'
 LIBS+=' -lpng16 -lz' # by order: -lpng16 -lz -ljpeg -lgif -ltiff -lwebp -lopenjp2
 
 #cfg='cmake'

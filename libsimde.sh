@@ -11,7 +11,7 @@ lic='MIT'
 src='https://github.com/simd-everywhere/simde.git'
 
 cfg='meson'
-meson_cfg='-Dtests=false'
+meson_config='-Dtests=false'
 
 dev_bra='master'
 dev_vrs='0.8.2'

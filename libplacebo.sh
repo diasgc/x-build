@@ -8,7 +8,7 @@ sub='submodule update --init'
 tls='python3-mako'
 
 cfg='meson'
-meson_cfg="-Ddemos=false"
+meson_config="-Ddemos=false"
 
 dev_bra='main'
 dev_vrs='7.349.0'
@@ -17,7 +17,7 @@ eta='60'
 
 on_config_ndk(){
     dep='glslang vulkan'
-    meson_cfg+=" -Dvulkan-registry=${dir_install}/share/vulkan/registry/vk.xml";;
+    meson_config+=" -Dvulkan-registry=${dir_install}/share/vulkan/registry/vk.xml";;
 }
 
 on_config(){

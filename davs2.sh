@@ -7,7 +7,7 @@ src='https://github.com/pkuvcl/davs2.git'
 #src_rel=false
 cfg='ac'
 
-ac_bin="--disable-cli| "
+am_bin="--disable-cli| "
 build_static=''
 build_shared='--enable-shared'
 
@@ -29,7 +29,7 @@ on_config(){
 }
 
 on_config_ndk(){
-    ac_config="--enable-lto --enable-pic --enable-strip --disable-asm"
+    am_config="--enable-lto --enable-pic --enable-strip --disable-asm"
     LDFLAGS="-llog"
 }
 

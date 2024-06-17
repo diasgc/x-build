@@ -7,7 +7,7 @@ src='https://skia.googlesource.com/skcms.git'
 cfg='bazel'
 tls='bazel-bootstrap'
 
-bazel_cfg='--platforms=//platform:android_arm64'
+bazel_config='--platforms=//platform:android_arm64'
 
 dev_bra=''
 dev_vrs=''

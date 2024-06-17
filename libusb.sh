@@ -20,7 +20,7 @@ lst_lib='libusb-1.0'
 dev_vrs='1.0.27'
 
 on_config_ndk(){
-    ac_config+="--disable-udev"
+    am_config+="--disable-udev"
 }
 
 . xbuild && start

@@ -34,7 +34,7 @@ on_config(){
 }
 
 on_config_ndk(){
-	ac_config="--with-langvox=android --with-audio=linux --target=${arch}"
+	am_config="--with-langvox=android --with-audio=linux --target=${arch}"
 }
 
 . xbuild && start

@@ -7,7 +7,7 @@ lic='ISC License'
 src="https://github.com/drobilla/zix.git"
 
 cfg='meson'
-meson_cfg='-Dbenchmarks=disabled -Ddocs=disabled -Dhtml=disabled -Dtests=disabled -Dtests_cpp=disabled' 
+meson_config='-Dbenchmarks=disabled -Ddocs=disabled -Dhtml=disabled -Dtests=disabled -Dtests_cpp=disabled' 
 
 dev_bra='master'
 dev_vrs='0.4.2'
@@ -24,8 +24,8 @@ lst_bin=''
 lst_lic=''
 lst_pc='zix-0.pc'
 
-#$host_ndk   && meson_cfg+=' -Dthreads=disabled' || meson_cfg+=' -Dthreads=enabled'
-#$host_mingw && meson_cfg+=' -Dposix=disabled'   || meson_cfg+=' -Dposix=enabled'
+#$host_ndk   && meson_config+=' -Dthreads=disabled' || meson_config+=' -Dthreads=enabled'
+#$host_mingw && meson_config+=' -Dposix=disabled'   || meson_config+=' -Dposix=enabled'
 
 . xbuild && start
 

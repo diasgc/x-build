@@ -10,7 +10,7 @@ lic='Other'
 src='https://github.com/freedesktop/libXdmcp.git'
 
 cfg='ag'
-#ac_config='--enable-devel-docs'
+#am_config='--enable-devel-docs'
 
 dev_bra='master'
 dev_vrs=''

@@ -23,7 +23,7 @@ WFLAGS='-Wno-macro-redefined'
 CFLAGS=' -O3 -flto'
 
 
-ac_config="--disable-shared" # error in make install with --enable-shared
+am_config="--disable-shared" # error in make install with --enable-shared
 
 . xbuild && start
 

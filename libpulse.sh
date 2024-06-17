@@ -17,16 +17,16 @@ lst_bin='pacat pactl pa-info padsp'
 lst_lic='LICENSE GPL LGPL'
 lst_pc='libpulse.pc libpulse-simple.pc libpulse-mainloop-glib.pc'
 
-#meson_cfg="-Ddaemon=false -Ddoxygen=false -Dman=false -Dtests=false -Dglib=enabled -Ddatabase=simple -Dconsolekit=disabled -Dtcpwrap=disabled"
+#meson_config="-Ddaemon=false -Ddoxygen=false -Dman=false -Dtests=false -Dglib=enabled -Ddatabase=simple -Dconsolekit=disabled -Dtcpwrap=disabled"
 patch="libpulse-01"
-meson_cfg="-Ddaemon=false -Dclient=false -Ddoxygen=false -Dgcov=false -Dman=false -Dtests=false -Ddatabase=simple" 
+meson_config="-Ddaemon=false -Dclient=false -Ddoxygen=false -Dgcov=false -Dman=false -Dtests=false -Ddatabase=simple" 
 patch="libpulse-01"
 
 on_config(){
     $use_clang && LDFLAGS+=" -Wl,--undefined-version"    
 }
 on_config_ndk(){
-    #meson_cfg+=" -Dalsa=disabled -Dx11=disabled -Dgtk=disabled -Dopenssl=disabled -Dgsettings=disabled"
+    #meson_config+=" -Dalsa=disabled -Dx11=disabled -Dgtk=disabled -Dopenssl=disabled -Dgsettings=disabled"
     #LIBS="-landroid-glob -landroid-execinfo"
     LDFLAGS+=" -landroid-glob -landroid-execinfo"
     CFLAGS+=' -D__ANDROID__'
@@ -37,7 +37,7 @@ LDFLAGS+=" -liconv"
 
 # cannot compile static libs
 
-meson_cfg+=' -Dalsa=disabled
+meson_config+=' -Dalsa=disabled
 -Dasyncns=disabled
 -Davahi=disabled
 -Dbluez5=disabled
@@ -70,7 +70,7 @@ meson_cfg+=' -Dalsa=disabled
 -Denable-smoother-2=false'
 
 on_config_arm(){
-    meson_cfg+=" -Datomic-arm-linux-helpers=true -Datomic-arm-memory-barrier=true" 
+    meson_config+=" -Datomic-arm-linux-helpers=true -Datomic-arm-memory-barrier=true" 
 }
 on_editpack(){
     rm -rf share/locale

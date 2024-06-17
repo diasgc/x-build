@@ -23,7 +23,7 @@ lst_inc=''
 lst_lib=''
 
 on_config(){
-    meson_cfg="-Drootprefix=${dir_root}/builds"
+    meson_config="-Drootprefix=${dir_root}/builds"
 }
 
 . xbuild && start

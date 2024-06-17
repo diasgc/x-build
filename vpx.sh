@@ -8,7 +8,7 @@ src='https://chromium.googlesource.com/webm/libvpx.git'
 
 cfg='ac'
 ac_opts='--no-host --no-pic --no-sysroot'
-ac_config='--disable-examples --disable-unit-tests --disable-tools --disable-docs --enable-vp9-highbitdepth --as=yasm'
+am_config='--disable-examples --disable-unit-tests --disable-tools --disable-docs --enable-vp9-highbitdepth --as=yasm'
   #--enable-vp8 --enable-vp9 --enable-vp9-highbitdepth --enable-vp9-temporal-denoising --enable-vp9-postproc \
   #--enable-postproc --enable-onthefly-bitpacking --enable-multi-res-encoding --enable-better-hw-compatibility \
   #--enable-webm-io --enable-libyuv --enable-experimental --enable-pic "
@@ -27,10 +27,10 @@ on_config(){
 
   t2=$(arch_fromid arm64 armv7 x86 x86_64)
   $host_x86 && t3=$(os_fromid android linux win32) || t3=$(os_fromid android linux win64)
-  ac_config+=" --target=${t2}-${t3}-gcc"
+  am_config+=" --target=${t2}-${t3}-gcc"
 
-  $host_arm && ac_config+=" --enable-neon"
-  $host_arm32 && ac_config+=" --disable-neon-asm"
+  $host_arm && am_config+=" --enable-neon"
+  $host_arm32 && am_config+=" --disable-neon-asm"
   AS=${YASM}
 
 }

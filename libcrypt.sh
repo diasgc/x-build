@@ -18,7 +18,7 @@ lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
 on_config(){
-    ac_config="--with-libgpg-error-prefix=${dir_install} --with-capabilities --disable-doc"
+    am_config="--with-libgpg-error-prefix=${dir_install} --with-capabilities --disable-doc"
 }
 
 . xbuild && start

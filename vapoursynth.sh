@@ -11,7 +11,7 @@ dep='zimg'
 # ffmpeg requires vsscript
 
 cfg='ag'
-ac_config="--enable-python-module=no --enable-vspipe=no --enable-vsscript=no"
+am_config="--enable-python-module=no --enable-vspipe=no --enable-vsscript=no"
 WFLAGS='-Wno-macro-redefined -Wno-sign-compare -Wno-typedef-redefinition'
 build_strip=false
 
@@ -21,7 +21,7 @@ pkg_deb=''
 eta='60'
 
 on_config(){
-    $host_arm && ac_config+=" --enable-x86-asm=no"
+    $host_arm && am_config+=" --enable-x86-asm=no"
     $host_arm && $host_clang && CPPFLAGS+=' -mno-outline-atomics'
     c_printf 'include' 'VapourSynth.h' '"%d.%d",VAPOURSYNTH_API_MAJOR,VAPOURSYNTH_API_MINOR'
 }

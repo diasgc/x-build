@@ -9,7 +9,7 @@ dep='libxml2 freetype fontconfig libudfread liblzma'
 
 cfg='ar'
 ac_nosysroot=true
-ac_config="--disable-bdjava-jar --disable-examples"
+am_config="--disable-bdjava-jar --disable-examples"
 
 dev_bra='master'
 dev_vrs='1.3.4'

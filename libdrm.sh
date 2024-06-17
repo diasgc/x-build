@@ -6,7 +6,7 @@ lic='Other'
 src='https://gitlab.freedesktop.org/mesa/drm.git'
 
 cfg='meson'
-meson_cfg+=' -Dman-pages=disabled -Dnouveau=disabled -Dtests=false'
+meson_config+=' -Dman-pages=disabled -Dnouveau=disabled -Dtests=false'
 
 dev_vrs='2.4.120'
 pkg_deb='libdrm-dev'

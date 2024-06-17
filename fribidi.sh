@@ -1,27 +1,28 @@
 #!/bin/bash
 
 lib='fribidi'
-pkg_deb='libfribidi0'
 dsc='Unicode Bidirectional Algorithm Library'
 lic='LGPL-2.1'
 src='https://github.com/fribidi/fribidi.git'
+
 cfg='meson'
-eta='60'
 meson_bin='bin'
-meson_cfg="-Db_lto=true -Ddocs=false -Dtests=false"
+meson_config="-Db_lto=true -Ddocs=false -Dtests=false"
+
+on_config(){
+    $host_mingw || meson_config+=' -Db_pie=true'
+    $use_clang && meson_config+=' --warnlevel=0'
+}
 
 dev_vrs='1.0.15'
+pkg_deb='libfribidi0'
+eta='60'
 
 lst_inc='fribidi/*.h'
 lst_lib='libfribidi'
 lst_bin='fribidi'
 lst_lic='COPYING AUTHORS'
 lst_pc='fribidi.pc'
-
-on_config(){
-    $host_mingw || meson_cfg+=' -Db_pie=true'
-    $use_clang && meson_cfg+=' --warnlevel=0'
-}
 
 . xbuild && start
 

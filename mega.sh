@@ -7,16 +7,21 @@
 
 lib='mega'
 pkg='libmega'
-pkg_deb="${lib}-dev"
 dsc='MEGA cloud storage C++ SDK'
 lic='BSD-2c'
 src='https://github.com/meganz/sdk.git' #src_opt='--recurse-submodules'
-cfg='ag'
 dep='openssl libcares curl libraw libuv freeimage libmediainfo cryptopp sqlite3 readline libsodium' #freeimage
-eta='270'
+
+cfg='ag'
+am_config="--disable-tests --disable-examples --without-pdfium"
 mki='install-strip'
 mkc='distclean'
-CFG="--disable-tests --disable-examples --without-pdfium"
+
+dev_bra=''
+dev_vrs=''
+pkg_deb="mega-dev"
+eta='270'
+
 lst_inc=''
 lst_lib=''
 lst_bin=''

@@ -10,9 +10,11 @@ pkg='libcurl'
 dsc='A command line tool and library for transferring data with URL syntax'
 lic='Other'
 src='https://github.com/curl/curl.git'
-cfg='ar'
-
 dep='zlib libzstd brotli openssl'
+
+cfg='ar'
+# todo remove manual
+am_config="--with-openssl --disable-manual"
 
 dev_bra='master'
 dev_vrs=''
@@ -24,9 +26,6 @@ lst_lib='libcurl'
 lst_bin='curl curl-config'
 lst_lic='COPYING'
 lst_pc='libcurl.pc'
-
-# todo remove manual
-ac_config="--with-openssl --disable-manual"
 
 . xbuild && start
 

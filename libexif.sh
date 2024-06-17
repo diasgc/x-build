@@ -16,7 +16,7 @@ lst_lic='COPYING AUTHORS README SECURITY.md'
 lst_pc='libavif.pc'
 dev_vrs='0.6.24.1'
 
-ac_config='--disable-docs'
+am_config='--disable-docs'
 
 . xbuild && start
 

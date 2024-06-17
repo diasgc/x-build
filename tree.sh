@@ -9,10 +9,10 @@ dsc='Tree is a recursive directory listing command'
 lic='GPL-2'
 vrs='1.8.0'
 src="http://mama.indstate.edu/users/ice/tree/src/tree-${vrs}.tgz"
-cfg='make'
-eta='45'
-API=26
 
+cfg='make'
+tree_config=
+API=26
 OBJS="tree.o unix.o html.o xml.o json.o hash.o color.o file.o"
 CFLAGS+=' -std=c11 -O3 -flto -Wall' LDFLAGS+=" -s"
 
@@ -27,8 +27,8 @@ on_config(){
 
   $host_64 && CFLAGS+=" -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
 
-  CFG="prefix=$INSTALL_DIR CC=$CC"
-  mki="prefix=$INSTALL_DIR install"
+  tree_config="prefix=${INSTALL_DIR} CC=${CC}"
+  mki="prefix=${INSTALL_DIR} install"
 }
 
 source_patch(){
@@ -41,10 +41,13 @@ build_all(){
     pushd ${dir_src} >/dev/null
     do_log 'clean' make clean
     log 'make '
-    LDFLAGS=$LDFLAGS CFLAGS=$CFLAGS OBJS=$OBJS make $CFG -j4 >>"${log_file}" || err
+    LDFLAGS=${LDFLAGS} CFLAGS=${CFLAGS} OBJS=${OBJS} make ${tree_config} -j4 >>"${log_file}" || err
     logok
     do_log 'install' install -s -D -m 700 ${dir_src}/tree ${dir_install}/bin
     popd >/dev/null 
 }
+
+dev_vrs=''
+eta='45'
 
 . xbuild && start

@@ -9,8 +9,8 @@ cfg='ac'
 build_strip=false
 ac_nopic=true
 ac_nosysroot=true
-ac_bin="cli"
-ac_config="--enable-lto --enable-pic --enable-strip"
+am_bin="cli"
+am_config="--enable-lto --enable-pic --enable-strip"
 
 dev_vrs='0.164.3191'
 eta='400'

@@ -18,7 +18,7 @@ lst_bin='xzmore xzdec xzgrep xz lzmainfo xzless lzmadec xzdiff'
 lst_lic='COPYING AUTHORS'
 lst_pc='liblzma.pc'
 
-#ac_config="--disable-doc"
+#am_config="--disable-doc"
 WFLAGS="-Wno-macro-redefined"
 
 . xbuild && start

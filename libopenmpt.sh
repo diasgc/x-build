@@ -11,8 +11,8 @@ src='https://github.com/OpenMPT/openmpt.git'
 dep='ogg vorbis flac sndfile'
 
 cfg='ar'
-ac_bin='examples'
-ac_config='--without-mpg123 --without-portaudio --without-portaudiocpp --without-pulseaudio --without-sdl2 --disable-tests'
+am_bin='examples'
+am_config='--without-mpg123 --without-portaudio --without-portaudiocpp --without-pulseaudio --without-sdl2 --disable-tests'
 
 dev_bra='master'
 dev_vrs='0.7.6+release.autotools'

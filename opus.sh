@@ -26,9 +26,9 @@ lst_pc='opus.pc'
 
 . xbuild && start
 
-#$build_bin && ac_config+=' --enable-extra-programs' && meson_cfg+=' -Dextra-programs=enabled'
-#ac_config="--disable-doc"
-#meson_cfg='-Dtests=disabled -Ddocs=disabled'
+#$build_bin && am_config+=' --enable-extra-programs' && meson_config+=' -Dextra-programs=enabled'
+#am_config="--disable-doc"
+#meson_config='-Dtests=disabled -Ddocs=disabled'
 
 # cpu av8 av7 x86 x64
 # NDK ++  ++  ++  ++  clang

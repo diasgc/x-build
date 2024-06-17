@@ -6,8 +6,8 @@ lic='BSD'
 src='https://gitlab.xiph.org/xiph/rnnoise.git'
 
 cfg='ag'
-ac_bin="examples"
-ac_config="--disable-doc"
+am_bin="examples"
+am_config="--disable-doc"
 
 dev_bra=''
 dev_vrs=''

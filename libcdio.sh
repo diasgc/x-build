@@ -2,28 +2,16 @@
 
 #vrs='2.1.0'
 lib='libcdio'
-pkg_deb='libcdio-dev'
+
 dsc='Portable CD-ROM I/O library'
 lic='GPL-3.0'
 git='git://git.sv.gnu.org/libcdio.git'
-cfg='ac'
 dep='libiconv'
 
-#ac_bin="example-progs"
-
+cfg='ac'
+am_config="MAKE=make --enable-maintainer-mode"
+am_bin="example-progs"
 mkc='distclean'
-CFG="MAKE=make --enable-maintainer-mode"
-
-lst_inc='cdio++/*.hpp cdio/*.h'
-lst_lib='libiso9660++ libiso9660 libcdio++ libcdio libudf'
-lst_bin=''
-lst_lic='COPYING AUTHORS'
-lst_pc='libiso9660.pc libiso9660++.pc libcdio.pc libcdio++.pc libudf.pc'
-
-dev_bra='master'
-dev_vrs='1.3.2'
-eta='10'
-
 WFLAGS="-Wno-header-guard"
 
 source_patch(){
@@ -35,6 +23,17 @@ before_make(){
   #no docs, no bins, no help2man
   sed -i 's/^SUBDIRS = doc include lib src test example/SUBDIRS = include lib/' Makefile
 }
+
+dev_bra='master'
+dev_vrs='1.3.2'
+pkg_deb='libcdio-dev'
+eta='10'
+
+lst_inc='cdio++/*.hpp cdio/*.h'
+lst_lib='libiso9660++ libiso9660 libcdio++ libcdio libudf'
+lst_bin=''
+lst_lic='COPYING AUTHORS'
+lst_pc='libiso9660.pc libiso9660++.pc libcdio.pc libcdio++.pc libudf.pc'
 
 . xbuild && start
 

@@ -6,10 +6,10 @@ lic='BSD-2c'
 src='https://github.com/cisco/openh264.git'
 
 cfg='meson'
-meson_cfg='-Dcpp_rtti=false'
+meson_config='-Dcpp_rtti=false'
 
 on_config_ndk(){
-    ${build_static} && meson_cfg+=' -Dcpp_lib=-lc++_static'
+    ${build_static} && meson_config+=' -Dcpp_lib=-lc++_static'
 }
 
 dev_bra='master'

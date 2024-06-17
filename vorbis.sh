@@ -20,7 +20,7 @@ lst_pc='vorbisfile.pc vorbisenc.pc vorbis.pc'
 
 cmake_config='-DBUILD_TESTING=OFF'
 cmake_static='BUILD_STATIC_LIBS'
-ac_config='--disable-docs --disable-examples --disable-oggtest'
+am_config='--disable-docs --disable-examples --disable-oggtest'
 
 . xbuild && start
 

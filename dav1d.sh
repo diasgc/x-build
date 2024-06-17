@@ -4,12 +4,12 @@ lib='dav1d'
 dsc='AV1 cross-platform decoder, open-source, and focused on speed and correctness.'
 lic='GPL-2.0'
 src='https://code.videolan.org/videolan/dav1d.git'
-cfg='meson'
 tls='meson ninja'
-build_strip=false
 
+cfg='meson'
 meson_bin='enable_tools'
-meson_cfg="-Db_pie=true -Db_lto=true"
+meson_config="-Db_pie=true -Db_lto=true"
+build_strip=false
 
 dev_vrs='0.9.2'
 pkg_deb='libdav1d-dev'

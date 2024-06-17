@@ -223,12 +223,13 @@ start(){
 
 	cd "${dir_src}"
 
-	if [ -d "${dir_src}/.git" ]
-	if [ -n "${bra}" ]; then
-		do_log "checkout ${bra}" git checkout ${bra}
-	elif ${git_checkout}; then
-		do_log 'checkout' git checkout
-		unset git_checkout
+	if [ -d "${dir_src}/.git" ]; then
+		if [ -n "${bra}" ]; then
+			do_log "checkout ${bra}" git checkout ${bra}
+		elif ${git_checkout}; then
+			do_log 'checkout' git checkout
+			unset git_checkout
+		fi
 	fi
 
 	# default dir_config is dir_src
@@ -331,7 +332,7 @@ start(){
 			;;
 
 		automake) # use autotools and configure executable to create makefile
-			ac_configure
+			am_configure
 			cfg_cmd="${dir_config}/configure"
 			cfg_args+=("--prefix=${dir_install}" "${CFG}" "${build_liblink}" "${CBN}")
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
@@ -351,7 +352,7 @@ start(){
 			;;
 		bazel)
 			cfg_cmd='bazel'
-			do_log "${build_system}" "${cfg_cmd}" build "${bazel_cfg}" //...
+			do_log "${build_system}" "${cfg_cmd}" build "${bazel_config}" //...
 			;;
 		cargo)
 			cfg_cmd='cargo'
@@ -474,7 +475,7 @@ start(){
 	test -n "${vrs}" && sed -i "s/dev_vrs='.*'/dev_vrs='"${vrs}"'/g" ${this_script}
 
 	end_script
-}	
+}
 
 # see https://mesonbuild.com/Commands.html for command line options
 meson_configure(){
@@ -490,15 +491,15 @@ meson_configure(){
 	fi
 	meson_create_toolchain ${cfg_file}
 	MAKE_EXECUTABLE=ninja
-	$build_static && meson_cfg+=' --prefer-static'
-	[ -n "${meson_cfg}" ] && CFG="${meson_cfg} ${CFG}"
+	$build_static && meson_config+=' --prefer-static'
+	[ -n "${meson_config}" ] && CFG="${meson_config} ${CFG}"
 }
 
-ac_configure() {
+am_configure() {
 	$ac_reconf && autoreconf -fi 2>/dev/null >>${log_file}
 	#[ -z "${mki+x}" ] && mki=$(make_findtarget "install-strip" "install")
 	[ -z "$exec_config" ] && exec_config='configure' # default config executable
-	[ -n "${ac_config}" ] && CFG=${ac_config}
+	[ -n "${am_config}" ] && CFG=${am_config}
 
 	local opt_list="$(${dir_config}/${exec_config} --help | grep -P '^[[:space:]]+\-\-')"
 
@@ -511,8 +512,8 @@ ac_configure() {
 		build_type+=" --enable-shared"
 	fi
 
-	if [ -n "${ac_bin}" ]; then
-		arr=(${ac_bin//|/ })
+	if [ -n "${am_bin}" ]; then
+		arr=(${am_bin//|/ })
 		case ${#arr[@]} in
 			1) CBN=$(bool2str ${build_bin} "${arr[0]}=1" "${arr[0]}=0");;
 			2) CBN=$(bool2str ${build_bin} "${arr[1]}" "${arr[0]}");;

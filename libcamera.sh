@@ -12,7 +12,7 @@ patch='libcamera-0.3.0'
 tls='python3 python-jinja2 python3-ply'
 
 cfg='meson'
-meson_cfg='-Dcam=disabled -Ddocumentation=disabled -Dgstreamer=disabled -Dqcam=disabled -Dtracing=disabled'
+meson_config='-Dcam=disabled -Ddocumentation=disabled -Dgstreamer=disabled -Dqcam=disabled -Dtracing=disabled'
 
 dev_bra='master'
 dev_vrs='0.2.0'
@@ -26,7 +26,7 @@ lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
 on_config_ndk(){
-    meson_cfg='-Dandroid=enabled -Dudev=disabled'
+    meson_config='-Dandroid=enabled -Dudev=disabled'
     CFLAGS+=' -Wno-vla-cxx-extension'
 }
 

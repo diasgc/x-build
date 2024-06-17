@@ -1,25 +1,15 @@
 #!/bin/bash
 
 lib='gmp'
-pkg_deb='libgmp-dev'
 dsc='GNU Multiple Precision Arithmetic Library'
 lic='LGPL-3.0 License'
 url='https://gmplib.org/'
 hg='https://gmplib.org/repo/gmp/'
 tls='mercurial'
+
 cfg='ac'
-eta='272'
+am_config="CC_FOR_BUILD=cc"
 #mkc='distclean'
-
-ac_config="CC_FOR_BUILD=cc"
-
-dev_vrs='6.3.0'
-
-lst_inc='gmp.h'
-lst_lib='libgmp'
-lst_bin=''
-lst_lic='COPYING.LESSERv3 COPYINGv2 COPYINGv3 AUTHORS'
-lst_pc='gmp.pc'
 
 source_config(){
   # from bootstrap:
@@ -45,8 +35,18 @@ on_config(){
   src="https://gmplib.org/download/gmp/${vrs}"
   vrs="$(sed 's/gmp-//;s/\.tar.gz//' <<<${vrs})"
   ABI="${host_bits}"
-  $host_mingw && ac_config+=" --enable-fat"
+  $host_mingw && am_config+=" --enable-fat"
 }
+
+dev_vrs='6.3.0'
+pkg_deb='libgmp-dev'
+eta='272'
+
+lst_inc='gmp.h'
+lst_lib='libgmp'
+lst_bin=''
+lst_lic='COPYING.LESSERv3 COPYINGv2 COPYINGv3 AUTHORS'
+lst_pc='gmp.pc'
 
 . xbuild && start
 

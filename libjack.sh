@@ -5,29 +5,28 @@
 #  .   .   .   .   .   .   .   .   .   .   .  bin
 
 lib='libjack'
-pkg_deb="${lib}-dev"
 dsc='Jack Audio Connection Kit: a low-latency synchronous callback-based media server'
 lic='GPL-2.0'
 src='https://github.com/jackaudio/jack2.git'
-cfg='waf'
 tls='python'
-eta='30'
+
+cfg='waf'
 
 on_config(){
-  CFG="--prefix=${dir_install} --doxygen=no"
+  waf_config="--prefix=${dir_install} --doxygen=no"
 }
 
 
 build_clean(){
-  do_log 'clean' $dir_src/waf distclean
+  do_log 'clean' ${dir_src}/waf distclean
 }
 
 build_config(){
-  do_log 'config' $dir_src/waf configure $CFG
+  do_log 'config' ${dir_src}/waf configure ${waf_config}
 }
 
 on_make(){
-  $dir_src/waf build $CFG
+  ${dir_src}/waf build ${waf_config}
 }
 
 on_install(){
@@ -35,7 +34,12 @@ on_install(){
 }
 
 build_make_package(){
-  $dir_src/waf install --prefix=${1}
+  ${dir_src}/waf install --prefix=${1}
 }
+
+dev_bra=''
+dev_vrs=''
+pkg_deb="libjack-dev"
+eta='30'
 
 . xbuild && start

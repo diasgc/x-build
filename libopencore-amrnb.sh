@@ -12,7 +12,7 @@ lic='Apache-2'
 src='https://git.code.sf.net/p/opencore-amr/code.git'
 cfg='ar'
 eta='100'
-ac_bin="--disable-examples|--enable-examples"
+am_bin="--disable-examples|--enable-examples"
 
 dev_vrs='0.1.6'
 

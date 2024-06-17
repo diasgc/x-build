@@ -7,7 +7,7 @@ src='https://github.com/libffi/libffi.git'
 url='https://sourceware.org/libffi/'
 
 cfg='ar'
-ac_config='--enable-portable-binary --disable-docs'
+am_config='--enable-portable-binary --disable-docs'
 
 dev_bra=''
 dev_vrs=''

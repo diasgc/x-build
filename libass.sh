@@ -24,7 +24,7 @@ eta='4'
 
 cfg='meson'
 meson_fontconfig=disabled
-meson_cfg='-Dtest=false -Dprofile=false -Ddirectwrite=disabled -Dcoretext=disabled'
+meson_config='-Dtest=false -Dprofile=false -Ddirectwrite=disabled -Dcoretext=disabled'
 
 extraOpts(){
     case $1 in --full)
@@ -35,8 +35,8 @@ extraOpts(){
 }
 
 on_config(){
-    meson_cfg+=" -Dfontconfig=${meson_fontconfig}"
-    $host_cross && meson_cfg+=' -Drequire-system-font-provider=false'
+    meson_config+=" -Dfontconfig=${meson_fontconfig}"
+    $host_cross && meson_config+=' -Drequire-system-font-provider=false'
     #CPPFLAGS+=" -I${dir_install_include}/fribidi -I${dir_install_include}/freetype2"
 }
 

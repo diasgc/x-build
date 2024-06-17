@@ -11,8 +11,9 @@ lic='BSD-2c'
 src='https://gitlab.xiph.org/xiph/daala.git'
 dep='ogg libpng'
 
-ac_bin="--disable-tools|--enable-tools"
-ac_config="--disable-doc \
+cfg='ac'
+am_bin="--disable-tools|--enable-tools"
+am_config="--disable-doc \
      --disable-examples \
      --disable-player \
      --disable-unit-tests \

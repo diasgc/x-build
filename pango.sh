@@ -7,7 +7,7 @@ src='https://gitlab.gnome.org/GNOME/pango.git'
 cfg='meson'
 dep='cairo expat fontconfig pixman freetype fribidi harfbuzz'
 #tls='libglib2.0-dev-bin python3 python3-toml python3-typogrify'
-meson_cfg='-Dintrospection=disabled -Dbuild-testsuite=false -Dbuild-examples=false'
+meson_config='-Dintrospection=disabled -Dbuild-testsuite=false -Dbuild-examples=false'
 
 dev_bra='master'
 dev_vrs='1.54.0'

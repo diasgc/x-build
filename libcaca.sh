@@ -12,7 +12,7 @@ src='https://github.com/cacalabs/libcaca.git'
 patch="libcaca-01"
 
 cfg='ac'
-ac_config='--disable-doc --disable-java --disable-python --disable-ruby'
+am_config='--disable-doc --disable-java --disable-python --disable-ruby'
 #CPPFLAGS+=" -Wno-ignored-optimization-argument -Wno-absolute-value -Wno-unused-but-set-variable -Wno-int-conversion"
 
 dev_bra='main'
@@ -27,7 +27,7 @@ lst_lic='COPYING COPYING.GPL COPYING.LGPL COPYING.ISC AUTHORS'
 lst_pc='caca++.pc caca.pc'
 
 on_config(){
-  $host_mingw || ac_config+=" --disable-win32"
+  $host_mingw || am_config+=" --disable-win32"
 }
 
 source_config(){

@@ -8,7 +8,7 @@ src='https://github.com/breakfastquay/rubberband.git'
 dep='sndfile samplerate fftw'
 
 cfg='meson'
-meson_cfg='-Dtests=disabled -Dlv2=disabled -Dladspa=disabled -Dvamp=disabled'
+meson_config='-Dtests=disabled -Dlv2=disabled -Dladspa=disabled -Dvamp=disabled'
 meson_bin='cmdline'
 
 dev_bra='default'

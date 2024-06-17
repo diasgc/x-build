@@ -7,7 +7,7 @@ src='https://github.com/zeromq/libzmq.git'
 dep='libsodium'
 
 cfg='ar'
-ac_config='--disable-Werror --with-libsodium'
+am_config='--disable-Werror --with-libsodium'
 
 dev_bra='master'
 dev_vrs='4.3.6'

@@ -16,7 +16,7 @@ pkg_deb="librust-gdk-pixbuf-sys-dev"
 
 tls='gobject-introspection'
 dep='glib2 libiconv libpng libjpeg'
-meson_cfg="-Dinstalled_tests=false -Dgtk_doc=false -Dintrospection=disabled -Dman=false -Dtests=false"
+meson_config="-Dinstalled_tests=false -Dgtk_doc=false -Dintrospection=disabled -Dman=false -Dtests=false"
 
 dev_vrs='2.42.13'
 

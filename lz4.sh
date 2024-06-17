@@ -20,7 +20,7 @@ lst_bin='lz4'
 lst_lic='LICENSE'
 lst_pc='liblz4.pc'
 
-meson_cfg='-Ddebug_level=0 -Dbin_examples=false -Dbin_contrib=false -Dbin_tests=false'
+meson_config='-Ddebug_level=0 -Dbin_examples=false -Dbin_contrib=false -Dbin_tests=false'
 meson_bin='bin_programs'
 
 on_build_bin(){

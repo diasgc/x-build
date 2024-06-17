@@ -22,22 +22,22 @@ lst_pc='lcms2.pc'
 dev_bra='master'
 dev_vrs='2.13.1'
 
-meson_cfg='-Djpeg=disabled -Dtiff=disabled'
+meson_config='-Djpeg=disabled -Dtiff=disabled'
 
 extraOpts(){
     case $1 in
         --full)
             dep='libjpeg libtiff'
-            meson_cfg='-Djpeg=enabled -Dtiff=enabled'
+            meson_config='-Djpeg=enabled -Dtiff=enabled'
             ;;
         --gpl3)
-            meson_cfg+=' -Dfastfloat=true -Dthreaded=true'
+            meson_config+=' -Dfastfloat=true -Dthreaded=true'
             ;;
     esac
 }
 
 on_build_bin(){
-    meson_cfg+=' -Dutils=true'
+    meson_config+=' -Dutils=true'
 }
 
 . xbuild && start

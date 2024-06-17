@@ -25,7 +25,7 @@ lst_pc='libaacs.pc'
 eta='10'
 
 on_config(){
-    ac_config="--with-libgcrypt-prefix=${dir_install} --with-libgpg-error-prefix=${dir_install}"
+    am_config="--with-libgcrypt-prefix=${dir_install} --with-libgpg-error-prefix=${dir_install}"
     export YACC='byacc' YFLAGS='--update'
 }
 

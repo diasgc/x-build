@@ -17,8 +17,8 @@ tls='flex'
 lst_inc=''
 lst_lib=''
 
-ac_config="--disable-libsystemd --disable-libudev"
-meson_cfg="-Dlibsystemd=false -Dlibudev=false -Dlibusb=false -Dpolkit=false -Dusb=false -Dserial=false"
+am_config="--disable-libsystemd --disable-libudev"
+meson_config="-Dlibsystemd=false -Dlibudev=false -Dlibusb=false -Dpolkit=false -Dusb=false -Dserial=false"
 
 source_config(){
     ./bootstrap

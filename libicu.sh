@@ -12,7 +12,7 @@ src='https://github.com/unicode-org/icu.git'
 url=''
 
 cfg='ac'
-ac_config='--disable-icuio --disable-layout --disable-tests --disable-samples'
+am_config='--disable-icuio --disable-layout --disable-tests --disable-samples'
 config_dir='icu4c/source'
 mki='install'
 
@@ -25,7 +25,7 @@ on_config(){
     if [ ! $host_ndk ] || [ $API -lt 31 ]; then
 
         dir_build="${dir_src}/${config_dir}/build_${arch}"
-        ac_config+=" --with-data-packaging=archive"
+        am_config+=" --with-data-packaging=archive"
 
         if ! $build_pkgdl && $host_cross; then
             dir_cross="${dir_src}/${config_dir}/build_${build_arch}"
@@ -34,7 +34,7 @@ on_config(){
                 ./libicu.sh native --full
             fi
             arch=$a
-            ac_config+=" --with-cross-build=${dir_cross}"
+            am_config+=" --with-cross-build=${dir_cross}"
         fi
     else
         exit 0

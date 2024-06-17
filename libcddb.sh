@@ -2,12 +2,25 @@
 
 #vrs='1.3.2'
 lib='libcddb'
-pkg_deb='libcddb2-dev'
 dsc='CDDB server access library'
 lic='GPL?'
 src='https://salsa.debian.org/nickg/libcddb.git'
-cfg='ac'
 dep='libiconv libcdio' # optional
+
+cfg='ac'
+am_config="--without-cdio"
+WFLAGS='-Wno-header-guard'
+
+source_patch(){
+    # ix clang undefined symbol rpl_malloc error by disabling AC_FUNC_MALLOC
+    sed -i 's|AC_FUNC_MALLOC|#AC_FUNC_MALLOC|' configure.ac
+    # regenerate
+    do_am_autoreconf "${dir_src}"
+}
+
+dev_bra='master'
+dev_vrs='1.3.2'
+pkg_deb='libcddb2-dev'
 eta='10'
 
 lst_inc='cddb/*.h'
@@ -15,21 +28,6 @@ lst_lib='libcddb'
 lst_bin='cddb_query'
 lst_lic='COPYING AUTHORS'
 lst_pc='libcddb.pc'
-
-dev_bra='master'
-dev_vrs='1.3.2'
-stb_bra=''
-stb_vrs=''
-
-CFG="--without-cdio"
-WFLAGS='-Wno-header-guard'
-
-source_patch(){
-    # ix clang undefined symbol rpl_malloc error by disabling AC_FUNC_MALLOC
-    sed -i 's|AC_FUNC_MALLOC|#AC_FUNC_MALLOC|' configure.ac
-    # regenerate
-    doAutoreconf ${dir_src}
-}
 
 . xbuild && start
 

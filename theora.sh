@@ -15,7 +15,7 @@ source_config(){
 }
 
 cfg='ag'
-ac_config="--disable-doc --disable-spec --disable-examples --disable-oggtest --disable-vorbistest"
+am_config="--disable-doc --disable-spec --disable-examples --disable-oggtest --disable-vorbistest"
 
 dev_bra='master'
 dev_vrs='1.1.1'

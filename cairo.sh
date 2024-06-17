@@ -7,7 +7,7 @@ src='https://gitlab.freedesktop.org/cairo/cairo.git'
 cfg='meson'
 dep='zlib lzo glib2 libpng fontconfig freetype pixman'
 
-meson_cfg='-Dxcb=disabled -Dxlib=disabled -Dxlib-xcb=disabled -Dtests=disabled -Dquartz=disabled -Dsymbol-lookup=disabled -Dspectre=disabled'
+meson_config='-Dxcb=disabled -Dxlib=disabled -Dxlib-xcb=disabled -Dtests=disabled -Dquartz=disabled -Dsymbol-lookup=disabled -Dspectre=disabled'
 
 dev_bra='master'
 dev_vrs='1.18.1'

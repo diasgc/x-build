@@ -251,7 +251,7 @@ case $host_os in
                 ;;
 esac
 
-ac_config="--arch=$CPU \
+am_config="--arch=$CPU \
      --target-os=${PLATFORM,,} \
      --cc=$CC \
      --ar=$AR \
@@ -264,7 +264,7 @@ ac_config="--arch=$CPU \
      $extopts \
      $extlibs"
 
-test -n "$extraversion" && ac_config="--extra-version=$extraversion $ac_config"
+test -n "$extraversion" && am_config="--extra-version=$extraversion $am_config"
 # make the log cleaner
 WFLAGS='-Wno-unused-command-line-argument'
 _vvc_patch(){

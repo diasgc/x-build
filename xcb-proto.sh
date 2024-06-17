@@ -17,7 +17,7 @@ on_config(){
     vrs='1.16.0'
     src="https://xorg.freedesktop.org/archive/individual/proto/xcb-proto-${vrs}.tar.gz"
     tar_stripcomponents=true
-    ac_config="--with-python_prefix=${dir_install}"
+    am_config="--with-python_prefix=${dir_install}"
     export PYTHON_PREFIX=${dir_install}
 }
 

@@ -10,7 +10,7 @@ dep='libxml2 glib2'
 
 cfg='meson'
 meson_bin="bool:build-tools"
-meson_cfg='-Dbuild-tests=false'
+meson_config='-Dbuild-tests=false'
 
 dev_bra='master'
 dev_vrs='2.4'

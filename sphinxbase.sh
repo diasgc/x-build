@@ -7,7 +7,7 @@ src='https://github.com/cmusphinx/sphinxbase.git'
 src_rel=false
 
 cfg='ag'
-ac_config='--without-python'
+am_config='--without-python'
 
 on_config_ndk(){
     LDFLAGS+=" -llog"

@@ -7,7 +7,7 @@ git='https://gitlab.com/lv2/lv2.git'
 dep='sndfile lilv'
 
 cfg='meson'
-meson_cfg='-Ddocs=disabled -Dtests=disabled -Dplugins=disabled'
+meson_config='-Ddocs=disabled -Dtests=disabled -Dplugins=disabled'
 
 dev_bra='master'
 dev_vrs='1.18.11'

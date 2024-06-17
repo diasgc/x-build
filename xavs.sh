@@ -7,7 +7,7 @@ src='https://svn.code.sf.net/p/xavs/code/trunk'
 
 cfg="ac"
 ac_opts='--update-config_sub --update-config_guess --no-sysroot --no-pic'
-ac_config="--disable-asm --enable-pic"
+am_config="--disable-asm --enable-pic"
 
 dev_vrs='0.1.55'
 pkg_deb=''

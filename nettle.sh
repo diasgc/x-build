@@ -8,7 +8,7 @@ dep='gmp'
 
 cfg='ac'
 cfg_cmd='./.bootstrap'
-ac_config="--disable-documentation --disable-mini-gmp --enable-pic CC_FOR_BUILD=gcc"
+am_config="--disable-documentation --disable-mini-gmp --enable-pic CC_FOR_BUILD=gcc"
 mkc='distclean'
 
 dev_bra='master'
@@ -24,8 +24,8 @@ on_config(){
     vrs=$(sed 's,nettle_,,;s,_release_.*\.tar\.gz$,,' <<<${f})
     tar_stripcomponents=true
   fi
-  ac_config+=" $(bool2str ${host_arm} '--enable-arm-neon' '--enable-x86-sha-ni --enable-x86-aesni')"
-  ac_config+=" $(bool2str ${host_gnu} '--enable' '--disable')-assembler"
+  am_config+=" $(bool2str ${host_arm} '--enable-arm-neon' '--enable-x86-sha-ni --enable-x86-aesni')"
+  am_config+=" $(bool2str ${host_gnu} '--enable' '--disable')-assembler"
   ${host_cross} || dir_install_pc="${dir_install}/lib64/pkgconfig"
 }
 

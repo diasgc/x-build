@@ -10,10 +10,10 @@ config_dir="libvmaf"
 build_dir='libvmaf'
 
 cfg='meson'
-meson_cfg='-Denable_docs=false -Denable_tests=false'
+meson_config='-Denable_docs=false -Denable_tests=false'
 
 on_config(){
-    meson_cfg+=" -Denable_avx512=$(bool2str ${host_arm} 'false' 'true')"
+    meson_config+=" -Denable_avx512=$(bool2str ${host_arm} 'false' 'true')"
 }
 
 dev_bra=''

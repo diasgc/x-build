@@ -10,8 +10,8 @@ cmake_file='vo-amrwbenc.cmake'
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='EXAMPLE'
 
-#ac_bin='--disable-example|--enable-example'
-#ac_config='--disable-maintainer-mode'
+#am_bin='--disable-example|--enable-example'
+#am_config='--disable-maintainer-mode'
 
 lst_inc='vo-amrwbenc/enc_if.h'
 lst_lib='libvo-amrwbenc'
@@ -25,7 +25,7 @@ eta='17'
 
 cmake_config='-DENABLE_ASM=ON'
 
-#[ "$arch" == "arm-linux-androideabi" ] && ac_config+=" --enable-armv7neon=yes"
+#[ "$arch" == "arm-linux-androideabi" ] && am_config+=" --enable-armv7neon=yes"
 #HOST_NPROC=1
 
 . xbuild && start

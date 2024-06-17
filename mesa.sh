@@ -20,7 +20,7 @@ pkg_deb=''
 eta='0'
 
 on_config_ndk(){
-    meson_cfg='-Dplatforms=android -Degl-native-platform=android -Dandroid-stub=true -Dgallium-drivers=freedreno -Dvulkan-drivers=freedreno'
+    meson_config='-Dplatforms=android -Degl-native-platform=android -Dandroid-stub=true -Dgallium-drivers=freedreno -Dvulkan-drivers=freedreno'
     CPPFLAGS+=' -D_GNU_SOURCE=1'
     export API=26 #vulkan sync_merge
 }

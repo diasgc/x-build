@@ -15,7 +15,7 @@ dep='cairo freetype gdk-pixbuf glib2 libxml2 pango'
 eta='110'
 
 on_config(){
-    meson_cfg="-Dintrospection=disabled -Ddocs=disabled -Dtests=false -Dpixbuf-loader=disabled -Dtriplet=${arch}"
+    meson_config="-Dintrospection=disabled -Ddocs=disabled -Dtests=false -Dpixbuf-loader=disabled -Dtriplet=${arch}"
 }
 
 cargo_install(){

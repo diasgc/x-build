@@ -7,7 +7,7 @@ src='https://git.savannah.gnu.org/git/libiconv.git'
 url='https://www.gnu.org/software/libiconv'
 
 cfg='ac'
-ac_config=" --enable-extra-encodings"
+am_config=" --enable-extra-encodings"
 ac_reconf=false
 
 lst_inc='iconv.h libcharset.h localcharset.h'

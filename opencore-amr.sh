@@ -10,7 +10,7 @@ dsc='OpenCORE Adaptive Multi Rate (AMR) speech codec'
 lic='Apache-2'
 src='https://git.code.sf.net/p/opencore-amr/code.git'
 cfg='ar'
-ac_bin="--disable-examples|--enable-examples"
+am_bin="--disable-examples|--enable-examples"
 
 dev_vrs='0.1.6'
 eta='100'

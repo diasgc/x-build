@@ -12,7 +12,7 @@ src="https://github.com/LibRaw/LibRaw.git"
 dep='libjpeg lcms2 zlib jasper'
 
 cfg='ar'
-ac_config='--disable-examples --disable-openmp'
+am_config='--disable-examples --disable-openmp'
 
 dev_bra='master'
 dev_vrs='0.21.2'

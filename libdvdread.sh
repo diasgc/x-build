@@ -20,7 +20,7 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='dvdread.pc'
 
-ac_config="--disable-apidoc"
+am_config="--disable-apidoc"
 
 . xbuild && start
 

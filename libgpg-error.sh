@@ -15,7 +15,7 @@ src='https://github.com/gpg/libgpg-error/archive/refs/tags/libgpg-error-'${vrs}'
 cfg='ar'
 eta='60'
 
-ac_config="--disable-languages --disable-doc --disable-tests"
+am_config="--disable-languages --disable-doc --disable-tests"
 
 _on_config(){
     CPPFLAGS+=" -I${dir_src}/src"
@@ -23,7 +23,7 @@ _on_config(){
 }
 
 on_config_ndk(){
-    ac_config+=' --disable-threads'
+    am_config+=' --disable-threads'
 }
 
 source_patch(){

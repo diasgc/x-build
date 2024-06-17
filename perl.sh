@@ -41,7 +41,7 @@ on_config(){
     #if ${host_cross}; then
     #    cfg='ac'
     #    unset build_liblink
-    #    ac_config="--target=${arch} -Duseshrplib"
+    #    am_config="--target=${arch} -Duseshrplib"
     #fi
 }
 

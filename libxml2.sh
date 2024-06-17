@@ -10,7 +10,7 @@ pkg='libxml-2.0'
 
 cmake_config='-DLIBXML2_WITH_TESTS=OFF -DLIBXML2_WITH_PYTHON=OFF'
 cmake_bin='LIBXML2_WITH_PROGRAMS'
-ac_config='--without-debug --without-python'
+am_config='--without-debug --without-python'
 
 dev_bra='master'
 dev_vrs='2.9.12'

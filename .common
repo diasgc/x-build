@@ -65,7 +65,7 @@ function splash {
 
 function show_banner {
 	echo -ne "\n\n${CW}Cross Build scripts ${vsh} for Linux${C0}\n"
-  [ -n $(command -v lsb_release) ] && echo -ne "$(lsb_release -sd) "
+  [ -n "$(command -v lsb_release)" ] && echo -ne "$(lsb_release -sd) "
   if [ -n "$(uname -r | grep 'microsoft')" ];then
     echo -ne "WSL2 "
   elif [ -n "$(uname -r | grep 'Microsoft')" ];then
@@ -461,6 +461,7 @@ function install_rustc {
 function install_cargo_cbuild {
   cargo install cargo-c --features=vendored-openssl  
 }
+
 # usage: search_configfile <config-file> (ex. CMakeLists.txt, configure, meson.build)
 # returns: nearest source root location of config file
 search_configfile(){
@@ -487,7 +488,7 @@ function config_guess {
       cfg_cmd="${dir_config}/bootstrap.sh"
     elif [ -f "${dir_config}/bootstrap" ]; then
       cfg_cmd="${dir_config}/bootstrap"
-	  elif [ -f "${dir_config}/configure.ac"]; then
+	  elif [ -f "${dir_config}/configure.ac" ]; then
 	    cfg='ar'		
     elif [ ! -f "${dir_config}/configure" ]; then
       cfg_cmd="autoreconf -fiv ${dir_config}/bootstrap"
@@ -524,12 +525,12 @@ function am_set_buildlink {
   : "${ac_shared:=shared}"
   build_liblink="--$(bool2str ${build_shared} enable disable)-${ac_shared}"
   build_liblink="--$(bool2str ${build_static} enable disable)-${ac_static} ${build_liblink}"
-  if [ -n "${ac_bin}" ]; then
-    case "${ac_bin}" in
-      --enable-*) CBN="${ac_bin}=$(bool2str ${build_bin} 1 0)";;
-      able-*)     CBN="--$(bool2str ${build_bin} en dis)${ac_bin}";;
-      with-*)     CBN="--$(bool2str ${build_bin} without-${ac_bin:5} ${ac_bin})";;
-      *)          CBN="--enable-${ac_bin}=$(bool2str ${build_bin} 1 0)";;
+  if [ -n "${am_bin}" ]; then
+    case "${am_bin}" in
+      --enable-*) CBN="${am_bin}=$(bool2str ${build_bin} 1 0)";;
+      able-*)     CBN="--$(bool2str ${build_bin} en dis)${am_bin}";;
+      with-*)     CBN="--$(bool2str ${build_bin} without-${am_bin:5} ${am_bin})";;
+      *)          CBN="--enable-${am_bin}=$(bool2str ${build_bin} 1 0)";;
     esac
   fi
 }
@@ -562,18 +563,22 @@ function config_init {
 	case "${cfg}" in
 		cm|ccm|cmake|ccmake)
 			build_system=cmake
+      config_args="${cmake_config}"
       cmake_set_buildlink
 			;;
 		ab|am|ac|ar|ag|auto*)
 			build_system=automake
+      config_args="${am_config}"
       am_set_buildlink
 			;;
 		meson)
 			build_system=meson
+      config_args="${meson_config}"
 			meson_set_buildlink
 			;;
     bazel)
       build_system=bazel
+      config_args="${bazel_config}"
       ;;
     cargo)
       build_system=cargo
@@ -587,57 +592,6 @@ function config_init {
 	if [ -z "${CBN}" ];then
 		$build_bin && CBN="${cb1}" || CBN="${cb0}"
 	fi
-}
-
-config_init_old(){
-  # check build type and set defaults if no cst0 cst1 build_liblink0 or build_liblink1 value provided
-case $cfg in
-	cm|ccm|cmake|ccmake) build_system=cmake
-
-		[ -n "$cstk" ] && cst0="-D${cstk}=OFF" cst1="-D${cstk}=ON"
-		[ -n "$build_liblinkk" ] && build_liblink0="-D${build_liblinkk}=OFF" build_liblink1="-D${build_liblinkk}=ON"
-		
-		! $build_shared && [ -z "$cst1" ] && cst1="-DBUILD_SHARED_LIBS=OFF"
-		[ -z "$build_liblink1" ] && build_liblink1="-DBUILD_SHARED_LIBS=ON"
-		
-		$build_static && ! $build_shared && build_liblink="${cst1} ${build_liblink0}"
-		$build_shared && ! $build_static && build_liblink="${build_liblink1} ${cst0}"
-		$build_static && $build_shared && build_liblink="${cst1} ${build_liblink1}"
-		
-		[ -n "$cbk" ] && cb0="-D${cbk}=OFF" cb1="-D${cbk}=ON"
-
-		;;
-	ab|am|ac|ar|ag|auto*) build_system=automake
-		[ -z "$cst0" ] && cst0="--disable-static"
-		[ -z "$cst1" ] && cst1="--enable-static"
-		[ -z "$build_liblink0" ] && build_liblink0="--disable-shared"
-		[ -z "$build_liblink1" ] && build_liblink1="--enable-shared"
-		$build_static && ! $build_shared && build_liblink="${cst1} ${build_liblink0}"
-		$build_shared && ! $build_static && build_liblink="${build_liblink1} ${cst0}"
-		$build_static && $build_shared && build_liblink="${cst1} ${build_liblink1}"
-		[ -n "$cbk" ] && {
-		case $cbk in
-			--enable-*) cb0="${cbk}=0"; cb1="${cbk}=1";;
-			able-*) cb0="--dis${cbk}"; cb1="--en${cbk}";;
-			with-*) cb0="--without-${cbk:5}"; cb1="--${cbk}";;
-			*) cb0="--enable-${cbk}=0" cb1="--enable-${cbk}=1";;
-		esac
-		}
-		;;
-	meson) build_system=meson
-		test -z "${meson_static}" && meson_static="-Ddefault_library=static"
-		$build_static && ! $build_shared && build_liblink="${meson_static}"
-		test -z "${meson_shared}" && meson_shared="-Ddefault_library=shared"
-		$build_shared && ! $build_static && build_liblink="${meson_shared}"
-		$build_static && $build_shared && build_liblink="-Ddefault_library=both"
-		;;
-	mk|make) build_system=make;;
-	other) build_system=other;;
-	*) unset build_system;;
-esac
-if [ -z "${CBN}" ];then
-	$build_bin && CBN="${cb1}" || CBN="${cb0}"
-fi
 }
 
 

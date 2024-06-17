@@ -20,12 +20,12 @@ lst_lic='COPYING AUTHORS'
 lst_pc='pixman-1.pc'
 
 on_config(){
-    meson_cfg='-Dgtk=disabled -Dlibpng=disabled -Dtests=disabled -Ddemos=disabled -Dopenmp=disabled'
+    meson_config='-Dgtk=disabled -Dlibpng=disabled -Dtests=disabled -Ddemos=disabled -Dopenmp=disabled'
 patch="pixman-01"
-    $host_arm && meson_cfg+=' -Dneon=enabled'
-    $host_arm64 && ac_config='--disable-arm-a64-neon' && meson_cfg='-Da64-neon=enabled'
+    $host_arm && meson_config+=' -Dneon=enabled'
+    $host_arm64 && am_config='--disable-arm-a64-neon' && meson_config='-Da64-neon=enabled'
 patch="pixman-01"
-    #$host_arm32 && ac_config='--disable-arm-neon --disable-arm-simd'
+    #$host_arm32 && am_config='--disable-arm-neon --disable-arm-simd'
     $use_clang && CFLAGS='-Wno-unknown-attributes'
 }
 

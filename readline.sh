@@ -6,7 +6,7 @@ lic='GLP-2.0'
 src='https://git.savannah.gnu.org/git/readline.git'
 
 cfg='ac'
-ac_config="--disable-install-examples"
+am_config="--disable-install-examples"
 
 dev_bra=''
 dev_vrs=''

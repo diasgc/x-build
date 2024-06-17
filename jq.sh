@@ -20,7 +20,7 @@ eta='575'
 pkg_deb="libjq-dev"
 
 on_config(){
-    ac_config="--disable-maintainer-mode --disable-docs --with-oniguruma=${dir_install}"
+    am_config="--disable-maintainer-mode --disable-docs --with-oniguruma=${dir_install}"
     unset build_liblink build_link
 }
 

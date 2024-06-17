@@ -13,7 +13,7 @@ patch="lilv-01"
 dep='libiconv zix'
 
 cfg='meson'
-meson_cfg='-Dbindings_py=disabled -Ddocs=disabled -Dhtml=disabled -Dsinglehtml=disabled -Dtests=disabled -Dtools=disabled'
+meson_config='-Dbindings_py=disabled -Ddocs=disabled -Dhtml=disabled -Dsinglehtml=disabled -Dtests=disabled -Dtools=disabled'
 LDFLAGS+=" -liconv"
 
 dev_bra='master'

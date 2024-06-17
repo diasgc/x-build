@@ -19,15 +19,15 @@ lst_lib='libgcrypt'
 lst_bin='mpicalc libgcrypt-config dumpsexp hmac256'
 
 on_config(){
-    ac_config="--disable-doc --with-libgpg-error-prefix=${LIBSDIR}"
-    $host_arm && ac_config+=" --disable-aesni-support \
+    am_config="--disable-doc --with-libgpg-error-prefix=${LIBSDIR}"
+    $host_arm && am_config+=" --disable-aesni-support \
         --disable-shaext-support \
         --disable-pclmul-support \
         --disable-sse41-support \
         --disable-drng-support \
         --disable-avx-support \
         --disable-avx2-support"
-    $host_gnu && ac_config+=" --with-capabilities=yes"
+    $host_gnu && am_config+=" --with-capabilities=yes"
 }
 
 . xbuild && start
