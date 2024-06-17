@@ -4,13 +4,14 @@ lib='aribb24'
 dsc='A library for ARIB STD-B24, decoding JIS 8 bit characters and parsing MPEG-TS stream'
 lic='LGPL-3.0'
 src='https://github.com/nkoriyama/aribb24.git'
-cfg='cmake'
 dep='libpng bzip2'
-build_strip=false
 
+cfg='cmake'
 cmake_bin='BUILD_EXECUTABLES'
 cmake_file='aribb24.cmake'
 cmake_config='-DINSTALL_DOCS=OFF'
+build_strip=false
+WFLAGS="-Wno-pointer-to-int-cast -Wno-unused-command-line-argument"
 
 dev_bra='master'
 dev_vrs='1.0.3'
@@ -22,8 +23,6 @@ lst_lib='libaribb24'
 lst_bin=''
 lst_lic='COPYING README.md'
 lst_pc='aribb24.pc'
-
-WFLAGS="-Wno-pointer-to-int-cast -Wno-unused-command-line-argument"
 
 . xbuild && start
 

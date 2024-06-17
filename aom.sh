@@ -4,20 +4,9 @@ lib='aom'
 dsc='Alliance for Open Media AV1 codec'
 lic='BSD-2c'
 src='https://aomedia.googlesource.com/aom.git'
-cfg='cmake'
 tls='perl'
 
-dev_bra='main'
-dev_vrs='3.9.0'
-pkg_deb='libaom-dev'
-eta='240'
-
-lst_inc='aom/*.h'
-lst_lib='libaom'
-lst_bin='aomdec aomenc'
-lst_lic='LICENSE PATENTS AUTHORS'
-lst_pc='aom.pc'
-
+cfg='cmake'
 cmake_static='CONFIG_STATIC'
 cmake_bin='ENABLE_EXAMPLES'
 cmake_config='-DENABLE_TESTS=OFF
@@ -30,6 +19,21 @@ cmake_config='-DENABLE_TESTS=OFF
 #$host_arm32 && cmake_config+=" -DAOM_NEON_INTRIN_FLAG=-mfpu=neon"
 #$host_x86 && cmake_config+=' -DCMAKE_C_COMPILER_ARG1=-m32 -DCMAKE_CXX_COMPILER_ARG1=-m32'
 #$host_mingw && cmake_config+=" -DCONFIG_PIC=1"
+
+dev_bra='main'
+dev_vrs='3.9.0'
+pkg_deb='libaom-dev'
+eta='240'
+
+lst_inc='aom/aom_decoder.h aom/aom_integer.h
+ aom/aom_external_partition.h
+ aom/aom_frame_buffer.h aom/aom_image.h
+ aom/aom.h aom/aom_encoder.h aom/aomcx.h
+ aom/aom_codec.h aom/aomdx.h'
+lst_lib='libaom'
+lst_pc='aom.pc'
+lst_bin='aomdec aomenc'
+lst_lic='LICENSE PATENTS AUTHORS'
 
 . xbuild && start
 

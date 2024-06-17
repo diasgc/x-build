@@ -4,9 +4,29 @@ lib='avisynth'
 dsc='A powerful nonlinear scripting language for video'
 lic='GPL'
 src='https://github.com/AviSynth/AviSynthPlus.git'
-cfg='cmake'
 
+cfg='cmake'
 cmake_config="-DHEADERS_ONLY=OFF"
+
+on_config(){
+    if ${src_rel}; then
+        vrs="$(github_latest_release AviSynth/AviSynthPlus)"
+        src="https://github.com/AviSynth/AviSynthPlus/archive/refs/tags/${vrs}.tar.gz"
+    fi
+}
+
+on_build_bin(){
+    cmake_config+=" -DENABLE_PLUGINS=ON"
+}
+
+on_config_mingw(){
+    # dont pass LT_SYS_LIBRARY_PATH to avoid redefinition error
+    unset PKG_CONFIG_LIBDIR
+}
+
+dev_vrs='3.7.3'
+pkg_deb=''
+eta='240'
 
 lst_inc='avisynth/avisynth.h
  avisynth/avisynth_c.h
@@ -28,26 +48,6 @@ lst_lib='libavisynth
 lst_bin=''
 lst_lic=''
 lst_pc='avisynth.pc'
-
-dev_vrs='3.7.3'
-pkg_deb=''
-eta='240'
-
-on_config(){
-    if ${src_rel}; then
-        vrs="$(github_latest_release AviSynth/AviSynthPlus)"
-        src="https://github.com/AviSynth/AviSynthPlus/archive/refs/tags/${vrs}.tar.gz"
-    fi
-}
-
-on_build_bin(){
-    cmake_config+=" -DENABLE_PLUGINS=ON"
-}
-
-on_config_mingw(){
-    # dont pass LT_SYS_LIBRARY_PATH to avoid redefinition error
-    unset PKG_CONFIG_LIBDIR
-}
 
 . xbuild && start
 

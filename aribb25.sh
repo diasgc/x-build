@@ -1,12 +1,12 @@
 #!/bin/bash
 
 lib='aribb25'
-pkg_deb='libaribb24-dev'
 dsc='Basic implementation of the ARIB STD-B25 public standard.'
 lic='ISC'
 src='https://code.videolan.org/videolan/aribb25.git'
-cfg='ar'
 dep='pscs'
+
+cfg='ar'
 
 dev_vrs=''
 pkg_deb=''

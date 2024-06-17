@@ -9,9 +9,16 @@ dsc='The ultra fast download utility'
 lic='GLP-2.0'
 src='https://github.com/aria2/aria2.git'
 url='https://aria2.github.io/'
-cfg='ar'
 dep='openssl expat libssh2 sqlite3 libcares'
 
+cfg='ar'
+
+on_config(){
+    if ${src_rel}; then
+        vrs="$(github_latest_release aria2/aria2)"
+        src="https://github.com/nkoriyama/aribb24/archive/refs/tags/release-${vrs}.tar.gz"
+    fi
+}
 
 dev_bra='main'
 dev_vrs=''
@@ -23,13 +30,6 @@ lst_lib=''
 lst_bin='aria2c'
 lst_lic='COPYING AUTHORS'
 lst_pc=''
-
-on_config(){
-    if ${src_rel}; then
-        vrs="$(github_latest_release aria2/aria2)"
-        src="https://github.com/nkoriyama/aribb24/archive/refs/tags/release-${vrs}.tar.gz"
-    fi
-}
 
 . xbuild && start
 

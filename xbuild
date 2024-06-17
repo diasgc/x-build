@@ -425,7 +425,7 @@ start(){
 		if fn_defined 'on_strip'; then
 			fn_log 'strip' on_strip
 		elif ${build_strip}; then
-			do_log 'strip' doStrip
+			do_log 'strip'  do_strip
 		fi
 	fi
 
@@ -575,14 +575,14 @@ ac_configure() {
 	MAKE_EXECUTABLE=make
 }
 
-doStrip(){
+ function do_strip {
 	local libdir
 	for dd in $(find ${dir_build} \( -name "*.a" -o -name "*.so" \));do
 		${STRIP} --strip-unneeded $dd
 	done
 }
 
-end_script(){
+function end_script {
 	log_end
 	sed -i "s/eta='.*'/eta='"${eta}"'/g" ${this_script}
 	# check if parent process is shell script
