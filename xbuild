@@ -339,9 +339,9 @@ start(){
 			cmake_configure
 			cfg_cmd=${CMAKE_EXECUTABLE}
 			: "${cmake_bdir:=${dir_config}}"
-			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}" -Wno-dev)
+			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${cmake_toolchain}" "${CFG}" "${CSH}" "${CBN}" "${CPACK}" -Wno-dev)
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
-			case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
+			case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 			;;
 
 		automake) # use autotools and configure executable to create makefile

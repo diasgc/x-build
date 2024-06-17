@@ -213,7 +213,7 @@ cmake_check_cmakefiles(){
 cmake_configure(){
 	: "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
 	[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}
-	[ -f "${cmake_toolchain_file}" ] && CTC="-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}"
+	[ -f "${cmake_toolchain_file}" ] && cmake_toolchain="-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}"
 
 	if [ -n "${cmake_static}" ]; then
 		arr=(${cmake_static//|/ })
