@@ -2,13 +2,19 @@
 
 lib='expat'
 dsc='Fast streaming XML parser written in C'
-lic=''
+lic='MIT'
 src='https://github.com/libexpat/libexpat.git'
-cfg='cmake'
 
+cfg='cmake'
+config_dir="expat"
 cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='EXPAT_BUILD_TOOLS'
 cmake_config='-DEXPAT_BUILD_EXAMPLES=OFF -DEXPAT_BUILD_TESTS=OFF'
+
+dev_bra='master'
+dev_vrs='2.6.2'
+pkg_deb="libexpat1-dev"
+eta='128'
 
 lst_inc='expat_config.h expat.h expat_external.h'
 lst_lib='libexpat'
@@ -16,21 +22,10 @@ lst_bin=''
 lst_lic='expat/COPYING expat/AUTHORS'
 lst_pc='expat.pc'
 
-dev_bra='master'
-dev_vrs='2.6.2'
-pkg_deb="libexpat1-dev"
-eta='10'
-
-config_dir="expat"
-
-on_config(){
-    $build_static && ! $build_shared && cmake_config+=' -DBUILD_SHARED_LIBS=OFF'
-}
-
 . xbuild && start
 
 # cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
+# NDK  +   .   .   .  clang
 # GNU  .   .   .   .  gcc
 # WIN  .   .   .   .  clang/gcc
 

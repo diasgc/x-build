@@ -39,7 +39,8 @@ cmake_build_toolchainfile(){
 		set(CMAKE_CXX_COMPILER ${CXX})
 		set(CMAKE_ASM_NASM_COMPILER ${ASM_NASM})
 		EOF
-	$cmake_fulltoolchain && cat <<-EOF >>${cmake_toolchain_file}
+	
+	${cmake_fulltoolchain} && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_AR ${AR} CACHE FILEPATH Archiver)
 		set(CMAKE_RANLIB ${RANLIB} CACHE FILEPATH Indexer)
 		set(CMAKE_C_COMPILER_AR "${AR}")
@@ -55,25 +56,25 @@ cmake_build_toolchainfile(){
 		set(CMAKE_NM "${NM}")
 		set(CMAKE_POSITION_INDEPENDENT_CODE 1)
 		EOF
-	$host_cross && cat <<-EOF >>${cmake_toolchain_file}
+	
+	${host_cross} && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 		set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
 		set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 		set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
 		EOF
 
-	$host_x86 && cat <<-EOF >>${cmake_toolchain_file}
+	${host_x86} && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_C_COMPILER_ARG1 "-m32")
 		set(CMAKE_CXX_COMPILER_ARG1 "-m32")
 		EOF
 	
-  $build_shared && NDK_STL="shared" || NDK_STL="static"
-	$host_ndk && cat <<-EOF >>${cmake_toolchain_file}
+	${host_ndk} && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_ANDROID_NDK OFF)
 		set(ANDROID_ABI ${ABI})
 		set(ANDROID_PLATFORM ${API})
 		set(ANDROID_NDK ${ANDROID_NDK_HOME})
-		set(ANDROID_STL c++_${NDK_STL})
+		set(ANDROID_STL c++_$(bool2str ${build_shared} shared static))
 		set(ZLIB_INCLUDE_DIRS ${SYSROOT}/usr/include)
 		set(ZLIB_LIBRARIES ${SYSROOT}/usr/lib/${arch})
 		set(ZLIB_VERSION_STRING 1.2.11)
@@ -84,7 +85,7 @@ cmake_build_toolchainfile(){
 	mingw_stdlibs='-static-libgcc -static-libstdc++ -lwsock32 -lws2_32'
 	mingw_exelink='-Wl,-Bstatic'
 	#mingw_exelink='-static-libgcc -static-libstdc++ -Wl,-pdb='
-	$host_mingw && cat <<-EOF >>${cmake_toolchain_file}
+	${host_mingw} && cat <<-EOF >>${cmake_toolchain_file}
 		set(CMAKE_COMPILER_IS_MINGW ON)
 		set(CMAKE_FIND_ROOT_PATH \${CMAKE_FIND_ROOT_PATH} ${LLVM_MINGW_HOME}/generic-w64-mingw32 ${LLVM_MINGW_HOME}/${arch}-w64-mingw32/bin)
 		set(CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES "${LLVM_MINGW_HOME}/${arch}/include/c++/v1;${LLVM_MINGW_HOME}/lib/clang/*/include;${LLVM_MINGW_HOME}/${arch}/include")
@@ -95,14 +96,15 @@ cmake_build_toolchainfile(){
 		set(CMAKE_FIND_LIBRARY_PREFIXES "lib" "")
 		set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" ".dll.a" ".lib" ".a")
 		EOF
+	
 	#cmake_addcpack
-  	test -n "${cmake_definitions}" && echo "add_definitions("${cmake_definitions[@]}")" >>${cmake_toolchain_file}
-	test -n "${cmake_add_link_options}" && echo "add_link_options("${cmake_add_link_options}")" >>${cmake_toolchain_file}
+  	test -n "${cmake_definitions}"         && echo "add_definitions("${cmake_definitions[@]}")" >>${cmake_toolchain_file}
+	test -n "${cmake_add_link_options}"    && echo "add_link_options("${cmake_add_link_options}")" >>${cmake_toolchain_file}
 	test -n "${cmake_add_compile_options}" && echo "add_compile_options("${cmake_add_compile_options[@]}")" >>${cmake_toolchain_file}
-	test -n "${cmake_cxx_flags_release}" && echo "set(CMAKE_CXX_FLAGS_RELEASE \""${cmake_cxx_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
-	test -n "${cmake_c_flags_release}" && echo "set(CMAKE_C_FLAGS_RELEASE \""${cmake_c_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
+	test -n "${cmake_cxx_flags_release}"   && echo "set(CMAKE_CXX_FLAGS_RELEASE \""${cmake_cxx_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
+	test -n "${cmake_c_flags_release}"     && echo "set(CMAKE_C_FLAGS_RELEASE \""${cmake_c_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
 	test -n "${cmake_include_directories}" && echo "include_directories("${cmake_include_directories[@]}")" >>${cmake_toolchain_file}
-	test -n "${WFLAGS}" && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
+	test -n "${WFLAGS}"                    && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
 	
 }
 

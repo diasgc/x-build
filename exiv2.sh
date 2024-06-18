@@ -8,16 +8,14 @@ lib='exiv2'
 dsc='Image metadata library and tools'
 lic='Other'
 src='https://github.com/Exiv2/exiv2.git'
-cfg='cmake'
 dep='libiconv expat libpng inih'
-eta='60'
-pkg_deb="libkf5kexiv2-dev"
 
 # Options
 exiv2_xmp="ON"
 exiv2_png="ON"
 mingw_posix=true
 
+cfg='cmake'
 cmake_config="-DINSTALL_EXAMPLES=OFF -DEXIV2_BUILD_DOC=OFF \
 	-DEXIV2_BUILD_SAMPLES=OFF -DBUILD_TESTING=OFF"
 
@@ -30,6 +28,8 @@ extraOpts(){
 }
 
 dev_vrs='1.0.0.9'
+eta='60'
+pkg_deb="libkf5kexiv2-dev"
 
 lst_inc=''
 lst_lib=''

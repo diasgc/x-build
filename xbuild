@@ -679,7 +679,7 @@ build_dependencies_old(){
 #usage: meson_create_toolchain <out.meson.file>
 meson_create_toolchain(){
 	test -f "${1}"  && rm ${1}
-	case "${arch} in
+	case "${arch}" in
 		aarch*)  cpu1="aarch64" cpu2="aarch64";;
 		arm*)    cpu1="arm"     cpu2="arm";;
 		i686*)   cpu1="x86"     cpu2="i686";;
