@@ -8,7 +8,7 @@ src='https://gitlab.gnome.org/GNOME/libgsf.git'
 dep='glib2 libxml2 libiconv'
 
 cfg='ag'
-ac_nosysroot=true
+am_nosysroot=true
 
 dev_bra='main'
 dev_vrs=''

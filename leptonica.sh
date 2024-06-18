@@ -27,7 +27,7 @@ cmake_config="-DBUILD_TESTS=OFF -DENABLE_GIF=OFF -DENABLE_ZLIB=OFF \
   -DENABLE_WEBP=OFF -DENABLE_OPENJPEG=OFF -DSW_BUILD=OFF"
 cmake_definitions+=('-Wno-address-of-packed-member')
 
-ac_nosysroot=true
+am_nosysroot=true
 am_config+=" --disable-programs \
     --without-giflib \
     --without-libwebp \

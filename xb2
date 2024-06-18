@@ -36,9 +36,9 @@ fi
 sudo=$(command -v sudo)
 
 
-: "${ac_nohost:=false}"
-: "${ac_nosysroot:=false}"
-: "${ac_nopic:=false}"
+: "${am_nohost:=false}"
+: "${am_nosysroot:=false}"
+: "${am_nopic:=false}"
 : "${ac_reconf:=true}"
 : "${API:=34}"
 : "${apt:=${lib}}"
@@ -751,23 +751,23 @@ am_configure() {
 					test -f "${fpath}" && cp -f /usr/share/automake*/config.guess ${fpath}
 					;;
 				--no-sysroot)
-					ac_nosysroot=true
+					am_nosysroot=true
 					;;
 				--no-pic)
-					ac_nopic=true
+					am_nopic=true
 					;;
 				--no-host)
-					ac_nohost=true
+					am_nohost=true
 					;;
 			esac
 		done
 	fi
 
-	if ! $ac_nohost && $host_cross && [ -n "$(echo "${opt_list}" | grep '\-\-host')" ]; then
+	if ! $am_nohost && $host_cross && [ -n "$(echo "${opt_list}" | grep '\-\-host')" ]; then
 		$host_cross && CFG+=" --host=${arch}"
 	fi
 
-	if ! $ac_nosysroot; then
+	if ! $am_nosysroot; then
 		if [ -n "$(echo "${opt_list}" | grep '\-\-with-sysroot')" ]; then
 			CFG+=" --with-sysroot=${SYSROOT}"
 		elif [ -n "$(echo "${opt_list}" | grep '\-\-sysroot')" ]; then
@@ -775,7 +775,7 @@ am_configure() {
 		fi
 	fi
 
-	if ! $ac_nopic && ! $host_mingw && [ -n "$(echo "${opt_list}" | grep '\-\-with-pic')" ]; then
+	if ! $am_nopic && ! $host_mingw && [ -n "$(echo "${opt_list}" | grep '\-\-with-pic')" ]; then
 		CFG+=" --with-pic"
 	fi
 	MAKE_EXECUTABLE=make
@@ -796,7 +796,7 @@ end_script(){
 	$debug && set +x
 	unset	dir_config dir_build dir_src \
 			build_link cfg_bin exec_config vrs vnd \
-			ac_nohost ac_nopic ac_nosysroot ac_opts ac_reconf \
+			am_nohost am_nopic am_nosysroot ac_opts ac_reconf \
 			req_pcforlibs mkc mki mingw_posix \
 			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
 	dec_tab

@@ -17,7 +17,7 @@ make_install='install'
 pkg='libavcodec'
 
 patch_skip=true
-ac_nohost=true
+am_nohost=true
 
 lst_inc=''
 lst_lib=''

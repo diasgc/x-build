@@ -19,7 +19,7 @@ pkg_deb='libass-dev'
 eta='4'
 
 #cfg='ag'
-#ac_nosysroot=true
+#am_nosysroot=true
 #dep='freetype fontconfig fribidi libpng harfbuzz'
 
 cfg='meson'

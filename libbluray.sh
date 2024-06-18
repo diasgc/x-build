@@ -8,7 +8,7 @@ src='https://code.videolan.org/videolan/libbluray.git'
 dep='libxml2 freetype fontconfig libudfread liblzma'
 
 cfg='ar'
-ac_nosysroot=true
+am_nosysroot=true
 am_config="--disable-bdjava-jar --disable-examples"
 
 dev_bra='master'

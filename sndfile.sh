@@ -18,7 +18,7 @@ cmake_static=''
 cmake_bin='BUILD_PROGRAMS'
 cmake_config="-DENABLE_PACKAGE_CONFIG=ON -DBUILD_TESTING=OFF -DINSTALL_MANPAGES=OFF -DBUILD_EXAMPLES=OFF -DENABLE_MPEG=OFF -DENABLE_EXTERNAL_LIBS=OFF"
 
-ac_nosysroot=true
+am_nosysroot=true
 
 dev_bra='main'
 dev_vrs='1.2.2'

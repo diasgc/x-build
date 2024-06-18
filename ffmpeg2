@@ -18,7 +18,7 @@ src_tgz="https://github.com/FFmpeg/FFmpeg/archive/refs/tags/${vrs_tag}.tar.gz"
 patch_skip=true
 
 cfg='ac'
-ac_nohost=true
+am_nohost=true
 
 mki='install'
 make_install='install'

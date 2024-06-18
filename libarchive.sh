@@ -9,7 +9,7 @@ url='http://www.libarchive.org/'
 dep='libiconv bzip2 libb2 liblzma libzstd lz4 lzo zlib'
 
 cfg='ar'
-ac_nosysroot=true
+am_nosysroot=true
 
 #cfg='cmake' # fails due to call to undeclared function "locale_charset" (libiconv)
 #cmake_config='-DBUILD_TESTING=OFF -DENABLE_TEST=OFF'

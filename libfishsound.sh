@@ -15,7 +15,7 @@ cfg='ag'
 dep='ogg vorbis speex flac sndfile'
 eta='20'
 
-ac_nosysroot=true
+am_nosysroot=true
 
 . xbuild && start
 

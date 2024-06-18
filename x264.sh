@@ -7,8 +7,8 @@ src='https://code.videolan.org/videolan/x264.git'
 
 cfg='ac'
 build_strip=false
-ac_nopic=true
-ac_nosysroot=true
+am_nopic=true
+am_nosysroot=true
 am_bin="cli"
 am_config="--enable-lto --enable-pic --enable-strip"
 
