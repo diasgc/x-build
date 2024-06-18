@@ -308,13 +308,15 @@ start(){
 
 	if fn_defined 'build_prepare'; then
 		fn_log 'prepare' build_prepare
+		unset build_prepare
 	fi
 
 	if fn_defined 'build_clean'; then
 		fn_log 'clean' build_clean
+		unset build_clean
 	elif [ -f "Makefile" ]; then
-		mkc=$(make_findtarget "distclean" "clean")
-		[ -n "${mkc}" ] && do_quietly 'clean' ${MAKE_EXECUTABLE} $mkc
+		test -z "${mkc}" && mkc="$(make_findtarget "distclean" "clean")"
+		test -n "${mkc}" && do_quietly 'clean' "${MAKE_EXECUTABLE}" "${mkc}"
 	fi
 
 	local arr
@@ -323,31 +325,46 @@ start(){
 		unset -f build_config
 	else case "${build_system}" in
 		cmake)
-			cmake_configure
-			cfg_cmd=${CMAKE_EXECUTABLE}
+			: "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
+			cmake_set_buildlink
 			: "${cmake_builddir:=${dir_config}}"
-			cfg_args+=("${cmake_builddir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${cmake_toolchain}" "${cmake_config}" "${lib_link}" "${cfg_bin}" "${CPACK}" -Wno-dev)
+			cfg_args=("${cmake_builddir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}")
+			if ${host_cross}; then
+				[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}
+				[ -f "${cmake_toolchain_file}" ] && cfg_args+=( "-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}" )
+			fi
+			cfg_args+=("${cmake_config}" "${lib_link}" "${cfg_bin}" "${CPACK}" -Wno-dev)
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 			;;
 
 		automake) # use autotools and configure executable to create makefile
 			am_configure
+			am_set_buildlink
 			cfg_cmd="${dir_config}/configure"
 			cfg_args+=("--prefix=${dir_install}" "${am_config}" "${lib_link}" "${cfg_bin}")
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			;;
 
 		meson)
-			meson_configure
+			# see https://mesonbuild.com/Commands.html for command line options
+			cfg_args=('setup' '--buildtype=release')
+			${host_clang} || LD="bfd"
+			meson_set_buildlink
+			if ${host_cross}; then
+				local cfg_file="${dir_config}/${arch}.meson"
+				meson_create_toolchain ${cfg_file}
+				cfg_args+=("--cross-file=${cfg_file}")
+			fi
+			${build_static} && meson_config+=' --prefer-static'
 			cfg_cmd='meson'
-			cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${meson_config}" "${lib_link}" "${cfg_bin}")
+			cfg_args+=("--prefix=${dir_install}" "${meson_config}" "${lib_link}" "${cfg_bin}")
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
-			#do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${lib_link} ${cfg_bin}
+			MAKE_EXECUTABLE=ninja
 			;;
 
 		make)
-			: "${mkf:=$CFG}"
+			: "${mkf:=${CFG}}"
 			MAKE_EXECUTABLE=make
 			;;
 		bazel)
@@ -477,34 +494,16 @@ start(){
 	end_script
 }
 
-# see https://mesonbuild.com/Commands.html for command line options
-meson_configure(){
-	export cfg_file="${dir_config}/${arch}.meson"
-	test -f "${cfg_file}"  && rm ${cfg_file}
-	${host_clang} || LD="bfd"
-	if [ -n "${meson_bin}" ]; then
-		arr=(${meson_bin//|/ })
-		case ${#arr[@]} in
-			1) cfg_bin="-D${arr[0]}=$(bool2str ${build_bin} true false)";;
-			2) cfg_bin="-D$(bool2str ${build_bin} ${arr[1]} ${arr[0]})";;
-		esac
-	fi
-	meson_create_toolchain ${cfg_file}
-	MAKE_EXECUTABLE=ninja
-	$build_static && meson_config+=' --prefer-static'
-	[ -n "${meson_config}" ] && CFG="${meson_config} ${CFG}"
-}
-
 am_configure() {
-	$ac_reconf && autoreconf -fi 2>/dev/null >>${log_file}
+	${ac_reconf} && autoreconf -fi 2>/dev/null >>${log_file}
 	#[ -z "${mki+x}" ] && mki=$(make_findtarget "install-strip" "install")
-	[ -z "$exec_config" ] && exec_config='configure' # default config executable
+	: "${exec_config:=configure}"
 	[ -n "${am_config}" ] && CFG=${am_config}
 
 	local opt_list="$(${dir_config}/${exec_config} --help | grep -P '^[[:space:]]+\-\-')"
 
 	# find static build option
-	if $build_static && [ -n "$(echo "${opt_list}" | grep '\-\-enable-static')" ]; then
+	if ${build_static} && [ -n "$(echo "${opt_list}" | grep '\-\-enable-static')" ]; then
 		build_type="--enable-static"
 	fi
 	# find shared build option
@@ -695,7 +694,8 @@ build_dependencies_old(){
 
 #usage: meson_create_toolchain <out.meson.file>
 meson_create_toolchain(){
-	case $arch in
+	test -f "${1}"  && rm ${1}
+	case "${arch} in
 		aarch*)  cpu1="aarch64" cpu2="aarch64";;
 		arm*)    cpu1="arm"     cpu2="arm";;
 		i686*)   cpu1="x86"     cpu2="i686";;

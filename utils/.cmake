@@ -210,43 +210,6 @@ cmake_check_cmakefiles(){
 	return 0
 }
 
-cmake_configure(){
-	: "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
-	[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}
-	[ -f "${cmake_toolchain_file}" ] && cmake_toolchain="-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}"
-
-	if [ -n "${cmake_static}" ]; then
-		arr=(${cmake_static//|/ })
-		case ${#arr[@]} in
-			1) $build_static && lib_link="-D${arr[0]}=ON" || lib_link="-D${arr[0]}=OFF";;
-			2) $build_static && lib_link="-D${arr[0]}" || lib_link="-D${arr[1]}";;
-		esac
-	fi
-
-	#if [ -z "${cmake_shared}" ]; then
-	#	$build_shared && lib_link+=' -DBUILD_SHARED_LIBS=ON' || lib_link+=' -DBUILD_SHARED_LIBS=OFF'
-	#else
-  if [ -n "${cmake_shared}" ]; then
-		arr=(${cmake_shared//|/ })
-		case ${#arr[@]} in
-			1) $build_shared && lib_link+=" -D${arr[0]}=ON" || lib_link+=" -D${arr[0]}=OFF";;
-			2) $build_shared && lib_link+=" -D${arr[1]}" || lib_link+=" -D${arr[0]}";;
-		esac
-	fi
-
-	if [ -n "${cmake_bin}" ]; then
-		arr=(${cmake_bin//|/ })
-		case ${#arr[@]} in
-			1) $build_bin && cfg_bin="-D${arr[0]}=ON" || cfg_bin="-D${arr[0]}=OFF";;
-			2) $build_bin && cfg_bin="-D${arr[1]}" || cfg_bin="-D${arr[0]}";;
-		esac
-	fi
-
-	[ -n "${cmake_config}" ] && CFG="${cmake_config} ${CFG}"
-	#MAKE_EXECUTABLE=cmake
-	#mkf='--build . --target install --config Release'
-}
-
 #1=cmake_key 2=$build_key_bool 
 cmake_readkey(){
 	local arr

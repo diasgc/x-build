@@ -563,22 +563,16 @@ function config_init {
 	case "${cfg}" in
 		cm|ccm|cmake|ccmake)
 			build_system=cmake
-      config_args="${cmake_config}"
-      cmake_set_buildlink
 			;;
 		ab|am|ac|ar|ag|auto*)
 			build_system=automake
-      config_args="${am_config}"
       am_set_buildlink
 			;;
 		meson)
 			build_system=meson
-      config_args="${meson_config}"
-			meson_set_buildlink
 			;;
     bazel)
       build_system=bazel
-      config_args="${bazel_config}"
       ;;
     cargo)
       build_system=cargo
