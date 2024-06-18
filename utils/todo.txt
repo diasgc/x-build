@@ -7,4 +7,3 @@ bazel: skcms.sh
 cmake: thor.sh
 
 lzo.sh # todo src_rel
-
