@@ -14,7 +14,7 @@ cmake_definitions+=('-Wno-double-promotion')
 
 extraOpts(){
 	case $1 in
-		--full) dep='freetype fontconfig glib2 cairo libicu';;
+		--all) dep='freetype fontconfig glib2 cairo libicu';;
 	esac
 }
 

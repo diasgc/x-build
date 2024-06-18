@@ -161,9 +161,9 @@ start(){
 		fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
 	fi
 
-	fn_defined 'on_build_bin' && unset CBN && fn_log '' on_build_bin 
-	fn_defined 'on_build_static' && unset build_liblink && fn_log '' on_build_static
-	fn_defined 'on_build_shared' && unset build_liblink && fn_log '' on_build_shared
+	fn_defined 'on_build_bin' && unset cfg_bin && fn_log '' on_build_bin 
+	fn_defined 'on_build_static' && unset lib_link && fn_log '' on_build_static
+	fn_defined 'on_build_shared' && unset lib_link && fn_log '' on_build_shared
 
 	# check whether to update source of main lib and dependencies
 	if ${update}; then
@@ -325,8 +325,8 @@ start(){
 		cmake)
 			cmake_configure
 			cfg_cmd=${CMAKE_EXECUTABLE}
-			: "${cmake_bdir:=${dir_config}}"
-			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${cmake_toolchain}" "${CFG}" "${build_liblink}" "${CBN}" "${CPACK}" -Wno-dev)
+			: "${cmake_builddir:=${dir_config}}"
+			cfg_args+=("${cmake_builddir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${cmake_toolchain}" "${cmake_config}" "${lib_link}" "${cfg_bin}" "${CPACK}" -Wno-dev)
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 			;;
@@ -334,16 +334,16 @@ start(){
 		automake) # use autotools and configure executable to create makefile
 			am_configure
 			cfg_cmd="${dir_config}/configure"
-			cfg_args+=("--prefix=${dir_install}" "${CFG}" "${build_liblink}" "${CBN}")
+			cfg_args+=("--prefix=${dir_install}" "${am_config}" "${lib_link}" "${cfg_bin}")
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			;;
 
 		meson)
 			meson_configure
 			cfg_cmd='meson'
-			cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${CFG}" "${build_liblink}" "${CBN}")
+			cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${meson_config}" "${lib_link}" "${cfg_bin}")
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
-			#do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${build_liblink} ${CBN}
+			#do_log 'meson' meson setup --buildtype=release --cross-file=${cfg_file} --prefix=${dir_install} ${CFG} ${lib_link} ${cfg_bin}
 			;;
 
 		make)
@@ -356,7 +356,7 @@ start(){
 			;;
 		cargo)
 			cfg_cmd='cargo'
-			cfg_args+=('cinstall' '--release' "--prefix=${dir_install}" "${cargo_cfg}" "${build_liblink}" "${CBN}" '--verbose')
+			cfg_args+=('cinstall' '--release' "--prefix=${dir_install}" "${cargo_cfg}" "${lib_link}" "${cfg_bin}" '--verbose')
 			skip_make=true
 			skip_install=true
 			do_progress "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
@@ -485,8 +485,8 @@ meson_configure(){
 	if [ -n "${meson_bin}" ]; then
 		arr=(${meson_bin//|/ })
 		case ${#arr[@]} in
-			1) CBN="-D${arr[0]}=$(bool2str ${build_bin} true false)";;
-			2) CBN="-D$(bool2str ${build_bin} ${arr[1]} ${arr[0]})";;
+			1) cfg_bin="-D${arr[0]}=$(bool2str ${build_bin} true false)";;
+			2) cfg_bin="-D$(bool2str ${build_bin} ${arr[1]} ${arr[0]})";;
 		esac
 	fi
 	meson_create_toolchain ${cfg_file}
@@ -515,8 +515,8 @@ am_configure() {
 	if [ -n "${am_bin}" ]; then
 		arr=(${am_bin//|/ })
 		case ${#arr[@]} in
-			1) CBN=$(bool2str ${build_bin} "${arr[0]}=1" "${arr[0]}=0");;
-			2) CBN=$(bool2str ${build_bin} "${arr[1]}" "${arr[0]}");;
+			1) cfg_bin=$(bool2str ${build_bin} "${arr[0]}=1" "${arr[0]}=0");;
+			2) cfg_bin=$(bool2str ${build_bin} "${arr[1]}" "${arr[0]}");;
 		esac
 	fi
 
@@ -577,7 +577,7 @@ function end_script {
 	[ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done ${C0}${lib} ${vrs}\n"
 	${debug} && set +x
 	unset	dir_config dir_build dir_src \
-			build_liblink CBN exec_config vrs vnd \
+			lib_link cfg_bin exec_config vrs vnd \
 			ac_nohost ac_nopic ac_nosysroot ac_opts ac_reconf \
 			req_pcforlibs mkc mki mingw_posix \
 			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
@@ -643,17 +643,17 @@ check_install(){
 
 function build_dependencies {
 	local dep_args="${arch} ${dep_build} $(bool2str ${build_allshared} --shared --static) $(bool2str ${build_download} '--dl' '')"
-	local pkgfile libname old_build_liblink old_csb
+	local pkgfile libname old_lib_link old_csb
 	while [ -n "${1}" ]; do
 		test -f "./${1}.sh" || exit_err "Fail to build dependency ${1}. Script file not found."
 		pkgfile=$(./${1}.sh ${arch} --get pc)
 		if [ ! -f "${pkgfile}" ]; then
-			old_build_liblink=${build_liblink}; old_csb=${CSB}
-			unset build_liblink CSB
+			old_lib_link=${lib_link}; old_csb=${CSB}
+			unset lib_link CSB
 
 			./${1}.sh ${dep_args}
 			
-			build_liblink=${old_build_liblink}; CSB=${old_csb}
+			lib_link=${old_lib_link}; CSB=${old_csb}
 		else
 			log_info "${1}: ${C0} version $(pkg-config --modversion ${pkgfile})"
 		fi
@@ -663,7 +663,7 @@ function build_dependencies {
 
 build_dependencies_old(){
 	local pkgfile
-	local o_build_liblink
+	local o_lib_link
 	local o_cbh
 	local cf
 	local ldir
@@ -672,14 +672,14 @@ build_dependencies_old(){
 		pkgfile=$(./${1}.sh ${arch} --get pc)
 		libname=$(./${1}.sh --get libname)
 		if [ ! -f "${pkgfile}" ]; then
-			o_build_liblink=$build_liblink
+			o_lib_link=$lib_link
 			o_cbh=$CBH
 			${build_download} && local dl="--dl" || local dl=''
-			unset build_liblink CBH
+			unset lib_link CBH
 			
 			./${1}.sh ${arch} ${dep_build} ${dl}
 			
-			build_liblink=$o_build_liblink
+			lib_link=$o_lib_link
 			CBH=$o_cbh
 		fi
 		if [ -f "${pkgfile}" ]; then
@@ -1221,14 +1221,14 @@ fi
 config_init
 
 # reset presets, we don't need them anymore
-unset cst0 cst1 build_liblink0 build_liblink1 cb0 cb1 cstk build_liblinkk cbk
+unset cst0 cst1 lib_link0 lib_link1 cb0 cb1 cstk lib_linkk cbk
 
 : "${MAKE_EXECUTABLE:=make}"
 
 export arch update retry \
 build_shared build_static build_bin build_system \
 dir_install \
-build_liblink CBN LIBSDIR PLATFORM CPU ABI EABI \
+lib_link cfg_bin LIBSDIR PLATFORM CPU ABI EABI \
 host_arch host_64 host_eabi host_vnd host_arm host_os \
 mingw_posix MAKE_EXECUTABLE cmake_includes
 

@@ -10,7 +10,7 @@ lic='BSD-2c'
 src='https://code.videolan.org/rist/librist.git'
 
 cfg='meson'
-cfg_bin='built_tools'
+meson_bin='built_tools'
 
 dev_bra='master'
 dev_vrs='0.2.6'

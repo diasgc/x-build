@@ -11,7 +11,7 @@ cfg='ar'
 
 on_config(){
     am_config="--disable-maintainer-mode --disable-docs --with-oniguruma=${dir_install}"
-    unset build_liblink build_link
+    unset lib_link build_link
 }
 
 on_create_pc(){

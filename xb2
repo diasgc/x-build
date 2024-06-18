@@ -164,7 +164,7 @@ main(){
 	export arch update retry \
 		build_shared build_static build_bin build_system build_link\
 		dir_install \
-		CBN LIBSDIR PLATFORM CPU ABI EABI \
+		cfg_bin LIBSDIR PLATFORM CPU ABI EABI \
 		host_arch host_64 host_eabi host_vnd host_arm host_os \
 		mingw_posix MAKE_EXECUTABLE cmake_includes
 
@@ -211,7 +211,7 @@ function build_dependencies {
 
 function build_dependencies_old {
 	local pkgconfig_file script_file
-	local o_build_liblink
+	local o_lib_link
 	local o_cbn
 	local cf
 	local ldir
@@ -221,15 +221,15 @@ function build_dependencies_old {
 		pkgconfig_file=$(./${1}.sh ${arch} --get pc)
 		libname=$(./${1}.sh --get libname)
 		if [ ! -f "${pkgconfig_file}" ]; then
-			o_build_liblink="${build_link}"
-			o_cbn="${CBN}"
+			o_lib_link="${build_link}"
+			o_cbn="${cfg_bin}"
 			${build_download} && local dl="--dl" || local dl=''
-			unset build_link CBN
+			unset build_link cfg_bin
 			
 			./xb2 ${1} ${arch} ${dep_build} ${dl}
 			
-			build_link=$o_build_liblink
-			CBN=$o_cbn
+			build_link=$o_lib_link
+			cfg_bin=$o_cbn
 		fi
 		if [ -f "${pkgconfig_file}" ]; then
 			local cmi=$(./${1}.sh ${arch} --get cmake_include)
@@ -382,15 +382,15 @@ start(){
 	check_tools "${tls}"
 
 	local ovrs="${vrs}"
-	local obuild_liblink="${build_link}"
-	local ocbn="${CBN}"
-	unset vrs build_link CBN
+	local olib_link="${build_link}"
+	local ocbn="${cfg_bin}"
+	unset vrs build_link cfg_bin
 
 	build_dependencies ${dep}
 
 	vrs="${ovrs}"
-	build_link="${obuild_liblink}"
-	CBN="${ocbn}"
+	build_link="${olib_link}"
+	cfg_bin="${ocbn}"
 
 	log_start "${arch}" "${eta}s"
 
@@ -400,7 +400,7 @@ start(){
 	${build_shared} && bss="${bss}${SSB}[shared]" || bss="${bss}${CD}[shared]"
 	${build_bin} && echo -ne "${bss}${SSB}[bin]${C0} " || echo -ne "${bss}${CD}[bin]${C0} "
 	
-	fn_defined 'on_build_bin' && unset CBN && on_build_bin 
+	fn_defined 'on_build_bin' && unset cfg_bin && on_build_bin 
 	fn_defined 'on_build_static' && unset build_link && on_build_static
 	fn_defined 'on_build_shared' && unset build_link && on_build_shared 
 	
@@ -553,8 +553,8 @@ start(){
 		cmake)
 			cmake_configure
 			cfg_cmd=${CMAKE_EXECUTABLE}
-			: "${cmake_bdir:=${dir_config}}"
-			cfg_args+=("${cmake_bdir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${build_link}" "${CBN}" "${CPACK}" -Wno-dev)
+			: "${cmake_builddir:=${dir_config}}"
+			cfg_args+=("${cmake_builddir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}" "${CTC}" "${CFG}" "${build_link}" "${cfg_bin}" "${CPACK}" -Wno-dev)
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 			;;
@@ -562,14 +562,14 @@ start(){
 		automake) # use autotools and configure executable to create makefile
 			am_configure
 			cfg_cmd="${dir_config}/configure"
-			cfg_args+=("--prefix=${dir_install}" "${CFG}" "${build_link}" "${CBN}")
+			cfg_args+=("--prefix=${dir_install}" "${CFG}" "${build_link}" "${cfg_bin}")
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			;;
 
 		meson)
 			meson_configure
 			cfg_cmd='meson'
-			cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${CFG}" "${build_link}" "${CBN}")
+			cfg_args+=('setup' '--buildtype=release' "--cross-file=${cfg_file}" "--prefix=${dir_install}" "${CFG}" "${build_link}" "${cfg_bin}")
 			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			;;
 
@@ -704,8 +704,8 @@ meson_configure(){
 	if [ -n "${meson_bin}" ]; then
 		arr=(${meson_bin//|/ })
 		case ${#arr[@]} in
-			1) $build_bin && CBN="-D${arr[0]}=true" || CBN="-D${arr[0]}=false";;
-			2) $build_bin && CBN="-D${arr[1]}" || CBN="-D${arr[0]}";;
+			1) $build_bin && cfg_bin="-D${arr[0]}=true" || cfg_bin="-D${arr[0]}=false";;
+			2) $build_bin && cfg_bin="-D${arr[1]}" || cfg_bin="-D${arr[0]}";;
 		esac
 	fi
 	meson_create_toolchain ${cfg_file}
@@ -734,8 +734,8 @@ am_configure() {
 	if [ -n "${am_bin}" ]; then
 		arr=(${am_bin//|/ })
 		case ${#arr[@]} in
-			1) $build_bin && CBN="${arr[0]}=1" || CBN="${arr[0]}=0";;
-			2) $build_bin && CBN="${arr[1]}" || CBN="${arr[0]}";;
+			1) $build_bin && cfg_bin="${arr[0]}=1" || cfg_bin="${arr[0]}=0";;
+			2) $build_bin && cfg_bin="${arr[1]}" || cfg_bin="${arr[0]}";;
 		esac
 	fi
 
@@ -795,7 +795,7 @@ end_script(){
 	[ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done${C0}\n"
 	$debug && set +x
 	unset	dir_config dir_build dir_src \
-			build_link CBN exec_config vrs vnd \
+			build_link cfg_bin exec_config vrs vnd \
 			ac_nohost ac_nopic ac_nosysroot ac_opts ac_reconf \
 			req_pcforlibs mkc mki mingw_posix \
 			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS

@@ -1,39 +1,25 @@
 #!/bin/bash
 
 lib='libtiff'
+pkg='libtiff-4'
 dsc='TIFF Library and Utilities'
 lic='GPL?'
 src='https://gitlab.com/libtiff/libtiff.git'
+
 cfg='cmake'
-pkg='libtiff-4'
-
-mingw_posix=true
-bin="tiff-tools"
-dep=
-cmake_tiff=
-
 cmake_config='-Dtiff-tests=OFF -Dtiff-docs=OFF -Dtiff-contrib=OFF'
+cmake_deps='OFF'
+cmake_bin="tiff-tools"
+mingw_posix=true
 
 dev_vrs='4.6.0'
 pkg_deb="libtiff-dev"
 eta='12'
 
-lst_inc='tiffconf.h tiffvers.h tiff.h tiffio.hxx tiffio.h'
-lst_lib='libtiffxx libtiff'
-lst_bin='tiffmedian tiffset fax2ps tiff2bw tiffdither raw2tiff tiffsplit tiff2pdf fax2tiff tiff2rgba pal2rgb tiff2ps tiffcrop tiffcmp tiffinfo tiffcp tiffdump ppm2tiff'
-lst_lic='COPYRIGHT'
-lst_pc='libtiff-4.pc'
-
-
 extraOpts(){
     case $1 in
-        --full)
-            dep='liblzma libjpeg libzstd libdeflate lerc'
-            cmake_tff='-Dlzma=ON -Djpeg=ON -Dzstd=ON -Dlerc=ON -Dlibdeflate=ON -Dwebp=ON'
-            ;;
-        --min)
-            cmake_tiff='-Dlzma=OFF -Djpeg=OFF -Dzstd=OFF -Dlerc=OFF -Dlibdeflate=OFF -Dwebp=OFF'
-            ;;
+        --all) dep='liblzma libjpeg libzstd libdeflate lerc' cmake_deps='ON';;
+        --min) dep='' cmake_deps='OFF';;
     esac
 }
 
@@ -43,10 +29,15 @@ on_build_static(){
 }
 
 on_config(){
-    $build_bin || cmake_config+=' -Dtiff-tools=OFF'
-    cmake_config+=" ${cmake_tiff}"
-    #$host_arm && cmake_config+=" -Dcxx=OFF"
+    cmake_config+=" -Dlzma=${cmake_deps} -Djpeg=${cmake_deps} -Dzstd=${cmake_deps} -Dlerc=${cmake_deps} -Dlibdeflate=${cmake_deps} -Dwebp=${cmake_deps}"
+    cmake_config+=" -Dcxx=$(bool2str ${host_arm} OFF ON)"
 }
+
+lst_inc='tiffconf.h tiffvers.h tiff.h tiffio.hxx tiffio.h'
+lst_lib='libtiffxx libtiff'
+lst_bin='tiffmedian tiffset fax2ps tiff2bw tiffdither raw2tiff tiffsplit tiff2pdf fax2tiff tiff2rgba pal2rgb tiff2ps tiffcrop tiffcmp tiffinfo tiffcp tiffdump ppm2tiff'
+lst_lic='COPYRIGHT'
+lst_pc='libtiff-4.pc'
 
 . xbuild && start
 

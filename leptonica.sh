@@ -35,7 +35,7 @@ am_config+=" --disable-programs \
     --without-libopenjpeg"
 
 extraOpts(){
-  case $1 in --full)
+  case $1 in --all)
     dep='zlib libjpeg libpng libwebp libtiff giflib openjpeg'
     cmake_config='-DBUILD_TESTS=OFF';;
   esac

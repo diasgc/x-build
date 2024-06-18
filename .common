@@ -265,12 +265,12 @@ function gitlab_get_latest_tarball {
 function googlesource_get_latest_tarball {
   vrs="$(git_version_remote ${1})"
   src="${src%%\.git}/+archive/${vrs}.tar.gz"
-  curl_tar ${src} ${lib}
+  curl_tar "${src}" "${lib}"
 }
 
 #usage tar_version <url-dir> <prefix>
 function tar_version {
-    echo $(curl -sL ${1} | grep -oP "${2}[0-9\.]+.tar.gz" | sed "s,${2},,;s,.tar.gz,," | sort -rV | head -n1)
+    curl -sL "${1}" | grep -oP "${2}[0-9\.]+.tar.gz" | sed "s,${2},,;s,.tar.gz,," | sort -rV | head -n1
 }
 
 function curl_tar {
@@ -505,17 +505,17 @@ function cmake_set_buildlink {
   : "${cmake_static:=BUILD_STATIC_LIBS}"
   : "${cmake_shared:=BUILD_SHARED_LIBS}"
   case "${cmake_shared}" in
-    -D*=*) ${build_shared} && build_liblink="${cmake_shared}";;
-    *) build_liblink="-D${cmake_shared}=$(bool2str ${build_shared} ON OFF)";;
+    -D*=*) ${build_shared} && lib_link="${cmake_shared}";;
+    *) lib_link="-D${cmake_shared}=$(bool2str ${build_shared} ON OFF)";;
   esac
   case "${cmake_static}" in
-    -D*=*) ${build_static} && build_liblink="${cmake_static}";;
-    *) build_liblink="-D${cmake_static}=$(bool2str ${build_static} ON OFF) ${build_liblink}";;
+    -D*=*) ${build_static} && lib_link="${cmake_static}";;
+    *) lib_link="-D${cmake_static}=$(bool2str ${build_static} ON OFF) ${lib_link}";;
   esac
   if [ -n "${cmake_bin}" ]; then
     case "${cmake_bin}" in
-      -D*=*) ${build_bin} && CBN="${cmake_bin}";;
-      *) CBN="-D${cmake_bin}=$(bool2str ${build_bin} ON OFF)";;
+      -D*=*) ${build_bin} && cfg_bin="${cmake_bin}";;
+      *) cfg_bin="-D${cmake_bin}=$(bool2str ${build_bin} ON OFF)";;
     esac
   fi
 }
@@ -523,14 +523,14 @@ function cmake_set_buildlink {
 function am_set_buildlink {
   : "${ac_static:=static}"
   : "${ac_shared:=shared}"
-  build_liblink="--$(bool2str ${build_shared} enable disable)-${ac_shared}"
-  build_liblink="--$(bool2str ${build_static} enable disable)-${ac_static} ${build_liblink}"
+  lib_link="--$(bool2str ${build_shared} enable disable)-${ac_shared}"
+  lib_link="--$(bool2str ${build_static} enable disable)-${ac_static} ${lib_link}"
   if [ -n "${am_bin}" ]; then
     case "${am_bin}" in
-      --enable-*) CBN="${am_bin}=$(bool2str ${build_bin} 1 0)";;
-      able-*)     CBN="--$(bool2str ${build_bin} en dis)${am_bin}";;
-      with-*)     CBN="--$(bool2str ${build_bin} without-${am_bin:5} ${am_bin})";;
-      *)          CBN="--enable-${am_bin}=$(bool2str ${build_bin} 1 0)";;
+      --enable-*) cfg_bin="${am_bin}=$(bool2str ${build_bin} 1 0)";;
+      able-*)     cfg_bin="--$(bool2str ${build_bin} en dis)${am_bin}";;
+      with-*)     cfg_bin="--$(bool2str ${build_bin} without-${am_bin:5} ${am_bin})";;
+      *)          cfg_bin="--enable-${am_bin}=$(bool2str ${build_bin} 1 0)";;
     esac
   fi
 }
@@ -539,16 +539,16 @@ function meson_set_buildlink {
   : "${meson_static:=-Ddefault_library=static}"
   : "${meson_shared:=-Ddefault_library=shared}"
   if ${build_static} && ${build_shared}; then
-    build_liblink="-Ddefault_library=both"
+    lib_link="-Ddefault_library=both"
   elif ${build_static}; then
-    build_liblink="${meson_static}"
+    lib_link="${meson_static}"
   elif ${build_shared}; then
-    build_liblink="${meson_shared}"
+    lib_link="${meson_shared}"
   fi
   if [ -n "${meson_bin}" ]; then
     case "${meson_bin}" in
-      bool:*) meson_bin="${meson_bin#bool:*}" && CBN="-D${meson_bin}=$(bool2str ${build_bin} 'true' 'false')";;
-      *) meson_bin="${meson_bin#*:*}" && CBN="-D${meson_bin}=$(bool2str ${build_bin} enabled disabled)";;
+      bool:*) meson_bin="${meson_bin#bool:*}" && cfg_bin="-D${meson_bin}=$(bool2str ${build_bin} 'true' 'false')";;
+      *) meson_bin="${meson_bin#*:*}" && cfg_bin="-D${meson_bin}=$(bool2str ${build_bin} enabled disabled)";;
     esac
   fi
 }
@@ -582,15 +582,15 @@ function config_init {
       ;;
     cargo)
       build_system=cargo
-      build_liblink="--library-type=$(bool2str ${build_static} staticlib dylib)"
+      lib_link="--library-type=$(bool2str ${build_static} staticlib dylib)"
       ;;
 		mk|make) build_system=make;;
 		other) build_system=other;;
 		*) unset build_system;;
 	esac
 
-	if [ -z "${CBN}" ];then
-		$build_bin && CBN="${cb1}" || CBN="${cb0}"
+	if [ -z "${cfg_bin}" ];then
+		$build_bin && cfg_bin="${cb1}" || cfg_bin="${cb0}"
 	fi
 }
 
