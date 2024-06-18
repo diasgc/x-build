@@ -249,38 +249,24 @@ start(){
 		elif [ -n "${cfg_cmd}" ];then
 			do_log 'config' ${cfg_cmd}
 			unset cfg_cmd
-		else case ${cfg} in
-			ab)		[ -f "${dir_config}/boostrap" ] && do_log 'bootstrap' ${dir_config}/boostrap
-					[ -f "${dir_config}/boostrap.sh" ] && do_log 'bootstrap' ${dir_config}/boostrap.sh
-					;;
-			ag) 	do_am_autogen ${dir_config} --noconfigure;;
-			ar) 	do_am_autoreconf ${dir_config};;
-			am)		if [ ! -f "${dir_config}/configure" ];then
-						if [ -f "${dir_config}/autogen.sh" ];then
-							do_am_autogen ${dir_config} --noconfigure
-						else
-							do_am_autoreconf ${dir_config}
-						fi
-					fi
-					;;
+		else case "${cfg}" in
+			ab)	[ -f "${dir_config}/boostrap" ] && do_log 'bootstrap' ${dir_config}/boostrap
+				[ -f "${dir_config}/boostrap.sh" ] && do_log 'bootstrap' ${dir_config}/boostrap.sh
+				;;
+			ag) do_am_autogen ${dir_config} --noconfigure;;
+			ar) do_am_autoreconf ${dir_config};;
+			am)	am_config_guess;;
 			esac
 		fi
 		request_patch=true
 	fi
 
 	if ${request_patch}; then
-		# check if has patch function in source
 		fn_defined 'source_patch' && fn_log 'patch' source_patch
 		if [ -n "${cmake_file}" ] && [ -f "${dir_root}/cmake/${cmake_file}" ]; then
 			cp -f "${dir_root}/cmake/${cmake_file}" "${dir_src}/CMakeLists.txt" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"
 			unset cmake_file
 		fi
-		#local fcmake="${dir_root}/cmake/${cmake_file}"
-		#if [ -f "${fcmake}" ]; then
-		#	local fcmake_dst="${dir_src}/CMakeLists.txt"
-		#	cp -f "${fcmake}" "${fcmake_dst}" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"
-		#	unset cmake_file
-		#fi
 	fi
 
 	${break_on_patch} && end_script
@@ -326,9 +312,9 @@ start(){
 	else case "${build_system}" in
 		cmake)
 			: "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
-			cmake_set_buildlink
 			: "${cmake_builddir:=${dir_config}}"
 			cfg_args=("${cmake_builddir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}")
+			cmake_set_buildlink
 			if ${host_cross}; then
 				[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}
 				[ -f "${cmake_toolchain_file}" ] && cfg_args+=( "-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}" )
@@ -788,27 +774,9 @@ clean(){
 	clear
 }
 
-function do_am_autoreconf {
-	local tag='autoreconf'
-	echo -ne "${CD}${tag}${C0}"
-	pushdir ${1}
-	log_this autoreconf -fiv
-	popdir
-	logok ${tag}
-}
 
-function do_am_autogen {
-	local tag='autoreconf'
-	echo -ne "${CD}${tag}${C0}"
-	pushdir ${1} && shift
-	case ${1} in
-		--noerr ) ./autogen.sh >>${log_file} 2>&1;;
-		--noconfigure ) NOCONFIGURE=1 log_this ./autogen.sh;;
-		* ) log_this ./autogen.sh;;
-	esac
-	popdir
-	logok ${tag}
-}
+
+
 
 toolchain_android(){
 	PLATFORM='Android'

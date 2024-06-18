@@ -471,6 +471,44 @@ search_configfile(){
   echo "${dir_src}/${dest}"
 }
 
+function am_config_guess {
+  if [ -f "${dir_config}/autogen.sh" ]; then
+    do_am_autogen ${dir_config} --noconfigure
+  elif [ -f "${dir_config}/bootstrap.sh" ]; then
+    do_log 'bootstrap' ${dir_config}/boostrap.sh
+  elif [ -f "${dir_config}/bootstrap" ]; then
+    do_log 'bootstrap' ${dir_config}/boostrap
+  elif [ -f "${dir_config}/configure.ac" ]; then
+    do_am_autoreconf ${dir_config}
+  elif [ -f "${dir_config}/configure" ]; then
+    cfg='ac'
+  else
+    exit_err "No automake configure file. Exiting..."
+  fi
+}
+
+function do_am_autogen {
+	local tag='autoreconf'
+	echo -ne "${CD}${tag}${C0}"
+	pushdir ${1} && shift
+	case ${1} in
+		--noerr ) ./autogen.sh >>${log_file} 2>&1;;
+		--noconfigure ) NOCONFIGURE=1 log_this ./autogen.sh;;
+		* ) log_this ./autogen.sh;;
+	esac
+	popdir
+	logok ${tag}
+}
+
+function do_am_autoreconf {
+	local tag='autoreconf'
+	echo -ne "${CD}${tag}${C0}"
+	pushdir ${1}
+	log_this autoreconf -fiv
+	popdir
+	logok ${tag}
+}
+
 function config_guess {
   if [ -f "${dir_config}/meson.build" ]; then
     build_system="meson"
