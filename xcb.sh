@@ -15,12 +15,14 @@ dev_vrs='1.17.0'
 pkg_deb='libxcb1-dev'
 eta='0'
 
+on_src_release(){
+    vrs="$(tar_version https://xcb.freedesktop.org/dist/ libxcb-)"
+    src="https://xcb.freedesktop.org/dist/libxcb-${vrs}.tar.gz"
+    tar_stripcomponents=true
+}
+
 on_config(){
-    if ${src_rel}; then
-        vrs="$(tar_version https://xcb.freedesktop.org/dist/ libxcb-)"
-        src="https://xcb.freedesktop.org/dist/libxcb-${vrs}.tar.gz"
-        tar_stripcomponents=true
-    fi
+    ${src_rel} && on_src_release
 }
 
 lst_inc=''

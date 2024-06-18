@@ -8,11 +8,13 @@ src='https://github.com/AviSynth/AviSynthPlus.git'
 cfg='cmake'
 cmake_config="-DHEADERS_ONLY=OFF"
 
+on_src_release(){
+    vrs="$(github_latest_release AviSynth/AviSynthPlus)"
+    src="https://github.com/AviSynth/AviSynthPlus/archive/refs/tags/${vrs}.tar.gz"
+}
+
 on_config(){
-    if ${src_rel}; then
-        vrs="$(github_latest_release AviSynth/AviSynthPlus)"
-        src="https://github.com/AviSynth/AviSynthPlus/archive/refs/tags/${vrs}.tar.gz"
-    fi
+    ${src_rel} && on_src_release
 }
 
 on_build_bin(){

@@ -13,11 +13,12 @@ dep='openssl expat libssh2 sqlite3 libcares'
 
 cfg='ar'
 
+on_src_release(){
+    vrs="$(github_latest_release aria2/aria2)"
+    src="https://github.com/nkoriyama/aribb24/archive/refs/tags/release-${vrs}.tar.gz"
+}
 on_config(){
-    if ${src_rel}; then
-        vrs="$(github_latest_release aria2/aria2)"
-        src="https://github.com/nkoriyama/aribb24/archive/refs/tags/release-${vrs}.tar.gz"
-    fi
+    ${src_rel} && on_src_release
 }
 
 dev_bra='main'

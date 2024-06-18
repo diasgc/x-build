@@ -16,14 +16,16 @@ dev_vrs='3.9.1'
 pkg_deb='nettle-dev'
 eta='288'
 
+on_src_release(){
+  local u=$(sed 's,\.git$,/-,' <<<${src})
+  local f="$(curl -sL $u/tags | grep -oP 'nettle_[0-9\.]+_release_[0-9]+.tar.gz' | head -n1)"
+  src="$u/archive/${f%%\.tar\.gz}/nettle-${f}"
+  vrs=$(sed 's,nettle_,,;s,_release_.*\.tar\.gz$,,' <<<${f})
+  tar_stripcomponents=true
+}
+
 on_config(){
-  if ${src_rel}; then
-    local u=$(sed 's,\.git$,/-,' <<<${src})
-    local f="$(curl -sL $u/tags | grep -oP 'nettle_[0-9\.]+_release_[0-9]+.tar.gz' | head -n1)"
-    src="$u/archive/${f%%\.tar\.gz}/nettle-${f}"
-    vrs=$(sed 's,nettle_,,;s,_release_.*\.tar\.gz$,,' <<<${f})
-    tar_stripcomponents=true
-  fi
+  ${src_rel} && on_src_release
   am_config+=" $(bool2str ${host_arm} '--enable-arm-neon' '--enable-x86-sha-ni --enable-x86-aesni')"
   am_config+=" $(bool2str ${host_gnu} '--enable' '--disable')-assembler"
   ${host_cross} || dir_install_pc="${dir_install}/lib64/pkgconfig"

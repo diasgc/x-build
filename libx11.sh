@@ -23,11 +23,14 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-on_config(){
-    if ${src_rel}; then
-        vrs=$(curl -sL https://www.x.org/releases/individual/lib/ | grep -oP 'libX11-\d+.\d+.\d+.tar.gz' | tail -n1)
-        src="https://www.x.org/releases/individual/lib/${vrs}"
-        vrs="$(sed 's,libX11-,,;s,.tar.gz,,' <<<${vrs})"
-    fi
+on_src_release(){
+    vrs=$(curl -sL https://www.x.org/releases/individual/lib/ | grep -oP 'libX11-\d+.\d+.\d+.tar.gz' | tail -n1)
+    src="https://www.x.org/releases/individual/lib/${vrs}"
+    vrs="$(sed 's,libX11-,,;s,.tar.gz,,' <<<${vrs})"
 }
+
+on_config(){
+    ${src_rel} && on_src_release
+}
+
 . xbuild && start

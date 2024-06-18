@@ -484,8 +484,6 @@ am_configure() {
 	${ac_reconf} && autoreconf -fi 2>/dev/null >>${log_file}
 	#[ -z "${mki+x}" ] && mki=$(make_findtarget "install-strip" "install")
 	: "${exec_config:=configure}"
-	[ -n "${am_config}" ] && CFG=${am_config}
-
 	local opt_list="$(${dir_config}/${exec_config} --help | grep -P '^[[:space:]]+\-\-')"
 
 	# find static build option
@@ -530,19 +528,19 @@ am_configure() {
 	fi
 
 	if ! $ac_nohost && $host_cross && [ -n "$(echo "${opt_list}" | grep '\-\-host')" ]; then
-		$host_cross && CFG+=" --host=${arch}"
+		$host_cross && ac_config+=" --host=${arch}"
 	fi
 
-	if ! $ac_nosysroot; then
+	if ! ${ac_nosysroot}; then
 		if [ -n "$(echo "${opt_list}" | grep '\-\-with-sysroot')" ]; then
-			CFG+=" --with-sysroot=${SYSROOT}"
+			ac_config+=" --with-sysroot=${SYSROOT}"
 		elif [ -n "$(echo "${opt_list}" | grep '\-\-sysroot')" ]; then
-			CFG+=" --sysroot=${SYSROOT}"
+			ac_config+=" --sysroot=${SYSROOT}"
 		fi
 	fi
 
 	if ! $ac_nopic && ! $host_mingw && [ -n "$(echo "${opt_list}" | grep '\-\-with-pic')" ]; then
-		CFG+=" --with-pic"
+		ac_config+=" --with-pic"
 	fi
 	MAKE_EXECUTABLE=make
 }

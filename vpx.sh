@@ -17,13 +17,15 @@ dev_vrs='1.14.1'
 pkg_deb='libvpx-dev'
 eta='244'
 
+on_src_release(){
+  vrs='v1.14.1-rc1'
+  src="https://chromium.googlesource.com/webm/libvpx/+archive/${vrs}.tar.gz"
+  tar_stripcomponents=true
+}
+
 on_config(){
-  if ${src_rel}; then
-    vrs='v1.14.1-rc1'
-    src="https://chromium.googlesource.com/webm/libvpx/+archive/${vrs}.tar.gz"
-    tar_stripcomponents=true
-  fi
-  $build_shared && unset lib_link #--enable-shared only supported on ELF, OS/2, and Darwin for now
+  ${src_rel} && on_src_release
+  ${build_shared} && unset lib_link #--enable-shared only supported on ELF, OS/2, and Darwin for now
 
   t2=$(arch_fromid arm64 armv7 x86 x86_64)
   $host_x86 && t3=$(os_fromid android linux win32) || t3=$(os_fromid android linux win64)

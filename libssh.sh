@@ -38,11 +38,13 @@ extraOpts(){
     esac
 }
 
+on_src_release(){
+    vrs='0.10.6'
+    src="https://git.libssh.org/projects/libssh.git/snapshot/libssh-${vrs}.tar.gz"
+}
+
 on_config(){
-    if ${src_rel}; then
-        vrs='0.10.6'
-        src="https://git.libssh.org/projects/libssh.git/snapshot/libssh-${vrs}.tar.gz"
-    fi
+    ${src_rel} && on_src_release
     cmake_config+=" ${dep_opt}"
 }
 

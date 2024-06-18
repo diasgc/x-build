@@ -16,13 +16,15 @@ dev_vrs=''
 pkg_deb=''
 eta=''
 
+on_src_release(){
+    url='http://deb.debian.org/debian/pool/main/a/arj/'
+    vrs=$(curl -s ${url} | grep -oP 'arj_\K([0-9\.]+).orig.tar.gz' | tail -n1)
+    src="${url}arj_${vrs}"
+    vrs=${vrs/\.orig\.tar\.gz/}
+}
+
 on_config(){
-    if ${src_rel}; then
-        url='http://deb.debian.org/debian/pool/main/a/arj/'
-        vrs=$(curl -s ${url} | grep -oP 'arj_\K([0-9\.]+).orig.tar.gz' | tail -n1)
-        src="${url}arj_${vrs}"
-        vrs=${vrs/\.orig\.tar\.gz/}
-    fi
+    ${src_rel} && on_src_release
 }
 
 . xbuild && start

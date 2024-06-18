@@ -23,11 +23,19 @@ lst_pc='boost.pc'
 
 #pc_llib=null
 
+on_src_release(){
+    vrs="$(github_latest_release boostorg/boost)"
+    vrs="${vrs//boost-/}"
+    src="https://github.com/boostorg/boost/releases/download/${vrs}/${vrs}-cmake.tar.gz"
+}
+
+on_config(){
+    ${src_rel} && on_src_release
+}
+
 on_config(){
     if ${src_rel}; then
-        vrs="$(github_latest_release boostorg/boost)"
-        vrs="${vrs//boost-/}"
-        src="https://github.com/boostorg/boost/releases/download/${vrs}/${vrs}-cmake.tar.gz"
+        on_src_release
     else
         vrs="$(git_version_remote ${src})"
         vrs="${vrs//boost-/}"

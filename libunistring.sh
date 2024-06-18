@@ -18,12 +18,14 @@ lst_bin=''
 lst_lic='COPYING COPYING.LIB AUTHORS'
 lst_pc='libunistring'
 
+on_src_release(){
+    tar_stripcomponents=true
+    vrs="$(curl -s "${url}/" | grep -oP '(?<=libunistring-)([0-9\.]+)(?=.tar.gz)' | tail -n 1)"
+    src="${url}/libunistring-${vrs}.tar.gz"
+}
+
 on_config(){
-    if ${src_rel}; then
-        tar_stripcomponents=true
-        vrs="$(curl -s "${url}/" | grep -oP '(?<=libunistring-)([0-9\.]+)(?=.tar.gz)' | tail -n 1)"
-        src="${url}/libunistring-${vrs}.tar.gz"
-    fi
+    ${src_rel} && on_src_release
 }
 
 before_make(){

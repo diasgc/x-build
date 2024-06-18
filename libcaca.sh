@@ -13,21 +13,13 @@ patch="libcaca-01"
 
 cfg='ac'
 am_config='--disable-doc --disable-java --disable-python --disable-ruby'
-#CPPFLAGS+=" -Wno-ignored-optimization-argument -Wno-absolute-value -Wno-unused-but-set-variable -Wno-int-conversion"
-
-dev_bra='main'
-dev_vrs='0.99.beta20'
-pkg_deb='libcaca-dev'
-eta='80'
-
-lst_inc='caca++.h caca.h caca0.h caca_types.h caca_conio.h'
-lst_lib='libcaca libcaca++'
-lst_bin='caca-config cacafire cacaserver img2txt cacaclock cacademo cacaview cacaplay'
-lst_lic='COPYING COPYING.GPL COPYING.LGPL COPYING.ISC AUTHORS'
-lst_pc='caca++.pc caca.pc'
+WFLAGS='-Wno-ignored-optimization-argument
+ -Wno-absolute-value
+ -Wno-unused-but-set-variable 
+ -Wno-int-conversion'
 
 on_config(){
-  $host_mingw || am_config+=" --disable-win32"
+  am_config+=" --$(bool2str ${host_mingw} disable enable)-win32"
 }
 
 source_config(){
@@ -39,6 +31,17 @@ source_config(){
   sed -i 's/if defined(_WIN32)/if defined(_MSC_VER)/g' cxx/caca++.h
   ${use_clang} && sed -i 's/-O2 -fno-strength-reduce/-O3 -flto/g' configure
 }
+
+dev_bra='main'
+dev_vrs='0.99.beta20'
+pkg_deb='libcaca-dev'
+eta='80'
+
+lst_inc='caca++.h caca.h caca0.h caca_types.h caca_conio.h'
+lst_lib='libcaca libcaca++'
+lst_bin='caca-config cacafire cacaserver img2txt cacaclock cacademo cacaview cacaplay'
+lst_lic='COPYING COPYING.GPL COPYING.LGPL COPYING.ISC AUTHORS'
+lst_pc='caca++.pc caca.pc'
 
 . xbuild && start
 

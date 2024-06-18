@@ -20,13 +20,14 @@ dev_vrs='2.2.7'
 pkg_deb='libdc1394-dev'
 eta='60'
 
+on_src_release(){
+    vrs="$(sourceforge_json ${lib} | jq -r .release.filename)"
+    src="https://sourceforge.net/projects/${lib}/files/${vrs}"
+    vrs=$(grep -oP '(?<=/)[0-9\.]+(?=/)' <<<${vrs})
+}
+
 on_config(){
-    if ${src_rel}; then
-        vrs="$(sourceforge_json ${lib} | jq -r .release.filename)"
-        src="https://sourceforge.net/projects/${lib}/files/${vrs}"
-        vrs=$(grep -oP '(?<=/)[0-9\.]+(?=/)' <<<${vrs})
-    fi
-    return 0
+    ${src_rel} && on_src_release
 }
 
 . xbuild && start
