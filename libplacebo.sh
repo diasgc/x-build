@@ -17,7 +17,7 @@ eta='60'
 
 on_config_ndk(){
     dep='glslang vulkan'
-    meson_config+=" -Dvulkan-registry=${dir_install}/share/vulkan/registry/vk.xml";;
+    meson_config+=" -Dvulkan-registry=${dir_install}/share/vulkan/registry/vk.xml"
 }
 
 on_config(){

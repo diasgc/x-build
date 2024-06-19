@@ -631,6 +631,7 @@ cat <<-EOF >${dir_root}/.config
 #!/bin/bash
 export config_lastupdate=$(date +%s) \\
     dir_root="$(pwd)" \\
+    sudo=$(command -v sudo) \\
     cmd_install="${cmd_install}" \\
     build_arch="${build_arch}" \\
     XB_HAS_GNU_CLANG=${XB_HAS_GNU_CLANG} \\

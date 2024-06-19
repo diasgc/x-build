@@ -12,7 +12,7 @@
 
 function trap_sigint {
 	tput cnorm -- normal
-	cd $(dirname $0)
+	cd "$(dirname $0)"
 	echo -e "\n\n${CY1}  Interrupted by user${C0}\n  Log available at \e[4m${log_file}\e[24m\n\n"
 }
 
@@ -41,7 +41,7 @@ if [ -z ${vsh+x} ];then
 	test -f ".config" || ./x-setup
 	test -f ".config" || exit_err 'Unable to initialize config file: .config not found'
 	source .config
-	if `expr $(date +%s) - ${config_lastupdate}` -gt $((config_timeout * timeout_days)); then
+	if [ `expr $(date +%s) - ${config_lastupdate}` -gt $((config_timeout * timeout_days)) ]; then
 		test -f .config_old && rm -f .config_old
 		mv -f .config .config_old
 		./x-setup
@@ -50,9 +50,13 @@ if [ -z ${vsh+x} ];then
 
 fi
 
-export sudo=$(command -v sudo)
+export CPPFLAGS=
+export target_trip=
+export this_script=${dir_root}/$(basename "$0")
+export dir_src="${dir_sources}/${lib}"
 
-export HOST_NPROC=$(nproc)
+: "${API:=${ANDROID_NDK_API}}"
+: "${NDK_API:=${ANDROID_NDK_API}}"
 
 : "${am_nohost:=false}"
 : "${am_nosysroot:=false}"
@@ -117,14 +121,6 @@ retry=false
 logtime_start=0
 logtime_end=0
 
-: "${API:=${ANDROID_NDK_API}}"
-: "${NDK_API:=${ANDROID_NDK_API}}"
-
-export CPPFLAGS=
-export target_trip=
-
-export this_script=${dir_root}/$(basename "$0")
-export dir_src="${dir_sources}/${lib}"
 
 # Variables
 # mki: rule for install 'make $mkinstall' (default: install)
@@ -138,9 +134,9 @@ start(){
 
 	# Should we download the package instead of building it?
 	if ${build_download}; then
-		local lnk=$(get_link_pkg ${arch} ${lib})
+		local lnk="$(get_link_pkg "${arch}" "${lib}")"
 		if [ -n "${lnk}" ]; then
-			wget_pkg_tgz ${lnk} ${dir_install}
+			wget_pkg_tgz "${lnk}" "${dir_install}"
 			${skip_pc} || logver "${dir_install_pc}/${pkg}.pc"
 			end_script
 		fi
@@ -238,7 +234,7 @@ start(){
 	
 	# check if defined custom dir_config location (config_dir)
 	[ -n "${config_dir+x}" ] && dir_config="${dir_src}/${config_dir}"
-	cd ${dir_config}
+	cd "${dir_config}"
 
 	# if there is no config selected, try guess
 	test -z "${cfg}" && config_guess
@@ -283,7 +279,7 @@ start(){
 
 	[ -d "${dir_build}" ] || mkdir -p "${dir_build}"
 	
-	cd ${dir_build}
+	cd "${dir_build}"
 
 	log_vars dir_src dep PKG_CONFIG_LIBDIR
 	log_vars API CC CXX LD AS AR NM RANLIB STRIP
@@ -485,33 +481,38 @@ am_configure() {
 	${ac_reconf} && autoreconf -fi 2>/dev/null >>${log_file}
 	#[ -z "${mki+x}" ] && mki=$(make_findtarget "install-strip" "install")
 	: "${exec_config:=configure}"
+
 	local opt_list="$(${dir_config}/${exec_config} --help | grep -P '^[[:space:]]+\-\-')"
 
 	# find static build option
 	if ${build_static} && [ -n "$(echo "${opt_list}" | grep '\-\-enable-static')" ]; then
+		logf 'Supports --enable-static'
 		build_type="--enable-static"
 	fi
 	# find shared build option
 	if $build_shared && [ -n "$(echo "${opt_list}" | grep '\-\-enable-shared')" ]; then
+		logf 'Supports --enable-shared'
 		build_type+=" --enable-shared"
 	fi
 
-	if [ -n "${am_bin}" ]; then
-		arr=(${am_bin//|/ })
-		case ${#arr[@]} in
-			1) cfg_bin=$(bool2str ${build_bin} "${arr[0]}=1" "${arr[0]}=0");;
-			2) cfg_bin=$(bool2str ${build_bin} "${arr[1]}" "${arr[0]}");;
-		esac
-	fi
+	#if [ -n "${am_bin}" ]; then
+	#	arr=(${am_bin//|/ })
+	#	case ${#arr[@]} in
+	#		1) cfg_bin=$(bool2str ${build_bin} "${arr[0]}=1" "${arr[0]}=0");;
+	#		2) cfg_bin=$(bool2str ${build_bin} "${arr[1]}" "${arr[0]}");;
+	#	esac
+	#fi
 
 	if [ -n "${ac_opts}" ]; then
 		for opt in $(echo ${ac_opts}); do
 			case $opt in
 				--update-config_sub)
+					logf 'Apply --update-config_sub'
 					local fpath=$(find ${dir_src} -name 'config.sub')
 					test -f "${fpath}" && cp -f /usr/share/automake*/config.sub ${fpath}
 					;;
 				--update-config_guess)
+					logf 'Apply --update-config_guess'
 					local fpath=$(find ${dir_src} -name 'config.guess')
 					test -f "${fpath}" && cp -f /usr/share/automake*/config.guess ${fpath}
 					;;
@@ -528,20 +529,21 @@ am_configure() {
 		done
 	fi
 
-	if ! $am_nohost && $host_cross && [ -n "$(echo "${opt_list}" | grep '\-\-host')" ]; then
-		$host_cross && ac_config+=" --host=${arch}"
+	if ${host_cross} && [ -n "$(grep '\-\-host' <<<"${opt_list}")" ]; then
+		logf "set --host=${arch}"
+		${am_nohost} || am_config+=" --host=${arch}"
 	fi
 
 	if ! ${am_nosysroot}; then
 		if [ -n "$(echo "${opt_list}" | grep '\-\-with-sysroot')" ]; then
-			ac_config+=" --with-sysroot=${SYSROOT}"
+			am_config+=" --with-sysroot=${SYSROOT}"
 		elif [ -n "$(echo "${opt_list}" | grep '\-\-sysroot')" ]; then
-			ac_config+=" --sysroot=${SYSROOT}"
+			am_config+=" --sysroot=${SYSROOT}"
 		fi
 	fi
 
 	if ! $am_nopic && ! $host_mingw && [ -n "$(echo "${opt_list}" | grep '\-\-with-pic')" ]; then
-		ac_config+=" --with-pic"
+		am_config+=" --with-pic"
 	fi
 	MAKE_EXECUTABLE=make
 }

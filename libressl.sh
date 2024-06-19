@@ -2,18 +2,18 @@
 
 lib='libressl'
 pkg='libssl'
-pkg_deb="${pkg}-dev"
 dsc='Secure Sockets Layer and cryptography libraries'
 lic='GPL'
 src='https://github.com/libressl-portable/portable.git'
-cfg='cmake'
-eta='120'
 
+cfg='cmake'
 cmake_bin="LIBRESSL_APPS"
 cmake_config="-DLIBRESSL_TESTS=OFF -DENABLE_NC=ON -DENABLE_EXTRATESTS=OFF"
 
 dev_bra='master'
 dev_vrs='3.9.0'
+pkg_deb="libssl-dev"
+eta='120'
 
 lst_inc='tls.h openssl/*.h'
 lst_lib='libcrypto libtls libssl'

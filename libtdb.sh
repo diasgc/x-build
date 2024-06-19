@@ -1,7 +1,7 @@
 #!/bin/bash
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang
-# GNU  .   .   .   .  gcc
+# GNU  .   .   .   .  clang/gcc
 # WIN  .   .   .   .  clang/gcc
 
 lib='libtdb'

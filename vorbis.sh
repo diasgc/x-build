@@ -4,23 +4,22 @@ lib='vorbis'
 dsc='Ogg Vorbis audio format'
 lic='BSD'
 src='https://github.com/xiph/vorbis.git'
-cfg='cmake'
 patch="vorbis-01"
 dep='ogg'
 
+cfg='cmake'
+cmake_config='-DBUILD_TESTING=OFF'
+cmake_static='BUILD_STATIC_LIBS'
+
 dev_vrs='1.3.7'
 pkg_deb='libvorbis-dev'
-eta='77'
+eta='48'
 
 lst_inc='vorbis/*.h'
 lst_lib='libvorbisfile libvorbisenc libvorbis'
 lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='vorbisfile.pc vorbisenc.pc vorbis.pc'
-
-cmake_config='-DBUILD_TESTING=OFF'
-cmake_static='BUILD_STATIC_LIBS'
-am_config='--disable-docs --disable-examples --disable-oggtest'
 
 . xbuild && start
 

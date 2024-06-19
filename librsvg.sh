@@ -25,4 +25,9 @@ cargo_install(){
     #cargo install cargo-c
 }
 
+# aa8 build:
+# error: could not compile `rsvg_convert` (bin "rsvg-convert") due to 1 previous error
+# command: ['cargo', 'build', '--locked', '--bin', 'rsvg-convert', '--manifest-path', 'sources/librsvg/Cargo.toml', '--target-dir', 'sources/librsvg/build_aarch64-linux-android/target', '--release', '--target', 'aarch64-linux-android', '--features', 'avif', '-p', 'rsvg_convert']
+# error adding symbols: file in wrong format
+
 . xbuild && start

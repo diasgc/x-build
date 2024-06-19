@@ -1,18 +1,23 @@
 #!/bin/bash
 
 lib='mbedtls'
-pkg_deb="${lib}-dev"
 dsc='An open source, portable, easy to use, readable and flexible SSL library.'
 lic='Apache-2.0'
 src='https://github.com/ARMmbed/mbedtls.git'
 sub='submodule update --init'
-cfg='cmake'
 tls='python3 perl'
 
+cfg='cmake'
 cmake_static='USE_STATIC_MBEDTLS_LIBRARY'
 cmake_shared='USE_SHARED_MBEDTLS_LIBRARY'
 cmake_bin="ENABLE_PROGRAMS"
 cmake_config="-DENABLE_TESTING=OFF" #-DUNSAFE_BUILD=OFF -DMBEDTLS_FATAL_WARNINGS=ON -DLINK_WITH_PTHREAD=OFF -DLINK_WITH_TRUSTED_STORAGE=OFF"
+
+on_create_pc(){
+    build_pkgconfig --name=libmbedtls --libs=-lmbedtls
+    build_pkgconfig --name=libmbedx509 --libs=-lmbedx509
+    build_pkgconfig --name=libmbedcrypto --libs=-lmbedcrypto
+}
 
 dev_bra='master'
 dev_vrs='v3.6.0'
@@ -43,12 +48,6 @@ lst_bin='cert_app crypto_examples key_app_writer
  gen_entropy'
 lst_lic='LICENSE'
 lst_pc='libmbedx509.pc libmbedcrypto.pc libmbedtls.pc'
-
-on_create_pc(){
-    build_pkgconfig --name=libmbedtls --libs=-lmbedtls
-    build_pkgconfig --name=libmbedx509 --libs=-lmbedx509
-    build_pkgconfig --name=libmbedcrypto --libs=-lmbedcrypto
-}
 
 . xbuild && start
 

@@ -1,15 +1,16 @@
 #!/bin/bash
 
 lib='libwebp'
-pkg_deb='webp'
 dsc='Library to encode and decode images in WebP format'
 lic='BSD'
 src='https://chromium.googlesource.com/webm/libwebp.git'
 dep='giflib libpng'
+
 cfg='cmake' # cmake not supporting dual static+shared build
-eta='70'
 
 dev_vrs='1.3.2'
+pkg_deb='libwebp-dev'
+eta='70'
 
 lst_inc='webp/*.h'
 lst_lib='libwebp libwebpmux libwebpdemux libwebpdecoder'

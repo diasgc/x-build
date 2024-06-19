@@ -5,16 +5,17 @@
 #  +   +   .   .   .   +   .   .   .   .   .  bin
 
 lib='opencore-amr'
-pkg='opencore-amrnb'
-pkg_deb="${pkg}-dev"
+pkg='opencore-amrwb'
 dsc='OpenCORE Adaptive Multi Rate (AMR) speech codec'
 lic='Apache-2'
 src='https://git.code.sf.net/p/opencore-amr/code.git'
+
 cfg='ar'
-eta='100'
-am_bin="--disable-examples|--enable-examples"
+am_bin="examples"
 
 dev_vrs='0.1.6'
+eta='100'
+pkg_deb='libopencore-amrwb-dev'
 
 . xbuild && start
 
