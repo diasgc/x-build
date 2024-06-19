@@ -10,7 +10,7 @@ cfg='cmake'
 
 dev_vrs='5.7.0'
 pkg_deb='libwavpack-dev'
-eta='30'
+eta='36'
 
 lst_inc='wavpack/wavpack.h'
 lst_lib='libwavpack'
