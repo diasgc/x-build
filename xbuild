@@ -28,13 +28,29 @@ if [ -z ${vsh+x} ];then
 		debug=true
 	fi
 	trap err ERR
-	[ -f ".config" ] && source .config
-	if [ ! -f ".config" ] || test `expr $(date +%s) - ${config_lastupdate}` -gt $((config_timeout * timeout_days)); then
+
+    export dir_cmake="${dir_root}/cmake"
+	test -d "${dir_cmake}" || exit_err "cmake dir is missing. Reinstall please."
+	export dir_patches="${dir_root}/patches"
+	test -d "${dir_patches}" || exit_err "patches dir is missing. Reinstall please."
+	export dir_pkgdist="${dir_root}/dist"
+	test -d "${dir_pkgdist}" || mkdir -p "${dir_pkgdist}"
+	export dir_sources="${dir_root}/sources"
+	test -d "${dir_sources}" || mkdir -p "${dir_sources}"
+	
+	test -f ".config" || ./x-setup
+	test -f ".config" || exit_err 'Unable to initialize config file: .config not found'
+	source .config
+	if `expr $(date +%s) - ${config_lastupdate}` -gt $((config_timeout * timeout_days)); then
+		test -f .config_old && rm -f .config_old
+		mv -f .config .config_old
 		./x-setup
-		source .config || exit_err 'Unable to initialize config file'
+		source .config
 	fi
+
 fi
-sudo=$(command -v sudo)
+
+export sudo=$(command -v sudo)
 
 export HOST_NPROC=$(nproc)
 
@@ -62,7 +78,7 @@ export HOST_NPROC=$(nproc)
 : "${host_native:=false}"
 
 : "${pkg:=${lib}}"
-: "${pkg_deb:=${lib}-dev}"
+: "${pkg_deb:=lib${lib//lib/}-dev}"
 
 : "${inline:=false}"
 : "${indent:=0}"
@@ -107,23 +123,8 @@ logtime_end=0
 export CPPFLAGS=
 export target_trip=
 
-export dir_sources="${dir_root}/sources" \
-       dir_cmake="${dir_root}/cmake" \
-       dir_patches="${dir_root}/patches" \
-	   dir_pkgdist="${dir_root}/dist" \
-	   this_script=${dir_root}/$(basename "$0")
-
-#export dir_src="${dir_sources}/$(bool2str [ -z "${src_dir}" ] ${lib} ${src_dir} )"
-if [ -z "${src_dir}" ];then
-	export dir_src=${dir_sources}/${lib}
-else
-	export dir_src=${dir_sources}/${src_dir}
-fi
-
-[ -d "${dir_sources}" ] || mkdir -p ${dir_sources}
-
-
-
+export this_script=${dir_root}/$(basename "$0")
+export dir_src="${dir_sources}/${lib}"
 
 # Variables
 # mki: rule for install 'make $mkinstall' (default: install)
