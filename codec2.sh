@@ -4,10 +4,16 @@ lib='codec2'
 dsc='A speech codec for 2400 bit/s and below'
 lic='LGPL-2.1'
 src='https://github.com/drowe67/codec2.git'
-cfg='cmake'
 patch='codec2-01' # patch generate_codebook for cross compiling
+
+cfg='cmake'
 cmake_static="BUILD_STATIC_LIBS"
 cmake_config="-DUNITTEST=OFF -DLPCNET=OFF"
+
+# cmake_options
+# BUILD_SHARED_LIBS "Build shared library. Set to OFF for static library." ON
+# UNITTEST          "Build unittest binaries." OFF
+# LPCNET            "Build codec2 with LPCNet support." OFF
 
 dev_bra='master'
 dev_vrs='1.2.0'
