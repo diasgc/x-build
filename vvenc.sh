@@ -20,13 +20,14 @@ lst_lic='AUTHORS.md LICENSE.txt'
 lst_pc='libvvenc.pc'
 
 dev_bra='master'
-dev_vrs='1.12.0-rc1'
+dev_vrs='1.12.0-rc2'
 pkg_deb=''
-eta='976'
+eta='1328'
 
 on_config_gnu(){
     # debian pkg llvm-18.1.3: missing LLVMgold.so. Workaround: disable lto
-    $host_clang && test -f ${SYSROOT}/lib/LLVMgold.so || cmake_config+=' -DVVENC_ENABLE_LINK_TIME_OPT=OFF' 
+    $host_clang && test -f "/usr/lib/LLVMgold.so" || cmake_config+=' -DVVENC_ENABLE_LINK_TIME_OPT=OFF' 
+    return 0
 }
 
 

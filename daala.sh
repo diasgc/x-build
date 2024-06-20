@@ -11,18 +11,19 @@ lic='BSD-2c'
 src='https://gitlab.xiph.org/xiph/daala.git'
 dep='ogg libpng'
 
-cfg='ac'
-am_bin="--disable-tools|--enable-tools"
-am_config="--disable-doc \
-     --disable-examples \
-     --disable-player \
-     --disable-unit-tests \
-     --disable-encoder-check"
+cfg='ag'
+am_bin="tools"
+am_config='--disable-doc
+ --disable-examples
+ --disable-player
+ --disable-unit-tests
+ --disable-encoder-check'
+WFLAGS='-Wno-null-pointer-subtraction -Wno-strict-prototypes -Wno-empty-body'
 
 dev_bra='main'
-dev_vrs='0.0-1731'
+dev_vrs='0.0-1731-g694d4ce'
 pkg_deb=''
-eta='60'
+eta='208'
 
 lst_inc='daala/*.h'
 lst_lib='libdaalaenc libdaaladec libdaalabase'

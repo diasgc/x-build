@@ -16,7 +16,7 @@ WFLAGS="-Wno-pointer-to-int-cast -Wno-unused-command-line-argument"
 dev_bra='master'
 dev_vrs='1.0.3'
 pkg_deb='libaribb24-dev'
-eta='10'
+eta='32'
 
 lst_inc='aribb24/*.h'
 lst_lib='libaribb24'

@@ -281,8 +281,8 @@ start(){
 	
 	cd "${dir_build}"
 
-	log_vars dir_src dep PKG_CONFIG_LIBDIR
-	log_vars API CC CXX LD AS AR NM RANLIB STRIP
+	log_vars dir_src dep PKG_CONFIG_LIBDIR SYSROOT TOOLCHAIN
+	log_vars CC CXX LD AS AR NM ADDR2LINE OBJCOPY OBJDUMP RANLIB READELF SIZE STRINGS STRIP WINDRES API
 
 	if fn_defined 'build_all'; then
 		fn_log 'build' build_all
@@ -307,67 +307,44 @@ start(){
 		fn_log 'config' build_config
 		unset -f build_config
 	else case "${build_system}" in
-		cmake)
-			: "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
-			: "${cmake_builddir:=${dir_config}}"
-			cfg_args=("${cmake_builddir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}")
-			cmake_set_buildlink
-			if ${host_cross}; then
-				[ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain ${dir_build}
-				[ -f "${cmake_toolchain_file}" ] && cfg_args+=( "-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}" )
-			fi
-			cfg_args+=("${cmake_config}" "${lib_link}" "${cfg_bin}" "${CPACK}" -Wno-dev)
-			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
-			case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
-			;;
+		cmake)    setup_cmake_config;;
 
-		automake) # use autotools and configure executable to create makefile
-			am_configure
-			am_set_buildlink
-			cfg_cmd="${dir_config}/configure"
-			cfg_args+=("--prefix=${dir_install}" "${am_config}" "${lib_link}" "${cfg_bin}")
-			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
-			;;
+		automake) setup_am_config;;
 
-		meson)
-			# see https://mesonbuild.com/Commands.html for command line options
-			cfg_args=('setup' '--buildtype=release')
-			${host_clang} || LD="bfd"
-			meson_set_buildlink
-			if ${host_cross}; then
-				local cfg_file="${dir_config}/${arch}.meson"
-				meson_create_toolchain ${cfg_file}
-				cfg_args+=("--cross-file=${cfg_file}")
-			fi
-			${build_static} && meson_config+=' --prefer-static'
-			cfg_cmd='meson'
-			cfg_args+=("--prefix=${dir_install}" "${meson_config}" "${lib_link}" "${cfg_bin}")
-			do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
-			MAKE_EXECUTABLE=ninja
-			;;
+		meson)    setup_meson_config;;
 
 		make)
 			: "${mkf:=${CFG}}"
-			MAKE_EXECUTABLE=make
+			build_cmd=make
+			build_tag="make"
+			build_args=("${mkf}" "-j${HOST_NPROC}")
 			;;
 		bazel)
 			cfg_cmd='bazel'
 			do_log "${build_system}" "${cfg_cmd}" build "${bazel_config}" //...
+			build_tag="make"
+			build_cmd=make
+			build_args=("${mkf}" "-j${HOST_NPROC}")
 			;;
 		cargo)
-			cfg_cmd='cargo'
-			cfg_args+=('cinstall' '--release' "--prefix=${dir_install}" "${cargo_cfg}" "${lib_link}" "${cfg_bin}" '--verbose')
-			skip_make=true
+			build_tag="make"
+			build_cmd='cargo'
+			build_args=('cinstall' '--release' "--prefix=${dir_install}" "${cargo_cfg}" "${lib_link}" "${cfg_bin}" '--verbose')
 			skip_install=true
-			do_progress "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
+			log_buildvars
+			#do_progress "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			;;
 		*)	if [ -n "${cfg_cmd}" ]; then
-				do_log 'config' ${cfg_cmd} ${cfg_args[@]}
+				log_buildvars
+				do_log 'config' "${cfg_cmd}" "${cfg_args[@]}"
 			else
 				exit_err "cfg ${cfg} unknown or cfg_cmd not defined. Use build_config to custom configure makefile"
 			fi
 			;;
 		esac
+		log_buildvars
+		test -n "${cfg_cmd}" && do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
+  		case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 	fi
 
 	${break_on_config} && end_script
@@ -385,7 +362,7 @@ start(){
 		$host_clang && static_ldflag="-all${static_ldflag}"
 	fi
 
-	$host_clang && $build_static && LDFLAGS="-static $LDFLAGS"
+	$host_clang && $build_static && LDFLAGS="-static ${LDFLAGS}"
 
 	log_vars CFLAGS CXXFLAGS WFLAGS CPPFLAGS LDFLAGS LIBS
 
@@ -394,9 +371,8 @@ start(){
 
 	if fn_defined 'on_make'; then
 		fn_log 'make' on_make
-	elif ! $skip_make; then
-		do_progress 'make' "${MAKE_EXECUTABLE}" ${mkf} -j${HOST_NPROC} || err
-		unset skip_make
+	else
+		do_progress "${build_tag}" "${build_cmd}" "${build_args[@]}" || err
 	fi
 
 	${break_on_make} && end_script
@@ -475,77 +451,6 @@ start(){
 	test -n "${vrs}" && sed -i "s/dev_vrs='.*'/dev_vrs='"${vrs}"'/g" ${this_script}
 
 	end_script
-}
-
-am_configure() {
-	${ac_reconf} && autoreconf -fi 2>/dev/null >>${log_file}
-	#[ -z "${mki+x}" ] && mki=$(make_findtarget "install-strip" "install")
-	: "${exec_config:=configure}"
-
-	local opt_list="$(${dir_config}/${exec_config} --help | grep -P '^[[:space:]]+\-\-')"
-
-	# find static build option
-	if ${build_static} && [ -n "$(echo "${opt_list}" | grep '\-\-enable-static')" ]; then
-		logf 'Supports --enable-static'
-		build_type="--enable-static"
-	fi
-	# find shared build option
-	if $build_shared && [ -n "$(echo "${opt_list}" | grep '\-\-enable-shared')" ]; then
-		logf 'Supports --enable-shared'
-		build_type+=" --enable-shared"
-	fi
-
-	#if [ -n "${am_bin}" ]; then
-	#	arr=(${am_bin//|/ })
-	#	case ${#arr[@]} in
-	#		1) cfg_bin=$(bool2str ${build_bin} "${arr[0]}=1" "${arr[0]}=0");;
-	#		2) cfg_bin=$(bool2str ${build_bin} "${arr[1]}" "${arr[0]}");;
-	#	esac
-	#fi
-
-	if [ -n "${ac_opts}" ]; then
-		for opt in $(echo ${ac_opts}); do
-			case $opt in
-				--update-config_sub)
-					logf 'Apply --update-config_sub'
-					local fpath=$(find ${dir_src} -name 'config.sub')
-					test -f "${fpath}" && cp -f /usr/share/automake*/config.sub ${fpath}
-					;;
-				--update-config_guess)
-					logf 'Apply --update-config_guess'
-					local fpath=$(find ${dir_src} -name 'config.guess')
-					test -f "${fpath}" && cp -f /usr/share/automake*/config.guess ${fpath}
-					;;
-				--no-sysroot)
-					am_nosysroot=true
-					;;
-				--no-pic)
-					am_nopic=true
-					;;
-				--no-host)
-					am_nohost=true
-					;;
-			esac
-		done
-	fi
-
-	if ${host_cross} && [ -n "$(grep '\-\-host' <<<"${opt_list}")" ]; then
-		logf "set --host=${arch}"
-		${am_nohost} || am_config+=" --host=${arch}"
-	fi
-
-	if ! ${am_nosysroot}; then
-		if [ -n "$(echo "${opt_list}" | grep '\-\-with-sysroot')" ]; then
-			am_config+=" --with-sysroot=${SYSROOT}"
-		elif [ -n "$(echo "${opt_list}" | grep '\-\-sysroot')" ]; then
-			am_config+=" --sysroot=${SYSROOT}"
-		fi
-	fi
-
-	if ! $am_nopic && ! $host_mingw && [ -n "$(echo "${opt_list}" | grep '\-\-with-pic')" ]; then
-		am_config+=" --with-pic"
-	fi
-	MAKE_EXECUTABLE=make
 }
 
  function do_strip {

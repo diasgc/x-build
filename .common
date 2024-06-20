@@ -539,56 +539,182 @@ function config_guess {
   return 0
 }
 
-function cmake_set_buildlink {
-  : "${cmake_static:=BUILD_STATIC_LIBS}"
+function setup_cmake_config {
+  # build: make
+  
+  : "${cmake_builddir:=${dir_config}}"
+  : "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
   : "${cmake_shared:=BUILD_SHARED_LIBS}"
+  
+  cfg_args=("${cmake_builddir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}")
+  
+  if ${host_cross}; then
+    [ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain "${dir_build}"
+    [ -f "${cmake_toolchain_file}" ] && cfg_args+=( "-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}" )
+  fi
+
+  test -n "${cmake_config}" && cfg_args+=( "${cmake_config}" )
+
   case "${cmake_shared}" in
-    -D*=*) ${build_shared} && lib_link="${cmake_shared}";;
-    *) lib_link="-D${cmake_shared}=$(bool2str ${build_shared} ON OFF)";;
+    -D*=*) ${build_shared} && cfg_args+=( "${cmake_shared}" );;
+    *)     cfg_args+=( "-D${cmake_shared}=$(bool2str ${build_shared} ON OFF)" );;
   esac
-  case "${cmake_static}" in
-    -D*=*) ${build_static} && lib_link="${cmake_static}";;
-    *) lib_link="-D${cmake_static}=$(bool2str ${build_static} ON OFF) ${lib_link}";;
-  esac
+  if [ -z "${cmake_static}" ]; then
+    cmake_static="$(grep -oP 'BUILD_STATIC_LIBS' ${dir_config}/CMakeLists.txt | head -n1)"
+  fi
+  if [ -n "${cmake_static}" ]; then
+    case "${cmake_static}" in
+      -D*=*) ${build_static} && cfg_args+=( "${cmake_static}" );;
+      *)     cfg_args+=( "-D${cmake_static}=$(bool2str ${build_static} ON OFF) ${lib_link}");;
+    esac
+  fi
   if [ -n "${cmake_bin}" ]; then
     case "${cmake_bin}" in
-      -D*=*) ${build_bin} && cfg_bin="${cmake_bin}";;
-      *) cfg_bin="-D${cmake_bin}=$(bool2str ${build_bin} ON OFF)";;
+      -D*=*) ${build_bin} && cfg_args+=( "${cmake_bin}" );;
+      *) cfg_args+=( "-D${cmake_bin}=$(bool2str ${build_bin} ON OFF)" );;
     esac
   fi
+  test -n "${CPACK}" && cfg_args+=( "${CPACK}" )
+  cfg_args+=( -Wno-dev )
+
+: "${build_cmd:=${MAKE_EXECUTABLE}}"
+  test -n "${mkf}" && build_args+=( "${mkf}")
+  build_args+=( "-j${HOST_NPROC}")
+  build_tag="make"
+
+  #do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
+  #case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 }
 
-function am_set_buildlink {
-  : "${ac_static:=static}"
-  : "${ac_shared:=shared}"
-  lib_link="--$(bool2str ${build_shared} enable disable)-${ac_shared}"
-  lib_link="--$(bool2str ${build_static} enable disable)-${ac_static} ${lib_link}"
+function setup_am_config {
+
+  # use autotools and configure executable to create makefile
+  ${ac_reconf} && autoreconf -fi 2>/dev/null >>${log_file}
+
+  cfg_cmd="${dir_config}/configure"
+
+	if [ -n "${ac_opts}" ]; then
+		for opt in $(echo ${ac_opts}); do
+			case $opt in
+				--update-config_sub)
+					logf 'Apply --update-config_sub'
+					local fpath=$(find ${dir_src} -name 'config.sub')
+					test -f "${fpath}" && cp -f /usr/share/automake*/config.sub ${fpath}
+					;;
+				--update-config_guess)
+					logf 'Apply --update-config_guess'
+					local fpath=$(find ${dir_src} -name 'config.guess')
+					test -f "${fpath}" && cp -f /usr/share/automake*/config.guess ${fpath}
+					;;
+				--no-sysroot)
+					am_nosysroot=true
+					;;
+				--no-pic)
+					am_nopic=true
+					;;
+				--no-host)
+					am_nohost=true
+					;;
+			esac
+		done
+	fi
+
+  cfg_args=("--prefix=${dir_install}")
+
+  if ! ${am_nohost} && ${host_cross} && [ -n "$(grep '\-\-host' ${cfg_cmd})" ]; then 
+    ${am_nohost} || cfg_args+=( "--host=${arch}" )
+  fi
+
+	if ! ${am_nosysroot}; then
+		if [ -n "$(grep '\-\-with-sysroot' ${cfg_cmd})" ]; then
+			cfg_args+=( "--with-sysroot=${SYSROOT}" )
+		elif [ -n "$(grep '\-\-sysroot' ${cfg_cmd})" ]; then
+			cfg_args+=( "--sysroot=${SYSROOT}" )
+		fi
+	fi
+
+	if ! ${am_nopic} && ! ${host_mingw} && [ -n "$(grep '\-\-with-pic' ${cfg_cmd})" ]; then
+		cfg_args+=( "--with-pic" )
+	fi
+	
+  # find static build option
+  : "${am_static:=static}"
+  cfg_args+=( "--$(bool2str ${build_static} enable disable)-${am_static}" )
+  
+  #if ${build_static}; then
+  #  if [ -n "${am_static}" ]; then
+  #    cfg_args+=( "${am_static}" )
+  #  elif [ -n "$(grep '\-\-enable-static' ${cfg_cmd})" ]; then
+  #    cfg_args+=( "--enable-static")
+  #  fi
+  #fi
+
+  # find shared build option
+  : "${am_shared:=shared}"
+  cfg_args+=( "--$(bool2str ${build_shared} enable disable)-${am_shared}" )
+
+  #if ${build_shared}; then
+  #  if [ -n "${am_shared}" ]; then
+  #    cfg_args+=( "${am_shared}" )
+  #  elif [ -n "$(grep '\-\-enable-shared' ${cfg_cmd})" ]; then
+  #    cfg_args+=( "--enable-shared")
+  #  fi
+  #fi
+  
   if [ -n "${am_bin}" ]; then
     case "${am_bin}" in
-      --enable-*) cfg_bin="${am_bin}=$(bool2str ${build_bin} 1 0)";;
-      able-*)     cfg_bin="--$(bool2str ${build_bin} en dis)${am_bin}";;
-      with-*)     cfg_bin="--$(bool2str ${build_bin} without-${am_bin:5} ${am_bin})";;
-      *)          cfg_bin="--enable-${am_bin}=$(bool2str ${build_bin} 1 0)";;
+      --*) cfg_args+=( "${am_bin}" );;
+      *)   cfg_args+=( "--$(bool2str ${build_bin} enable disable)-${am_bin}");;
     esac
   fi
+  test -n "${am_config}" && cfg_args+=( "${am_config}" )
+
+  : "${build_cmd:=${MAKE_EXECUTABLE}}"
+  test -n "${mkf}" && build_args+=( "${mkf}")
+  build_args+=( "-j${HOST_NPROC}")
+  build_tag="make"
 }
 
-function meson_set_buildlink {
+function setup_meson_config {
+  # see https://mesonbuild.com/Commands.html for command line options
+  
+  cfg_cmd='meson'
+  cfg_args=('setup' '--buildtype=release' "--prefix=${dir_install}")
+  
+  if ${host_cross}; then
+    local cfg_file="${dir_config}/${arch}.meson"
+    meson_create_toolchain ${cfg_file}
+    cfg_args+=("--cross-file=${cfg_file}")
+  fi
+
+  ${host_clang} || LD="bfd"
+  
   : "${meson_static:=-Ddefault_library=static}"
   : "${meson_shared:=-Ddefault_library=shared}"
+
   if ${build_static} && ${build_shared}; then
-    lib_link="-Ddefault_library=both"
+    cfg_args+=( '-Ddefault_library=both' )
   elif ${build_static}; then
-    lib_link="${meson_static}"
+    cfg_args+=( "${meson_static}" ' --prefer-static')
   elif ${build_shared}; then
-    lib_link="${meson_shared}"
+    cfg_args+=( "${meson_shared}" )
   fi
   if [ -n "${meson_bin}" ]; then
     case "${meson_bin}" in
-      bool:*) meson_bin="${meson_bin#bool:*}" && cfg_bin="-D${meson_bin}=$(bool2str ${build_bin} 'true' 'false')";;
-      *) meson_bin="${meson_bin#*:*}" && cfg_bin="-D${meson_bin}=$(bool2str ${build_bin} enabled disabled)";;
+      bool:*) meson_bin="${meson_bin#bool:*}" && cfg_args+=( "-D${meson_bin}=$(bool2str ${build_bin} 'true' 'false')" );;
+      *) meson_bin="${meson_bin#*:*}" && cfg_args+=( "-D${meson_bin}=$(bool2str ${build_bin} enabled disabled)" );;
     esac
   fi
+  
+  test -n "${meson_config}" && cfg_args+=( "${meson_config}" )
+  
+  #log_buildvars
+  #do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
+
+  : "${build_cmd:=ninja}"
+  build_tag="ninja"
+  test -n "${mkf}" && build_args+=( "${mkf}")
+  build_args+=( "-j${HOST_NPROC}")
 }
 
 # check build system and set defaults - static and shared build options
@@ -604,7 +730,6 @@ function config_init {
 			;;
 		ab|am|ac|ar|ag|auto*)
 			build_system=automake
-      am_set_buildlink
 			;;
 		meson)
 			build_system=meson
@@ -854,6 +979,11 @@ function err {
 
 function secs2time {
 	[ $(($1/60%60)) -eq 0 ] && printf '%ds' $(($1%60)) || printf '%dm %ds' $(($1/60%60)) $(($1%60))
+}
+
+function log_buildvars {
+  printf "Build system: ${build_system}\nConfig args:\n" >>${log_file}
+  printf '%s\n' "${cfg_args[@]}" >>${log_file}
 }
 
 function print_vars {

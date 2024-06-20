@@ -40,7 +40,7 @@ on_config(){
 
 dev_vrs='6.3.0'
 pkg_deb='libgmp-dev'
-eta='272'
+eta='27502781664'
 
 lst_inc='gmp.h'
 lst_lib='libgmp'
