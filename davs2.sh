@@ -25,7 +25,7 @@ lst_pc='davs2.pc'
 on_config(){
     dir_config="${dir_src}/build/linux"
     dir_build="${dir_src}/build/linux"
-    mkf="STRIP="
+    make_args="STRIP="
 }
 
 on_config_ndk(){

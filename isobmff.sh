@@ -30,4 +30,4 @@ source_patch(){
 #-I/${dir_src}/external/Part04-Dynamic_Range_Control/trunk/modules/uniDrcModules/uniDrcCommon -I/${dir_src}/external/Part04-Dynamic_Range_Control/trunk/tools/readonlubitbuf/include \
 #-I/${dir_src}/external/Part04-Dynamic_Range_Control/trunk/tools/wavIO/include -I/${dir_src}/external/Part04-Dynamic_Range_Control/trunk/tools/writeonlubitbuf/include"
 #CFLAGS+=" $xinclude" CXXFLAGS+=" $xinclude" CPPFLAGS+=" $xinclude"
-#mkf="libisoiff isoiff_tool"
+#make_args="libisoiff isoiff_tool"

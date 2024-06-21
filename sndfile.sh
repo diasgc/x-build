@@ -12,7 +12,7 @@ src='https://github.com/libsndfile/libsndfile.git'
 cfg='cmake'
 tls='python'
 #dep='ogg vorbis opus flac speex sqlite3 lame'
-mki='install'
+make_install='install'
 
 cmake_static=''
 cmake_bin='BUILD_PROGRAMS'

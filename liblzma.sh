@@ -8,7 +8,7 @@ lic='GPL-3 LGPL-2.1'
 src='https://git.tukaani.org/xz.git'
 cfg='cmake'
 eta='110'
-#mki='install'
+#make_install='install'
 #cfg_cmd='./autogen.sh --no-po4a'
 
 dev_vrs='5.7.0'

@@ -9,7 +9,7 @@ tls='help2man'
 
 cfg='ac'
 cfg_cmd='./bootstrap'
-mki='install'
+make_install='install'
 
 dev_bra='main'
 dev_vrs='2.5.0.1'

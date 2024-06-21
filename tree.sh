@@ -28,7 +28,7 @@ on_config(){
   $host_64 && CFLAGS+=" -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
 
   tree_config="prefix=${INSTALL_DIR} CC=${CC}"
-  mki="prefix=${INSTALL_DIR} install"
+  make_install="prefix=${INSTALL_DIR} install"
 }
 
 source_patch(){

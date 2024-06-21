@@ -13,9 +13,6 @@ am_bin='tools'
 am_config="--disable-hardware-acceleration --enable-local-libopts --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-doc --disable-manpages --disable-guile --disable-tests"
 WFLAGS='-Wno-tautological-constant-compare -Wno-unused-but-set-variable -Wno-unused-function -Wno-implicit-const-int-float-conversion -Wno-implicit-const-int-float-conversion -Wno-unused-but-set-parameter'
 
-mki='install'
-make_install='install'
-
 on_config(){
     local v="$(curl -sL ${url}/ftp/gcrypt/gnutls/ | grep -oP 'v[0-9]+\.[0-9]+' | tail -n1)"
     local f="$(curl -sL ${url}/ftp/gcrypt/gnutls/${v}/ | grep -oP 'gnutls-[0-9\.]+tar..z' | head -n1)"

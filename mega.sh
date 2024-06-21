@@ -14,8 +14,8 @@ dep='openssl libcares curl libraw libuv freeimage libmediainfo cryptopp sqlite3 
 
 cfg='ag'
 am_config="--disable-tests --disable-examples --without-pdfium"
-mki='install-strip'
-mkc='distclean'
+make_install='install-strip'
+make_clean='distclean'
 
 dev_bra=''
 dev_vrs=''

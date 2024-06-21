@@ -123,9 +123,9 @@ logtime_end=0
 
 
 # Variables
-# mki: rule for install 'make $mkinstall' (default: install)
-# mkc: rule for clean 'make $mkclean' (default: clean)
-# mkf: additional rule for make
+# make_install: rule for install 'make $make_install' (default: install)
+# make_clean: rule for clean 'make $make_clean' (default: clean)
+# make_args: additional rule for make
 # no_host  : while using autotools, no host will be set for cross-compile if no_host is not empty
 
 gitjson=
@@ -298,14 +298,14 @@ start(){
 		fn_log 'clean' build_clean
 		unset build_clean
 	elif [ -f "Makefile" ]; then
-		test -z "${mkc}" && mkc="$(make_findtarget "distclean" "clean")"
-		test -n "${mkc}" && do_quietly 'clean' "${MAKE_EXECUTABLE}" "${mkc}"
+		test -z "${make_clean}" && make_clean="$(make_findtarget "distclean" "clean")"
+		test -n "${make_clean}" && do_quietly 'clean' "${MAKE_EXECUTABLE}" "${make_clean}"
 	fi
 
-	local arr
 	if fn_defined 'build_config'; then
 		fn_log 'config' build_config
 		unset -f build_config
+
 	else case "${build_system}" in
 		cmake)    setup_cmake_config;;
 
@@ -314,25 +314,33 @@ start(){
 		meson)    setup_meson_config;;
 
 		make)
-			: "${mkf:=${CFG}}"
-			build_cmd=make
+			cfg_cmd=
+			: "${make_args:=${CFG}}"
+			build_cmd=${MAKE_EXECUTABLE}
 			build_tag="make"
-			build_args=("${mkf}" "-j${HOST_NPROC}")
+			build_args=("${make_args}" "-j${HOST_NPROC}")
 			;;
+
 		bazel)
 			cfg_cmd='bazel'
-			do_log "${build_system}" "${cfg_cmd}" build "${bazel_config}" //...
+			cfg_args=( 'build' )
+			test -n "${bazel_config}" && cfg_args+=( "${bazel_config}" )
+			cfg_args+=( "//.." )
+			#do_log "${build_system}" "${cfg_cmd}" build "${bazel_config}" //...
 			build_tag="make"
 			build_cmd=make
-			build_args=("${mkf}" "-j${HOST_NPROC}")
+			build_args=("${make_args}" "-j${HOST_NPROC}")
 			;;
 		cargo)
 			build_tag="make"
 			build_cmd='cargo'
-			build_args=('cinstall' '--release' "--prefix=${dir_install}" "${cargo_cfg}" "${lib_link}" "${cfg_bin}" '--verbose')
+			lib_link=
+			build_args=('cinstall' '--release' "--prefix=${dir_install}" )
+			build_args+=( "--library-type=$(bool2str ${build_static} staticlib dylib)" )
+			test -n "${cargo_config}" && build_args+=( "${cargo_config}" )
+			test -n "${cfg_bin}" && build_args+=( "${cargo_config}" )
+			build_args+=('--verbose')
 			skip_install=true
-			log_buildvars
-			#do_progress "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
 			;;
 		*)	if [ -n "${cfg_cmd}" ]; then
 				log_buildvars
@@ -366,7 +374,7 @@ start(){
 
 	log_vars CFLAGS CXXFLAGS WFLAGS CPPFLAGS LDFLAGS LIBS
 
-	[ -z "${mki}" ] && mki="install"
+	: "${make_install:=install}"
 	: "${skip_make:=false}"
 
 	if fn_defined 'on_make'; then
@@ -470,7 +478,7 @@ function end_script {
 	unset	dir_config dir_build dir_src \
 			lib_link cfg_bin exec_config vrs vnd \
 			am_nohost am_nopic am_nosysroot ac_opts ac_reconf \
-			req_pcforlibs mkc mki mingw_posix \
+			req_pcforlibs make_clean mki mingw_posix \
 			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
 	dec_tab
 	echo -e "${C0}${ind}"

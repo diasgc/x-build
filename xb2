@@ -244,8 +244,8 @@ function build_dependencies_old {
 
 # Variables
 # mki: rule for install 'make $mkinstall' (default: install)
-# mkc: rule for clean 'make $mkclean' (default: clean)
-# mkf: additional rule for make
+# make_clean: rule for clean 'make $make_cleanlean' (default: clean)
+# make_args: additional rule for make
 # no_host  : while using autotools, no host will be set for cross-compile if no_host is not empty
 
 gitjson=
@@ -541,8 +541,8 @@ start(){
 	if fn_defined 'build_clean'; then
 		fn_log 'clean' build_clean
 	elif [ -f "Makefile" ]; then
-		mkc=$(make_findtarget "distclean" "clean")
-		[ -n "${mkc}" ] && do_quietly 'clean' ${MAKE_EXECUTABLE} $mkc
+		make_clean=$(make_findtarget "distclean" "clean")
+		[ -n "${make_clean}" ] && do_quietly 'clean' ${MAKE_EXECUTABLE} $make_clean
 	fi
 
 	local arr
@@ -574,7 +574,7 @@ start(){
 			;;
 
 		make)
-			: "${mkf:=$CFG}"
+			: "${make_args:=$CFG}"
 			MAKE_EXECUTABLE=make
 			;;
 		bazel)
@@ -609,13 +609,13 @@ start(){
 
 	log_vars CFLAGS CXXFLAGS WFLAGS CPPFLAGS LDFLAGS LIBS
 
-	[ -z "${mki}" ] && mki="install"
+	[ -z "${mki}" ] && make_install="install"
 	: "${skip_make:=false}"
 
 	if fn_defined 'on_make'; then
 		fn_log 'make' on_make
 	elif ! $skip_make; then
-		do_progress 'make' ${MAKE_EXECUTABLE} ${mkf} -j${HOST_NPROC} || err
+		do_progress 'make' ${MAKE_EXECUTABLE} ${make_args} -j${HOST_NPROC} || err
 		unset skip_make
 	fi
 
@@ -716,7 +716,7 @@ meson_configure(){
 
 am_configure() {
 	$ac_reconf && autoreconf -fi 2>/dev/null >>${log_file}
-	#[ -z "${mki+x}" ] && mki=$(make_findtarget "install-strip" "install")
+	#[ -z "${mki+x}" ] && make_install=$(make_findtarget "install-strip" "install")
 	[ -z "$exec_config" ] && exec_config='configure' # default config executable
 	[ -n "${am_config}" ] && CFG=${am_config}
 
@@ -797,7 +797,7 @@ end_script(){
 	unset	dir_config dir_build dir_src \
 			build_link cfg_bin exec_config vrs vnd \
 			am_nohost am_nopic am_nosysroot ac_opts ac_reconf \
-			req_pcforlibs mkc mki mingw_posix \
+			req_pcforlibs make_clean mki mingw_posix \
 			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
 	dec_tab
 	echo

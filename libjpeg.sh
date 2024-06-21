@@ -10,7 +10,7 @@ eta='78'
 cmake_static="ENABLE_STATIC"
 cmake_shared="ENABLE_SHARED"
 #patch='libjpeg-01'
-mki='install/strip'
+make_install='install/strip'
 
 cmake_config="-DWITH_JPEG8=ON -DWITH_JPEG7=ON -DWITH_DOCS=OFF -DWITH_MAN=OFF"
 

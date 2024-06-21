@@ -7,7 +7,7 @@ src='https://github.com/libssh2/libssh2.git'
 dep='openssl' # or Libgcrypt or mbedTLS
 cfg='ar' # cmake unsupported dual static shared build
 eta='72'
-mki='install'
+make_install='install'
 
 cmake_config='-DBUILD_TESTING=OFF -DINSTALL_DOCS=OFF'
 cmake_bin='BUILD_EXAMPLES'

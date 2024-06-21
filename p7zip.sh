@@ -12,8 +12,8 @@ static_ldflag=-static
 on_config(){
     CXXFLAGS+=" $CPPFLAGS -Wno-c++11-narrowing -Wno-dangling-else -Wno-switch"
     CC="$CC $CFLAGS $CPPFLAGS"
-    mkf="7z 7za OPTFLAGS=${CXXFLAGS} DEST_HOME=${dir_install}"
-    mki="install DEST_HOME=${dir_install}"
+    make_args="7z 7za OPTFLAGS=${CXXFLAGS} DEST_HOME=${dir_install}"
+    make_install="install DEST_HOME=${dir_install}"
 }
 
 before_make(){
@@ -25,7 +25,7 @@ on_make(){
     cd $dir_src
     CC="$CC $CFLAGS $CPPFLAGS"
     make -j4 7z 7za OPTFLAGS="${CXXFLAGS}" DEST_HOME=${dir_install}
-    mki="install DEST_HOME=${dir_install}"
+    make_install="install DEST_HOME=${dir_install}"
 }
 
 create_package(){

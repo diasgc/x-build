@@ -37,8 +37,8 @@ on_config(){
     dir_build="${dir_src}"
     cmake_builddir="-G Ninja -S runtimes -B build_${arch}"
     cmake_config+=" -DLLVM_ENABLE_RUNTIMES=$(str_concat ';' "${runtimes[@]}")"
-    mkf="-C build_${arch} $(echo "${runtimes[@]//lib/ }")"
-    mki="-C build_${arch} $(echo "${runtimes[@]//lib/install-}")"
+    make_args="-C build_${arch} $(echo "${runtimes[@]//lib/ }")"
+    make_install="-C build_${arch} $(echo "${runtimes[@]//lib/install-}")"
 }
 
 lst_inc=''

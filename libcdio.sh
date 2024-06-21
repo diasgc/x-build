@@ -11,7 +11,7 @@ dep='libiconv'
 cfg='ac'
 am_config="MAKE=make --enable-maintainer-mode"
 am_bin="example-progs"
-mkc='distclean'
+make_clean='distclean'
 WFLAGS="-Wno-header-guard"
 
 source_patch(){

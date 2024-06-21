@@ -7,7 +7,7 @@ lic='GPL-2.0'
 src='https://github.com/caolanm/libwmf.git'
 cfg='ar'
 dep='freetype expat libpng libjpeg'
-mki='install'
+make_install='install'
 
 dev_vrs=''
 pkg_deb='libwmf-dev'

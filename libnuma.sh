@@ -9,7 +9,7 @@ cfg='ar'
 eta='90'
 pkg='numa'
 eta='30'
-mki=install
+make_install=install
 API=26 # min api necessary for declaration of functions like 'shmget'
 
 lst_inc='numa.h numaif.h numacompat1.h'

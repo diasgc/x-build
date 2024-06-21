@@ -9,7 +9,7 @@ tls='mercurial'
 
 cfg='ac'
 am_config="CC_FOR_BUILD=cc"
-#mkc='distclean'
+#make_clean='distclean'
 
 source_config(){
   # from bootstrap:

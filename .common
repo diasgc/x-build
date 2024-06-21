@@ -578,7 +578,7 @@ function setup_cmake_config {
   cfg_args+=( -Wno-dev )
 
 : "${build_cmd:=${MAKE_EXECUTABLE}}"
-  test -n "${mkf}" && build_args+=( "${mkf}")
+  test -n "${make_args}" && build_args+=( "${make_args}")
   build_args+=( "-j${HOST_NPROC}")
   build_tag="make"
 
@@ -670,14 +670,19 @@ function setup_am_config {
   test -n "${am_config}" && cfg_args+=( "${am_config}" )
 
   : "${build_cmd:=${MAKE_EXECUTABLE}}"
-  test -n "${mkf}" && build_args+=( "${mkf}")
+  test -n "${make_args}" && build_args+=( "${make_args}")
   build_args+=( "-j${HOST_NPROC}")
   build_tag="make"
 }
 
+# see https://mesonbuild.com/Commands.html for command line options
 function setup_meson_config {
-  # see https://mesonbuild.com/Commands.html for command line options
   
+  : "${build_cmd:=ninja}"
+  build_tag="ninja"
+  test -n "${make_args}" && build_args+=( "${make_args}")
+  build_args+=( "-j${HOST_NPROC}" )
+
   cfg_cmd='meson'
   cfg_args=('setup' '--buildtype=release' "--prefix=${dir_install}")
   
@@ -699,22 +704,21 @@ function setup_meson_config {
   elif ${build_shared}; then
     cfg_args+=( "${meson_shared}" )
   fi
+
   if [ -n "${meson_bin}" ]; then
     case "${meson_bin}" in
-      bool:*) meson_bin="${meson_bin#bool:*}" && cfg_args+=( "-D${meson_bin}=$(bool2str ${build_bin} 'true' 'false')" );;
-      *) meson_bin="${meson_bin#*:*}" && cfg_args+=( "-D${meson_bin}=$(bool2str ${build_bin} enabled disabled)" );;
+      bool:*)
+        meson_bin="${meson_bin#bool:*}"
+        cfg_args+=( "-D${meson_bin}=$(bool2str ${build_bin} 'true' 'false')" )
+        ;;
+      *)
+        meson_bin="${meson_bin#*:*}"
+        cfg_args+=( "-D${meson_bin}=$(bool2str ${build_bin} enabled disabled)" )
+        ;;
     esac
   fi
   
   test -n "${meson_config}" && cfg_args+=( "${meson_config}" )
-  
-  #log_buildvars
-  #do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
-
-  : "${build_cmd:=ninja}"
-  build_tag="ninja"
-  test -n "${mkf}" && build_args+=( "${mkf}")
-  build_args+=( "-j${HOST_NPROC}")
 }
 
 # check build system and set defaults - static and shared build options
@@ -745,10 +749,6 @@ function config_init {
 		other) build_system=other;;
 		*) unset build_system;;
 	esac
-
-	if [ -z "${cfg_bin}" ];then
-		$build_bin && cfg_bin="${cb1}" || cfg_bin="${cb0}"
-	fi
 }
 
 

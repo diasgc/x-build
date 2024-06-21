@@ -9,7 +9,7 @@ dep='gmp'
 cfg='ac'
 cfg_cmd='./.bootstrap'
 am_config="--disable-documentation --disable-mini-gmp --enable-pic CC_FOR_BUILD=gcc"
-mkc='distclean'
+make_clean='distclean'
 
 dev_bra='master'
 dev_vrs='3.9.1'

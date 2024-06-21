@@ -11,9 +11,8 @@ cfg='meson'
 meson_config='-Dgtk_doc=false -Dman=false'
 
 before_make(){
-    mkf="-C ${dir_build}"
-    mki="${mkf} install"
-    make_install="${mkf} install"
+    make_args="-C ${dir_build}"
+    make_install="${make_args} install"
 }
 
 on_config(){

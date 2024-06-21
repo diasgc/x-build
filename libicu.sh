@@ -14,7 +14,7 @@ url=''
 cfg='ac'
 am_config='--disable-icuio --disable-layout --disable-tests --disable-samples'
 config_dir='icu4c/source'
-mki='install'
+make_install='install'
 
 dev_bra=''
 dev_vrs='70.1'

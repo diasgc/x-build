@@ -1,26 +1,26 @@
 #!/bin/bash
 
 lib='libdvdread'
-pkg_deb="${lib}-dev"
 pkg='dvdread'
 dsc='Library to read DVD disks'
 lic='GPL-2.0'
 src='https://code.videolan.org/videolan/libdvdread.git'
+
 cfg='ar'
-eta='52'
-mki='install-strip'
-mkc='distclean'
+am_config="--disable-apidoc"
+make_install='install-strip'
+make_clean='distclean'
 
 dev_bra='main'
 dev_vrs='6.1.3'
+pkg_deb="libdvdread-dev"
+eta='52'
 
 lst_inc='dvdread/*.h'
 lst_lib='libdvdread'
 lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='dvdread.pc'
-
-am_config="--disable-apidoc"
 
 . xbuild && start
 

@@ -11,7 +11,7 @@ cfg='other'
 openssl_config=
 CFLAGS='-Wno-macro-redefined'
 # install no docs
-mki="install_sw"
+make_install="install_sw"
 
 dev_bra='master'
 dev_vrs='3.3.0'

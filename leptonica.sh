@@ -7,7 +7,6 @@ dsc='An open source C library for efficient image processing and image analysis 
 lic='copyleft'
 src='https://github.com/DanBloomberg/leptonica.git'
 cfg='cmake'
-mki='install'
 make_install='install-strip'
 
 lst_inc='leptonica/*.h'

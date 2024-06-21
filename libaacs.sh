@@ -14,8 +14,8 @@ cfg='ar'
 
 tls='flex'
 dep='libgcrypt'
-mki='install-strip'
-mkc='distclean'
+make_install='install-strip'
+make_clean='distclean'
 
 lst_inc=''
 lst_lib=''

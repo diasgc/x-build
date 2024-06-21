@@ -8,7 +8,6 @@ src='https://github.com/dyne/frei0r.git'
 cfg='cmake'
 xdp='gavl opencv cairo'
 eta='275'
-mki='install'
 
 lst_inc='frei0r.h'
 lst_lib='frei0r-1/*.*'

@@ -18,7 +18,7 @@ eta='592'
 
 on_config(){
     build_dir=$dir_src
-    cargo_cfg+=" --target ${arch}"
+    cargo_config+=" --target ${arch}"
 }
 
 lst_inc=''

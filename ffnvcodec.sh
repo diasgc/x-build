@@ -23,7 +23,6 @@ lst_bin=''
 lst_pc='ffnvcodec.pc'
 
 on_config(){
-    mki="PREFIX=${INSTALL_DIR} install"
     make_install="PREFIX=${INSTALL_DIR} install"
 }
 

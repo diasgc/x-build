@@ -1,37 +1,33 @@
 #!/bin/bash
 
 lib='libcares'
-pkg_deb='libc-ares2'
 dsc='A C library for asynchronous DNS requests'
 lic='MIT'
 src='https://github.com/c-ares/c-ares.git'
+
 cfg='ar'
-eta='10'
-mki='install-strip'
-mkc='distclean'
-
-make_clean='distclean'
-make_install='install-strip'
-
 cmake_config='-DCARES_STATIC_PIC=ON'
 cmake_static='CARES_STATIC'
 cmake_shared='CARES_SHARED'
 cmake_bin='CARES_BUILD_TOOLS'
 
+make_clean='distclean'
+make_install='install-strip'
+
 dev_bra='main'
 dev_vrs='1.18.1'
-stb_bra=''
-stb_vrs=''
+pkg_deb='libc-ares2'
+eta='10'
+
+on_editpack(){
+    $build_man || rm -rf share/man
+}
 
 lst_inc='ares_version.h ares.h ares_nameser.h ares_dns.h ares_rules.h ares_build.h'
 lst_lib='libcares'
 lst_bin=''
 lst_lic='LICENSE.md AUTHORS'
 lst_pc='libcares.pc'
-
-on_editpack(){
-    $build_man || rm -rf share/man
-}
 
 . xbuild && start
 

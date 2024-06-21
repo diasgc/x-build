@@ -9,7 +9,7 @@ vnd='libpng'
 cfg='cmake'
 dep='zlib'
 patch='libpng-01' #
-mki='install/strip'
+make_install='install/strip'
 
 dev_vrs='1.6.44'
 cmake_static="PNG_STATIC"
