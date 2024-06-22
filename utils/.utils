@@ -404,7 +404,7 @@ menu_get(){
 		vrs_taglist)git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
 		vrs_tags)   git ls-remote --tags --sort="v:refname" $src | grep -oP 'tags/.*\d+\.\d+\.\d+.*';;
 		vrs_local)  git_version_local $dir_src;;
-		opt*)       showOpts "$(pwd)/sources/$lib"; exit 0;;
+		opt*)       lib_options "$(pwd)/sources/$lib"; exit 0;;
 		log)        [ -f "${dir_install}/${lib}.log" ] && nano ${dir_install}/${lib}.log;;
 		patch)      patch_get; exit 0;;
 		vrs_git)    git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g' | tail -n1;;
@@ -442,7 +442,7 @@ menu_list(){
 					;;
 		tar*)       $b && list_tarball;;
 		branches)   [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" branch -a;;
-		opt*)       showOpts "$(pwd)/sources/$lib"; exit 0;;
+		opt*)       lib_options "$(pwd)/sources/$lib"; exit 0;;
 		tags)       [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" tag --list;;
 		env)        $b && loadToolchain && print_vars CC CXX LD AS AR NM RANLIB STRIP ADDR2LINE OBJCOPY OBJDUMP READELF SIZE STRINGS WINDRES GCOV;;
 		deps)       for f in ${dir_root}/*.sh; do

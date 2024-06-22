@@ -88,6 +88,10 @@ function bool2str {
 	${1} && echo "${2}" || echo "${3}"
 }
 
+function safe_cd {
+  cd "${1}" || exit_err "Could not find directory ${1}"
+}
+
 function request_cmd {
 	local c1=${1}
 	local c2=${2}

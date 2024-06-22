@@ -1160,7 +1160,7 @@ function show_build_system_options {
 
 }
 
-showOpts(){
+lib_options(){
 	if [ -d "$1" ];then
 		local od=$(pwd)
 		local bdir=$(pwd)/builds
@@ -1627,7 +1627,7 @@ while [ ${1} ];do
 		--update)   update=true;;
 		--opt*s|--show*opt*s)
 					dir_src="$(pwd)/sources/${script_list[0]}"
-					test -d "${dir_src}" && showOpts "${dir_src}"
+					test -d "${dir_src}" && lib_options "${dir_src}"
 					exit 0;;
 		--checkPkg) checkPkg; exit 0;;
 		--libName)  echo "${lib}"; exit 0;;

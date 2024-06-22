@@ -15,7 +15,7 @@ cmake_definitions=(-Wno-c99-extensions)
 dev_bra='master'
 dev_vrs='0.1.3'
 pkg_deb='libsoxr-dev'
-eta='45'
+eta='144'
 
 lst_inc='soxr.h soxr-lsr.h'
 lst_lib='libsoxr.a libsoxr-lsr.a'

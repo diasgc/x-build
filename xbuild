@@ -180,7 +180,7 @@ start(){
 	echo -ne "$(bool2str ${build_shared} ${SSB} ${CD})[shared]"
 	echo -ne "$(bool2str ${build_bin} ${SSB} ${CD})[bin] ${C0}"
 
-	cd ${dir_sources}
+	safe_cd "${dir_sources}"
 
 
 	if [ ! ${retry} ]; then
@@ -212,7 +212,7 @@ start(){
 		fi
 	fi
 
-	cd "${dir_src}"
+	safe_cd "${dir_src}"
 
 	if [ -d "${dir_src}/.git" ]; then
 		if [ -n "${bra}" ]; then
@@ -228,7 +228,7 @@ start(){
 	
 	# check if defined custom dir_config location (config_dir)
 	[ -n "${config_dir+x}" ] && dir_config="${dir_src}/${config_dir}"
-	cd "${dir_config}"
+	safe_cd "${dir_config}"
 
 	# if there is no config selected, try guess
 	test -z "${cfg}" && config_guess
@@ -273,7 +273,7 @@ start(){
 
 	[ -d "${dir_build}" ] || mkdir -p "${dir_build}"
 	
-	cd "${dir_build}"
+	safe_cd "${dir_build}"
 
 	log_vars dir_src dep PKG_CONFIG_LIBDIR SYSROOT TOOLCHAIN
 	log_vars CC CXX LD AS AR NM ADDR2LINE OBJCOPY OBJDUMP RANLIB READELF SIZE STRINGS STRIP WINDRES API
@@ -391,7 +391,7 @@ start(){
 	if fn_defined 'on_install'; then
 		fn_log 'install' on_install
 	elif ! ${skip_install}; then
-		cd "${dir_build}"
+		safe_cd "${dir_build}"
 		do_log 'install' "${MAKE_EXECUTABLE}" ${make_install}
 	fi
 
@@ -430,13 +430,13 @@ start(){
 				fi
 			fi
 		else
-			cd "${dir_build}"
+			safe_cd "${dir_build}"
 			vrs="$(pkg-config ${pcfile} --modversion)"
 			do_log 'cpack' cpack -G DEB -P "${lib}_${vrs}_${arch}"
 		fi
 	fi
 
-	cd ${dir_src}
+	safe_cd "${dir_src}"
 
 	${skip_pc} || logver "${pcfile}"
 
@@ -904,14 +904,15 @@ usage(){
   printf "Example targeting android armv8 build shared libs and executable:\n\n\n  ${CW}${0} aa8 --shared --bin --no-strip --no-dist\n\n\n${C0}"
 }
 
-showOpts(){
+# todo optimize this
+lib_options(){
 	if [ -d "$1" ];then
-		local od=$(pwd)
+		local od="$(pwd)"
 		local bdir=$(pwd)/builds
-		cd "${1}/${config_dir}"
+		safe_cd "${1}/${config_dir}"
 		[ -f CMakeLists.txt ] && ${CMAKE_EXECUTABLE} -LA | awk '{if(f)print} /-- Cache values/{f=1}' >${od}/builds/${lib}_cmake.opts && nano "${od}/builds/${lib}_cmake.opts"
 		[ -f configure ] && ./configure --help >${od}/builds/${lib}_aconf.opts && nano "${od}/builds/${lib}_am.opts"
-		cd $od
+		safe_cd "$od"
 	else
 		echo -e "${CD}${ind}${CR0}no configuration file found in ${CR1}${1}${CD}\n\n"
 	fi
@@ -1003,7 +1004,7 @@ while [ $1 ];do
 		--diff)     shift; create_diff $@; exit 0;;
 		--update)   update=true;;
 		--upd-all)  update=true; req_update_deps=true;;
-		--opts)     showOpts "$(pwd)/sources/$lib"; exit 0;;
+		--opts)     lib_options && exit;;
 		--checkPkg) checkPkg; exit 0;;
 		--libName)  echo "${lib}"; exit 0;;
 		--var)      shift; echo "$($1)"; exit 0;;
