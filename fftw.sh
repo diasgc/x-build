@@ -2,16 +2,17 @@
 
 lib='fftw'
 pkg='fftw3'
-pkg_deb='fftw-dev'
 dsc='Library for computing Fourier transforms (version 3.x)'
 lic='GPL-3.0'
-vrs='3.3.10'
-src="http://fftw.org/fftw-${vrs}.tar.gz"
+src="http://fftw.org/fftw-3.3.10.tar.gz"
+url='http://fftw.org'
+
 cfg='cmake'
-eta='120'
 cmake_config="-DBUILD_TESTS=OFF -DENABLE_THREADS=ON -DWITH_COMBINED_THREADS=ON"
 
 dev_vrs='3.3.9'
+pkg_deb='libfftw3-dev'
+eta='120'
 
 lst_inc='fftw3.h fftw3.f fftw3.f03 fftw3q.f03 ftw3l.f03'
 lst_lib='libfftw3'
@@ -21,22 +22,26 @@ lst_pc='fftw3.pc'
 
 extraOpts(){
   case $1 in
-    -f|--float ) cmake_config+=" -DENABLE_FLOAT=ON" pkg='fftwf' pclib='-lfftwf';;
-    -l|--long )  cmake_config+=" -DENABLE_LONG_DOUBLE=ON" pkg='fftwl' pclib='-lfftwl';;
-    -q|--quad )  cmake_config+=" -DENABLE_QUAD_PRECISION=ON" pkg='fftwq' pclib=='-lfftwq';;
-    *) pclib=
+    -f|--float ) cmake_config+=" -DENABLE_FLOAT=ON" pkg='fftwf';;
+    -l|--long )  cmake_config+=" -DENABLE_LONG_DOUBLE=ON" pkg='fftwl';;
+    -q|--quad )  cmake_config+=" -DENABLE_QUAD_PRECISION=ON" pkg='fftwq';;
   esac
 }
 
+on_src_release(){
+    vrs="$(tar_version ${url}/download.html fftw-)"
+    src="${url}/fftw-${vrs}.tar.gz"
+}
+
 on_config(){
-  $host_arm || cmake_config+=" -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_AVX=ON -DENABLE_AVX2=ON"
+  on_src_release
+  local x86="$(bool2str ${host_arm} OFF ON)"
+  cmake_config+=" -DENABLE_SSE=${x86} -DENABLE_SSE2=${x86} -DENABLE_AVX=${x86} -DENABLE_AVX2=${x86}"
 }
 
 on_create_pc(){
-  build_pkgconfig --libs=${pclib}
+  build_pkgconfig --name=${pkg} --libs=-l${pkg}
 }
-
-. xbuild && start
 
 # cpu av8 av7 x86 x64
 # NDK PP   .   .   .  clang

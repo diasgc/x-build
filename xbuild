@@ -10,12 +10,6 @@
 : "${debug:=false}"
 : "${timeout_days:=3}"
 
-function trap_sigint {
-	tput cnorm -- normal
-	cd "$(dirname $0)"
-	echo -e "\n\n${CY1}  Interrupted by user${C0}\n  Log available at \e[4m${log_file}\e[24m\n\n"
-}
-
 # first load .common functions and error trap
 if [ -z ${vsh+x} ];then
 	source .common
@@ -41,7 +35,7 @@ if [ -z ${vsh+x} ];then
 	test -f ".config" || ./x-setup
 	test -f ".config" || exit_err 'Unable to initialize config file: .config not found'
 	source .config
-	if [ `expr $(date +%s) - ${config_lastupdate}` -gt $((config_timeout * timeout_days)) ]; then
+	if [ $(($(date +%s) - ${config_lastupdate})) -gt $((config_timeout * timeout_days)) ]; then
 		test -f .config_old && rm -f .config_old
 		mv -f .config .config_old
 		./x-setup
@@ -315,10 +309,10 @@ start(){
 
 		make)
 			cfg_cmd=
-			: "${make_args:=${CFG}}"
 			build_cmd=${MAKE_EXECUTABLE}
 			build_tag="make"
-			build_args=("${make_args}" "-j${HOST_NPROC}")
+			test -n "${make_args}" && build_args=( "${make_args}" )
+			build_args+=( "-j$(nproc)" )
 			;;
 
 		bazel)
@@ -363,14 +357,7 @@ start(){
 
 	[ -n "${WFLAGS}" ] && CPPFLAGS+=" ${WFLAGS}"
 
-	if [ -z "${static_ldflag}" ];then
-		static_ldflag='-static'
-		# set -all-static flags at make time (see: https://stackoverflow.com/questions/20068947/how-to-static-link-linux-software-that-uses-configure)
-		# $build_static && [[ "$LDFLAGS" != *"-all-static"* ]] && LDFLAGS="-all-static $LDFLAGS"
-		$host_clang && static_ldflag="-all${static_ldflag}"
-	fi
-
-	$host_clang && $build_static && LDFLAGS="-static ${LDFLAGS}"
+	${host_clang} && ${build_static} && LDFLAGS="-static ${LDFLAGS}"
 
 	log_vars CFLAGS CXXFLAGS WFLAGS CPPFLAGS LDFLAGS LIBS
 
@@ -405,7 +392,7 @@ start(){
 		fn_log 'install' on_install
 	elif ! ${skip_install}; then
 		cd "${dir_build}"
-		do_log 'install' "${MAKE_EXECUTABLE}" ${mki}
+		do_log 'install' "${MAKE_EXECUTABLE}" ${make_install}
 	fi
 
 	# check whether to create pkg-config .pc file
@@ -478,7 +465,7 @@ function end_script {
 	unset	dir_config dir_build dir_src \
 			lib_link cfg_bin exec_config vrs vnd \
 			am_nohost am_nopic am_nosysroot ac_opts ac_reconf \
-			req_pcforlibs make_clean mki mingw_posix \
+			req_pcforlibs make_clean make_install mingw_posix \
 			cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
 	dec_tab
 	echo -e "${C0}${ind}"

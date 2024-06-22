@@ -4,18 +4,18 @@
 # Definition constants and functions
 # ................................................
 
-function trap_sigint {
+function trap_sigint_common {
   tput cnorm
   cd "$(dirname $0)"
   local l
   [ -f "${log_file}" ] && l="  Log available at ${log_file}\n"
-  echo -e "\n\n${CY1}  Interrupted by user${C0}\n${l}\n"
+  echo -e "\n\n${CY1}  trap_sigint@common: Interrupted by user${C0}\n${l}\n"
   trap - SIGINT
   exit 1
 }
 
 shopt -s extglob
-trap trap_sigint SIGINT
+trap trap_sigint_common SIGINT
 
 vsh='1.2.0-main'
 
@@ -962,6 +962,7 @@ function exit_err {
 
 function err {
 	if [ -n "${logtime_start}" ]; then
+    # consider use of ${EPOCHREALTIME/.} instead
 		logtime_end=$(date +%s)
 		echo -e "${CR1} fail ${CR0}[$(secs2time $((${logtime_end}-${logtime_start})))]${C0}\n"
 	fi

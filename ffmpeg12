@@ -12,8 +12,6 @@ lic='GLP-2.0'
 src='https://git.ffmpeg.org/ffmpeg.git'
 cfg='ac'
 eta='777'
-make_install='install'
-make_install='install'
 pkg='libavcodec'
 
 patch_skip=true

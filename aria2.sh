@@ -17,6 +17,7 @@ on_src_release(){
     vrs="$(github_latest_release aria2/aria2)"
     src="https://github.com/nkoriyama/aribb24/archive/refs/tags/release-${vrs}.tar.gz"
 }
+
 on_config(){
     ${src_rel} && on_src_release
 }

@@ -18,7 +18,7 @@ lst_pc='vidstab.pc'
 dev_bra='main'
 dev_vrs='1.20'
 pkg_deb='libvidstab-dev'
-eta='80'
+eta='32'
 
 . xbuild && start
 

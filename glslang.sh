@@ -5,13 +5,30 @@ dsc='OpenGL and OpenGL ES shader front end and validator'
 lic='BSD-3c'
 # After version 13.1.1 libHLSL and libOGLCompiler were removed
 src='https://github.com/KhronosGroup/glslang.git' vrs='13.1.1'
-cfg='cmake'
-eta='147'
-pkg_deb="glslang-dev"
 
-pc_llibs='-lglslang -lOSDependent -lHLSL -lOGLCompiler -lSPVRemapper'
+cfg='cmake'
+cmake_config='-DBUILD_TESTING=OFF -DINSTALL_GTEST=OFF
+ -DENABLE_OPT=ON -DALLOW_EXTERNAL_SPIRV_TOOLS=ON
+ -DENABLE_HLSL=ON 
+ -DBUILD_EXTERNAL=ON'
+
+patch_source(){
+    pushd ${dir_src}
+    ./update_glslang_sources.py
+    popd
+}
+
+on_create_pc(){
+    build_pkgconfig --name=glslang --libs=-lglslang
+    build_pkgconfig --name=OSDependent --libs=-lOSDependent
+    build_pkgconfig --name=HLSL --libs=-lHLSL
+    build_pkgconfig --name=OGLCompiler --libs=-lOGLCompiler
+    build_pkgconfig --name=SPVRemapper --libs=-lSPVRemapper
+}
 
 dev_vrs='1.3.280'
+pkg_deb="glslang-dev"
+eta='147'
 
 lst_inc='glslang/*.h glslang/Public/*.h glslang/Include/*.h glslang/MachineIndependent/*.h glslang/SPIRV/*.h glslang/HLSL/*.h'
 lst_lib='libSPIRV
@@ -24,17 +41,6 @@ lst_lib='libSPIRV
 lst_bin='spirv-remap glslangValidator'
 lst_lic='LICENSE.txt'
 lst_pc='libSPIRV.pc libOSDependent.pc libSPVRemapper.pc libOGLCompiler.pc libHLSL.pc libglslang.pc libglslang-default-resource-limits.pc'
-
-cmake_config='-DBUILD_TESTING=OFF -DINSTALL_GTEST=OFF
- -DENABLE_OPT=ON -DALLOW_EXTERNAL_SPIRV_TOOLS=ON
- -DENABLE_HLSL=ON 
- -DBUILD_EXTERNAL=ON'
-
-patch_source(){
-    pushd ${dir_src}
-    ./update_glslang_sources.py
-    popd
-}
 
 . xbuild && start
 

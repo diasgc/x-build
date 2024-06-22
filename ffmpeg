@@ -15,7 +15,6 @@ tbz='https://ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2'
 tgz="https://github.com/FFmpeg/FFmpeg/archive/refs/tags/${vrs_tag}.tar.gz"
 cfg='ac'
 eta='777'
-make_install='install'
 pkg='libavcodec'
 
 patch_skip=true
