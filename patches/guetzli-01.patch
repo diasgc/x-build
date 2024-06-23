@@ -27,7 +27,7 @@
 +if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
 +    add_library(guetzli_static STATIC ${src_guetzli})
 +    target_link_libraries(guetzli_static PRIVATE ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
-+    set_target_properties(guetzli_static PROPERTIES OUTPUT_NAME guetzli)
++    set_host_properties(guetzli_static PROPERTIES OUTPUT_NAME guetzli)
 +    list(APPEND guetzli_targets guetzli_static)
 +endif()
 +

@@ -391,14 +391,14 @@ set(CMAKE_C_FLAGS "-std=c99 ${CPP} ${CMAKE_C_FLAGS} -Wall -Wextra ${WFLAGS}")
 add_library(xavs2_obj OBJECT ${xavs2_SRC} ${xavs2_HDR} )
 add_library(xavs2 $<TARGET_OBJECTS:xavs2_obj>)
 
-set_target_properties(xavs2 PROPERTIES VERSION ${XAVS2_LIB_VERSION} SOVERSION ${XAVS2_SO_VERSION})
+set_host_properties(xavs2 PROPERTIES VERSION ${XAVS2_LIB_VERSION} SOVERSION ${XAVS2_SO_VERSION})
 target_link_libraries(xavs2 ${XAVS2_LIBS})
 
 set(xavs2_targets xavs2)
 
 if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
   add_library(xavs2_static STATIC $<TARGET_OBJECTS:xavs2_obj>)
-  set_target_properties(xavs2_static PROPERTIES
+  set_host_properties(xavs2_static PROPERTIES
     VERSION ${XAVS2_LIB_VERSION}
     SOVERSION ${XAVS2_SO_VERSION}
     OUTPUT_NAME xavs2

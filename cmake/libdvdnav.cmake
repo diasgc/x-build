@@ -111,7 +111,7 @@ target_compile_definitions(${PROJECT_NAME}
     PRIVATE
       HAVE_CONFIG_H
 )
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "lib${PROJECT_NAME}")
+set_host_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "lib${PROJECT_NAME}")
 if(MSVC)
   target_compile_definitions(${PROJECT_NAME}
     PRIVATE
@@ -120,10 +120,10 @@ if(MSVC)
       _CRT_NONSTDC_NO_DEPRECATE
       PATH_MAX=1024
   )
-  set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/DEF:\"${CMAKE_CURRENT_SOURCE_DIR}/msvc/libdvdnav.def\"")
+  set_host_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/DEF:\"${CMAKE_CURRENT_SOURCE_DIR}/msvc/libdvdnav.def\"")
   if(CMAKE_SYSTEM_NAME STREQUAL WindowsStore)
      # fix linkage with dvdcss
-     set_target_properties(${PROJECT_NAME}
+     set_host_properties(${PROJECT_NAME}
        PROPERTIES
          LINK_FLAGS_DEBUG "/defaultlib:vccorlibd.lib /defaultlib:msvcrtd.lib"
          LINK_FLAGS_RELEASE "/defaultlib:vccorlib.lib /defaultlib:msvcrt.lib"

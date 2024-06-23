@@ -47,7 +47,7 @@
 -  $<BUILD_INTERFACE:${ZenLib_SOURCES_PATH}>
 -  $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>)
 -
--set_target_properties(zen PROPERTIES
+-set_host_properties(zen PROPERTIES
 -  VERSION ${ZenLib_VERSION}
 -  SOVERSION ${ZenLib_MAJOR_VERSION}
 -  PUBLIC_HEADER "${ZenLib_HDRS}"
@@ -112,7 +112,7 @@
 +    $<BUILD_INTERFACE:${ZenLib_SOURCES_PATH}>
 +    $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>)
 +
-+  set_target_properties(${zenlib} PROPERTIES
++  set_host_properties(${zenlib} PROPERTIES
 +    VERSION ${ZenLib_VERSION}
 +    SOVERSION ${ZenLib_MAJOR_VERSION}
 +    PUBLIC_HEADER "${ZenLib_HDRS}"

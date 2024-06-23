@@ -6,10 +6,10 @@
  endif()
 -
 -add_library(avif ${AVIF_SRCS})
--set_target_properties(avif
+-set_host_properties(avif
 +function(add_lib sfx lnk)
 +    add_library(avif${sfx} ${lnk} ${AVIF_SRCS})
-+    set_target_properties(avif${sfx}
++    set_host_properties(avif${sfx}
                        PROPERTIES
                            VERSION ${LIBRARY_VERSION}
                            SOVERSION ${LIBRARY_SOVERSION}

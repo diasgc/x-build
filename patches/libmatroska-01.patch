@@ -15,12 +15,12 @@
 -
 -add_library(matroska ${libmatroska_SOURCES} ${libmatroska_PUBLIC_HEADERS} ${libmatroska_C_PUBLIC_HEADERS})
 -target_link_libraries(matroska PUBLIC EBML::ebml)
--set_target_properties(matroska PROPERTIES
+-set_host_properties(matroska PROPERTIES
 +include(GenerateExportHeader)
 +function(add_lib sfx lnk)
 +add_library(matroska${sfx} ${lnk} ${libmatroska_SOURCES} ${libmatroska_PUBLIC_HEADERS} ${libmatroska_C_PUBLIC_HEADERS})
 +target_link_libraries(matroska${sfx} PUBLIC EBML::ebml)
-+set_target_properties(matroska${sfx} PROPERTIES
++set_host_properties(matroska${sfx} PROPERTIES
    VERSION 7.0.0
    SOVERSION 7
    CXX_VISIBILITY_PRESET hidden

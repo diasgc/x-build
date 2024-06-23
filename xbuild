@@ -3,25 +3,27 @@
 # X-Build util 0.4.0 2024-diasgc
 # ................................................
 
-#set -x
+function init {
+	
+	: "${debug:=false}"
+	: "${config_timeout:=86400}"
+	: "${timeout_days:=3}"
+	: "${banner:=true}"
 
-: "${banner:=true}"
-: "${config_timeout:=86400}"
-: "${debug:=false}"
-: "${timeout_days:=3}"
-
-# first load .common functions and error trap
-if [ -z ${vsh+x} ];then
 	source .common
 	source ./utils/.utils
 	source ./utils/.cmake
+	
 	set -o pipefail
-	if [ "${1}" == "--debug" ];then
-		shift
-		set -x
-		debug=true
-	fi
 	trap err ERR
+
+	case "${1}" in
+		--debug|-d) shift; set -x; debug=true;;
+		--help|-h)	show_banner; usage; exit 0;;
+		--new|-n)   shift; generate_script $@; exit 0;;
+	esac
+	
+	export root_args=( $@ )
 
     export dir_cmake="${dir_root}/cmake"
 	test -d "${dir_cmake}" || exit_err "cmake dir is missing. Reinstall please."
@@ -41,11 +43,13 @@ if [ -z ${vsh+x} ];then
 		./x-setup
 		source .config
 	fi
+}
 
-fi
+# first load .common functions and error trap
+test -z ${vsh+x} && init
 
 export CPPFLAGS=
-export target_trip=
+export host_trip=
 export this_script=${dir_root}/$(basename "$0")
 export dir_src="${dir_sources}/${lib}"
 
@@ -140,7 +144,7 @@ start(){
 	# Apply custom configurations
 	fn_defined 'on_config' && fn_log '' on_config
 
-	case ${target_trip[3]} in
+	case ${host_trip[3]} in
 		android) fn_defined 'on_config_ndk'   && fn_log '' on_config_ndk;;
 		gnu)     fn_defined 'on_config_gnu'   && fn_log '' on_config_gnu;;
 		mingw32) fn_defined 'on_config_mingw' && fn_log '' on_config_mingw;;
@@ -158,14 +162,14 @@ start(){
 
 	# check whether to update source of main lib and dependencies
 	if ${update}; then
-		[ -d "${dir_src}" ] && rm -rf "${dir_src}" 2>/dev/null
+		safe_rm "${dir_src}"
 		! ${req_update_deps} && update=false
 	else
 		! ${git_checkout} && ! ${retry} && [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
 	fi
 
 	# Reset LOGFILE
-	[ -f "${log_file}" ] && rm -f ${log_file}
+	safe_rm "${log_file}"
 
 	# check build tools
 	check_tools ${tls}
@@ -182,7 +186,7 @@ start(){
 
 	safe_cd "${dir_sources}"
 
-
+	# remove the build dir only if different from source or config dir
 	if [ ! ${retry} ]; then
 		if [ "${dir_build}" != "${dir_src}" ] && [[ "${dir_build}" != "${dir_config}" ]]; then
 			rm -rf ${dir_build}
@@ -193,23 +197,10 @@ start(){
 	local request_patch=false
 
 	# get source
-	if [ ! -d "${dir_src}" ];then
-		
+	if [ ! -d "${dir_src}" ];then	
 		get_source
-		request_config=true
 		${break_on_git} && end_script
-
-		# check if there is a cmake file
-		if [ -n "${cmake_file}" ] && [ -f "${dir_root}/cmake/${cmake_file}.cmake" ]; then
-			cp "${dir_root}/cmake/${cmake_file}.cmake" "${dir_src}/CMakeLists.txt"
-		fi
-
-		# apply patches from function or file
-		if fn_defined 'patch_source'; then
-			fn_log 'patch' patch_source
-		elif [ -n "${patch[@]}" ]; then
-			fn_log '' patch_fromfilelist
-		fi
+		request_config=true
 	fi
 
 	safe_cd "${dir_src}"
@@ -253,11 +244,18 @@ start(){
 	fi
 
 	if ${request_patch}; then
-		fn_defined 'source_patch' && fn_log 'patch' source_patch
+		# check if there is a source_patch function
+		if fn_defined 'source_patch'; then
+			fn_log 'patch' source_patch
+			unset source_patch
+		fi
+		# check if there is a cmake file
 		if [ -n "${cmake_file}" ] && [ -f "${dir_root}/cmake/${cmake_file}" ]; then
 			cp -f "${dir_root}/cmake/${cmake_file}" "${dir_src}/CMakeLists.txt" || exit_err "Unable to copy ${fcmake} to ${fcmake_dst}"
 			unset cmake_file
 		fi
+		# check for patch file and apply
+		test -n "${patch[@]}" && fn_log '' patch_fromfilelist
 	fi
 
 	${break_on_patch} && end_script
@@ -271,9 +269,7 @@ start(){
 		esac
 	fi
 
-	[ -d "${dir_build}" ] || mkdir -p "${dir_build}"
-	
-	safe_cd "${dir_build}"
+	safe_mkdir "${dir_build}" && safe_cd "${dir_build}"
 
 	log_vars dir_src dep PKG_CONFIG_LIBDIR SYSROOT TOOLCHAIN
 	log_vars CC CXX LD AS AR NM ADDR2LINE OBJCOPY OBJDUMP RANLIB READELF SIZE STRINGS STRIP WINDRES API
@@ -675,7 +671,15 @@ clean(){
 	clear
 }
 
-
+function xbuild_patch {
+  case $1 in
+    # usage libname.sh --patch a [sources/libname/]path/to/newfile [sources/libname/]path/to/oldfile
+    a|add|append)       shift; patch_append $@;;
+    m|make|e|embed)     shift; patch_embed $1;;
+    g|get|show)         patch_get;;
+  esac
+  exit 0
+}
 
 
 
@@ -701,7 +705,7 @@ toolchain_android(){
 	LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
 	#test $build_static && LDFLAGS+=" -static-libstdc++ -lc++_static"
 
-	cmake_system_processor="${target_trip[0]}${target_trip[1]}"
+	cmake_system_processor="${host_trip[0]}${host_trip[1]}"
 	$host_arm32 && cmake_system_processor="armv7-a"
 	cmake_findrootpath="/usr/${arch} /usr/${arch}/lib /usr/${arch}/lib/${API} /usr/${arch}/sysroot/usr ${dir_install}"
 	export NDK_API=${API}
@@ -781,7 +785,7 @@ loadToolchain(){
 
 	CPPFLAGS+=" -I${dir_install_include}"
 	LDFLAGS="-L${dir_install_lib}"
-	cmake_system_processor="${target_trip[0]}${target_trip[1]}"
+	cmake_system_processor="${host_trip[0]}${host_trip[1]}"
 
 	if $host_cross; then
 		case $PLATFORM in
@@ -826,9 +830,9 @@ loadToolchain(){
 		CROSS_PREFIX LT_SYS_LIBRARY_PATH CPPFLAGS LDFLAGS
 }
 
-set_target(){
+set_host(){
 	cpu_id="${1}"
-	target_trip=("${2}" "${3}" "${4}" "${5}" "${6}" "${7}" "${8}")
+	host_trip=("${2}" "${3}" "${4}" "${5}" "${6}" "${7}" "${8}")
 	arch="${2}-${4}-${5}${6}"
 	CT0="${9}"
 	CT1="${10}"
@@ -838,46 +842,46 @@ set_target(){
 	set_env
 }
 
-set_target_build(){
-	target_trip[5]=$(uname -m)
-	arch="${target_trip[5]}-${OSTYPE}"
-	target_trip[0]=${target_trip[5]}
-	if [ "${target_triple[0]::3}" == "arm" ]; then
-		target_trip[1]="${target_triple[0]:3}"
-		target_trip[0]="${target_triple[0]::3}"
+set_host_build(){
+	host_trip[5]=$(uname -m)
+	arch="${host_trip[5]}-${OSTYPE}"
+	host_trip[0]=${host_trip[5]}
+	if [ "${host_triple[0]::3}" == "arm" ]; then
+		host_trip[1]="${host_triple[0]:3}"
+		host_trip[0]="${host_triple[0]::3}"
 	fi
 	arr=(${OSTYPE//-/ })
-	target_trip[2]=${arr[0]}
-	target_trip[3]=${arr[1]}
-	if [ -z "${target_trip[3]##*eabi*}" ] ;then
-		local a2=${target_trip[3]%eabi*}
-		target_trip[4]=${target_trip[3]#${a2}*}
-		target_trip[3]=${a2}
+	host_trip[2]=${arr[0]}
+	host_trip[3]=${arr[1]}
+	if [ -z "${host_trip[3]##*eabi*}" ] ;then
+		local a2=${host_trip[3]%eabi*}
+		host_trip[4]=${host_trip[3]#${a2}*}
+		host_trip[3]=${a2}
 	fi
 	set_env
 	STRIP=strip
 }
 
 set_env(){
-	case ${target_trip[0]} in
+	case ${host_trip[0]} in
 		aarch64) host_arm=true;  host_arm32=false; host_arm64=true;  host_x86=false; host_x64=false; host_bits=64;;
 		arm)     host_arm=true;  host_arm32=true;  host_arm64=true;  host_x86=false; host_x64=false; host_bits=32;;
 		i686)    host_arm=false; host_arm32=false; host_arm64=false; host_x86=true;  host_x64=false; host_bits=32;;
 		x86_64)  host_arm=false; host_arm32=false; host_arm64=false; host_x86=false; host_x64=true; host_bits=64;;
 	esac
-	case ${target_trip[3]} in
+	case ${host_trip[3]} in
 		android) host_sys=linux;   host_mingw=false; host_os=android; host_ndk=true;	host_gnu=false;	host_clang=true;  PLATFORM="Android"
 		         dir_install="/usr/${arch}/local"
 		         ;;
 		gnu)     host_sys=linux;   host_mingw=false; host_os=gnu;     host_ndk=false;	host_gnu=true;	host_clang=false; PLATFORM="Linux"
-		         dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
+		         dir_install="${dir_root}/builds/${PLATFORM,,}/${host_trip[5]}"
 		         ;;
 		mingw32) host_sys=windows; host_mingw=true;  host_os=mingw32; host_ndk=false;	host_gnu=false;	host_clang=true;  PLATFORM="Windows"
-		         dir_install="${dir_root}/builds/${PLATFORM,,}/${target_trip[5]}"
+		         dir_install="${dir_root}/builds/${PLATFORM,,}/${host_trip[5]}"
 		         ;;
 	esac
-	#LIBSDIR="$(pwd)/builds/${PLATFORM,,}/${target_trip[5]}"
-	[ ! -d "${dir_install}" ] && mkdir -p "${dir_install}"
+	#LIBSDIR="$(pwd)/builds/${PLATFORM,,}/${host_trip[5]}"
+	safe_mkdir "${dir_install}"
 	export dir_install
 	export dir_install_bin="${dir_install}/bin"
 	export dir_install_include="${dir_install}/include"
@@ -887,26 +891,36 @@ set_env(){
 	export PKG_CONFIG_PATH=
 }
 
-usage(){
-  printf "\n\n${CW}Usage: ${0} ${CC1}<target> ${CC1}<build-options> ${CB1}<builder-options> ${CM1}<other-options>${C0}\n\n"
-  printf "${CC1}target:${CC0}   native|${CC1}[a-android|l-linux|w-windows]${CC2}[a-arm|x-x86]${CC1}[hf-armhf|7-armv7|8-armv8|86-x86|64-x64]\n"
-  printf "          ${CC1}eg. aa8, lx64, wa64)\n\n"
-  printf "${CC2}build:    --static* --shared | --both\n"
-  printf "          --bin*|--no-bin \n\n"
-  printf "${CB1}builder:  --api <api> --cmake  --ndkcmake  --ccmake\n"
-  printf "          --dist --strip --dirbuild <dir> \n\n"
-  printf "${CB1}compiler: --clang*|--gcc --cpus\n"
-  printf "          --tune <tune> --mcpu <mcpu> --mtune <mtune> \n\n"
-  printf "          --update --upd-all --refresh --retry --force --clear\n"
-  printf "          --patch <add|make|get> --diff --opts\n\n"
-  printf "${CM1}control:  --desc --get --list --checkPkg --libName --var <var> \n\n"
-  printf "${CM1}other:    --skip --goto \n\n"
-  printf "Example targeting android armv8 build shared libs and executable:\n\n\n  ${CW}${0} aa8 --shared --bin --no-strip --no-dist\n\n\n${C0}"
+function show_buildopts_cmake {
+	local cmake_i=$(find ${dir_src} -name CMakeLists.txt)
+	local cmake_o="${dir_root}/builds/${lib}_cmake.opts"
+	local d=$(pwd)
+	if [ -n "${cmake_i}" ]; then
+		for c in ${cmake_i}; do
+			safe_cd $(dirname ${c})
+			${CMAKE_EXECUTABLE} -LA | awk '{if(f)print} /-- Cache values/{f=1}' >>${cmake_o}
+		done
+	fi
+	safe_cd "${d}"
+	
+}
+
+function show_buildopts_am {
+	local am_i=$(find ${dir_src} -name configure)
+	local am_o="${dir_root}/builds/${lib}_am.opts"
+	local d=$(pwd)
+	if [ -n "${am_i}" ]; then
+		for c in ${am_i}; do
+			safe_cd $(dirname ${c})
+			./configure --help >>${cmake_o}
+		done
+	fi
+	safe_cd "${d}"
 }
 
 # todo optimize this
-lib_options(){
-	if [ -d "$1" ];then
+show_build_opts(){
+	if [ -d "${1}" ];then
 		local od="$(pwd)"
 		local bdir=$(pwd)/builds
 		safe_cd "${1}/${config_dir}"
@@ -941,118 +955,108 @@ optVrs='@(--version|--vrs|--ver|-v)'
 optDnl='@(--download|--dl|-d)'
 optHelp='@(--help|-h)'
 
-while [ $1 ];do
-	case $1 in
-		
-		$optHelp)	show_banner; usage; exit 0;;
+# set host: must be first arg
+case "${1}" in
+  # native host=build
+  native)  set_host_build; host_native=true;;
 
-		native)		set_target_build; host_native=true;;
+  # android host: aarch64, arm, i686, x86_64. To-do: riscv
+  $aa64 )  set_host '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6;;
+  $aa32 )  set_host '1' 'arm' 'v7a' 'linux' 'android' 'eabi' 'armeabi-v7a' '32' $CG2 $CG5;;
+  $ax86 )  set_host '2' 'i686' '' 'linux' 'android' '' 'x86' '32' $CG0 $CG1;;
+  $ax64 )  set_host '3' 'x86_64' '' 'linux' 'android' '' 'x86_64' '64' $CG0 $CG1;;
 
-		$aa64 )		set_target '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6;;
-		$aa32 )		set_target '1' 'arm' 'v7a' 'linux' 'android' 'eabi' 'armeabi-v7a' '32' $CG2 $CG5;;
-		$ax86 )		set_target '2' 'i686' '' 'linux' 'android' '' 'x86' '32' $CG0 $CG1;;
-		$ax64 )		set_target '3' 'x86_64' '' 'linux' 'android' '' 'x86_64' '64' $CG0 $CG1;;
+  # linux gnu host: aarch64, arm, i686, x86_64
+  $la64 )  set_host '4' 'aarch64' '' 'linux' 'gnu' '' 'aarch64' '64' $CM4 $CM6;;
+  $la32 )  set_host '5' 'arm' '' 'linux' 'gnu' 'eabihf' 'armv7' '32' $CM4 $CM6;;
+  $lx86 )  set_host '6' 'i686' '' 'linux' 'gnu' '' 'x86' '32' $CM0 $CM1;;
+  $lx64 )  set_host '7' 'x86_64' '' 'linux' 'gnu' '' 'x86_64' '64' $CM0 $CM1;;
 
-		$la64 )		set_target '4' 'aarch64' '' 'linux' 'gnu' '' 'aarch64' '64' $CM4 $CM6;;
-		$la32 )		set_target '5' 'arm' '' 'linux' 'gnu' 'eabihf' 'armv7' '32' $CM4 $CM6;;
-		$lx86 )		set_target '6' 'i686' '' 'linux' 'gnu' '' 'x86' '32' $CM0 $CM1;;
-		$lx64 )		set_target '7' 'x86_64' '' 'linux' 'gnu' '' 'x86_64' '64' $CM0 $CM1;;
+  # mingw windows host: aarch64, arm, i686, x86_64
+  $wa64 )  set_host '8' 'aarch64' '' 'w64' 'mingw32' '' 'arm64' '64' $CC0 $CC1;;
+  $wa32 )  set_host '9' 'arm' 'v7' 'w64' 'mingw32' '' 'armv7' '32' $CC0 $CC1;;
+  $wx86 )  set_host '10' 'i686' '' 'w64' 'mingw32' '' 'x86' '32' $CB0 $CB1;;
+  $wx64 )  set_host '11' 'x86_64' '' 'w64' 'mingw32' '' 'x86_64' '64' $CB0 $CB1;;
 
-		$wa64 )		set_target '8' 'aarch64' '' 'w64' 'mingw32' '' 'arm64' '64' $CC0 $CC1;;
-		$wa32 )		set_target '9' 'arm' 'v7' 'w64' 'mingw32' '' 'armv7' '32' $CC0 $CC1;;
-		$wx86 )		set_target '10' 'i686' '' 'w64' 'mingw32' '' 'x86' '32' $CB0 $CB1;;
-		$wx64 )		set_target '11' 'x86_64' '' 'w64' 'mingw32' '' 'x86_64' '64' $CB0 $CB1;;
+  # error: unknown host
+  *)       exit_err "Unknown ${1} architecture";;
+esac
 
-		--shared)   build_shared=true; build_static=false;;
-		--static)   build_static=true; build_shared=false;;
-		--both)     build_static=true; build_shared=true;;
-		--bin)      build_bin=true;;
+# Other options
 
-		--full)    	build_shared=true
-					build_static=true
-					build_bin=true
-					build_dist=true
-					dep_build="--full"
-					;;
-		
-		--prefix)   shift; dir_install=$1;;
-		--clang)    use_clang=true;;
-		--gcc)      use_clang=false;;
+while [ ${1} ];do
+  case "${1}" in
 
-		--new)      shift; generate_script $@; exit 0;;
-		--break)    shift; set_break ${1};;
+  # build
+    --shared)    build_shared=true; build_static=false;;
+    --static)    build_static=true; build_shared=false;;
+    --both)      build_static=true; build_shared=true;;
+    --bin)       build_bin=true;;
+    --full)      build_shared=true
+                 build_static=true
+                 build_bin=true
+                 build_dist=true
+                 dep_build="--full"
+                 ;;
+    --man)       build_man=true;;
+    
+    # compiler
+    --clang)     use_clang=true;;
+    --gcc)       use_clang=false;;
+    --strip)     build_strip=true;;
+    --api)       shift; export API=$1;;
+    --tune)      shift; menu_tune $1;;
+    --cpus)      loadToolchain; ${CC} --print-supported-cpus; exit 0;;
+    --mcpu)      shift; export CPPFLAGS+=" -mcpu=${1}";;
+    --mtune)     shift; export CPPFLAGS+=" -mtune=${1}";;
 
-		$optVrs)	shift; vrs="${1}";;
-		--devel)    src_rel=false;;
-		--bra*)     shift; export bra="${1}";;
-		--checkout) git_checkout=true;;
-		
-		--force)    [ -f "${dir_install_pc}/${pkg}.pc" ] && rm "${dir_install_pc}/${pkg}.pc" 2>/dev/null;;
+    # install
+    --prefix)    shift; dir_install="${1}";;
+    --dist)      build_dist=true;;
+    --cpack)     build_cpack=true;;
+    
+    # source
+    --opts)      show_build_opts && exit;;
+    --devel)     src_rel=false;;
+    --release)   src_rel=true;;
+    --git)       shift; menu_git $@; exit 0;;
+    --bra*)      shift; export bra="${1}";;
+    --checkout)  git_checkout=true;;
+    --update)    update=true;;
+    --upd-all)   update=true; req_update_deps=true;;
+    --force)     [ -f "${dir_install_pc}/${pkg}.pc" ] && rm "${dir_install_pc}/${pkg}.pc" 2>/dev/null;;
+    $optDnl)     build_download=true;;
 
-		--man)      build_man=true;;
-		--dist)     build_dist=true;;
-		--cpack)    build_cpack=true;;
-		--strip)    build_strip=true;;
-		--api)      shift; export API=$1;;
-		--tune)     shift; menu_tune $1;;
-		--cpus)     loadToolchain; $CC --print-supported-cpus; exit 0;;
-		--mcpu)		shift; export CPPFLAGS+=" -mcpu=${1}";;
-		--mtune)	shift; export CPPFLAGS+=" -mtune=${1}";;
-		
-		$optDnl)	build_download=true;;
+    # script
+    --break)     shift; set_break ${1};;
+    --skip)      shift; menu_skip_options $@;;
+    $optVrs)     shift; vrs="${1}";;
+    --diff)      shift; create_diff $@; exit 0;;
+    --checkPkg)  checkPkg; exit 0;;
+    --libName)   echo "${lib}"; exit 0;;
+    --var)       shift; echo "$($1)"; exit 0;;
+    --refresh)   update=true;;
+    --retry)     retry=true;;
+    --clear)     shift; menu_clear $@; exit 0;;
+    --desc )     echo $dsc && exit 0;;
+    --get)       shift; menu_get $@; exit 0;;
+    --check)     shift; check_install $@; exit 0;;
+    --list)      shift; menu_list $@; exit 0;;
+    --patch)     shift; xbuild_patch $@;;
+    --goto)      shift; menu_goto $@; exit 0;;
+    --dir-build) shift; dir_build=$1;;
+    --inline)    inline=true;;
+    --cmake)     cfg='cmake';;
+    --ndk-cmake) ndkcmake=true;;
+    --ccmake)    cfg='ccm';;
+    --nobanner)  banner=false;;
+    
+    --latest-release) utils_get_latest_release; exit 0;;
 
-		--diff)     shift; create_diff $@; exit 0;;
-		--update)   update=true;;
-		--upd-all)  update=true; req_update_deps=true;;
-		--opts)     lib_options && exit;;
-		--checkPkg) checkPkg; exit 0;;
-		--libName)  echo "${lib}"; exit 0;;
-		--var)      shift; echo "$($1)"; exit 0;;
-		--refresh)  update=true;;
-		--retry)    retry=true;;
-		
-		
-		--clear)    shift; menu_clear $@; exit 0;;
-		--desc )    echo $dsc && exit 0;;
-		
-		--get)      shift; menu_get $@; exit 0;;
-		
-		--check)    shift; check_install $@; exit 0;;
-
-		--list)     shift; menu_list $@; exit 0;;
-
-		--patch)    shift;
-					case $1 in
-						# usage libname.sh --patch a [sources/libname/]path/to/newfile [sources/libname/]path/to/oldfile
-						a|add|append)       shift; patch_append $@; exit 0;;
-						m|make|e|embed)     shift; patch_embed $1; exit 0;;
-						g|get|show)         patch_get; exit 0;;
-					esac
-					;;
-
-		--skip)     shift; menu_skip_options $@;;
-
-		--goto)     shift; menu_goto $@; exit 0;;
-
-		--git)      shift; menu_git $@; exit 0;;
-
-		--dirbuild) shift; dir_build=$1;;
-		--inline)   inline=true;;
-		--cmake)    cfg='cmake';;
-		--ndkcmake) ndkcmake=true;;
-		--ccmake)   cfg='ccm';;
-		--nobanner) banner=false;;
-		
-		--latest-release) utils_get_latest_release; exit 0;;
-
-		* ) if fn_defined 'extraOpts'; then
-				extraOpts $1
-			else
-				cfg_args+=("${1}")
-			fi
-			;;
-	esac
-	shift
+    * ) fn_defined 'extraOpts' && extraOpts "${1}" || cfg_args+=( "${1}" )
+      ;;
+  esac
+  shift
 done
 
 fn_undef 'extraOpts'
@@ -1062,12 +1066,12 @@ if fn_defined 'compiler_config'; then
 	fn_undef 'compiler_config'
 fi
 
-[ -z "${mingw_posix}" ] && mingw_posix=false
+test -z "${mingw_posix}" && mingw_posix=false
 
 # Set default Host
 
-if [ -z "${target_trip}" ];then
-	set_target_build
+if [ -z "${host_trip}" ];then
+	set_host_build
 fi
 
 # is cross-compile?

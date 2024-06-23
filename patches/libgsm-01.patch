@@ -37,7 +37,7 @@
 +
 +if (BUILD_STATIC_LIBS)
 +  add_library(gsm-static STATIC ${gsm_src})
-+  set_target_properties(gsm-static PROPERTIES OUTPUT_NAME gsm)
++  set_host_properties(gsm-static PROPERTIES OUTPUT_NAME gsm)
 +  list(APPEND lib_targets gsm-static)
 +endif()
 +

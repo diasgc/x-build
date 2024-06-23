@@ -146,7 +146,7 @@
 +
 +macro(add_lib sfx lnk)
 +    add_library(cmix${sfx} ${lnk} $<TARGET_OBJECTS:cmix_o>)
-+    set_target_properties(cmix${sfx} PROPERTIES
++    set_host_properties(cmix${sfx} PROPERTIES
 +        VERSION ${PROJECT_VERSION}
 +        SOVERSION ${PROJECT_VERSION_MAJOR}
 +        OUTPUT_NAME cmix

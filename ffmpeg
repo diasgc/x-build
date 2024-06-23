@@ -393,7 +393,7 @@ lensfun_patch(){
 	sed -i '/lensfun.h lf_db_new/lensfun.h lf_db_create/g' "${dir_src}/configure"
 }
 
-patch_source(){
+source_patch(){
 	test ${patch_vvc} && vvc_patch
 	lensfun_patch
 }

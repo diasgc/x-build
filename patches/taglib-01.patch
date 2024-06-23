@@ -16,8 +16,8 @@
 +  target_link_libraries(tag${sfx} ${ZLIB_LIBRARIES})
  endif()
  
--set_target_properties(tag PROPERTIES
-+set_target_properties(tag${sfx} PROPERTIES
+-set_host_properties(tag PROPERTIES
++set_host_properties(tag${sfx} PROPERTIES
    VERSION ${TAGLIB_SOVERSION_MAJOR}.${TAGLIB_SOVERSION_MINOR}.${TAGLIB_SOVERSION_PATCH}
    SOVERSION ${TAGLIB_SOVERSION_MAJOR}
    INSTALL_NAME_DIR ${CMAKE_INSTALL_LIBDIR}
@@ -27,14 +27,14 @@
 +  OUTPUT_NAME tag
  )
  if(VISIBILITY_HIDDEN)
--  set_target_properties(tag PROPERTIES C_VISIBILITY_PRESET hidden)
-+  set_target_properties(tag${sfx} PROPERTIES C_VISIBILITY_PRESET hidden)
+-  set_host_properties(tag PROPERTIES C_VISIBILITY_PRESET hidden)
++  set_host_properties(tag${sfx} PROPERTIES C_VISIBILITY_PRESET hidden)
  endif()
  
  if(BUILD_FRAMEWORK)
    unset(INSTALL_NAME_DIR)
--  set_target_properties(tag PROPERTIES 
-+  set_target_properties(tag${sfx} PROPERTIES 
+-  set_host_properties(tag PROPERTIES 
++  set_host_properties(tag${sfx} PROPERTIES 
        FRAMEWORK TRUE
        MACOSX_RPATH 1
        VERSION "A"
@@ -72,20 +72,20 @@
 -add_library(tag_c tag_c.cpp ${tag_c_HDRS})
 -
 -target_link_libraries(tag_c tag)
--set_target_properties(tag_c PROPERTIES
+-set_host_properties(tag_c PROPERTIES
 +target_link_libraries(tag_c${sfx} tag)
-+set_target_properties(tag_c${sfx} PROPERTIES
++set_host_properties(tag_c${sfx} PROPERTIES
    PUBLIC_HEADER "${tag_c_HDRS}"
    DEFINE_SYMBOL MAKE_TAGLIB_LIB
  )
  if(VISIBILITY_HIDDEN)
--	set_target_properties(tag_c PROPERTIES C_VISIBILITY_PRESET hidden
-+	set_target_properties(tag_c${sfx} PROPERTIES C_VISIBILITY_PRESET hidden
+-	set_host_properties(tag_c PROPERTIES C_VISIBILITY_PRESET hidden
++	set_host_properties(tag_c${sfx} PROPERTIES C_VISIBILITY_PRESET hidden
  	)
  endif()
  if(BUILD_FRAMEWORK)
--  set_target_properties(tag_c PROPERTIES FRAMEWORK TRUE)
-+  set_target_properties(tag_c${sfx} PROPERTIES FRAMEWORK TRUE)
+-  set_host_properties(tag_c PROPERTIES FRAMEWORK TRUE)
++  set_host_properties(tag_c${sfx} PROPERTIES FRAMEWORK TRUE)
  endif()
  
  # On Solaris we need to explicitly add the C++ standard and runtime
@@ -97,8 +97,8 @@
 +  target_link_libraries(tag_c${sfx} ${ROGUEWAVE_STDCXX_LIBRARY} Crun)
  endif()
  
--set_target_properties(tag_c PROPERTIES
-+set_target_properties(tag_c${sfx} PROPERTIES
+-set_host_properties(tag_c PROPERTIES
++set_host_properties(tag_c${sfx} PROPERTIES
    VERSION 0.0.0
    SOVERSION 0
    DEFINE_SYMBOL MAKE_TAGLIB_C_LIB

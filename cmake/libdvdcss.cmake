@@ -75,7 +75,7 @@ add_library(dvdcss_obj OBJECT ${dvdcss_SOURCES})
 
 macro(add_libdvdcss sfx lnk)
     add_library(dvdcss${sfx} ${lnk} $<TARGET_OBJECTS:dvdcss_obj>)
-    set_target_properties(dvdcss${sfx} PROPERTIES
+    set_host_properties(dvdcss${sfx} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME dvdcss

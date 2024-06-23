@@ -5,8 +5,8 @@
  
  set(BRUNSLI_LIBRARIES brunslicommon-static brunslidec-static brunslienc-static)
 -
-+set_target_properties(brunslienc-static PROPERTIES OUTPUT_NAME brunslienc-c)
-+set_target_properties(brunslidec-static PROPERTIES OUTPUT_NAME brunslidec-c)
++set_host_properties(brunslienc-static PROPERTIES OUTPUT_NAME brunslienc-c)
++set_host_properties(brunslidec-static PROPERTIES OUTPUT_NAME brunslidec-c)
  if(NOT BRUNSLI_EMSCRIPTEN)
  add_library(brunslidec-c SHARED
    c/dec/decode.cc

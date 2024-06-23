@@ -6,6 +6,7 @@ lic='GPL'
 src='https://github.com/AviSynth/AviSynthPlus.git'
 
 cfg='cmake'
+cmake_bin='ENABLE_PLUGINS'
 cmake_config="-DHEADERS_ONLY=OFF"
 
 on_src_release(){
@@ -15,10 +16,6 @@ on_src_release(){
 
 on_config(){
     ${src_rel} && on_src_release
-}
-
-on_build_bin(){
-    cmake_config+=" -DENABLE_PLUGINS=ON"
 }
 
 on_config_mingw(){

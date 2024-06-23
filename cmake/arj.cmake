@@ -68,7 +68,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_library(arjcrypt_o OBJECT integr.c gost.c gost_t.c nmsg_crp.c arjcrypt.c gnu/arjcrypt.def)
 function(add_lib name sfx lnk)
     add_library(${name}${sfx} ${lnk})
-    set_target_properties(${name}${sfx} PROPERTIES
+    set_host_properties(${name}${sfx} PROPERTIES
         OUTPUT_NAME ${name}
         VERSION ${VERSION}
     )

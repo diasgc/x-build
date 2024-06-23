@@ -49,7 +49,7 @@ include_directories(
 
 macro(add_lib sfx lnk)
     add_library(rtmp${sfx} ${lnk} ${SRCS} ${HDRS})
-    set_target_properties(rtmp${sfx} PROPERTIES
+    set_host_properties(rtmp${sfx} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME rtmp

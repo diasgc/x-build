@@ -87,7 +87,7 @@
 +
 +macro(add_lib sfx lnk)
 +    add_library(bpg${sfx} ${lnk} $<TARGET_OBJECTS:bpg_o>)
-+    set_target_properties(bpg${sfx} PROPERTIES
++    set_host_properties(bpg${sfx} PROPERTIES
 +        VERSION ${PROJECT_VERSION}
 +        SOVERSION ${PROJECT_VERSION_MAJOR}
 +        OUTPUT_NAME bpg

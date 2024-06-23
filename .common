@@ -43,18 +43,28 @@ CL0="\e[38;5;34m" CL1="\e[38;5;72m" CL2="\e[38;5;114m" CL3="\e[38;5;120m"  CL4="
 # theme colors
 CT0=$CM0 CT1=$CM1 CS0=$CR0 CS1=$CR1 SSB=$C0
 
-: "${shell_dstack:=}"
-
-case $(uname -v) in
-  *Ubuntu*) apt_install='apt -qq install -y';;
-  *) exit_err "Unknown $(uname -v) os, please provide package-install command in .common (line 50)";;
-esac
-
 # Logger
 logtime_start=
 export dir_root=$(pwd)
-export PS1='\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;95m\]\u@\e[0;95m\h\[\033[00m\]:\[\033[01;96m\]\w\[\033[00m\]\$ '
 
+: "${shell_dstack:=}"
+
+case $(uname -v) in
+  *Ubuntu*)
+    apt_install='apt -qq install -y'
+    apt_search='apt search'
+    apt_show='apt-cache show'
+    export PS1='\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\[\033[01;95m\]\u@\e[0;95m\h\[\033[00m\]:\[\033[01;96m\]\w\[\033[00m\]\$ '
+    ;;
+  *) exit_err "Unknown $(uname -v) os, please provide package-install command in .common (line 48)";;
+esac
+
+
+
+
+# functions
+
+# splash and banner
 function splash {
   echo
   printf "${CB6}THE ▀▄ ▄▀   █▀▀▄ █  █ ▀█▀ █   █▀▀▄\n"
@@ -76,6 +86,27 @@ function show_banner {
   is_running=true
 }
 
+function usage {
+  printf "\n\n${CW}Usage: ${0} ${CC1}<host> ${CC1}<library-link> ${CB1}<builder-options> ${CM1}<other-options>${C0}\n\n"
+  printf "${CW}host:${C0}native|[a-android|l-linux|w-windows][a-arm|x-x86][hf-armhf|7-armv7|8-armv8|86-x86|64-x64]\n"
+  printf "          ${CC1}eg. aa8, lx64, wa64)\n\n"
+  printf "${CC2}library:    --static* --shared | --both\n"
+  printf "          --bin*|--no-bin \n\n"
+  printf "${CB1}system:  --api <api> --cmake  --ndkcmake  --ccmake\n"
+  printf "          --dist --strip --dirbuild <dir> \n\n"
+  printf "${CB1}compiler: --clang*|--gcc --cpus\n"
+  printf "          --tune <tune> --mcpu <mcpu> --mtune <mtune> \n\n"
+  printf "          --update --upd-all --refresh --retry --force --clear\n"
+  printf "          --patch <add|make|get> --diff --opts\n\n"
+  printf "${CM1}control:  --desc --get --list --checkPkg --libName --var <var> \n\n"
+  printf "${CM1}other:    --skip --goto \n\n"
+  printf "Example targeting android armv8 build shared libs and executable:\n\n\n  ${CW}${0} aa8 --shared --bin --no-strip --no-dist\n\n\n${C0}"
+}
+
+
+
+# utils
+
 # usage bool2int <condition>
 # returns 1 for true and 0 for false
 function bool2int {
@@ -90,6 +121,26 @@ function bool2str {
 
 function safe_cd {
   cd "${1}" || exit_err "Could not find directory ${1}"
+}
+
+function safe_rm {
+  while [ ${1} ]; do
+    if [ -d "${1}" ]; then
+      rm -rf "${1}" 2>/dev/null || exit_err "Could not delete dir ${1}"
+    elif [ -f "${1}" ]; then
+      rm -f "${1}" 2>/dev/null || exit_err "Could not delete file ${1}"
+    fi
+    shift
+  done
+}
+
+function safe_mkdir {
+  while [ ${1} ]; do
+    if [ ! -d "${1}" ]; then
+      mkdir -p "${1}" 2>/dev/null || exit_err "Could not create dir ${1}"
+    fi
+    shift
+  done
 }
 
 function request_cmd {
@@ -121,6 +172,63 @@ function apt_install {
 	done
 }
 
+function check_pkg_deb {
+  for p in $@; do
+    test -n $(apt search $p | grep -o "${p}") && echo "${p}" && break
+  done
+}
+
+#usage xbuild --new <github_url>
+function generate_script {
+  test -z "${1}" && exit_err "Usage: xbuild --new <git-url>"
+  
+  local giturl="${1/\.git}"
+  local libname="${giturl##*/}" && libname="${libname,,}"
+  local scriptname="${dir_root}/${libname}.sh"
+  
+  cp "${dir_root}/utils/script.template" ${scriptname}
+  chmod +x "${scriptname}"
+
+  sed -i 's,@src@,'${giturl}',g;s,@lib@,'${libname}',g' ${scriptname}
+  local pkgname="$(check_pkg_deb lib${libname//lib/}-dev ${libname}.-dev ${libname})"
+  sed -i 's,@pkg_deb@,'${pkgname}',g' ${scriptname}
+
+  case ${giturl} in
+		*github*)
+			local json=$(github_json $srcname)
+			local libdesc=$(cat ${json} | jq .description | xargs)
+			local lic=$(cat ${json} | jq .license.name | xargs)
+			test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
+			test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname};;
+	esac
+
+  echo -e "${CD}${ind}${CD}    Done.New script generated: \e[4m${scriptname}\e[24m${C0}\n\n"
+}
+
+#usage xbuild --new <github_url>
+generate_script_old(){
+	test -z "${1}" && exit_err "Usage: xbuild --new <git-url>"
+	local giturl="${1}"
+	local srcname="${giturl/\.git/}"
+	local libname="${srcname##*/}"
+	libname="${libname,,}"
+	case ${libname} in *.git) libname=${libname/\.git/};; esac
+	local scriptname="${dir_root}/${libname}.sh"
+	cp "${dir_root}/utils/script.template" ${scriptname}
+	chmod +x "${scriptname}"
+	sed -i 's,@src@,'${giturl}',g;s,@lib@,'${libname}',g' ${scriptname}
+	local pkgname="lib${libname//lib/}-dev"
+	test -z "$(apt-cache show ${pkgname} 2>/dev/null | grep ${pkgname})" && pkgname=
+	sed -i 's,@pkg_deb@,'${pkgname}',g' ${scriptname}
+	case $giturl in
+		*github*)
+			local json=$(github_json $srcname)
+			local libdesc=$(cat ${json} | jq .description | xargs)
+			local lic=$(cat ${json} | jq .license.name | xargs)
+			test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
+			test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname};;
+	esac
+}
 
 
 function get_source {

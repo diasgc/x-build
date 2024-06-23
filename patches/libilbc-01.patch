@@ -7,9 +7,9 @@
 +set(ilbc_static "")
 +if (BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
 +    add_library(ilbc-static STATIC ${ilbc_source_files})
-+    set_target_properties(ilbc-static PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 3)
-+    set_target_properties(ilbc-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-+    set_target_properties(ilbc-static PROPERTIES OUTPUT_NAME ilbc)
++    set_host_properties(ilbc-static PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 3)
++    set_host_properties(ilbc-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
++    set_host_properties(ilbc-static PROPERTIES OUTPUT_NAME ilbc)
 +    set(ilbc_static "ilbc-static")
 +endif()
  

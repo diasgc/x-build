@@ -27,8 +27,8 @@
 +    target_compile_definitions(ebml${sfx} PUBLIC HAVE_WINAPIFAMILY_H)
    endif()
  endif()
--set_target_properties(ebml PROPERTIES
-+set_target_properties(ebml${sfx} PROPERTIES
+-set_host_properties(ebml PROPERTIES
++set_host_properties(ebml${sfx} PROPERTIES
    VERSION 5.0.0
    SOVERSION 5
    CXX_VISIBILITY_PRESET hidden

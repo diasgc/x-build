@@ -59,7 +59,7 @@
 -    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/zopfli>
 -    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 -)
--set_target_properties(libzopfli PROPERTIES
+-set_host_properties(libzopfli PROPERTIES
 -  OUTPUT_NAME zopfli
 -  VERSION ${ZOPFLI_VERSION}
 -  SOVERSION ${ZOPFLI_VERSION_MAJOR}
@@ -83,7 +83,7 @@
 -    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/zopflipng>
 -    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 -)
--set_target_properties(libzopflipng PROPERTIES
+-set_host_properties(libzopflipng PROPERTIES
 -  OUTPUT_NAME zopflipng
 -  VERSION ${ZOPFLI_VERSION}
 -  SOVERSION ${ZOPFLI_VERSION_MAJOR}
@@ -110,7 +110,7 @@
 +        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/zopfli>
 +        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 +    )
-+    set_target_properties(${lib} PROPERTIES
++    set_host_properties(${lib} PROPERTIES
 +        OUTPUT_NAME zopfli
 +        VERSION ${ZOPFLI_VERSION}
 +        SOVERSION ${ZOPFLI_VERSION_MAJOR}
@@ -135,7 +135,7 @@
 +        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/zopflipng>
 +        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 +    )
-+    set_target_properties(${lib} PROPERTIES
++    set_host_properties(${lib} PROPERTIES
 +        OUTPUT_NAME zopflipng
 +        VERSION ${ZOPFLI_VERSION}
 +        SOVERSION ${ZOPFLI_VERSION_MAJOR}

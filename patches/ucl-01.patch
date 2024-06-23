@@ -13,7 +13,7 @@
 +include_directories(include)
 +function(add_libucl sfx lnk)
 +    add_library(${PROJECT_NAME}${sfx} ${lnk} ${src_libucl})
-+    set_target_properties(${PROJECT_NAME}${sfx} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
++    set_host_properties(${PROJECT_NAME}${sfx} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 +    install(TARGETS ${PROJECT_NAME}${sfx}
 +        LIBRARY DESTINATION lib
 +        ARCHIVE DESTINATION lib

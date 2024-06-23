@@ -24,7 +24,7 @@ on_config(){
 }
 
 on_config_ndk(){
-  openssl_config="android-${target_trip[0]} -D__ANDROID_API__=${API} no-tests" && openssl_config="${openssl_config/aarch64/arm64}"
+  openssl_config="android-${host_trip[0]} -D__ANDROID_API__=${API} no-tests" && openssl_config="${openssl_config/aarch64/arm64}"
   export ANDROID_NDK_ROOT=${ANDROID_NDK_HOME}
 }
 

@@ -8,17 +8,14 @@ lib='isobmff'
 dsc='ISO Base Media File Format Reference Software'
 lic='?'
 src='https://github.com/MPEGGroup/isobmff.git'
+sub='submodule update --init --recursive'
+
 cfg='cmake'
 
 dev_bra='main'
 dev_vrs=''
 pkg_deb=''
 eta='60'
-
-
-source_patch(){
-    git submodule update --init --recursive
-}
 
 . xbuild && start
 

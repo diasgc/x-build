@@ -26,11 +26,11 @@
 -
 -add_executable(flif_exe ${COMMON_SOURCES} ${WINDOWS_EXE_SOURCE} ${FLIF_SRC_DIR}/flif-enc.cpp ${FLIF_SRC_DIR}/flif.cpp)
 -target_link_libraries(flif_exe ${PNG_LIBRARY} ${STATIC_LINKED_LIBS})
--set_target_properties(flif_exe PROPERTIES OUTPUT_NAME flif)
+-set_host_properties(flif_exe PROPERTIES OUTPUT_NAME flif)
 -add_executable(dflif_exe ${COMMON_SOURCES} ${WINDOWS_EXE_SOURCE} ${FLIF_SRC_DIR}/flif-enc.cpp ${FLIF_SRC_DIR}/flif.cpp)
 -target_compile_definitions(dflif_exe PRIVATE DECODER_ONLY)
 -target_link_libraries(dflif_exe ${PNG_LIBRARY} ${STATIC_LINKED_LIBS})
--set_target_properties(dflif_exe PROPERTIES OUTPUT_NAME dflif)
+-set_host_properties(dflif_exe PROPERTIES OUTPUT_NAME dflif)
 -
 -if(WIN32)
 -    target_include_directories(flif_exe PRIVATE ${FLIF_SRC_DIR}/../build/MSVC/getopt)
@@ -88,11 +88,11 @@
 +endif()   
 +add_executable(flif_exe ${COMMON_SOURCES} ${WINDOWS_EXE_SOURCE} ${FLIF_SRC_DIR}/flif-enc.cpp ${FLIF_SRC_DIR}/flif.cpp)
 +target_link_libraries(flif_exe ${PNG_LIBRARY} ${STATIC_LINKED_LIBS})
-+set_target_properties(flif_exe PROPERTIES OUTPUT_NAME flif)
++set_host_properties(flif_exe PROPERTIES OUTPUT_NAME flif)
 +add_executable(dflif_exe ${COMMON_SOURCES} ${WINDOWS_EXE_SOURCE} ${FLIF_SRC_DIR}/flif-enc.cpp ${FLIF_SRC_DIR}/flif.cpp)
 +target_compile_definitions(dflif_exe PRIVATE DECODER_ONLY)
 +target_link_libraries(dflif_exe ${PNG_LIBRARY} ${STATIC_LINKED_LIBS})
-+set_target_properties(dflif_exe PROPERTIES OUTPUT_NAME dflif)
++set_host_properties(dflif_exe PROPERTIES OUTPUT_NAME dflif)
 +
 +if(WIN32)
 +    target_include_directories(flif_exe PRIVATE ${FLIF_SRC_DIR}/../build/MSVC/getopt)

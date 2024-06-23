@@ -21,9 +21,9 @@
 +        add_library(vorbisenc-static STATIC ${VORBISENC_SOURCES})
 +        add_library(vorbisfile-static STATIC ${VORBISFILE_SOURCES})
 +
-+        set_target_properties(vorbis-static PROPERTIES SOVERSION ${VORBIS_VERSION_INFO} OUTPUT_NAME vorbis)
-+        set_target_properties(vorbisenc-static PROPERTIES SOVERSION ${VORBISENC_VERSION_INFO} OUTPUT_NAME vorbisenc)
-+        set_target_properties(vorbisfile-static PROPERTIES SOVERSION ${VORBISFILE_VERSION_INFO} OUTPUT_NAME vorbisfile)
++        set_host_properties(vorbis-static PROPERTIES SOVERSION ${VORBIS_VERSION_INFO} OUTPUT_NAME vorbis)
++        set_host_properties(vorbisenc-static PROPERTIES SOVERSION ${VORBISENC_VERSION_INFO} OUTPUT_NAME vorbisenc)
++        set_host_properties(vorbisfile-static PROPERTIES SOVERSION ${VORBISFILE_VERSION_INFO} OUTPUT_NAME vorbisfile)
 +
 +        target_include_directories(vorbis-static
 +            PUBLIC

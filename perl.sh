@@ -24,7 +24,7 @@ lst_pc=''
 
 eta='20'
 
-patch_source(){
+source_patch(){
     tar_stripcomponents=true
     vrs_cross="$(tar_version 'https://github.com/arsv/perl-cross/releases' 'perl-cross-')"
     src_cross="https://github.com/arsv/perl-cross/archive/refs/tags/${vrs_cross}.tar.gz"

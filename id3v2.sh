@@ -36,7 +36,7 @@ option(BUILD_STATIC_LIBS "to build also static libs" ON)
 add_definitions(-DVERSION=0.1.12 -Wall -pedantic -O3 -flto)
 function(add_lib sfx lnk)
     add_library(id3v2${sfx} ${lnk} convert.cpp list.cpp id3v2.cpp genre.cpp genre.h frametable.h)
-    set_target_properties(id3v2${sfx} PROPERTIES OUTPUT_NAME id3v2)
+    set_host_properties(id3v2${sfx} PROPERTIES OUTPUT_NAME id3v2)
     target_link_library(id3v2${sfx} -lz -lid3)
 endfunction()
 

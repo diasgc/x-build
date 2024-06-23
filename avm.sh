@@ -1,8 +1,4 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK  +   .   .   .  clang
-# GNU  +   .   .   .  clang/gcc
-# WIN  .   .   .   .  clang/gcc
 
 lib='avm'
 pkg='aom'
@@ -42,3 +38,8 @@ on_config_ndk(){
 }
 
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK  +   .   .   .  clang
+# GNU  +   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc

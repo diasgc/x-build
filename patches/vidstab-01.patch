@@ -17,7 +17,7 @@
 +set(targets vidstab)
 +if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
 +add_library (vidstab_static STATIC ${SOURCES})
-+set_target_properties(vidstab_static PROPERTIES OUTPUT_NAME vidstab)
++set_host_properties(vidstab_static PROPERTIES OUTPUT_NAME vidstab)
 +target_link_libraries(vidstab_static m)
 +list(APPEND targets vidstab_static)
 +if(ORC_FOUND)

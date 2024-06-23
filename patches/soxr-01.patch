@@ -8,10 +8,10 @@
 +  set(PROJECT_NAME_STATIC ${PROJECT_NAME}-static)
 +  add_library (${PROJECT_NAME_STATIC} STATIC ${SOURCES})
 +  target_link_libraries (${PROJECT_NAME_STATIC} PRIVATE ${LIBS} ${LIBM_LIBRARIES})
-+  set_target_properties (${PROJECT_NAME_STATIC} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
++  set_host_properties (${PROJECT_NAME_STATIC} PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 +endif()
  if (BUILD_FRAMEWORK)
-   set_target_properties (${PROJECT_NAME} PROPERTIES FRAMEWORK TRUE)
+   set_host_properties (${PROJECT_NAME} PROPERTIES FRAMEWORK TRUE)
  elseif (NOT WIN32)
 @@ -115,13 +121,19 @@
      configure_file (${CMAKE_CURRENT_SOURCE_DIR}/${LSR}.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${LSR}.pc)
@@ -21,7 +21,7 @@
 +    set(LSR_STATIC ${LSR}_static)
 +    add_library (${LSR_STATIC} STATIC ${LSR})
 +    target_link_libraries (${LSR_STATIC} ${PROJECT_NAME_STATIC})
-+    set_target_properties (${LSR_STATIC} PROPERTIES OUTPUT_NAME ${LSR})
++    set_host_properties (${LSR_STATIC} PROPERTIES OUTPUT_NAME ${LSR})
 +  endif()
  endif ()
  

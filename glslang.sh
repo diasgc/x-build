@@ -12,7 +12,7 @@ cmake_config='-DBUILD_TESTING=OFF -DINSTALL_GTEST=OFF
  -DENABLE_HLSL=ON 
  -DBUILD_EXTERNAL=ON'
 
-patch_source(){
+source_patch(){
     pushd ${dir_src}
     ./update_glslang_sources.py
     popd

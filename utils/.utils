@@ -55,35 +55,6 @@ util_add_patch(){
 }
 
 
-
-#usage xbuild --new <github_url>
-generate_script(){
-	#set -x
-	test -z "$1" && return 0
-	local giturl=$1
-	local srcname=${giturl/\.git/}
-	local libname="${srcname##*/}"
-	libname="${libname,,}"
-	case ${libname} in *.git) libname=${libname/\.git/};; esac
-	local scriptname="${dir_root}/${libname}.sh"
-	cp "${dir_root}/utils/script.template" ${scriptname}
-	chmod +x "${scriptname}"
-	sed -i 's,@src@,'${giturl}',g;s,@lib@,'${libname}',g' ${scriptname}
-	local pkgname="lib${libname//lib/}-dev"
-	test -z "$(apt-cache show ${pkgname} 2>/dev/null | grep ${pkgname})" && pkgname=
-	sed -i 's,@pkg_deb@,'${pkgname}',g' ${scriptname} 
-	case $giturl in
-		*github*)
-			local json=$(github_json $srcname)
-			local libdesc=$(cat ${json} | jq .description | xargs)
-			local lic=$(cat ${json} | jq .license.name | xargs)
-			test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
-			test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname};;
-	esac
-	#set +x
-}
-
-
 github_latest_tgz(){
 	case $src in
 		*github.*)
