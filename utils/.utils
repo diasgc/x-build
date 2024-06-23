@@ -131,22 +131,6 @@ list_tarball(){
 	return 0
 }
 
-# USAGE: create_patch [b64] <rel_path_oldfile> [<rel_path_newfile>]
-create_patch(){  
-	local od=$(pwd); cd ${dir_src} || return 1
-	local b64=false
-	[ "${1}" == "b64" ] && b64=true && shift
-	case $# in
-		0) return 1;;
-		1) touch "${1}_"
-		   $b64 && diff -Naur "${1}_" "${1}" >"${1}.patch" || diff -Naur "${1}_" "${1}" | base64 -w 72 >"${1}.patch"
-		   ;;
-		*) $b64 && diff -Naur "${1}" "${2}" >"${2}.patch" || diff -Naur "${1}" "${2}" | base64 -w 72 >"${2}.patch"
-		   ;;
-	esac
-	cd $od
-}
-
 hwinfoCountCores(){
 	echo $(nproc)
 	# or cat /proc/cpuinfo | grep -Po -c 'model name\s+: \K(.*)'
@@ -189,38 +173,14 @@ prompt_remove(){
 	echo
 }
 
-patch_check_xbpatch(){
-	pushdir ${dir_root}
-	local matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
-	if [ ${#matches[@]} -gt 0 ]; then
-		for match in ${matches[@]}; do
-			echo -ne "${CC2}${match} ${C0}"
-			local block=$(awk '/^<<.'${match}'./{flag=1; next} /^'{$match}'/{flag=0} flag' $0)
-			case $match in
-				XB_CREATE_CMAKELISTS|CMakeLists.txt)
-					echo "${block}" >${dir_src}/CMakeLists.txt
-					echo -e "\ncreate CMakeLists.txt: \n$block" >>${log_file}
-					;;
-				XB_PATCH) pushdir ${dir_src}
-					patch -p0 <<<$(echo "${block}") 2>&1 >${log_file}
-					echo -e "\npatch found: \n$block" >>${log_file}
-					popdir
-					;;
-				XB64_PATCH) pushdir ${dir_src}
-					patch -p0 <<<$(echo "${block}" | base64 -d) 2>&1 >${log_file}
-					popdir
-					;;
-				LZS_PATCH) pushdir ${dir_src}
-					patch -p0 <<<$(echo "${block}" | ${dir_root}/utils/lz-string -d -) 2>&1 >${log_file}
-					popdir
-					;;
-				*) echo -e "\nUnknown block name ${match} with this contents (ignoring):\n$block" >>${log_file}
-					;;
-			esac
-		done
-	fi
-	popdir
-	return 0
+function menu_patch {
+  case $1 in
+    # usage libname.sh --patch a [sources/libname/]path/to/newfile [sources/libname/]path/to/oldfile
+    a|add|append)       shift; patch_append $@;;
+    m|make|e|embed)     shift; patch_embed $1;;
+    g|get|show)         patch_get;;
+  esac
+  exit 0
 }
 
 # usage libname.sh --patch a [sources/libname/]path/to/newfile [sources/libname/]path/to/oldfile
@@ -300,6 +260,39 @@ create_diff(){
 	popdir
 }
 
+patch_check_xbpatch(){
+	pushdir ${dir_root}
+	local matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
+	if [ ${#matches[@]} -gt 0 ]; then
+		for match in ${matches[@]}; do
+			echo -ne "${CC2}${match} ${C0}"
+			local block=$(awk '/^<<.'${match}'./{flag=1; next} /^'{$match}'/{flag=0} flag' $0)
+			case $match in
+				XB_CREATE_CMAKELISTS|CMakeLists.txt)
+					echo "${block}" >${dir_src}/CMakeLists.txt
+					echo -e "\ncreate CMakeLists.txt: \n$block" >>${log_file}
+					;;
+				XB_PATCH) pushdir ${dir_src}
+					patch -p0 <<<$(echo "${block}") 2>&1 >${log_file}
+					echo -e "\npatch found: \n$block" >>${log_file}
+					popdir
+					;;
+				XB64_PATCH) pushdir ${dir_src}
+					patch -p0 <<<$(echo "${block}" | base64 -d) 2>&1 >${log_file}
+					popdir
+					;;
+				LZS_PATCH) pushdir ${dir_src}
+					patch -p0 <<<$(echo "${block}" | ${dir_root}/utils/lz-string -d -) 2>&1 >${log_file}
+					popdir
+					;;
+				*) echo -e "\nUnknown block name ${match} with this contents (ignoring):\n$block" >>${log_file}
+					;;
+			esac
+		done
+	fi
+	popdir
+	return 0
+}
 
 set_break(){
     case $1 in

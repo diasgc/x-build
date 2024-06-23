@@ -1,8 +1,4 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK  +   F   .  PP  clang
-# GNU  .   .   .  PP  gcc
-# WIN  .   .   .  PP  clang/gcc
 
 lib='uavs3e'
 dsc='AVS3 encoder which supports AVS3-P2 baseline profile.'
@@ -17,7 +13,7 @@ lst_bin='uavs3enc'
 
 dev_vrs='1.3.2'
 pkg_deb=''
-eta='0'
+eta='144'
 
 cmake_config='-DCOMPILE_10BIT=1'
 
@@ -29,6 +25,11 @@ cmake_definitions+=(
 )
 
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK  +   F   .  PP  clang
+# GNU  .   .   .  PP  gcc
+# WIN  .   .   .  PP  clang/gcc
 
 # Filelist
 # --------

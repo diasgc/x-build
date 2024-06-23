@@ -21,6 +21,7 @@ function init {
 		--debug|-d) shift; set -x; debug=true;;
 		--help|-h)	show_banner; usage; exit 0;;
 		--new|-n)   shift; generate_script $@; exit 0;;
+		--opts|-o)  show_build_opts; exit 0;;
 	esac
 	
 	export root_args=( $@ )
@@ -46,7 +47,7 @@ function init {
 }
 
 # first load .common functions and error trap
-test -z ${vsh+x} && init
+test -z ${vsh+x} && init $@
 
 export CPPFLAGS=
 export host_trip=
@@ -139,7 +140,6 @@ start(){
 			end_script
 		fi
 	fi
-
 
 	# Apply custom configurations
 	fn_defined 'on_config' && fn_log '' on_config
@@ -671,18 +671,6 @@ clean(){
 	clear
 }
 
-function xbuild_patch {
-  case $1 in
-    # usage libname.sh --patch a [sources/libname/]path/to/newfile [sources/libname/]path/to/oldfile
-    a|add|append)       shift; patch_append $@;;
-    m|make|e|embed)     shift; patch_embed $1;;
-    g|get|show)         patch_get;;
-  esac
-  exit 0
-}
-
-
-
 toolchain_android(){
 	PLATFORM='Android'
 	[ -d "${ANDROID_NDK_HOME}" ] || exit_err "No ANDROID NDK Toolchain found. Aborting."
@@ -850,7 +838,7 @@ set_host_build(){
 		host_trip[1]="${host_triple[0]:3}"
 		host_trip[0]="${host_triple[0]::3}"
 	fi
-	arr=(${OSTYPE//-/ })
+	arr=( ${OSTYPE//-/ } )
 	host_trip[2]=${arr[0]}
 	host_trip[3]=${arr[1]}
 	if [ -z "${host_trip[3]##*eabi*}" ] ;then
@@ -891,35 +879,8 @@ set_env(){
 	export PKG_CONFIG_PATH=
 }
 
-function show_buildopts_cmake {
-	local cmake_i=$(find ${dir_src} -name CMakeLists.txt)
-	local cmake_o="${dir_root}/builds/${lib}_cmake.opts"
-	local d=$(pwd)
-	if [ -n "${cmake_i}" ]; then
-		for c in ${cmake_i}; do
-			safe_cd $(dirname ${c})
-			${CMAKE_EXECUTABLE} -LA | awk '{if(f)print} /-- Cache values/{f=1}' >>${cmake_o}
-		done
-	fi
-	safe_cd "${d}"
-	
-}
-
-function show_buildopts_am {
-	local am_i=$(find ${dir_src} -name configure)
-	local am_o="${dir_root}/builds/${lib}_am.opts"
-	local d=$(pwd)
-	if [ -n "${am_i}" ]; then
-		for c in ${am_i}; do
-			safe_cd $(dirname ${c})
-			./configure --help >>${cmake_o}
-		done
-	fi
-	safe_cd "${d}"
-}
-
 # todo optimize this
-show_build_opts(){
+show_build_opts_old(){
 	if [ -d "${1}" ];then
 		local od="$(pwd)"
 		local bdir=$(pwd)/builds
@@ -960,7 +921,7 @@ case "${1}" in
   # native host=build
   native)  set_host_build; host_native=true;;
 
-  # android host: aarch64, arm, i686, x86_64. To-do: riscv
+  # android host: aarch64, arm, i686, x86_64. todo: add riscv
   $aa64 )  set_host '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6;;
   $aa32 )  set_host '1' 'arm' 'v7a' 'linux' 'android' 'eabi' 'armeabi-v7a' '32' $CG2 $CG5;;
   $ax86 )  set_host '2' 'i686' '' 'linux' 'android' '' 'x86' '32' $CG0 $CG1;;
@@ -1016,7 +977,6 @@ while [ ${1} ];do
     --cpack)     build_cpack=true;;
     
     # source
-    --opts)      show_build_opts && exit;;
     --devel)     src_rel=false;;
     --release)   src_rel=true;;
     --git)       shift; menu_git $@; exit 0;;
@@ -1042,7 +1002,7 @@ while [ ${1} ];do
     --get)       shift; menu_get $@; exit 0;;
     --check)     shift; check_install $@; exit 0;;
     --list)      shift; menu_list $@; exit 0;;
-    --patch)     shift; xbuild_patch $@;;
+    --patch)     shift; menu_patch $@;;
     --goto)      shift; menu_goto $@; exit 0;;
     --dir-build) shift; dir_build=$1;;
     --inline)    inline=true;;

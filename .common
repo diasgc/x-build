@@ -579,8 +579,41 @@ function install_cargo_cbuild {
 search_configfile(){
   local cmd="${1}"
   local dest="$(find ${dir_src} -name ${cmd} -printf "%d %p\n"|sort -n|head -n1)"
-  dest="$(sed 's,.*'${dir_src}'/,,;s,/'${cmd}',,' <<<${dest})"
-  echo "${dir_src}/${dest}"
+  if [ -n "${dest}" ]; then
+    dest="$(sed 's,.*'${dir_src}'/,,;s,/'${cmd}',,' <<<${dest})"
+    echo "${dir_src}/${dest}"
+  else
+    echo
+  fi
+}
+
+
+function show_build_opts {
+  : "${dir_src:=${dir_root}/sources/${lib}}"
+  test ! -d "${dir_src}" && exit_err "${dir_src} does not exist. Download source first."
+	local cf
+  local d
+	# search meson
+	cf="$(search_configfile meson_options.txt)"
+	if [ -n "${cf}" ]; then
+    d="${dir_root}/builds/${lib}_meson.opts"
+		cat "${cf}" | tr '\n' ' ' | sed 's/  */ /g;s/option(/\n/g;s/)/\n/g;s/'feature'/enabled|disabled/g;s/'boolean'/true|false/g;s/,/\n/g' >"${d}"
+		echo -e "\n\t${CY0}Found meson options: ${d}\n"
+	fi
+	# search cmake
+	cf="$(search_configfile CMakeLists.txt)"
+	if [ -n "${cf}" ]; then
+    d="${dir_root}/builds/${lib}_cmake.opts"
+		cmake ${cf} -LA 2>/dev/null | awk '{if(f)print} /-- Cache values/{f=1}' >"${d}"
+		echo -e "\n\t${CY0}Found cmake options: ${d}\n"
+	fi
+	# search automake
+	cf="$(search_configfile configure)"
+	if [ -n "${cf}" ]; then
+    d="${dir_root}/builds/${lib}_am.opts"
+		${cf} --help | grep -o '\-\-.*' >"${d}"
+		echo -e "\n\t${CY0}Found automake options: ${d}\n"
+	fi
 }
 
 function am_config_guess {
