@@ -26,8 +26,10 @@ WFLAGS+=" -Wno-unknown-warning-option \
  -Wno-for-loop-analysis"
 
 on_config(){
-    $host_native && cmake_config+=' -DXEVE_NATIVE_BUILD=ON'
-    $host_arm && cmake_config+=" -DARM=TRUE"
+    cmake_config+=" -DXEVE_NATIVE_BUILD=$(bool2str ${host_native} ON OFF)"
+    cmake_config+=" -DARM=$(bool2str ${host_arm} ON OFF)"
+    #$host_native && cmake_config+=' -DXEVE_NATIVE_BUILD=ON'
+    #$host_arm && cmake_config+=" -DARM=TRUE"
 }
 
 on_end(){

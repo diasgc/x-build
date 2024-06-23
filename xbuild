@@ -54,6 +54,8 @@ export host_trip=
 export this_script=${dir_root}/$(basename "$0")
 export dir_src="${dir_sources}/${lib}"
 
+: "${MAKE_EXECUTABLE:=make}"
+: "${CMAKE_EXECUTABLE:=cmake}"
 : "${API:=${ANDROID_NDK_API}}"
 : "${NDK_API:=${ANDROID_NDK_API}}"
 
@@ -879,19 +881,14 @@ set_env(){
 	export PKG_CONFIG_PATH=
 }
 
-# todo optimize this
-show_build_opts_old(){
-	if [ -d "${1}" ];then
-		local od="$(pwd)"
-		local bdir=$(pwd)/builds
-		safe_cd "${1}/${config_dir}"
-		[ -f CMakeLists.txt ] && ${CMAKE_EXECUTABLE} -LA | awk '{if(f)print} /-- Cache values/{f=1}' >${od}/builds/${lib}_cmake.opts && nano "${od}/builds/${lib}_cmake.opts"
-		[ -f configure ] && ./configure --help >${od}/builds/${lib}_aconf.opts && nano "${od}/builds/${lib}_am.opts"
-		safe_cd "$od"
-	else
-		echo -e "${CD}${ind}${CR0}no configuration file found in ${CR1}${1}${CD}\n\n"
-	fi
-}
+
+
+
+
+
+
+
+
 
 
 
@@ -949,71 +946,75 @@ while [ ${1} ];do
   case "${1}" in
 
   # build
-    --shared)    build_shared=true; build_static=false;;
-    --static)    build_static=true; build_shared=false;;
-    --both)      build_static=true; build_shared=true;;
-    --bin)       build_bin=true;;
-    --full)      build_shared=true
-                 build_static=true
-                 build_bin=true
-                 build_dist=true
-                 dep_build="--full"
-                 ;;
-    --man)       build_man=true;;
-    
-    # compiler
-    --clang)     use_clang=true;;
-    --gcc)       use_clang=false;;
-    --strip)     build_strip=true;;
-    --api)       shift; export API=$1;;
-    --tune)      shift; menu_tune $1;;
-    --cpus)      loadToolchain; ${CC} --print-supported-cpus; exit 0;;
-    --mcpu)      shift; export CPPFLAGS+=" -mcpu=${1}";;
-    --mtune)     shift; export CPPFLAGS+=" -mtune=${1}";;
+  --shared)    build_shared=true; build_static=false;;
+  --static)    build_static=true; build_shared=false;;
+  --both)      build_static=true; build_shared=true;;
+  --bin)       build_bin=true;;
+  --full)      build_shared=true
+               build_static=true
+               build_bin=true
+               build_dist=true
+               dep_build="--full"
+               ;;
+  --man)       build_man=true;;
 
-    # install
-    --prefix)    shift; dir_install="${1}";;
-    --dist)      build_dist=true;;
-    --cpack)     build_cpack=true;;
-    
-    # source
-    --devel)     src_rel=false;;
-    --release)   src_rel=true;;
-    --git)       shift; menu_git $@; exit 0;;
-    --bra*)      shift; export bra="${1}";;
-    --checkout)  git_checkout=true;;
-    --update)    update=true;;
-    --upd-all)   update=true; req_update_deps=true;;
-    --force)     [ -f "${dir_install_pc}/${pkg}.pc" ] && rm "${dir_install_pc}/${pkg}.pc" 2>/dev/null;;
-    $optDnl)     build_download=true;;
+  # compiler
+  --clang)     use_clang=true;;
+  --gcc)       use_clang=false;;
+  --strip)     build_strip=true;;
+  --api)       shift; export API=$1;;
+  --tune)      shift; menu_tune $1;;
+  --cpus)      loadToolchain; ${CC} --print-supported-cpus; exit 0;;
+  --mcpu)      shift; export CPPFLAGS+=" -mcpu=${1}";;
+  --mtune)     shift; export CPPFLAGS+=" -mtune=${1}";;
 
-    # script
-    --break)     shift; set_break ${1};;
-    --skip)      shift; menu_skip_options $@;;
-    $optVrs)     shift; vrs="${1}";;
-    --diff)      shift; create_diff $@; exit 0;;
-    --checkPkg)  checkPkg; exit 0;;
-    --libName)   echo "${lib}"; exit 0;;
-    --var)       shift; echo "$($1)"; exit 0;;
-    --refresh)   update=true;;
-    --retry)     retry=true;;
-    --clear)     shift; menu_clear $@; exit 0;;
-    --desc )     echo $dsc && exit 0;;
-    --get)       shift; menu_get $@; exit 0;;
-    --check)     shift; check_install $@; exit 0;;
-    --list)      shift; menu_list $@; exit 0;;
-    --patch)     shift; menu_patch $@;;
-    --goto)      shift; menu_goto $@; exit 0;;
-    --dir-build) shift; dir_build=$1;;
-    --inline)    inline=true;;
-    --cmake)     cfg='cmake';;
-    --ndk-cmake) ndkcmake=true;;
-    --ccmake)    cfg='ccm';;
-    --nobanner)  banner=false;;
+  # install
+  --prefix)    shift; dir_install="${1}";;
+  --dist)      build_dist=true;;
+  --cpack)     build_cpack=true;;
     
-    --latest-release) utils_get_latest_release; exit 0;;
+  # source
+  --devel)     src_rel=false;;
+  --release)   src_rel=true;;
+  --git)       shift; menu_git $@; exit 0;;
+  --bra*)      shift; export bra="${1}";;
+  --checkout)  git_checkout=true;;
+  --update)    update=true;;
+  --upd-all)   update=true; req_update_deps=true;;
+  --force)     [ -f "${dir_install_pc}/${pkg}.pc" ] && rm "${dir_install_pc}/${pkg}.pc" 2>/dev/null;;
+  $optDnl)     build_download=true;;
 
-    * ) fn_defined 'extraOpts' && extraOpts "${1}" || cfg_args+=( "${1}" )
+  # script
+  --break)     shift; set_break ${1};;
+  --skip)      shift; menu_skip_options $@;;
+  $optVrs)     shift; vrs="${1}";;
+  --diff)      shift; create_diff $@; exit 0;;
+  --checkPkg)  checkPkg; exit 0;;
+  --libName)   echo "${lib}"; exit 0;;
+  --var)       shift; echo "$($1)"; exit 0;;
+  --refresh)   update=true;;
+  --retry)     retry=true;;
+  --clear)     shift; menu_clear $@; exit 0;;
+  --desc )     echo $dsc && exit 0;;
+  --get)       shift; menu_get $@; exit 0;;
+  --check)     shift; check_install $@; exit 0;;
+  --list)      shift; menu_list $@; exit 0;;
+  --patch)     shift; menu_patch $@;;
+  --goto)      shift; menu_goto $@; exit 0;;
+  --dir-build) shift; dir_build=$1;;
+  --inline)    inline=true;;
+  --cmake)     cfg='cmake';;
+  --ndk-cmake) ndkcmake=true;;
+  --ccmake)    cfg='ccm';;
+  --nobanner)  banner=false;;
+    
+  --latest-release) utils_get_latest_release; exit 0;;
+
+  * ) if fn_defined 'extraOpts'; then
+        extraOpts "${1}"
+      else
+        cfg_args+=( "${1}" )
+      fi
       ;;
   esac
   shift
@@ -1029,17 +1030,10 @@ fi
 test -z "${mingw_posix}" && mingw_posix=false
 
 # Set default Host
-
-if [ -z "${host_trip}" ];then
-	set_host_build
-fi
+test -z "${host_trip}" && set_host_build
 
 # is cross-compile?
-if [ "${build_arch}" == "${arch}" ]; then
-	host_cross=false
-else
-	host_cross=true
-fi
+host_cross=$([ "${build_arch}" == "${arch}" ] && false || true)
 
 loadToolchain
 
@@ -1053,11 +1047,6 @@ if [ -n "${sudo}" ] && ! ${sudo} -n true 2>/dev/null; then
 fi
 
 config_init
-
-# reset presets, we don't need them anymore
-unset cst0 cst1 lib_link0 lib_link1 cb0 cb1 cstk lib_linkk cbk
-
-: "${MAKE_EXECUTABLE:=make}"
 
 export arch update retry \
 build_shared build_static build_bin build_system \
