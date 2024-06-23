@@ -13,8 +13,12 @@ cmake_config='-DINSTALL_DOCS=OFF'
 build_strip=false
 WFLAGS="-Wno-pointer-to-int-cast -Wno-unused-command-line-argument"
 
+on_create_pc(){
+    build_pkgconfig --libs=-laribb24
+}
+
 dev_bra='master'
-dev_vrs='1.0.3'
+dev_vrs='v1.0.3'
 pkg_deb='libaribb24-dev'
 eta='32'
 

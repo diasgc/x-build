@@ -6,7 +6,7 @@ dsc='Perceptual video quality assessment based on multi-method fusion'
 lic='BSD-2c Patent'
 src='https://github.com/Netflix/vmaf.git'
 
-config_dir="libvmaf"
+config_dir='libvmaf'
 build_dir='libvmaf'
 
 cfg='meson'

@@ -252,9 +252,10 @@ function get_source {
   
   # git sub command requires git to apply
   test -n "${sub}" && src_rel=false
+  
   if ${src_rel}; then
-    if fn_defined 'latest_release'; then
-      latest_release
+    if fn_defined 'on_src_release'; then
+      on_src_release
     else
       case "${src}" in
         *github.com*) github_get_latest_tarball "${src}" "${lib}" && return 0;;
@@ -725,7 +726,7 @@ function setup_cmake_config {
   : "${build_cmd:=${MAKE_EXECUTABLE}}"
   : "${install_cmd:=${MAKE_EXECUTABLE}}"
   : "${install_args:=${make_install}}" 
-  
+
   test -n "${make_args}" && build_args+=( "${make_args}")
   build_args+=( "-j${HOST_NPROC}")
   build_tag="make"

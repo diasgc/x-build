@@ -4,6 +4,7 @@ lib='avisynth'
 dsc='A powerful nonlinear scripting language for video'
 lic='GPL'
 src='https://github.com/AviSynth/AviSynthPlus.git'
+url='http://avisynth.nl/index.php/Main_Page'
 
 cfg='cmake'
 cmake_bin='ENABLE_PLUGINS'

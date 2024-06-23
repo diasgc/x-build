@@ -18,7 +18,7 @@ LIBS+=' -lpng16 -lz' # by order: -lpng16 -lz -ljpeg -lgif -ltiff -lwebp -lopenjp
 
 dev_vrs='5.4.1'
 pkg_deb='libtesseract-dev'
-eta='1200'
+eta='1184'
 
 lst_inc='tesseract/*.h'
 lst_lib='libtesseract'
