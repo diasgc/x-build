@@ -41,7 +41,7 @@ endif()
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined" )
 
 add_library(objlib OBJECT ${src_enc} ${hdr_enc})
-set_host_properties(objlib PROPERTIES POSITION_INDEPENDENT_CODE 1)
+set_target_properties(objlib PROPERTIES POSITION_INDEPENDENT_CODE 1)
 
 function(add_lib sfx lnk)
     if(ENABLE_ASM)
@@ -49,7 +49,7 @@ function(add_lib sfx lnk)
     else()
         add_library(${PROJECT_NAME}${sfx} ${lnk} $<TARGET_OBJECTS:objlib>)
     endif()
-    set_host_properties(${PROJECT_NAME}${sfx} PROPERTIES
+    set_target_properties(${PROJECT_NAME}${sfx} PROPERTIES
         VERSION ${VERSION}
         SOVERSION ${VERSION_MAJOR}
         OUTPUT_NAME ${PROJECT_NAME}

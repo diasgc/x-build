@@ -74,8 +74,8 @@
  endif()
  
  # set the folder where to place the projects
--set_host_properties( ${LIB_NAME} PROPERTIES FOLDER lib )
-+set_host_properties( ${LIB_NAME}${sfx} PROPERTIES FOLDER lib OUTPUT_NAME ${LIB_NAME})
+-set_target_properties( ${LIB_NAME} PROPERTIES FOLDER lib )
++set_target_properties( ${LIB_NAME}${sfx} PROPERTIES FOLDER lib OUTPUT_NAME ${LIB_NAME})
 +endfunction()
 +
 +add_lib("" "")

@@ -50,7 +50,7 @@ file(GLOB jpegxr_HDR image/sys/*.h image/decode/*.h image/encode/*.h)
 add_library(jpegxr_obj OBJECT ${jpegxr_SRC} ${jpegxr_HDR})
 
 add_library(jpegxr $<TARGET_OBJECTS:jpegxr_obj>)
-set_host_properties(jpegxr PROPERTIES VERSION ${JXRLIB_LIB_VERSION} SOVERSION ${JXRLIB_SO_VERSION})
+set_target_properties(jpegxr PROPERTIES VERSION ${JXRLIB_LIB_VERSION} SOVERSION ${JXRLIB_SO_VERSION})
 
 # JXR-GLUE Library
 file(GLOB jxrglue_SRC jxrgluelib/*.c jxrtestlib/*.c)
@@ -58,7 +58,7 @@ file(GLOB jxrglue_HDR jxrgluelib/*.h jxrtestlib/*.h)
 
 add_library(jxr_obj OBJECT ${jxrglue_SRC} ${jxrglue_HDR})
 add_library(jxrglue $<TARGET_OBJECTS:jxr_obj>)
-set_host_properties(jxrglue PROPERTIES
+set_target_properties(jxrglue PROPERTIES
   VERSION ${JXRLIB_LIB_VERSION}
   SOVERSION ${JXRLIB_SO_VERSION})
 target_link_libraries(jxrglue PRIVATE jpegxr m)
@@ -66,7 +66,7 @@ set(jpegxr_targets jpegxr jxrglue)
 
 if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
   add_library(jpegxr_static STATIC $<TARGET_OBJECTS:jpegxr_obj>)
-  set_host_properties(jpegxr_static PROPERTIES
+  set_target_properties(jpegxr_static PROPERTIES
     VERSION ${JXRLIB_LIB_VERSION}
     SOVERSION ${JXRLIB_SO_VERSION}
     OUTPUT_NAME jpegxr
@@ -74,7 +74,7 @@ if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
     ARCHIVE_OUTPUT_NAME jpegxr)
 
   add_library(jxrglue_static STATIC $<TARGET_OBJECTS:jxr_obj>)
-  set_host_properties(jxrglue_static PROPERTIES
+  set_target_properties(jxrglue_static PROPERTIES
     VERSION ${JXRLIB_LIB_VERSION}
     SOVERSION ${JXRLIB_SO_VERSION}
     OUTPUT_NAME jxrglue

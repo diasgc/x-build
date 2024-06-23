@@ -47,13 +47,13 @@
 -# to the API), the SOVERSION should be the same even when bumping up VERSION.
 -# The way gme.h is designed, SOVERSION should very rarely be bumped, if ever.
 -# Hopefully the API can stay compatible with old versions.
--set_host_properties(gme
+-set_target_properties(gme
 -    PROPERTIES VERSION ${GME_VERSION}
 -               SOVERSION 1)
 -
 -# macOS framework build
 -if(BUILD_FRAMEWORK)
--    set_host_properties(gme
+-    set_target_properties(gme
 -        PROPERTIES FRAMEWORK TRUE
 -                   FRAMEWORK_VERSION A
 -                   MACOSX_FRAMEWORK_IDENTIFIER net.mpyne.gme
@@ -79,14 +79,14 @@
 +    # to the API), the SOVERSION should be the same even when bumping up VERSION.
 +    # The way gme.h is designed, SOVERSION should very rarely be bumped, if ever.
 +    # Hopefully the API can stay compatible with old versions.
-+    set_host_properties(${lib}
++    set_target_properties(${lib}
 +        PROPERTIES VERSION ${GME_VERSION}
 +                SOVERSION 1
 +                OUTPUT_NAME gme)
 +
 +    # macOS framework build
 +    if(BUILD_FRAMEWORK)
-+        set_host_properties(${lib}
++        set_target_properties(${lib}
 +            PROPERTIES FRAMEWORK TRUE
 +                    FRAMEWORK_VERSION A
 +                    MACOSX_FRAMEWORK_IDENTIFIER net.mpyne.gme

@@ -13,7 +13,7 @@
      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
  )
  
--set_host_properties(
+-set_target_properties(
 -    ogg PROPERTIES
 -    SOVERSION ${LIB_SOVERSION}
 -    VERSION ${LIB_VERSION}
@@ -21,7 +21,7 @@
 -)
 +macro(add_lib sfx lnk)
 +    add_library(ogg${sfx} ${lnk} $<TARGET_OBJECTS:ogg>)
-+    set_host_properties(
++    set_target_properties(
 +        ogg${sfx} PROPERTIES
 +        SOVERSION ${LIB_SOVERSION}
 +        VERSION ${LIB_VERSION}
@@ -30,7 +30,7 @@
 +    )
  
 -if(BUILD_FRAMEWORK)
--    set_host_properties(ogg PROPERTIES
+-    set_target_properties(ogg PROPERTIES
 -        FRAMEWORK TRUE
 -        FRAMEWORK_VERSION ${PROJECT_VERSION}
 -        MACOSX_FRAMEWORK_IDENTIFIER org.xiph.ogg
@@ -39,7 +39,7 @@
 -        XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
 -        OUTPUT_NAME Ogg
 +    if(BUILD_FRAMEWORK)
-+        set_host_properties(ogg${sfx} PROPERTIES
++        set_target_properties(ogg${sfx} PROPERTIES
 +            FRAMEWORK TRUE
 +            FRAMEWORK_VERSION ${PROJECT_VERSION}
 +            MACOSX_FRAMEWORK_IDENTIFIER org.xiph.ogg

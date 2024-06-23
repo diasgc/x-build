@@ -180,7 +180,7 @@ start(){
 	build_dependencies ${dep}
 
 	# start log
-	log_start ${arch} "$((${eta}/$(nproc)))s"
+	log_start "${arch}" "$((${eta}/$(nproc)))s"
 
 	echo -ne "$(bool2str ${build_static} ${SSB} ${CD})[static]"
 	echo -ne "$(bool2str ${build_shared} ${SSB} ${CD})[shared]"
@@ -390,7 +390,7 @@ start(){
 		fn_log 'install' on_install
 	elif ! ${skip_install}; then
 		safe_cd "${dir_build}"
-		do_log 'install' "${MAKE_EXECUTABLE}" ${make_install}
+		do_log 'install' "${install_cmd}" "${install_args}"
 	fi
 
 	# check whether to create pkg-config .pc file

@@ -33,7 +33,7 @@ add_library(quirc_obj OBJECT
 
 macro(add_lib sfx lnk)
     add_library(quirc${sfx} ${lnk} $<TARGET_OBJECTS:quirc_obj>)
-    set_host_properties(quirc${sfx} PROPERTIES
+    set_target_properties(quirc${sfx} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME quirc

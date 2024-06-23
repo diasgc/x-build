@@ -17,7 +17,7 @@
 +  target_include_directories(onig-static PUBLIC
 +    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 +    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
-+  set_host_properties(onig-static PROPERTIES OUTPUT_NAME onig)
++  set_target_properties(onig-static PROPERTIES OUTPUT_NAME onig)
 +  list(APPEND target_libs onig-static)
 +endif()
  if(MSVC)

@@ -108,7 +108,7 @@ macro(add_lib sfx lnk)
     else()
         add_library(xvidcore${sfx} ${lnk} $<TARGET_OBJECTS:libxvidcore_obj>)
     endif()
-    set_host_properties(xvidcore${sfx} PROPERTIES
+    set_target_properties(xvidcore${sfx} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME xvidcore
@@ -129,7 +129,7 @@ macro(build_executable app)
     add_executable(${app} examples/${app}.c ${xvidcore_HEADER} src/utils/emms.h)
     target_link_libraries(${app} xvidcore)
     target_compile_options(${app} PUBLIC ${WFLAGS})
-    set_host_properties(${app} PROPERTIES OUTPUT_NAME ${app}) #LINK_FLAGS_RELEASE -s
+    set_target_properties(${app} PROPERTIES OUTPUT_NAME ${app}) #LINK_FLAGS_RELEASE -s
 endmacro(build_executable app)
 
 # Executables

@@ -722,11 +722,15 @@ function setup_cmake_config {
   test -n "${CPACK}" && cfg_args+=( "${CPACK}" )
   cfg_args+=( -Wno-dev )
 
-: "${build_cmd:=${MAKE_EXECUTABLE}}"
+  : "${build_cmd:=${MAKE_EXECUTABLE}}"
+  : "${install_cmd:=${MAKE_EXECUTABLE}}"
+  : "${install_args:=${make_install}}" 
+  
   test -n "${make_args}" && build_args+=( "${make_args}")
   build_args+=( "-j${HOST_NPROC}")
   build_tag="make"
-
+  
+  
   #do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
   #case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 }
@@ -815,6 +819,8 @@ function setup_am_config {
   test -n "${am_config}" && cfg_args+=( "${am_config}" )
 
   : "${build_cmd:=${MAKE_EXECUTABLE}}"
+  : "${install_cmd:=${MAKE_EXECUTABLE}}"
+  : "${install_args:=${make_install}}"
   test -n "${make_args}" && build_args+=( "${make_args}")
   build_args+=( "-j${HOST_NPROC}")
   build_tag="make"
@@ -824,6 +830,8 @@ function setup_am_config {
 function setup_meson_config {
   
   : "${build_cmd:=ninja}"
+  : "${install_cmd:=ninja}"
+  : "${install_args:=install}"
   build_tag="ninja"
   test -n "${make_args}" && build_args+=( "${make_args}")
   build_args+=( "-j${HOST_NPROC}" )
@@ -1285,7 +1293,7 @@ sourceforge_json(){
 function menu_skip_options {
 	while [ -n "${1}" ] || [ -n "${1##--*}" ]; do
 		case $1 in
-		dl|git|src) skip_dl=true;;
+		  dl|git|src) skip_dl=true;;
 		esac
 		shift
 	done

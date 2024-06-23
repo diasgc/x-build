@@ -31,7 +31,7 @@
 +  else()
 +    set_property(TARGET lzfse${sfx} PROPERTY C_STANDARD 99)
 +  endif()
-+  set_host_properties(lzfse${sfx} PROPERTIES
++  set_target_properties(lzfse${sfx} PROPERTIES
 +    POSITION_INDEPENDENT_CODE TRUE
 +    C_VISIBILITY_PRESET hidden
 +    INTERPROCEDURAL_OPTIMIZATION TRUE
@@ -63,7 +63,7 @@
    set_property(TARGET lzfse_cli PROPERTY C_STANDARD 99)
  endif()
  
--set_host_properties(lzfse PROPERTIES
+-set_target_properties(lzfse PROPERTIES
 -  POSITION_INDEPENDENT_CODE TRUE
 -  C_VISIBILITY_PRESET hidden
 -  INTERPROCEDURAL_OPTIMIZATION TRUE)

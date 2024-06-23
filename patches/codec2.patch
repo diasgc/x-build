@@ -7,4 +7,4 @@
 +       CMAKE_ARGS -DCMAKE_C_COMPILER=gcc
      )
      add_executable(generate_codebook IMPORTED)
-     set_host_properties(generate_codebook PROPERTIES
+     set_target_properties(generate_codebook PROPERTIES

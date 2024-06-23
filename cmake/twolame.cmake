@@ -52,7 +52,7 @@ add_definitions(-Wno-deprecated-non-prototype)
 
 macro(add_lib sfx lnk)
     add_library(twolame${sfx} ${lnk} $<TARGET_OBJECTS:libtwolame_obj>)
-    set_host_properties(twolame${sfx} PROPERTIES
+    set_target_properties(twolame${sfx} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME twolame
@@ -70,7 +70,7 @@ macro(build_executable app src)
     add_executable(${app} ${src})
     target_link_libraries(${app} twolame ${LIBS})
     target_compile_options(${app} PUBLIC ${WFLAGS})
-    set_host_properties(${app} PROPERTIES OUTPUT_NAME ${app}) #LINK_FLAGS_RELEASE -s
+    set_target_properties(${app} PROPERTIES OUTPUT_NAME ${app}) #LINK_FLAGS_RELEASE -s
     install(TARGETS ${app} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endmacro(build_executable app)
 

@@ -20,22 +20,22 @@
 +set(docs README LICENCE Changes)
 +
 +add_library(lzf ${src_lib})
-+set_host_properties(lzf PROPERTIES VERSION ${LIBVER} SOVERSION ${LIBMAJOR})
++set_target_properties(lzf PROPERTIES VERSION ${LIBVER} SOVERSION ${LIBMAJOR})
 +add_compile_options("-Wno-expansion-to-defined")
 +
 +if(WIN32)
-+  set_host_properties(lzf PROPERTIES SUFFIX "-${LIBMAJOR}${CMAKE_SHARED_LIBRARY_SUFFIX}")
++  set_target_properties(lzf PROPERTIES SUFFIX "-${LIBMAJOR}${CMAKE_SHARED_LIBRARY_SUFFIX}")
 +endif(WIN32)
 +
 +if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
 +  add_library(lzf_static STATIC ${src_lib})
-+  set_host_properties(lzf_static PROPERTIES OUTPUT_NAME lzf)
++  set_target_properties(lzf_static PROPERTIES OUTPUT_NAME lzf)
 +endif()
 +
 +if(BUILD_UTILITIES)
 +  add_executable(lzf_bin lzf.c lzf.h)
 +  target_link_libraries(lzf_bin lzf)
-+  set_host_properties(lzf_bin PROPERTIES OUTPUT_NAME lzf)
++  set_target_properties(lzf_bin PROPERTIES OUTPUT_NAME lzf)
 +endif()
 +
 +install(TARGETS lzf

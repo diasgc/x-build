@@ -67,7 +67,7 @@ endif()
 
 macro(add_lib sfx lnk)
     add_library(lizard${sfx} ${lnk} $<TARGET_OBJECTS:liblizard_obj>)
-    set_host_properties(lizard${sfx} PROPERTIES
+    set_target_properties(lizard${sfx} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME lizard
@@ -90,7 +90,7 @@ if(BUILD_EXECUTABLES)
     set(lizard_LIC ${lizard_LIC} programs/COPYING)
     add_executable(lizard-app ${lizard_CLI} ${lizard_H})
     target_link_libraries(lizard-app lizard)
-    set_host_properties(lizard-app PROPERTIES
+    set_target_properties(lizard-app PROPERTIES
         LINK_FLAGS_RELEASE -s
         OUTPUT_NAME lizard
     )

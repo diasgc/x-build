@@ -16,7 +16,7 @@
 +
 +function(add_lib lib sfx lnk src)
 +    add_library(${lib}${sfx} ${lnk} ${src})
-+    set_host_properties(${lib}${sfx} PROPERTIES
++    set_target_properties(${lib}${sfx} PROPERTIES
 +        OUTPUT_NAME "${lib}"
 +    )
 +    install(TARGETS ${lib}${sfx}

@@ -4,9 +4,9 @@ lib='skcms'
 dsc='PNG encoder and decoder in C and C++'
 lic='BSD-3c'
 src='https://skia.googlesource.com/skcms.git'
-cfg='bazel'
 tls='bazel-bootstrap'
 
+cfg='bazel'
 bazel_config='--platforms=//platform:android_arm64'
 
 dev_bra=''

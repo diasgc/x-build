@@ -58,14 +58,14 @@ add_library(giflib_obj OBJECT ${giflib_SRC} )
 
 macro(add_lib sfx lnk)
     add_library(giflib${sfx} ${lnk} $<TARGET_OBJECTS:giflib_obj>)
-    set_host_properties(giflib${sfx} PROPERTIES
+    set_target_properties(giflib${sfx} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME giflib
         LINK_FLAGS_RELEASE -s
     )
     if(WIN32)
-      set_host_properties(giflib PROPERTIES SUFFIX "-${PROJECT_VERSION_MAJOR}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+      set_target_properties(giflib PROPERTIES SUFFIX "-${PROJECT_VERSION_MAJOR}${CMAKE_SHARED_LIBRARY_SUFFIX}")
     endif(WIN32)
     target_link_libraries(giflib${sfx} m)
     install(TARGETS giflib${sfx}

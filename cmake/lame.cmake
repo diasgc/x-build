@@ -80,7 +80,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 function(add_lib sfx lnk)
     add_library(${PROJECT_NAME}${sfx} ${lnk} ${SOURCE_LIB})
     target_include_directories(${PROJECT_NAME}${sfx} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-    set_host_properties(${PROJECT_NAME}${sfx} PROPERTIES 
+    set_target_properties(${PROJECT_NAME}${sfx} PROPERTIES 
         POSITION_INDEPENDENT_CODE ON
         OUTPUT_NAME ${PROJECT_NAME})
     export(TARGETS ${PROJECT_NAME}${sfx}

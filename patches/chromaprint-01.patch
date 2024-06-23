@@ -1,12 +1,12 @@
 --- src/CMakeLists.tx_	2022-01-22 00:47:08.165377700 +0000
 +++ src/CMakeLists.txt	2022-01-22 00:44:05.975377700 +0000
 @@ -73,6 +73,7 @@
- 	set_host_properties(chromaprint_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+ 	set_target_properties(chromaprint_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
  endif()
  
 +set(chromaprint_TARGETS chromaprint)
  add_library(chromaprint ${chromaprint_PUBLIC_SOURCES} ${chromaprint_PUBLIC_HEADERS} $<TARGET_OBJECTS:chromaprint_objs>)
- set_host_properties(chromaprint PROPERTIES
+ set_target_properties(chromaprint PROPERTIES
  	DEFINE_SYMBOL CHROMAPRINT_API_EXPORTS
 @@ -80,12 +81,23 @@
      VERSION ${chromaprint_VERSION}
@@ -14,17 +14,17 @@
  )
 +if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
 +	add_library(chromaprint_static STATIC ${chromaprint_PUBLIC_SOURCES} ${chromaprint_PUBLIC_HEADERS} $<TARGET_OBJECTS:chromaprint_objs>)
-+	set_host_properties(chromaprint_static PROPERTIES
++	set_target_properties(chromaprint_static PROPERTIES
 +		DEFINE_SYMBOL CHROMAPRINT_API_EXPORTS
 +		PUBLIC_HEADER ${chromaprint_PUBLIC_HEADERS}
 +		VERSION ${chromaprint_VERSION}
 +		SOVERSION ${chromaprint_SOVERSION}
 +	)
-+	set_host_properties(chromaprint_static PROPERTIES OUTPUT_NAME chromaprint)
++	set_target_properties(chromaprint_static PROPERTIES OUTPUT_NAME chromaprint)
 +	set(chromaprint_TARGETS chromaprint chromaprint_static)
 +endif()
  if(BUILD_FRAMEWORK)
- 	set_host_properties(chromaprint PROPERTIES FRAMEWORK TRUE)
+ 	set_target_properties(chromaprint PROPERTIES FRAMEWORK TRUE)
  endif()
  target_link_libraries(chromaprint ${chromaprint_LINK_LIBS})
  

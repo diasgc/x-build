@@ -115,7 +115,7 @@
 +
 +if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
 +  add_library(a52_static STATIC ${src_liba52})
-+  set_host_properties(a52_static PROPERTIES OUTPUT_NAME a52)
++  set_target_properties(a52_static PROPERTIES OUTPUT_NAME a52)
 +endif()
 +
 +if(BUILD_EXECUTABLES)

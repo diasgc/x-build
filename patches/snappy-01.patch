@@ -50,7 +50,7 @@
 -    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 -    $<INSTALL_INTERFACE:include>
 -)
--set_host_properties(snappy
+-set_target_properties(snappy
 -  PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 +set(build_types snappy)
 +
@@ -63,7 +63,7 @@
 +    add_library(${libsnappy} STATIC "")
 +  else()
 +    add_library(${libsnappy} "")
-+    set_host_properties(${libsnappy} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
++    set_target_properties(${libsnappy} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 +  endif()
 +
 +  target_sources(${libsnappy}
@@ -93,12 +93,12 @@
 +      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 +      $<INSTALL_INTERFACE:include>
 +  )
-+  set_host_properties(${libsnappy}
++  set_target_properties(${libsnappy}
 +    PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR} OUTPUT_NAME snappy)
  
 -target_compile_definitions(snappy PRIVATE -DHAVE_CONFIG_H)
 -if(BUILD_SHARED_LIBS)
--  set_host_properties(snappy PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+-  set_target_properties(snappy PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 -endif(BUILD_SHARED_LIBS)
 +  target_compile_definitions(${libsnappy} PRIVATE -DHAVE_CONFIG_H)
 +endforeach()

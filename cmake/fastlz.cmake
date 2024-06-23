@@ -39,7 +39,7 @@ add_library(fastlz_obj OBJECT fastlz.c fastlz.h )
 
 macro(add_lib sfx lnk)
     add_library(fastlz${sfx} ${lnk} $<TARGET_OBJECTS:fastlz_obj>)
-    set_host_properties(fastlz${sfx} PROPERTIES
+    set_target_properties(fastlz${sfx} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME fastlz

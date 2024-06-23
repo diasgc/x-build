@@ -113,7 +113,7 @@ endif()
 
 macro(add_lib sfx lnk)
     add_library(dc1394${sfx} ${lnk} $<TARGET_OBJECTS:dc1394_obj>)
-    set_host_properties(dc1394${sfx} PROPERTIES
+    set_target_properties(dc1394${sfx} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME dc1394
@@ -138,7 +138,7 @@ if(DC1394_WITH_VENDOR)
     file(GLOB dc1394-vendor_C dc1394/vendor/*.c dc1394/vendor/*.h)
     add_definitions(-Wno-enum-compare -Wno-gnu-pointer-arith)
     add_library(dc1394-vendor ${dc1394-vendor_C})
-    set_host_properties(dc1394-vendor PROPERTIES
+    set_target_properties(dc1394-vendor PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME dc1394-vendor
@@ -159,7 +159,7 @@ endif()
 if(HAVE_MACOSX)
     file(GLOB dc1394-macosx_C dc1394/macosx/*.c dc1394/macosx/*.h)
     add_library(dc1394-macosx ${dc1394-macosx_C})
-    set_host_properties(dc1394-macosx PROPERTIES
+    set_target_properties(dc1394-macosx PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME dc1394-macosx
@@ -175,7 +175,7 @@ endif()
 if(HAVE_WINDOWS)
     file(GLOB dc1394-windows_C dc1394/windows/*.c dc1394/windows/*.h)
     add_library(dc1394-windows ${dc1394-windows_C})
-    set_host_properties(dc1394-windows PROPERTIES
+    set_target_properties(dc1394-windows PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME dc1394-windows
@@ -193,7 +193,7 @@ if(HAVE_LINUX)
         file(GLOB dc1394-juju_C dc1394/juju/*.c dc1394/juju/*.h)
         add_library(dc1394-juju ${dc1394-juju_C})
         add_definitions(-std=gnu99 -pedantic-errors -Wno-zero-length-array)
-        set_host_properties(dc1394-juju PROPERTIES
+        set_target_properties(dc1394-juju PROPERTIES
             VERSION ${PROJECT_VERSION}
             SOVERSION ${PROJECT_VERSION_MAJOR}
             OUTPUT_NAME dc1394-juju
@@ -209,7 +209,7 @@ if(HAVE_LINUX)
         add_definitions(-Wno-macro-redefined -Wno-format-pedantic)    
         file(GLOB dc1394-linux_SRC dc1394/linux/*.c dc1394/linux/*.h)
         add_library(dc1394-linux ${dc1394-linux_SRC})
-        set_host_properties(dc1394-linux PROPERTIES
+        set_target_properties(dc1394-linux PROPERTIES
             VERSION ${PROJECT_VERSION}
             SOVERSION ${PROJECT_VERSION_MAJOR}
             OUTPUT_NAME dc1394-linux
@@ -230,7 +230,7 @@ endif()
 if(LIBUSB_FOUND)
     file(GLOB dc1394-usb_C dc1394/usb/*.c dc1394/usb/*.h)
     add_library(dc1394-usb ${dc1394-usb_C})
-    set_host_properties(dc1394-usb PROPERTIES
+    set_target_properties(dc1394-usb PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         OUTPUT_NAME dc1394-usb

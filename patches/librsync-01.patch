@@ -29,18 +29,18 @@
  
  # Set properties/options for shared vs static library.
 -if (BUILD_SHARED_LIBS)
--  set_host_properties(rsync PROPERTIES C_VISIBILITY_PRESET hidden)
+-  set_target_properties(rsync PROPERTIES C_VISIBILITY_PRESET hidden)
 -else (BUILD_SHARED_LIBS)
 -  target_compile_options(rsync PUBLIC -DLIBRSYNC_STATIC_DEFINE)
 -endif (BUILD_SHARED_LIBS)
 +if (BUILD_SHARED_LIBS AND sfx STREQUAL "")
-+  set_host_properties(rsync${sfx} PROPERTIES C_VISIBILITY_PRESET hidden)
++  set_target_properties(rsync${sfx} PROPERTIES C_VISIBILITY_PRESET hidden)
 +else ()
 +  target_compile_options(rsync${sfx} PUBLIC -DLIBRSYNC_STATIC_DEFINE)
 +endif ()
  
--set_host_properties(rsync PROPERTIES
-+set_host_properties(rsync${sfx} PROPERTIES
+-set_target_properties(rsync PROPERTIES
++set_target_properties(rsync${sfx} PROPERTIES
      VERSION ${LIBRSYNC_VERSION}
 -    SOVERSION ${LIBRSYNC_MAJOR_VERSION})
 -install(TARGETS rsync ${INSTALL_TARGETS_DEFAULT_ARGS}

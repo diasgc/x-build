@@ -18,7 +18,7 @@
 +
 +if(BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
 +  add_library(density_static STATIC ${SRC})
-+  set_host_properties(density_static PROPERTIES OUTPUT_NAME density)
++  set_target_properties(density_static PROPERTIES OUTPUT_NAME density)
 +  list(APPEND density_targets density_static)
 +endif()
 +

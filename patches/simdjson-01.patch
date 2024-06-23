@@ -8,7 +8,7 @@
 +function(add_lib sfx lnk)
 +  add_library(simdjson${sfx} ${lnk} src/simdjson.cpp)
 +
-+  set_host_properties(
++  set_target_properties(
 +      simdjson${sfx} PROPERTIES
 +      VERSION "${SIMDJSON_LIB_VERSION}"
 +      SOVERSION "${SIMDJSON_LIB_SOVERSION}"
@@ -24,7 +24,7 @@
 +  add_lib("-static" STATIC)
 +endif()
  
--set_host_properties(
+-set_target_properties(
 -    simdjson PROPERTIES
 -    VERSION "${SIMDJSON_LIB_VERSION}"
 -    SOVERSION "${SIMDJSON_LIB_SOVERSION}"
