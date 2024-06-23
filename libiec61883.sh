@@ -1,17 +1,16 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK +++ ... ... ... CLANG
-# GNU +++ ... ... ... GCC
-# WIN  F  ... ... ... CLANG/GCC
 
 lib='libiec61883'
-pkg_deb="${lib}-dev"
 dsc='An isochronous streaming media library for IEEE 1394'
 lic='LGPL-2.1'
 src='https://github.com/Distrotech/libiec61883.git'
-cfg='ar'
 dep='libraw1394'
-eta='15'
+
+cfg='ar'
+
+dev_vrs='1.2.0'
+pkg_deb="libiec61883-dev"
+eta='76'
 
 lst_inc=''
 lst_lib=''
@@ -19,12 +18,14 @@ lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc=''
 
-dev_vrs=''
-
 #$host_mingw && unset dep
 
 . xbuild && start
 
+# cpu av8 av7 x86 x64
+# NDK +++ ... ... ... CLANG
+# GNU +++ ... ... ... GCC
+# WIN  F  ... ... ... CLANG/GCC
 
 
 

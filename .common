@@ -725,6 +725,7 @@ function setup_cmake_config {
 
   : "${build_cmd:=${MAKE_EXECUTABLE}}"
   : "${install_cmd:=${MAKE_EXECUTABLE}}"
+  : "${make_install:=install}"
   : "${install_args:=${make_install}}" 
 
   test -n "${make_args}" && build_args+=( "${make_args}")
@@ -832,7 +833,8 @@ function setup_meson_config {
   
   : "${build_cmd:=ninja}"
   : "${install_cmd:=ninja}"
-  : "${install_args:=install}"
+  : "${make_install:=install}"
+  : "${install_args:=${make_install}}"
   build_tag="ninja"
   test -n "${make_args}" && build_args+=( "${make_args}")
   build_args+=( "-j${HOST_NPROC}" )

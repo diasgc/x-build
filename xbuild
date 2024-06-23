@@ -308,6 +308,7 @@ start(){
 		make)
 			cfg_cmd=
 			build_cmd=${MAKE_EXECUTABLE}
+			install_args=install
 			build_tag="make"
 			test -n "${make_args}" && build_args=( "${make_args}" )
 			build_args+=( "-j$(nproc)" )
@@ -359,7 +360,7 @@ start(){
 
 	log_vars CFLAGS CXXFLAGS WFLAGS CPPFLAGS LDFLAGS LIBS
 
-	: "${make_install:=install}"
+	: "${install_args:=install}"
 	: "${skip_make:=false}"
 
 	if fn_defined 'on_make'; then
@@ -388,7 +389,7 @@ start(){
 	: "${skip_install:=false}"
 	if fn_defined 'on_install'; then
 		fn_log 'install' on_install
-	elif ! ${skip_install}; then
+	elif ! ${skip_install} && [ -n "${install_cmd}" ]; then
 		safe_cd "${dir_build}"
 		do_log 'install' "${install_cmd}" "${install_args}"
 	fi

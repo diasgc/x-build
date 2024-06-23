@@ -1,17 +1,15 @@
 #!/bin/bash
 
-# cpu av8 av7 x86 x64
-# NDK  .   .   .   .  clang
-# GNU  .   .   .   .  clang/gcc
-# WIN  .   .   .   .  clang/gcc
-
 lib='libraw1394'
-pkg_deb="${lib}-dev"
 dsc='Interface library for the Linux IEEE1394 drivers.'
 lic='LGPL-2.1'
 src='https://github.com/Distrotech/libraw1394.git'
+
 cfg='ac'
-eta='30'
+
+dev_vrs='2.0.5'
+pkg_deb="${lib}-dev"
+eta='80'
 
 lst_inc=''
 lst_lib=''
@@ -19,9 +17,12 @@ lst_bin=''
 lst_lic='COPYING.LIB AUTHORS'
 lst_pc=''
 
-dev_vrs='2.0.5'
-
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
 
 # Filelist
 # --------
