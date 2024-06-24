@@ -6,6 +6,7 @@ dist/*
 llvm-gnu/*
 utils/lz-string
 .config
+.config_old
 .vscode
 _test.sh
 _template.sh
