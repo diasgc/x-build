@@ -507,26 +507,6 @@ function build_dependencies {
   done
 }
 
-wget_pkg_tgz(){
-  local tag="$(basename ${1})"
-  tag="pkg: ${tag//_${arch}.tag.gz/}"
-  printf "${CD}%s${C0}" ${tag}
-  printf "\n\n$(date): wget/untar %-50s to %s" $1 $2 >>${log_file}
-  wget -qO- ${1} 2>>${log_file} | tar --transform 's/^dbt2-0.37.50.3/dbt2/' -xvz -C ${2} >>${log_file} 2>&1 || err
-  echo -e "\n\n" >>${log_file}
-  logok $tag
-}
-
-clean(){
-  echo -ne "${CT0}\n\tcleaning...\n"
-  rm -rf builds/$arch/$lib builds/$arch/$lib.log
-  pushdir sources/$lib
-  [ -f Makefile ] && make clean
-  popdir
-  echo -e "$C0\tdone"
-  clear
-}
-
 toolchain_android(){
   PLATFORM='Android'
   [ -d "${ANDROID_NDK_HOME}" ] || exit_err "No ANDROID NDK Toolchain found. Aborting."
@@ -631,8 +611,8 @@ loadToolchain(){
   LDFLAGS="-L${dir_install_lib}"
   cmake_system_processor="${host_trip[0]}${host_trip[1]}"
 
-  if $host_cross; then
-    case $PLATFORM in
+  if ${host_cross}; then
+    case "${PLATFORM}" in
       Android) toolchain_android;;
       Windows) toolchain_llvm_mingw;;
       Linux)   toolchain_linux;;
@@ -643,11 +623,11 @@ loadToolchain(){
     if ${use_clang}; then
       CROSS_PREFIX=llvm-
       CC=clang CXX=clang++ AS=${CC} LD=ld.lld
-      $host_native && CPPFLAGS="-mtune=native ${CPPFLAGS}"
+      ${host_native} && CPPFLAGS="-mtune=native ${CPPFLAGS}"
     else
       CROSS_PREFIX=
       CC=gcc CXX=g++ AS=as LD=ld
-      $host_native && CPPFLAGS="-march=native ${CPPFLAGS}"
+      ${host_native} && CPPFLAGS="-march=native ${CPPFLAGS}"
     fi
     ASM_NASM=nasm
   fi
@@ -664,7 +644,8 @@ loadToolchain(){
   STRINGS=${CROSS_PREFIX}strings
   STRIP=${CROSS_PREFIX}strip
   WINDRES=${CROSS_PREFIX}windres
-  [ -z ${GCOV+x} ] && GCOV=${CROSS_PREFIX}gcov
+
+  test -z ${GCOV+x} && GCOV=${CROSS_PREFIX}gcov
 
   # export
   export CMAKE_EXECUTABLE YASM PKG_CONFIG API \
