@@ -240,7 +240,7 @@ function get_source {
 	# check whether to custom get source
 	if fn_defined 'source_get'; then
 		fn_log 'get' source_get
-		unset sty
+		unset source_get
     return 0
   fi
   
@@ -280,6 +280,41 @@ function get_source {
 			*svn.*)        svn_clone "${src}" "${lib}";;
 			*)             exit_err "Unknown source type for ${src}";;
   esac
+}
+
+
+function github_jinfo {
+  local id="$(sed 's,https://github\.com/,,;s,\.git$,,' <<<${1})"
+}
+
+
+# usage: github_set_src_release <git_url>
+#   git_url: https://github.com/user/repo.git
+#   prefix: prefix for name of source file (default none)
+#   ext: extension for source file (default tar.gz)
+function github_set_src_release {
+  local id="$(sed 's,https://github\.com/,,;s,\.git$,,' <<<${1})"
+  local json="$(curl -s https://api.github.com/repos/${id}/releases/latest)"
+  test -z "${json}" && return 0
+  local tarball_url=$(jq -r .tarball_url <<<${json})
+  if [ "${tarball_url}" = "null" ]; then
+    json=$(curl -sL "https://api.github.com/repos/${s}/tags")
+    tarball_url=$(jq -r .[0].tarball_url <<<${json})
+    if [ "${tarball_url}" = "null" ]; then
+      git_clone ${src} ${lib} ${src_opt}
+      return 0
+    fi
+    vrs=$(jq -r .[0].name <<<${json})
+  else
+    vrs=$(jq -r .tag_name <<<${json})
+  fi
+	dir_src="${dir_sources}/${2}"
+  local tag="get ${vrs}"
+  echo -ne "${CD}${tag}${C0}"
+  test -d "${dir_src}" && rm -rf "${dir_src}"
+	mkdir "${dir_src}"
+	curl -sL ${tarball_url} -w %{url_effective} 2>>"${log_file}" | tar -xz -C ${dir_src} --strip-components=1 2>>"${log_file}"
+	logok "${tag}"
 }
 
 # git_clone <source> <libname/destfolder> <options>
@@ -341,13 +376,13 @@ function hg_clone {
 	do_log 'clone' hg clone $1 $2
 }
 
+
 # usage: github_get_latest_tarball <git-url> <dest-dir>
 # result: from the git-url, set vrs to the latest release
 # and downloads + extracts tarball to dest-dir
 function github_get_latest_tarball {
-  echo "$(date): $@" >> "${log_file}"
   local s="$(sed 's,https://github\.com/,,;s,\.git$,,' <<<${1})"
-  local json=$(curl --silent "https://api.github.com/repos/${s}/releases/latest")
+  local json="$(curl -s https://api.github.com/repos/${s}/releases/latest)"
   local tarball_url=$(jq -r .tarball_url <<<${json})
   if [ "${tarball_url}" = "null" ]; then
     json=$(curl -sL "https://api.github.com/repos/${s}/tags")
@@ -725,6 +760,7 @@ function setup_cmake_config {
 
   : "${build_cmd:=${MAKE_EXECUTABLE}}"
   : "${install_cmd:=${MAKE_EXECUTABLE}}"
+  : "${make_install:=install}"
   : "${install_args:=${make_install}}" 
 
   test -n "${make_args}" && build_args+=( "${make_args}")
@@ -821,7 +857,8 @@ function setup_am_config {
 
   : "${build_cmd:=${MAKE_EXECUTABLE}}"
   : "${install_cmd:=${MAKE_EXECUTABLE}}"
-  : "${install_args:=${make_install}}"
+  : "${make_install:=install}"
+  : "${install_args:=${make_install}}" 
   test -n "${make_args}" && build_args+=( "${make_args}")
   build_args+=( "-j${HOST_NPROC}")
   build_tag="make"
@@ -1784,42 +1821,6 @@ version_parse(){
     fi
   done
   echo "${arrv[@]:0:3}" | sed 's/ /./g'
-}
-
-git_vremote(){
-  local vrs_exclude='alpha|beta'
-  local lgit=$(git ls-remote $src)
-  local v=$(echo "${lgit}" | grep -oP '\d+\.\d+\.\d+.*' | grep -vP $vrs_exclude | tail -n1)
-  [ -z "${v}" ] && v=$(echo "${lgit}" | grep -oP '\d+\.\d+.*' | grep -vP $vrs_exclude | tail -n1)
-  if [ -n "${v}" ]; then
-    echo "${v}"
-  fi
-  return 0
-  awk -v vv="${lgit}" ss="${src}" -f - << 'EOF'
-BEGIN {
-  FS = "[ /^]+"
-  while ("echo " vv "| sort -Vk2" | getline) {
-    if (!sha)
-      sha = substr($0, 1, 7)
-    tag = $3
-  }
-  while ("curl -s " ss "/releases/tag/" tag | getline)
-    if ($3 ~ "commits")
-      com = $2
-  printf com ? "%s-%s-g%s\n" : "%s\n", tag, com, sha
-}
-EOF
-}
-
-get_patch(){
-  local match=$(grep -oP "(?<=^<<').*?(?=')" $1)
-  local out
-  if [ -n "${match}" ]; then
-    out=${match}
-    local block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $1)
-    out+="\n${block}"
-  fi
-  echo ${out}
 }
 
 test_c0(){

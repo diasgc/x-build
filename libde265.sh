@@ -6,12 +6,14 @@ lic='LGPL-3.0'
 src='https://github.com/strukturag/libde265.git'
 
 cfg='cmake'
-cmake_static='BUILD_STATIC_LIBS'
 cmake_config='-DENABLE_SDL=OFF'
-
-on_config(){
-  cmake_config+=" -DDISABLE_SSE=$(bool2str ${host_arm} ON OFF)"
-}
+cmake_add_compile_options+=( 
+  -Wno-unused-variable
+  -Wno-unused-but-set-variable 
+  -Wno-uninitialized 
+  -Wno-unused-function 
+  -Wno-tautological-negation-compare
+  -Wno-mismatched-tags )
 
 lst_inc='libde265/*.h'
 lst_lib='liblibde265'
@@ -21,7 +23,7 @@ lst_pc='libde265.pc'
 
 dev_bra='main'
 dev_vrs='1.0.15'
-eta='140'
+eta='176'
 pkg_deb='libde265-dev'
 
 . xbuild && start

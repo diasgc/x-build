@@ -1,8 +1,4 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK N/A N/A  .   .  clang
-# GNU N/A N/A  .   .  gcc
-# WIN N/A N/A  .   .  clang/gcc
 
 lib='xevd'
 dsc='eXtra-fast Essential Video Decoder, MPEG-5 EVC (Essential Video Coding)'
@@ -58,3 +54,8 @@ lst_lic='COPYING'
 lst_pc="xevd${sfx}.pc"
 
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK N/A N/A  .   .  clang
+# GNU N/A N/A  .   .  gcc
+# WIN N/A N/A  .   .  clang/gcc

@@ -1,8 +1,4 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK  +  N/A  .   .  clang
-# GNU  F   F   .   .  gcc
-# WIN  F   F   .   .  clang/gcc
 
 lib='xeve'
 dsc='eXtra-fast Essential Video Encoder, MPEG-5 EVC (Essential Video Coding)'
@@ -27,9 +23,7 @@ WFLAGS+=" -Wno-unknown-warning-option \
 
 on_config(){
     cmake_config+=" -DXEVE_NATIVE_BUILD=$(bool2str ${host_native} ON OFF)"
-    cmake_config+=" -DARM=$(bool2str ${host_arm} ON OFF)"
-    #$host_native && cmake_config+=' -DXEVE_NATIVE_BUILD=ON'
-    #$host_arm && cmake_config+=" -DARM=TRUE"
+    cmake_config+=" -DARM=$(bool2str ${host_arm} TRUE FALSE)"
 }
 
 on_end(){
@@ -41,9 +35,9 @@ on_end(){
 }
 
 dev_bra='main'
-dev_vrs='0.5.0'
+dev_vrs='0.5.1'
 pkg_deb=''
-eta='0'
+eta='112'
 
 lst_inc="xeveb${sfx}/*.h"
 lst_lib="libxeve${sfx}"
@@ -52,3 +46,12 @@ lst_lic='COPYING'
 lst_pc="xeve${sfx}.pc"
 
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK  +  N/A  .   .  clang
+# GNU  F   F   .   .  gcc
+# WIN  F   F   .   .  clang/gcc
+
+# clang mingw-arm64: call to undeclared function 'posix_memalign'
+#                    passing '__m128d' (aka 'float64x2_t') to parameter of incompatible type 'float32x4_t'
+# clang gnu-arm64:   passing '__m128d' (aka 'float64x2_t') to parameter of incompatible type 'float32x4_t'
