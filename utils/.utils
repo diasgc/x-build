@@ -718,18 +718,6 @@ github_repo_id(){
   echo "${paths[2]}/${paths[3]}"
 }
 
-github_json(){
-  local paths=( ${1//\// } )
-  local url=
-  case ${paths[1]} in 
-    github.com) url="https://api.github.com/repos/${paths[2]}/${paths[3]}";;
-    *) echo;;
-  esac
-  local json=${dir_root}/builds/${libname}.info
-  wget -q $url -O ${json}
-  echo ${json}
-}
-
 github_description(){
   local paths=( ${1//\// } )
   local url=

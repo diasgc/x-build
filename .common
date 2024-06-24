@@ -178,13 +178,26 @@ function check_pkg_deb {
   done
 }
 
+
+function pkg_github_info {
+  if [ -z "${lic}" ] || [ -z "${dsc}" ];then
+    gitjson="$(git_api_tojson ${src})"
+    if [ -n "${gitjson}" ];then
+      #echo -ne "${CY1}${b}${C0}"
+      : "${lic:=$(jq -r .licence <<<${gitjson})}"
+      : "${dsc:=$(jq -r .description <<<${gitjson})}"
+    fi
+  fi
+}
+
+
 #usage xbuild --new <github_url>
 function generate_script {
   test -z "${1}" && exit_err "Usage: xbuild --new <git-url>"
-  
   local giturl="${1/\.git}"
   local libname="${giturl##*/}" && libname="${libname,,}"
   local scriptname="${dir_root}/${libname}.sh"
+  local jsonf
   
   cp "${dir_root}/utils/script.template" ${scriptname}
   chmod +x "${scriptname}"
@@ -195,41 +208,36 @@ function generate_script {
 
   case ${giturl} in
     *github*)
-      local json=$(github_json $srcname)
-      local libdesc=$(cat ${json} | jq .description | xargs)
-      local lic=$(cat ${json} | jq .license.name | xargs)
-      test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
-      test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname};;
+      jsonf="$(github_create_info_json ${srcname})"
+      dsc="$(jq -r .description <${jsonf})"
+      lic="$(jq -r .license.name <${jsonf})"
+      test -n "${dsc}" && dsc="${dsc%%\. *}" && sed -i 's/@desc@/'"${dsc}"'/g' ${scriptname}
+      test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname}
+      ;;
+    *gitlab*)
+      ;;
   esac
 
-  echo -e "${CD}${ind}${CD}    Done.New script generated: \e[4m${scriptname}\e[24m${C0}\n\n"
+  exit_info "Done. New script generated: \e[4m${scriptname}\e[24m${C0}\n\n"
 }
 
-#usage xbuild --new <github_url>
-generate_script_old(){
-  test -z "${1}" && exit_err "Usage: xbuild --new <git-url>"
-  local giturl="${1}"
-  local srcname="${giturl/\.git/}"
-  local libname="${srcname##*/}"
-  libname="${libname,,}"
-  case ${libname} in *.git) libname=${libname/\.git/};; esac
-  local scriptname="${dir_root}/${libname}.sh"
-  cp "${dir_root}/utils/script.template" ${scriptname}
-  chmod +x "${scriptname}"
-  sed -i 's,@src@,'${giturl}',g;s,@lib@,'${libname}',g' ${scriptname}
-  local pkgname="lib${libname//lib/}-dev"
-  test -z "$(apt-cache show ${pkgname} 2>/dev/null | grep ${pkgname})" && pkgname=
-  sed -i 's,@pkg_deb@,'${pkgname}',g' ${scriptname}
-  case $giturl in
-    *github*)
-      local json=$(github_json $srcname)
-      local libdesc=$(cat ${json} | jq .description | xargs)
-      local lic=$(cat ${json} | jq .license.name | xargs)
-      test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
-      test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname};;
+function github_create_info_json {
+  local paths=( ${1//\// } )
+  local url="https://api.github.com/repos/${paths[2]}/${paths[3]}"
+  local json="${dir_root}/builds/${libname}.info"
+  wget -q ${u} -O "${json}"
+  echo ${json}
+}
+
+git_api_tojson(){
+  local s=$(sed 's/https:\/\///g; s/\// /g; s/\.git$//' <<<"${1}")
+  set -- $s
+  case ${1} in
+    github*) echo -e "$(curl https://api.github.com/repos/${2}/${3} 2>/dev/null)";;
+    gitlab*) echo -e "$(curl -XGET -H "Content-Type: application/json" "https://${1}/api/v4/projects/${2}%2F${3}" 2>/dev/null)";;
+    *) echo;;
   esac
 }
-
 
 function get_source {
   
@@ -695,39 +703,6 @@ function config_guess {
   return 0
 }
 
-
-
-# check build system and set defaults - static and shared build options
-function config_init {
-
-  # if no cfg provided, try to guess
-  test -z "${cfg}" && config_guess
-  test -z "${cfg}" && exit_err 'No build system found. Exiting.'
-  
-  case "${cfg}" in
-    cm|ccm|cmake|ccmake)
-      build_system=cmake
-      ;;
-    ab|am|ac|ar|ag|auto*)
-      build_system=automake
-      ;;
-    meson)
-      build_system=meson
-      ;;
-    bazel)
-      build_system=bazel
-      ;;
-    cargo)
-      build_system=cargo
-      lib_link="--library-type=$(bool2str ${build_static} staticlib dylib)"
-      ;;
-    mk|make) build_system=make;;
-    other) build_system=other;;
-    *) unset build_system;;
-  esac
-}
-
-
 #usage build_pkgconfig [--filename=lib.pc][--prefix=install_dir]...[--libs=-la,-lb,-lc,...]
 function build_pkgconfig {
   local pkgconfig_file="${lib}.pc"
@@ -897,6 +872,11 @@ function exit_err {
     [ "${openlog}" != "n" ] && nano "${log_file}"
   fi
   exit 1
+}
+
+function exit_info {
+  echo -e "${CY1}  Info: ${CY0}${1}${C0}\n\n"
+  exit 0
 }
 
 function err {
@@ -1351,16 +1331,6 @@ git_local_version(){
   echo $out
 }
 
-git_api_tojson(){
-  local s=$(echo "$1" | sed 's/https:\/\///g; s/\// /g; s/\.git$//')
-  set -- $s
-  case ${1} in
-    github*) echo -e "$(curl https://api.github.com/repos/${2}/${3} 2>/dev/null)";;
-    gitlab*) echo -e "$(curl -XGET -H "Content-Type: application/json" "https://${1}/api/v4/projects/${2}%2F${3}" 2>/dev/null)";;
-    *) echo;;
-  esac
-}
-
 get_latest_release() {
   local s=$(echo "$1" | sed 's/https:\/\///g; s/\// /g; s/\.git$//')
   set -- $s
@@ -1401,10 +1371,6 @@ gitlab_licence(){
   else
     echo
   fi
-}
-
-github_json_desc(){
-  echo "${1}" | jq .description | sed 's/"//g'
 }
 
 github_jq(){

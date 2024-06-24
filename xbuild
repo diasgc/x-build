@@ -684,7 +684,6 @@ set_host_build(){
     host_trip[3]=${a2}
   fi
   set_env
-  STRIP=strip
 }
 
 set_env(){
@@ -872,6 +871,9 @@ host_cross=$([ "${build_arch}" == "${arch}" ] && false || true)
 
 loadToolchain
 
+# exit if missing vars lib arch or src
+test -z "${lib}" && exit_info "  ${arch} toolchain is loadad.\n  Now exiting...\n\n"
+
 if ${banner} && ! ${is_running}; then
   show_banner
   is_running=true
@@ -881,7 +883,21 @@ if [ -n "${sudo}" ] && ! ${sudo} -n true 2>/dev/null; then
   echo -ne "${CY1}Requesting sudo for tool install " && sudo echo -e "\e[1A\e[2K"
 fi
 
-config_init
+# check build system
+# if no cfg provided, try to guess
+test -z "${cfg}" && config_guess
+test -z "${cfg}" && exit_err 'No build system found. Exiting.'
+
+case "${cfg}" in
+  cmake)   build_system=cmake;;
+  meson)   build_system=meson;;
+  bazel)   build_system=bazel;;
+  cargo)   build_system=cargo;;
+  mk|make) build_system=make;;
+  other)   build_system=other;;
+  ab|am|ac|ar|ag|auto*) build_system=automake;;
+  *)       unset build_system;;
+esac
 
 export arch update retry \
 build_shared build_static build_bin build_system \
@@ -890,25 +906,7 @@ lib_link cfg_bin LIBSDIR PLATFORM CPU ABI EABI \
 host_arch host_64 host_eabi host_vnd host_arm host_os \
 mingw_posix MAKE_EXECUTABLE cmake_includes
 
-
-# exit if missing vars lib arch or src
-if [ -z "${lib}" ]; then
-  echo -e "\n\n\t${CB1}  Toolchain is loadad.\n\tNow exiting...\n\n${C0}"
-  return 0
-fi
-
 inc_tab
-
-if [ -z "${lic}" ] || [ -z "${dsc}" ];then
-  gitjson="$(git_api_tojson ${src})"
-  if [ -n "${gitjson}" ];then
-    #echo -ne "${CY1}${b}${C0}"
-    : "${lic:=$(echo "$gitjson" | jq .licence)}"
-    : "${dsc:=$(echo "$gitjson" | jq .description)}"
-  fi
-fi
-
-test ! -d "${dir_install}" && mkdir -p "${dir_install}"
 
 # show package info
 export log_file="${dir_install}/${lib}.log"
