@@ -216,7 +216,7 @@ XB_HAS_MINGW_CLANG=true
 XB_HAS_MINGW_GCC=false
 
 # first-time load common functions
-[ -z ${vsh+x} ] && . .common
+test -z ${vsh+x} && source .common
 
 # set cyan theme color
 CH=${CC0}
@@ -341,9 +341,7 @@ check_install gcc g++
 gcc_version=$(gcc -dumpversion)
 printf "${CH}%-20s: ${C0}%s\n" '  gcc version' ${gcc_version}
 
-if [ ! -d "builds/toolchain" ]; then
-    mkdir -p builds/toolchain
-fi
+safe_mkdir ${dir_root}/builds/toolchain
 export dir_toolchain="$(pwd)/builds/toolchain"
 
 echo -e "\n${CC1}GNU-GCC:"

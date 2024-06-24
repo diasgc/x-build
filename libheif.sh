@@ -1,36 +1,30 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  +   .   .   .   +   F   .   .   .   .   .  static
-#  +   .   .   .   .   F   .   .   .   .   .  shared
-#  +   .   .   .   +   F   .   .   .   .   .  bin
 
 lib='libheif'
-pkg_deb='libheif-dev'
 dsc='HEIF and AVIF file format decoder and encoder'
 lic='LGPL-3.0'
 src='https://github.com/strukturag/libheif.git'
-cfg='cmake'
 dep='libpng libjpeg x265 libde265 aom'
-eta='60'
 mingw_posix=true
 
+cfg='cmake'
 cmake_config='-DWITH_AOM=ON -DWITH_X265=ON -DWITH_DAV1D=OFF -DWITH_LIBDE265=ON -DWITH_RAV1E=OFF -DBUILD_TESTING=OFF'
 cmake_bin='WITH_EXAMPLES'
-am_config='--disable-rav1e --disable-go --disable-gdk-pixbuf'
-am_bin='--disable-examples|--enable-examples'
+
+on_config_ndk(){
+    LIBS+=" -llog"
+}
 
 dev_bra='main'
 dev_vrs='1.17.6'
+pkg_deb='libheif-dev'
+eta='60'
 
 lst_inc='libheif/*.h'
 lst_lib='libheif'
 lst_bin='heif-convert heif-enc heif-info'
 lst_lic='LICENSE AUTHORS'
 lst_pc='libheif.pc'
-
-on_config_ndk(){
-    LIBS+=" -llog"
-}
 
 . xbuild && start
 
