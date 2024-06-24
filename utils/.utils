@@ -1,16 +1,653 @@
 #!/bin/bash
 
+
+# cmake utils
+
+function setup_cmake_config {
+  # build: make
+  
+  : "${cmake_builddir:=${dir_config}}"
+  : "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
+  : "${cmake_shared:=BUILD_SHARED_LIBS}"
+  
+  cfg_args=("${cmake_builddir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}")
+  
+  if ${host_cross}; then
+    [ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain "${dir_build}"
+    [ -f "${cmake_toolchain_file}" ] && cfg_args+=( "-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}" )
+  fi
+
+  test -n "${cmake_config}" && cfg_args+=( "${cmake_config}" )
+
+  case "${cmake_shared}" in
+    -D*=*) ${build_shared} && cfg_args+=( "${cmake_shared}" );;
+    *)     cfg_args+=( "-D${cmake_shared}=$(bool2str ${build_shared} ON OFF)" );;
+  esac
+  if [ -z "${cmake_static}" ]; then
+    cmake_static="$(grep -oP 'BUILD_STATIC_LIBS' ${dir_config}/CMakeLists.txt | head -n1)"
+  fi
+  if [ -n "${cmake_static}" ]; then
+    case "${cmake_static}" in
+      -D*=*) ${build_static} && cfg_args+=( "${cmake_static}" );;
+      *)     cfg_args+=( "-D${cmake_static}=$(bool2str ${build_static} ON OFF) ${lib_link}");;
+    esac
+  fi
+  if [ -n "${cmake_bin}" ]; then
+    case "${cmake_bin}" in
+      -D*=*) ${build_bin} && cfg_args+=( "${cmake_bin}" );;
+      *) cfg_args+=( "-D${cmake_bin}=$(bool2str ${build_bin} ON OFF)" );;
+    esac
+  fi
+  test -n "${CPACK}" && cfg_args+=( "${CPACK}" )
+  cfg_args+=( -Wno-dev )
+
+  : "${build_cmd:=${MAKE_EXECUTABLE}}"
+  : "${install_cmd:=${MAKE_EXECUTABLE}}"
+  : "${make_install:=install}"
+  : "${install_args:=${make_install}}" 
+
+  test -n "${make_args}" && build_args+=( "${make_args}")
+  build_args+=( "-j${HOST_NPROC}")
+  build_tag="make"
+  
+  
+  #do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
+  #case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
+}
+
+# usage cmake_create_toolchain <dir>
+cmake_create_toolchain(){
+  cmake_build_toolchainfile
+}
+
+cmake_clang_toolchain(){
+  export cmake_toolchain_file="${dir_build}/${arch}.cmake"
+  cat <<-EOF >${cmake_toolchain_file}
+	set(CMAKE_SYSTEM_NAME "${PLATFORM}")
+	set(CMAKE_SYSTEM_PROCESSOR "${cmake_system_processor}")
+	set(CMAKE_C_COMPILER ${CC})
+	set(CMAKE_CXX_COMPILER ${CXX})
+	set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
+	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+	set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
+	EOF
+}
+
+: "${cmake_fulltoolchain:=true}"
+
+cmake_build_toolchainfile(){
+  export cmake_toolchain_file="${dir_build}/${arch}.cmake"
+  cat <<-EOF >${cmake_toolchain_file}
+	set(CMAKE_SYSTEM_NAME "${PLATFORM}")
+	set(CMAKE_SYSTEM_PROCESSOR "${cmake_system_processor}")
+	set(CMAKE_C_COMPILER ${CC})
+	set(CMAKE_CXX_COMPILER ${CXX})
+	set(CMAKE_ASM_NASM_COMPILER ${ASM_NASM})
+	EOF
+	
+  ${cmake_fulltoolchain} && cat <<-EOF >>${cmake_toolchain_file}
+	set(CMAKE_AR ${AR} CACHE FILEPATH Archiver)
+	set(CMAKE_RANLIB ${RANLIB} CACHE FILEPATH Indexer)
+	set(CMAKE_C_COMPILER_AR "${AR}")
+	set(CMAKE_CXX_COMPILER_AR "${AR}")
+	set(CMAKE_C_COMPILER_RANLIB "${RANLIB}")
+	set(CMAKE_CXX_COMPILER_RANLIB "${RANLIB}")
+	set(CMAKE_OBJDUMP "${OBJDUMP}")
+	set(CMAKE_OBJCOPY "${OBJCOPY}")
+	set(CMAKE_READELF "${READELF}")
+	set(CMAKE_STRIP "${STRIP}")
+	set(CMAKE_ADDR2LINE "${ADDR2LINE}")
+	set(CMAKE_LINKER "${LD}")
+	set(CMAKE_NM "${NM}")
+	set(CMAKE_POSITION_INDEPENDENT_CODE 1)
+	EOF
+	
+  ${host_cross} && cat <<-EOF >>${cmake_toolchain_file}
+	set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
+	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+	set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
+	EOF
+
+  ${host_x86} && cat <<-EOF >>${cmake_toolchain_file}
+	set(CMAKE_C_COMPILER_ARG1 "-m32")
+	set(CMAKE_CXX_COMPILER_ARG1 "-m32")
+	EOF
+	
+  ${host_ndk} && cat <<-EOF >>${cmake_toolchain_file}
+	set(CMAKE_ANDROID_NDK OFF)
+	set(ANDROID_ABI ${ABI})
+	set(ANDROID_PLATFORM ${API})
+	set(ANDROID_NDK ${ANDROID_NDK_HOME})
+	set(ANDROID_STL c++_$(bool2str ${build_shared} shared static))
+	set(ZLIB_INCLUDE_DIRS ${SYSROOT}/usr/include)
+	set(ZLIB_LIBRARIES ${SYSROOT}/usr/lib/${arch})
+	set(ZLIB_VERSION_STRING 1.2.11)
+	include(${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake)
+	EOF
+	
+  #mingw_stdlibs='-lwsock32 -lws2_32 -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32'
+  mingw_stdlibs='-static-libgcc -static-libstdc++ -lwsock32 -lws2_32'
+  mingw_exelink='-Wl,-Bstatic'
+  #mingw_exelink='-static-libgcc -static-libstdc++ -Wl,-pdb='
+  ${host_mingw} && cat <<-EOF >>${cmake_toolchain_file}
+	set(CMAKE_COMPILER_IS_MINGW ON)
+	set(CMAKE_FIND_ROOT_PATH \${CMAKE_FIND_ROOT_PATH} ${LLVM_MINGW_HOME}/generic-w64-mingw32 ${LLVM_MINGW_HOME}/${arch}-w64-mingw32/bin)
+	set(CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES "${LLVM_MINGW_HOME}/${arch}/include/c++/v1;${LLVM_MINGW_HOME}/lib/clang/*/include;${LLVM_MINGW_HOME}/${arch}/include")
+	set(CMAKE_RC_COMPILER ${CROSS_PREFIX}windres)
+	set(CMAKE_MC_COMPILER ${CROSS_PREFIX}windmc)
+	set(CMAKE_CXX_STANDARD_LIBRARIES "${mingw_stdlibs} \${CMAKE_CXX_STANDARD_LIBRARIES}")
+	#set(CMAKE_EXE_LINKER_FLAGS "${mingw_exelink} \${CMAKE_EXE_LINKER_FLAGS}")
+	set(CMAKE_FIND_LIBRARY_PREFIXES "lib" "")
+	set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" ".dll.a" ".lib" ".a")
+	EOF
+	
+  #cmake_addcpack
+  test -n "${cmake_definitions}"         && echo "add_definitions("${cmake_definitions[@]}")" >>${cmake_toolchain_file}
+  test -n "${cmake_add_link_options}"    && echo "add_link_options("${cmake_add_link_options}")" >>${cmake_toolchain_file}
+  test -n "${cmake_add_compile_options}" && echo "add_compile_options("${cmake_add_compile_options[@]}")" >>${cmake_toolchain_file}
+  test -n "${cmake_cxx_flags_release}"   && echo "set(CMAKE_CXX_FLAGS_RELEASE \""${cmake_cxx_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
+  test -n "${cmake_c_flags_release}"     && echo "set(CMAKE_C_FLAGS_RELEASE \""${cmake_c_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
+  test -n "${cmake_include_directories}" && echo "include_directories("${cmake_include_directories[@]}")" >>${cmake_toolchain_file}
+  test -n "${WFLAGS}"                    && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}	
+}
+
+cmake_shouldreplace_cmakelists(){
+  test ! "x${cfg}" == "xcmake" && return 0
+  test -f "${dir_config}/CMakeLists.txt" && test -z "${cmake_file}" && return 0
+  test -f "${dir_root}/cmake/${lib}.cmake" && return 1
+}
+
+cmake_generate_pkgconfig_pc_in(){
+  cat <<-EOF >"${dir_src}/${lib}.pc.in"
+	prefix=@CMAKE_INSTALL_PREFIX@
+	exec_prefix=${prefix}
+	libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
+	includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+	
+	Name: @PROJECT_NAME@
+	Description: @CMAKE_PROJECT_DESCRIPTION@
+	URL: @CMAKE_PROJECT_HOMEPAGE_URL@
+	Version: @PROJECT_VERSION@
+	Requires: 
+	Requires.private: @REQ_PRIVATE@
+	Libs: -L${libdir} -l@PROJECT_NAME@
+	Libs.private: @LIBS_PRIVATE@
+	Cflags: -I${includedir}
+	EOF
+}
+
+cmake_build_package(){
+  local brk=false
+  local flist=
+
+  until $brk; do
+    read l || brk=true
+	flist="$(echo $l | sed 's|'${dir_install}'/||') $flist"
+  done < ${dir_build}/install_manifest.txt
+
+  # add manual pc files
+  if [ -n "${pc_llib}" ]; then
+    flist="lib/pkgconfig/${pc_llib//-l/lib}.pc ${flist}"
+  elif [ -n "${pc_llibs}" ]; then
+    for ll in $pc_llibs; do
+      flist="lib/pkgconfig/${ll//-l/lib}.pc ${flist}"
+    done
+  fi
+
+  # check licence files
+  if [ -n "${lst_lic}" ]; then
+    [ -d "${dir_install}/share/doc/${lib}" ] || mkdir -p "${dir_install}/share/doc/${lib}"
+    for f in ${lst_lic}; do
+      if [ ! -f "${dir_install}/share/doc/${lib}/${f}" ]; then
+        cp ${dir_src}/${f} "${dir_install}/share/doc/${lib}/"
+        flist="share/doc/${lib}/${f} ${flist}"
+      fi
+    done
+  fi
+
+  # no flist, return
+  [ -z "${flist}" ] && return 0
+
+  # sort flist
+  flist=$(echo ${flist} | xargs -n1 | sort | xargs)
+
+  Pushdir ${dir_install}
+
+  local v=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
+  v=$(version_parse $v)
+  local sfx=
+  $build_shared || sfx='-static'
+  $build_static || sfx='-shared'
+  local fn="${lib}${sfx}_${v}_${arch}"
+
+  case ${pkg_fmt} in
+    tbz)
+      fn="${fn}.tar.bz2"
+      tar -cvjSf "${fn}" ${flist}
+      ;;
+    zip)
+      fn="${fn}.zip"
+      zip -r "${fn}" ${flist}
+      ;;
+    *)
+      fn="${fn}.tar.gz"
+      tar -czvf "${fn}" ${flist}
+      ;;
+  esac
+  [ -d "${dir_pkgdist}" ] || mkdir -p ${dir_pkgdist}
+  mv "${fn}" ${dir_pkgdist}/${fn}
+
+  if [ -z "$(cat ${dir_root}/${lib}.sh | grep '# Filelist')" ]; then
+    echo -e "\n\n# Filelist\n# --------" >> ${dir_root}/${lib}.sh
+    echo "# ${flist}" | sed 's| |\n# |g' >> ${dir_root}/${lib}.sh
+  fi
+  popdir
+}
+
+cmake_check_cmakefiles(){
+  if [ -f "${dir_root}/cmake/${lib}.cmake" ]; then
+    test -f "${dir_src}/CMakeLists.txt" && mv ${dir_src}/CMakeLists.txt ${dir_src}/CMakeLists.orig
+    cp ${dir_root}/cmake/${lib}.cmake ${dir_src}/CMakeLists.txt
+  elif [ -n "${cmake_file}" ]; then
+    cp ${dir_root}/cmake/${cmake_file} ${dir_src}/CMakeLists.txt
+  fi
+  return 0
+}
+
+#1=cmake_key 2=$build_key_bool 
+cmake_readkey(){
+  local arr
+  local ret
+  if [ -n "${!1}" ]; then
+    arr=(${!cfg_static//|/ })
+    case ${#arr[@]} in
+      1) ${!2} && ret="-D${arr[0]}=ON" || ret="-D${arr[0]}=OFF";;
+      2) ${!2} && ret="-D${arr[0]}" || ret="-D${arr[1]}";;
+    esac
+  fi
+  echo "${ret}"
+}
+
+cmake_include_directories(){
+  printf "include_directories($@)" >>${cmake_toolchain_file}
+}
+
+# SYNTAX: cmake_install_ext [./cmake/]src [sources/lib/]dstpath
+cmake_install_ext(){
+  local src
+  local dst
+  test -f "$1" && src=$1 || src="${dir_sources}/../cmake/$1"
+  test -f "$src" || do_log "$1 dir does not exists"
+  test -z "$2" && dst=${dir_src}/$2 || dst=$2
+  test -f "$dst" || dst="${dir_src}/$dst"
+  test -f "$dst" || do_log "$dst does not exists"
+  cp -f ${src} ${dst}
+}
+
+cmake_create_cmakelists(){
+  cmake_install_ext $1 ${dir_src}/CMakeLists.txt
+}
+
+cmake_addcpack(){
+  [ -z "${vnd}" ] && str_contains $src 'git' && vnd=$(git_vendor $src) || vnd=$lib
+  local u_email=$(git config --list | grep -oP '(?<=^user.email=).*$')
+  local u_name=$(git config --list | grep -oP '(?<=^user.name=).*$')
+  local f_lic=$(echo "$lst_lic" | awk '{print $1}')
+  [ -z "${vrs}" ] && vrs=$(git describe --git-dir=${dir_src}/.git --abbrev=0 --tags 2>/dev/null)
+  [ -z "${vrs}" ] && vrs='0.0.0'
+  export CPACK="-DCPACK_RESOURCE_FILE_LICENSE=${dir_src}/${f_lic} -DCPACK_PACKAGE_VERSION=\${CMAKE_PROJECT_VERSION} -DCPACK_PACKAGE_FILE_NAME=\${CMAKE_PROJECT_NAME}_\${CMAKE_PROJECT_VERSION}_${arch}"
+  cat <<-EOF >>${cmake_toolchain_file}
+	set(CPACK_PACKAGE_NAME "${lib}")
+	set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${dsc}")
+	set(CPACK_PACKAGE_VENDOR "${vnd}")
+	set(CPACK_VERBATIM_VARIABLES YES)
+	set(CPACK_PACKAGE_INSTALL_DIRECTORY ${CPACK_PACKAGE_NAME})
+	set(CPACK_OUTPUT_FILE_PREFIX "${dir_pkgdist}")
+	set(CPACK_PACKAGING_INSTALL_PREFIX "${dir_install}")
+	set(CPACK_PACKAGE_CONTACT "${u_email}")
+	set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${u_name}")
+	#set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+	# package name for deb
+	# if set, then instead of some-application-0.9.2-Linux.deb
+	# you'll get some-application_0.9.2_amd64.deb (note the underscores too)
+	set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+	# if you want every group to have its own package,
+	# although the same happens if this is not sent (so it defaults to ONE_PER_GROUP)
+	# and CPACK_DEB_COMPONENT_INSTALL is set to YES
+	set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)#ONE_PER_GROUP)
+	# without this you won't be able to pack only specified component
+	set(CPACK_DEB_COMPONENT_INSTALL YES)
+	include(CPack)
+	EOF
+}
+
+
+
+
+
+
+# automake utils
+
+function setup_am_config {
+
+  # use autotools and configure executable to create makefile
+  ${ac_reconf} && autoreconf -fi 2>/dev/null >>${log_file}
+
+  cfg_cmd="${dir_config}/configure"
+
+  if [ -n "${ac_opts}" ]; then
+    for opt in $(echo ${ac_opts}); do
+      case $opt in
+        --update-config_sub)
+          logf 'Apply --update-config_sub'
+          local fpath=$(find ${dir_src} -name 'config.sub')
+          test -f "${fpath}" && cp -f /usr/share/automake*/config.sub ${fpath}
+          ;;
+        --update-config_guess)
+          logf 'Apply --update-config_guess'
+          local fpath=$(find ${dir_src} -name 'config.guess')
+          test -f "${fpath}" && cp -f /usr/share/automake*/config.guess ${fpath}
+          ;;
+        --no-sysroot)
+          am_nosysroot=true
+          ;;
+        --no-pic)
+          am_nopic=true
+          ;;
+        --no-host)
+          am_nohost=true
+          ;;
+      esac
+    done
+  fi
+
+  cfg_args=("--prefix=${dir_install}")
+
+  if ! ${am_nohost} && ${host_cross} && [ -n "$(grep '\-\-host' ${cfg_cmd})" ]; then 
+    ${am_nohost} || cfg_args+=( "--host=${arch}" )
+  fi
+
+  if ! ${am_nosysroot}; then
+    if [ -n "$(grep '\-\-with-sysroot' ${cfg_cmd})" ]; then
+      cfg_args+=( "--with-sysroot=${SYSROOT}" )
+    elif [ -n "$(grep '\-\-sysroot' ${cfg_cmd})" ]; then
+      cfg_args+=( "--sysroot=${SYSROOT}" )
+    fi
+  fi
+
+  if ! ${am_nopic} && ! ${host_mingw} && [ -n "$(grep '\-\-with-pic' ${cfg_cmd})" ]; then
+    cfg_args+=( "--with-pic" )
+  fi
+  
+  # find static build option
+  : "${am_static:=static}"
+  cfg_args+=( "--$(bool2str ${build_static} enable disable)-${am_static}" )
+  
+  #if ${build_static}; then
+  #  if [ -n "${am_static}" ]; then
+  #    cfg_args+=( "${am_static}" )
+  #  elif [ -n "$(grep '\-\-enable-static' ${cfg_cmd})" ]; then
+  #    cfg_args+=( "--enable-static")
+  #  fi
+  #fi
+
+  # find shared build option
+  : "${am_shared:=shared}"
+  cfg_args+=( "--$(bool2str ${build_shared} enable disable)-${am_shared}" )
+
+  #if ${build_shared}; then
+  #  if [ -n "${am_shared}" ]; then
+  #    cfg_args+=( "${am_shared}" )
+  #  elif [ -n "$(grep '\-\-enable-shared' ${cfg_cmd})" ]; then
+  #    cfg_args+=( "--enable-shared")
+  #  fi
+  #fi
+  
+  if [ -n "${am_bin}" ]; then
+    case "${am_bin}" in
+      --*) cfg_args+=( "${am_bin}" );;
+      *)   cfg_args+=( "--$(bool2str ${build_bin} enable disable)-${am_bin}");;
+    esac
+  fi
+  test -n "${am_config}" && cfg_args+=( "${am_config}" )
+
+  : "${build_cmd:=${MAKE_EXECUTABLE}}"
+  : "${install_cmd:=${MAKE_EXECUTABLE}}"
+  : "${install_args:=${make_install}}"
+  test -n "${make_args}" && build_args+=( "${make_args}")
+  build_args+=( "-j${HOST_NPROC}")
+  build_tag="make"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+# meson utils
+
+# see https://mesonbuild.com/Commands.html for command line options
+function setup_meson_config {
+  
+  : "${build_cmd:=ninja}"
+  : "${install_cmd:=ninja}"
+  : "${make_install:=install}"
+  : "${install_args:=${make_install}}"
+  build_tag="ninja"
+  test -n "${make_args}" && build_args+=( "${make_args}")
+  build_args+=( "-j${HOST_NPROC}" )
+
+  cfg_cmd='meson'
+  cfg_args=('setup' '--buildtype=release' "--prefix=${dir_install}")
+  
+  if ${host_cross}; then
+    local cfg_file="${dir_config}/${arch}.meson"
+    meson_create_toolchain ${cfg_file}
+    cfg_args+=("--cross-file=${cfg_file}")
+  fi
+
+  ${host_clang} || LD="bfd"
+  
+  : "${meson_static:=-Ddefault_library=static}"
+  : "${meson_shared:=-Ddefault_library=shared}"
+
+  if ${build_static} && ${build_shared}; then
+    cfg_args+=( '-Ddefault_library=both' )
+  elif ${build_static}; then
+    cfg_args+=( "${meson_static}" ' --prefer-static')
+  elif ${build_shared}; then
+    cfg_args+=( "${meson_shared}" )
+  fi
+
+  if [ -n "${meson_bin}" ]; then
+    case "${meson_bin}" in
+      bool:*)
+        meson_bin="${meson_bin#bool:*}"
+        cfg_args+=( "-D${meson_bin}=$(bool2str ${build_bin} 'true' 'false')" )
+        ;;
+      *)
+        meson_bin="${meson_bin#*:*}"
+        cfg_args+=( "-D${meson_bin}=$(bool2str ${build_bin} enabled disabled)" )
+        ;;
+    esac
+  fi
+  
+  test -n "${meson_config}" && cfg_args+=( "${meson_config}" )
+}
+
+#usage: meson_create_toolchain <out.meson.file>
+meson_create_toolchain(){
+  test -f "${1}"  && rm ${1}
+  case "${arch}" in
+    aarch*)  cpu1="aarch64" cpu2="aarch64";;
+    arm*)    cpu1="arm"     cpu2="arm";;
+    i686*)   cpu1="x86"     cpu2="i686";;
+    x86_64*) cpu1="x86_64"  cpu2="x86_64";;
+  esac
+  cmake_create_toolchain ${dir_build}
+
+  cat <<-EOF >${1}
+	[binaries]
+	c = '${CC}'
+	c_ld = '${LD}'
+	cpp = '${CXX}'
+	cpp_ld = '${LD}'
+	ar = '${AR}'
+	as = '${AS}'
+	pkg-config = '$(command -v pkg-config)'
+	addr2line = '${ADDR2LINE}'
+	objcopy = '${OBJCOPY}'
+	objdump = '${OBJDUMP}'
+	ranlib = '${RANLIB}'
+	readelf = '${READELF}'
+	size = '${SIZE}'
+	strings = '${STRINGS}'
+	strip = '${STRIP}'
+	windres = '${WINDRES}'
+
+	[properties]
+	needs_exe_wrapper = true
+	cmake_toolchain_file = '${cmake_toolchain_file}'
+
+	[host_machine]
+	system = '$(str_lowercase ${PLATFORM})'
+	cpu_family = '${cpu1}'
+	endian = 'little'
+	cpu = '${cpu2}'
+
+	[target_machine]
+	system = '$(str_lowercase ${PLATFORM})'
+	cpu_family = '${cpu1}'
+	endian = 'little'
+	cpu = '${cpu2}'
+	EOF
+
+  echo -e "\nMeson file:(${1})\n\n" >>${log_file} 2>&1
+  cat ${1} >>${log_file} 2>&1
+}
+
+
+
+
+
+
+# make utils
+
+function setup_make_config {
+  cfg_cmd=
+  
+  build_cmd=${MAKE_EXECUTABLE}
+  build_tag="make"
+  test -n "${make_args}" && build_args=( "${make_args}" )
+  build_args+=( "-j$(nproc)" )
+
+  install_cmd=${MAKE_EXECUTABLE}
+  : "${make_install:=install}"
+  : "${install_args:=${make_install}}"
+}
+
+function make_findtarget {
+  ${MAKE_EXECUTABLE} ${1} -n 2>>${log_file}
+  if test $? -eq 2 ; then
+    echo "${2}"; echo "make: target ${1} not found, setting default ${2} target." >>${log_file}
+  else
+    echo "${1}"; echo "make: target ${1} found." >>${log_file}
+  fi
+}
+
+
+
+
+
+# cargo utils
+
+function setup_cargo_config {
+  build_tag="make"
+	build_cmd='cargo'
+	build_args=('cinstall' '--release' "--prefix=${dir_install}" )
+	build_args+=( "--library-type=$(bool2str ${build_static} staticlib dylib)" )
+	test -n "${cargo_config}" && build_args+=( "${cargo_config}" )
+	test -n "${cfg_bin}" && build_args+=( "${cargo_config}" )
+	build_args+=('--verbose')
+  install_cmd=
+  install_args=
+}
+
+function cargo_create_toolchain {
+  cat <<-EOF >>cargo-config.toml
+	[target.aarch64-linux-android]
+	ar = "/usr/aarch64-linux-android/bin/llvm-ar"
+	linker = "/usr/aarch64-linux-android/bin/clang"
+
+	[target.arm-linux-androideabi]
+	ar = "/usr/arm-linux-androideabi/bin/llvm-ar"
+	linker = "/usr/arm-linux-androideabi/bin/clang"
+
+	[target.i686-linux-android]
+	ar = "/usr/i686-linux-android/bin/llvm-ar"
+	linker = "/usr/i686-linux-android/bin/clang"
+
+	[target.x86_64-linux-android]
+	ar = "/usr/x86_64-linux-android/bin/llvm-ar"
+	linker = "/usr/x86_64-linux-android/bin/clang"
+	EOF
+}
+
+
+
+
+# bazel utils
+
+function setup_bazel_config {
+  cfg_cmd='bazel'
+  cfg_args=( 'build' )
+  test -n "${bazel_config}" && cfg_args+=( "${bazel_config}" )
+  cfg_args+=( "//.." )
+  #do_log "${build_system}" "${cfg_cmd}" build "${bazel_config}" //...
+  build_tag="make"
+  build_cmd=make
+  test -n "${make_args}" && build_args+=( "${make_args}" )
+  build_args+=( "-j$(nproc)" )
+
+  install_cmd=${MAKE_EXECUTABLE}
+  : "${make_install:=install}"
+  : "${install_args:=${make_install}}"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 list_cmakefiles(){
-	for f in *.sh; do
-		if [ -f "./cmake/${f//\.sh/}.cmake" ]; then
-			p="$(grep -oP 'cmake_file=.*' ${f})"
-			if [ -z "${p}" ]; then
-				echo "$f -> cmake_file='${f//\.sh/}'"
-			else
-				echo "${f} has ${p}"
-			fi
-		fi
-	done
+  for f in *.sh; do
+    if [ -f "./cmake/${f//\.sh/}.cmake" ]; then
+      p="$(grep -oP 'cmake_file=.*' ${f})"
+      if [ -z "${p}" ]; then
+        echo "$f -> cmake_file='${f//\.sh/}'"
+      else
+        echo "${f} has ${p}"
+      fi
+    fi
+  done
 }
 
 
@@ -29,12 +666,12 @@ aptInstallBr(){
 
 # usage: set_buildtype_key <input> <prefix> <on-val> <off-val>
 set_buildtype_key(){
-	local arr=(${1//|/ })
-	case ${#arr[@]} in
-		0) echo "${2}${3} ${2}${4}";;
-		1) ;;
-	esac
-	return 0
+  local arr=(${1//|/ })
+  case ${#arr[@]} in
+    0) echo "${2}${3} ${2}${4}";;
+    1) ;;
+  esac
+  return 0
 }
 
 
@@ -56,121 +693,121 @@ util_add_patch(){
 
 
 github_latest_tgz(){
-	case $src in
-		*github.*)
-			local dst=$(echo $src | sed -e 's|\.git||g')
-			local url=$(curl -ILs -o /dev/null -w %{url_effective} "${dst}/releases/latest")
-			local file=$(curl -s $url | grep -Po '(?<=>)[^<]*' | grep -Po '.*tar.gz$')
-			echo "${url}/${file}"
-		;;
-		*gitlab.*|*code.videolan.org*)
-			local dst=$(echo $src | sed -e 's|\.git||g')
-			local v=$(git_version_remote $src)
-			echo "$dst/-/archive/${v}/${lib}-${v}.tar.gz"
-		;;
-		*.googlesource.*)
-			local tag=$(git -c 'versionsort.suffix=-' ls-remote --refs --sort='v:refname' $src | tail -n1 | cut -f1)
-			echo "$src/+archive/${tag}.tar.gz"
-		;;
-	esac
+  case $src in
+    *github.*)
+      local dst=$(echo $src | sed -e 's|\.git||g')
+      local url=$(curl -ILs -o /dev/null -w %{url_effective} "${dst}/releases/latest")
+      local file=$(curl -s $url | grep -Po '(?<=>)[^<]*' | grep -Po '.*tar.gz$')
+      echo "${url}/${file}"
+    ;;
+    *gitlab.*|*code.videolan.org*)
+      local dst=$(echo $src | sed -e 's|\.git||g')
+      local v=$(git_version_remote $src)
+      echo "$dst/-/archive/${v}/${lib}-${v}.tar.gz"
+    ;;
+    *.googlesource.*)
+      local tag=$(git -c 'versionsort.suffix=-' ls-remote --refs --sort='v:refname' $src | tail -n1 | cut -f1)
+      echo "$src/+archive/${tag}.tar.gz"
+    ;;
+  esac
 }
 
 github_repo_id(){
-	local paths=( ${1//\// } )
-	paths[3]=${paths[3]/\.git/}
-	echo "${paths[2]}/${paths[3]}"
+  local paths=( ${1//\// } )
+  paths[3]=${paths[3]/\.git/}
+  echo "${paths[2]}/${paths[3]}"
 }
 
 github_json(){
-	local paths=( ${1//\// } )
-	local url=
-	case ${paths[1]} in 
-		github.com) url="https://api.github.com/repos/${paths[2]}/${paths[3]}";;
-		*) echo;;
-	esac
-	local json=${dir_root}/builds/${libname}.info
-	wget -q $url -O ${json}
-	echo ${json}
+  local paths=( ${1//\// } )
+  local url=
+  case ${paths[1]} in 
+    github.com) url="https://api.github.com/repos/${paths[2]}/${paths[3]}";;
+    *) echo;;
+  esac
+  local json=${dir_root}/builds/${libname}.info
+  wget -q $url -O ${json}
+  echo ${json}
 }
 
 github_description(){
-	local paths=( ${1//\// } )
-	local url=
-	case ${paths[1]} in 
-		github.com) url="https://api.github.com/repos/${paths[2]}/${paths[3]}";;
-		*) return 0
-	esac
-	local json=${dir_root}/builds/${libname}.info
-	test -f ${json} || wget -q $url -O ${json}
-	 echo $(cat ${json} | jq .description | xargs)
+  local paths=( ${1//\// } )
+  local url=
+  case ${paths[1]} in 
+    github.com) url="https://api.github.com/repos/${paths[2]}/${paths[3]}";;
+    *) return 0
+  esac
+  local json=${dir_root}/builds/${libname}.info
+  test -f ${json} || wget -q $url -O ${json}
+   echo $(cat ${json} | jq .description | xargs)
 }
 
 
 clearAll(){
-	if [ -z "$lib" ];then
-		read -p 'Clear all data? (Builds, Sources and Logs) [Y|n] ' ca
-		case $ca in Y|y) rm -rf builds sources && clear;;esac
-	else
-		rm -rf sources/$lib
-		[ -n "$arch" ] && rm -rf builds/$arch/$lib builds/$arch/$lib.log
-	fi
+  if [ -z "$lib" ];then
+    read -p 'Clear all data? (Builds, Sources and Logs) [Y|n] ' ca
+    case $ca in Y|y) rm -rf builds sources && clear;;esac
+  else
+    rm -rf sources/$lib
+    [ -n "$arch" ] && rm -rf builds/$arch/$lib builds/$arch/$lib.log
+  fi
 }
 
 checkPkg(){
-	local pf="${dir_install_pc}/${pkg}.pc"
-	[ -f "$pf" ] && echo $pf
-	return 0
+  local pf="${dir_install_pc}/${pkg}.pc"
+  [ -f "$pf" ] && echo $pf
+  return 0
 }
 
 list_tarball(){
-	local lf=$(ls -1 ${dir_pkgdist}/${lib}*${arch}.tar.gz 2>/dev/null | tail -n1)
-	if [ -z "${lf}" ] || [ ! -f "${lf}" ]; then
-		return 1
-	fi
-	tar -ztvf ${lf} | grep -e "[^/]$"
-	return 0
+  local lf=$(ls -1 ${dir_pkgdist}/${lib}*${arch}.tar.gz 2>/dev/null | tail -n1)
+  if [ -z "${lf}" ] || [ ! -f "${lf}" ]; then
+    return 1
+  fi
+  tar -ztvf ${lf} | grep -e "[^/]$"
+  return 0
 }
 
 hwinfoCountCores(){
-	echo $(nproc)
-	# or cat /proc/cpuinfo | grep -Po -c 'model name\s+: \K(.*)'
+  echo $(nproc)
+  # or cat /proc/cpuinfo | grep -Po -c 'model name\s+: \K(.*)'
 }
 
 hwinfoCountCoresReadable(){
-	# How to get the number of physical cores
-	local n=$(lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l)
-	local c=( 0 Single Dual 3 Quad 5 Hexa 7 Octa 9 Deca )
-	if [ ${n} -gt 10 ]; then
-		echo "${n}-Core"
-	else
-		echo "${c[${n}]}-Core"
-	fi
-	return 0
-	case "${n}" in
-		1) echo "Single-Core";;
-		2) echo "Dual-Core";;
-		4) echo "Quad-Core";;
-		6) echo "Hexa-Core";;
-		8) echo "Octa-Core";;
-		*) echo "${n}-Core";;
-	esac
+  # How to get the number of physical cores
+  local n=$(lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l)
+  local c=( 0 Single Dual 3 Quad 5 Hexa 7 Octa 9 Deca )
+  if [ ${n} -gt 10 ]; then
+    echo "${n}-Core"
+  else
+    echo "${c[${n}]}-Core"
+  fi
+  return 0
+  case "${n}" in
+    1) echo "Single-Core";;
+    2) echo "Dual-Core";;
+    4) echo "Quad-Core";;
+    6) echo "Hexa-Core";;
+    8) echo "Octa-Core";;
+    *) echo "${n}-Core";;
+  esac
 }
 
 hwinfoProcessor(){
-	cat /proc/cpuinfo | grep -Po 'model name\s+: \K(.*)' | head -n1
+  cat /proc/cpuinfo | grep -Po 'model name\s+: \K(.*)' | head -n1
 }
 
 prompt_remove(){
-	while [ -n "${1}" ]; do
-		echo -ne "\n  Are you sure you want do remove ${CY1}$(basename $1)?${C0} Type 'Yes' to proceed: "; read q
-		if [ "${q}" == "Yes" ]; then
-		echo -ne "  > Removing $1... " && rm -rf $1 2>/dev/null && echo -e " ${CG1}done${C0}" || echo -e "${CR1} Fail${C0}"
-		else
-		break
-		fi
-		shift
-	done
-	echo
+  while [ -n "${1}" ]; do
+    echo -ne "\n  Are you sure you want do remove ${CY1}$(basename $1)?${C0} Type 'Yes' to proceed: "; read q
+    if [ "${q}" == "Yes" ]; then
+    echo -ne "  > Removing $1... " && rm -rf $1 2>/dev/null && echo -e " ${CG1}done${C0}" || echo -e "${CR1} Fail${C0}"
+    else
+    break
+    fi
+    shift
+  done
+  echo
 }
 
 function menu_patch {
@@ -185,113 +822,113 @@ function menu_patch {
 
 # usage libname.sh --patch a [sources/libname/]path/to/newfile [sources/libname/]path/to/oldfile
 patch_append(){
-	local newfile=${1}
-	local oldfile
-	str_starts "${newfile}" "sources/${lib}/" && newfile="${newfile//sources\/${lib}\//}"
-	[ -f "sources/${lib}/${newfile}" ] || exit_err "unable to find file sources/${lib}/${newfile}"
-	shift
-	cd sources/${lib}
-	if [ -z "${1}" ]; then
-		oldfile="${newfile::-3}old"
-		touch sources/${lib}/${oldfile}
-	else
-		oldfile=${1}
-		str_starts "${oldfile}" "sources/${lib}/" && newfile="${oldfile//sources\/${lib}\//}"
-		[ -f "${oldfile}" ] || exit_err "unable to find file sources/${lib}/${oldfile}"
-	fi
-	diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" >>${dir_root}/sources/${lib}/xbuild.patch
-	cd ../..
-	echo -e "\n  ${CC1}Patch file updated at:${C0} $(pwd)/sources/${lib}/xbuild.patch\n\n"
+  local newfile=${1}
+  local oldfile
+  str_starts "${newfile}" "sources/${lib}/" && newfile="${newfile//sources\/${lib}\//}"
+  [ -f "sources/${lib}/${newfile}" ] || exit_err "unable to find file sources/${lib}/${newfile}"
+  shift
+  cd sources/${lib}
+  if [ -z "${1}" ]; then
+    oldfile="${newfile::-3}old"
+    touch sources/${lib}/${oldfile}
+  else
+    oldfile=${1}
+    str_starts "${oldfile}" "sources/${lib}/" && newfile="${oldfile//sources\/${lib}\//}"
+    [ -f "${oldfile}" ] || exit_err "unable to find file sources/${lib}/${oldfile}"
+  fi
+  diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" >>${dir_root}/sources/${lib}/xbuild.patch
+  cd ../..
+  echo -e "\n  ${CC1}Patch file updated at:${C0} $(pwd)/sources/${lib}/xbuild.patch\n\n"
 }
 
 patch_embed(){
-	if [ ! -f "sources/${lib}/xbuild.patch" ]; then
-		exit_err "No sources/${lib}/xbuild.patch file to embed"
-	fi
-	hdr="STR_PATCH"
-	case $1 in
-		xb64|XB64) echo -e "\n<<'XB64_PATCH'" >>${0}
-				cat "sources/${lib}/xbuild.patch" | base64 -w 90 >>${0}
-				echo -e "XB64_PATCH" >>${0}
-				;;
-		lzs|LZS)   echo -e "\n<<'LZS_PATCH'" >>${0}
-				cat "sources/${lib}/xbuild.patch" | utils/lz-string -c -w 90 - >>${0}
-				echo -e "LZS_PATCH" >>${0}
-				;;
-	esac
+  if [ ! -f "sources/${lib}/xbuild.patch" ]; then
+    exit_err "No sources/${lib}/xbuild.patch file to embed"
+  fi
+  hdr="STR_PATCH"
+  case $1 in
+    xb64|XB64) echo -e "\n<<'XB64_PATCH'" >>${0}
+        cat "sources/${lib}/xbuild.patch" | base64 -w 90 >>${0}
+        echo -e "XB64_PATCH" >>${0}
+        ;;
+    lzs|LZS)   echo -e "\n<<'LZS_PATCH'" >>${0}
+        cat "sources/${lib}/xbuild.patch" | utils/lz-string -c -w 90 - >>${0}
+        echo -e "LZS_PATCH" >>${0}
+        ;;
+  esac
 }
 
 patch_get(){
-	matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
-	if [ ${#matches[@]} -gt 0 ]; then
-		for match in ${matches[@]}; do
-			block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $0)
-			case $match in
-				XB64_PATCH) echo "${block}" | base64 -d;;
-				LZS_PATCH)  echo "${block}" | utils/lz-string -d -;;
-			esac
-		done
-	fi
-	return 0;
+  matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
+  if [ ${#matches[@]} -gt 0 ]; then
+    for match in ${matches[@]}; do
+      block=$(awk '/^<<.'"$match"'./{flag=1; next} /^'"$match"'/{flag=0} flag' $0)
+      case $match in
+        XB64_PATCH) echo "${block}" | base64 -d;;
+        LZS_PATCH)  echo "${block}" | utils/lz-string -d -;;
+      esac
+    done
+  fi
+  return 0;
 }
 
 create_diff(){
-	local b64=false
-	local newfile=${1}
-	local oldfile
-	[ -f "sources/${lib}/${newfile}" ] || exit_err "unable to find file sources/${lib}/${newfile}"
-	shift
-	pushdir sources/${lib}
-	if [ -z "${1}" ]; then
-		oldfile="${newfile::-3}old"
-		touch sources/${lib}/${oldfile}
-	else
-		oldfile=${1}
-		[ -f "${oldfile}" ] || exit_err "unable to find file sources/${lib}/${oldfile}"
-	fi
-	if $b64; then
-		diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" | base64 -w 90 >>"${newfile}.patch"
-	else
-		diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" >"${newfile}.patch"
-	fi
-	echo -e "\n  ${CC1}Done${C0}\n"
-	read -p "Open file? y|n: " yn
-	case $yn in y|Y) nano "${newfile}.patch";; esac
-	popdir
+  local b64=false
+  local newfile=${1}
+  local oldfile
+  [ -f "sources/${lib}/${newfile}" ] || exit_err "unable to find file sources/${lib}/${newfile}"
+  shift
+  pushdir sources/${lib}
+  if [ -z "${1}" ]; then
+    oldfile="${newfile::-3}old"
+    touch sources/${lib}/${oldfile}
+  else
+    oldfile=${1}
+    [ -f "${oldfile}" ] || exit_err "unable to find file sources/${lib}/${oldfile}"
+  fi
+  if $b64; then
+    diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" | base64 -w 90 >>"${newfile}.patch"
+  else
+    diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" >"${newfile}.patch"
+  fi
+  echo -e "\n  ${CC1}Done${C0}\n"
+  read -p "Open file? y|n: " yn
+  case $yn in y|Y) nano "${newfile}.patch";; esac
+  popdir
 }
 
 patch_check_xbpatch(){
-	pushdir ${dir_root}
-	local matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
-	if [ ${#matches[@]} -gt 0 ]; then
-		for match in ${matches[@]}; do
-			echo -ne "${CC2}${match} ${C0}"
-			local block=$(awk '/^<<.'${match}'./{flag=1; next} /^'{$match}'/{flag=0} flag' $0)
-			case $match in
-				XB_CREATE_CMAKELISTS|CMakeLists.txt)
-					echo "${block}" >${dir_src}/CMakeLists.txt
-					echo -e "\ncreate CMakeLists.txt: \n$block" >>${log_file}
-					;;
-				XB_PATCH) pushdir ${dir_src}
-					patch -p0 <<<$(echo "${block}") 2>&1 >${log_file}
-					echo -e "\npatch found: \n$block" >>${log_file}
-					popdir
-					;;
-				XB64_PATCH) pushdir ${dir_src}
-					patch -p0 <<<$(echo "${block}" | base64 -d) 2>&1 >${log_file}
-					popdir
-					;;
-				LZS_PATCH) pushdir ${dir_src}
-					patch -p0 <<<$(echo "${block}" | ${dir_root}/utils/lz-string -d -) 2>&1 >${log_file}
-					popdir
-					;;
-				*) echo -e "\nUnknown block name ${match} with this contents (ignoring):\n$block" >>${log_file}
-					;;
-			esac
-		done
-	fi
-	popdir
-	return 0
+  pushdir ${dir_root}
+  local matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
+  if [ ${#matches[@]} -gt 0 ]; then
+    for match in ${matches[@]}; do
+      echo -ne "${CC2}${match} ${C0}"
+      local block=$(awk '/^<<.'${match}'./{flag=1; next} /^'{$match}'/{flag=0} flag' $0)
+      case $match in
+        XB_CREATE_CMAKELISTS|CMakeLists.txt)
+          echo "${block}" >${dir_src}/CMakeLists.txt
+          echo -e "\ncreate CMakeLists.txt: \n$block" >>${log_file}
+          ;;
+        XB_PATCH) pushdir ${dir_src}
+          patch -p0 <<<$(echo "${block}") 2>&1 >${log_file}
+          echo -e "\npatch found: \n$block" >>${log_file}
+          popdir
+          ;;
+        XB64_PATCH) pushdir ${dir_src}
+          patch -p0 <<<$(echo "${block}" | base64 -d) 2>&1 >${log_file}
+          popdir
+          ;;
+        LZS_PATCH) pushdir ${dir_src}
+          patch -p0 <<<$(echo "${block}" | ${dir_root}/utils/lz-string -d -) 2>&1 >${log_file}
+          popdir
+          ;;
+        *) echo -e "\nUnknown block name ${match} with this contents (ignoring):\n$block" >>${log_file}
+          ;;
+      esac
+    done
+  fi
+  popdir
+  return 0
 }
 
 set_break(){
@@ -306,142 +943,173 @@ set_break(){
 }
 
 menu_tune(){
-	case $1 in
-		smd855)   CPPFLAGS+=" -mtune=cortex-a76.cortex-a55";;
-		smd865)   CPPFLAGS+=" -mtune=cortex-a77.cortex-a55";;
-		smd888)   CPPFLAGS+=" -mtune=cortex-a78.cortex-a55";;
-		cortex-*) CPPFLAGS+=" -mtune=$1";;
-	esac
+  case $1 in
+    smd855)   CPPFLAGS+=" -mtune=cortex-a76.cortex-a55";;
+    smd865)   CPPFLAGS+=" -mtune=cortex-a77.cortex-a55";;
+    smd888)   CPPFLAGS+=" -mtune=cortex-a78.cortex-a55";;
+    cortex-*) CPPFLAGS+=" -mtune=$1";;
+  esac
 }
 
 menu_clear(){
-	while [ -n "$1" ];do
-		case $1 in
-			source|srclib)   prompt_remove ${dir_src};;
-			allsources|sources)  prompt_remove ${dir_sources};;
-			builds)   prompt_remove ${dir_install};;
-			packages) prompt_remove ${dir_pkgdist};;
-			wipe*)    prompt_remove ${dir_pkgdist} ${dir_install} ${dir_sources};;
-		esac
-		shift
-	done
-	return 0
+  while [ -n "$1" ];do
+    case $1 in
+      source|srclib)   prompt_remove ${dir_src};;
+      allsources|sources)  prompt_remove ${dir_sources};;
+      builds)   prompt_remove ${dir_install};;
+      packages) prompt_remove ${dir_pkgdist};;
+      wipe*)    prompt_remove ${dir_pkgdist} ${dir_install} ${dir_sources};;
+    esac
+    shift
+  done
+  return 0
 }
 
 prt_hmenu(){
-	echo -e "\n${1}\n"
-	shift
-	local a
-	local b
-	while [ -n "$1" ]; do
-		a="$1"; shift
-		b="$1"; shift
-		printf "  ${CC0}%-20s: ${C0}%s\n" "$a" "$b"
-	done
-	echo
+  echo -e "\n${1}\n"
+  shift
+  local a
+  local b
+  while [ -n "$1" ]; do
+    a="$1"; shift
+    b="$1"; shift
+    printf "  ${CC0}%-20s: ${C0}%s\n" "$a" "$b"
+  done
+  echo
 }
 
 menu_get(){
-	local pkgfile="${dir_install_pc}/${pkg}.pc"
-	[ -f "${pkgfile}" ] && local has_pc=true
-	case $1 in
-		help)		prt_hmenu "${CW}usage: $0 --get ${CC0}<opt>" \
-					'cflags' 'get pkg-config --cflags' 'ldflags' 'get pkg-config --libs' 'ldstatic' 'get pkg-config --libs --static' \
-					'pc-ver' 'get package version' 'pc-path|pc' 'get pkg-config file path' 'pc-name' 'get pkg-config file name without .pc' \
-					'prefix' 'get prefix / install dir' 'libname' 'get the libname' 'aptname' 'get the debian package name' 'var <variable>' \
-					'get <variable> value' 'vrs_remote' 'get git remote latest version' 'vrs_tag' 'get git remote latest tag' 'vrs_tags' \
-					'get git remote tag list' 'vrs_local' 'get git local version' 'options|opts' 'show build options' 'log' 'edit (nano) log file' \
-					'patch' 'show decoded patch included in the script'
-					;;
-		cflags)     [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --cflags)";;
-		ldflags)    [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs)";;
-		ldstatic)   [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs --static)";;
-		pc-ver)     [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --modversion)";;
-		pc-path|pc) echo "${pkgfile}";;
-		pc-name)    echo "${pkg}";;
-		prefix)     echo "${dir_install}";;
-		libname)    echo "${lib}";;
-		aptname)    echo "${pkg_deb}";;
-		var)        shift; echo "${!1}";;
-		vrs_latest) echo $(github_latest_tgz); exit 0;;
-		vrs_remote) fn_defined 'vremote' && version_parse "$(vremote)" || git_version_remote $src;;
-		vrs_taglist)git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
-		vrs_tags)   git ls-remote --tags --sort="v:refname" $src | grep -oP 'tags/.*\d+\.\d+\.\d+.*';;
-		vrs_local)  git_version_local $dir_src;;
-		opt*)       lib_options "$(pwd)/sources/$lib"; exit 0;;
-		log)        [ -f "${dir_install}/${lib}.log" ] && nano ${dir_install}/${lib}.log;;
-		patch)      patch_get; exit 0;;
-		vrs_git)    git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g' | tail -n1;;
-		vrs_git_n)  git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g' | tail -n1 | sed 's/[a-zA-Z\-\^\{\}]//g';;
-	esac
+  local pkgfile="${dir_install_pc}/${pkg}.pc"
+  [ -f "${pkgfile}" ] && local has_pc=true
+  case $1 in
+    help)    prt_hmenu "${CW}usage: $0 --get ${CC0}<opt>" \
+          'cflags' 'get pkg-config --cflags' 'ldflags' 'get pkg-config --libs' 'ldstatic' 'get pkg-config --libs --static' \
+          'pc-ver' 'get package version' 'pc-path|pc' 'get pkg-config file path' 'pc-name' 'get pkg-config file name without .pc' \
+          'prefix' 'get prefix / install dir' 'libname' 'get the libname' 'aptname' 'get the debian package name' 'var <variable>' \
+          'get <variable> value' 'vrs_remote' 'get git remote latest version' 'vrs_tag' 'get git remote latest tag' 'vrs_tags' \
+          'get git remote tag list' 'vrs_local' 'get git local version' 'options|opts' 'show build options' 'log' 'edit (nano) log file' \
+          'patch' 'show decoded patch included in the script'
+          ;;
+    cflags)     [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --cflags)";;
+    ldflags)    [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs)";;
+    ldstatic)   [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --libs --static)";;
+    pc-ver)     [ -f "${pkgfile}" ] && echo "$(pkg-config ${pkgfile} --modversion)";;
+    pc-path|pc) echo "${pkgfile}";;
+    pc-name)    echo "${pkg}";;
+    prefix)     echo "${dir_install}";;
+    libname)    echo "${lib}";;
+    aptname)    echo "${pkg_deb}";;
+    var)        shift; echo "${!1}";;
+    vrs_latest) echo $(github_latest_tgz); exit 0;;
+    vrs_remote) fn_defined 'vremote' && version_parse "$(vremote)" || git_version_remote $src;;
+    vrs_taglist)git ls-remote --tags --refs --sort="v:refname" $src | tail -n1 | sed 's/.*\///';;
+    vrs_tags)   git ls-remote --tags --sort="v:refname" $src | grep -oP 'tags/.*\d+\.\d+\.\d+.*';;
+    vrs_local)  git_version_local $dir_src;;
+    opt*)       lib_options "$(pwd)/sources/$lib"; exit 0;;
+    log)        [ -f "${dir_install}/${lib}.log" ] && nano ${dir_install}/${lib}.log;;
+    patch)      patch_get; exit 0;;
+    vrs_git)    git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g' | tail -n1;;
+    vrs_git_n)  git ls-remote $src | grep 'refs/tags/' | sed 's/^.*refs\/tags\///g' | tail -n1 | sed 's/[a-zA-Z\-\^\{\}]//g';;
+  esac
 }
 
 menu_git(){
-	local b=false
-	[ -z "${lib}" ] && return 0
-	[ -z "${src}" ] && return 0
-	case $1 in
-		help)       prt_hmenu "${CW}usage: $0 --git ${CC0}<opt>" \
-					'tar*' 'list current tarball contents' 'branches' 'list all local git available branches' \
-					'tags' 'list all local git available branches' \
-					'env' 'list toolchain environment variables' 'deps' 'list packages that depend on '${lib}''
-					;;
-		clone)      str_contains $src 'git' || return 0
-					[ -d "sources/${lib}" ] && rm -rf sources/${lib}
-					git clone $src sources/${lib}
-					;;
-	esac
-	return 0
+  local b=false
+  [ -z "${lib}" ] && return 0
+  [ -z "${src}" ] && return 0
+  case $1 in
+    help)       prt_hmenu "${CW}usage: $0 --git ${CC0}<opt>" \
+          'tar*' 'list current tarball contents' 'branches' 'list all local git available branches' \
+          'tags' 'list all local git available branches' \
+          'env' 'list toolchain environment variables' 'deps' 'list packages that depend on '${lib}''
+          ;;
+    clone)      str_contains $src 'git' || return 0
+          [ -d "sources/${lib}" ] && rm -rf sources/${lib}
+          git clone $src sources/${lib}
+          ;;
+  esac
+  return 0
 }
 
 
 menu_list(){
-	local b=false
-	[ -n "${arch}" ] && [ -n "${lib}" ] && b=true
-	case $1 in
-		help)       prt_hmenu "${CW}usage: $0 --list ${CC0}<opt>" \
-					'tar*' 'list current tarball contents' 'branches' 'list all local git available branches' \
-					'tags' 'list all local git available branches' \
-					'env' 'list toolchain environment variables' 'deps' 'list packages that depend on '${lib}''
-					;;
-		tar*)       $b && list_tarball;;
-		branches)   [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" branch -a;;
-		opt*)       lib_options "$(pwd)/sources/$lib"; exit 0;;
-		tags)       [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" tag --list;;
-		env)        $b && loadToolchain && print_vars CC CXX LD AS AR NM RANLIB STRIP ADDR2LINE OBJCOPY OBJDUMP READELF SIZE STRINGS WINDRES GCOV;;
-		deps)       for f in ${dir_root}/*.sh; do
-					[ -n "$(cat $f | grep -oP 'dep=.*'${lib}'.*')" ] && echo $(basename $f) | sed 's|\.sh||'
-					done
-					;;
-	esac
-	return 0
+  local b=false
+  [ -n "${arch}" ] && [ -n "${lib}" ] && b=true
+  case $1 in
+    help)       prt_hmenu "${CW}usage: $0 --list ${CC0}<opt>" \
+          'tar*' 'list current tarball contents' 'branches' 'list all local git available branches' \
+          'tags' 'list all local git available branches' \
+          'env' 'list toolchain environment variables' 'deps' 'list packages that depend on '${lib}''
+          ;;
+    tar*)       $b && list_tarball;;
+    branches)   [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" branch -a;;
+    opt*)       lib_options "$(pwd)/sources/$lib"; exit 0;;
+    tags)       [ -d "${dir_src}/.git" ] && git --git-dir="${dir_src}/.git" tag --list;;
+    env)        $b && loadToolchain && print_vars CC CXX LD AS AR NM RANLIB STRIP ADDR2LINE OBJCOPY OBJDUMP READELF SIZE STRINGS WINDRES GCOV;;
+    deps)       for f in ${dir_root}/*.sh; do
+          [ -n "$(cat $f | grep -oP 'dep=.*'${lib}'.*')" ] && echo $(basename $f) | sed 's|\.sh||'
+          done
+          ;;
+  esac
+  return 0
 }
 
 menu_goto(){
-	case $1 in
-		src|source) pushd ${dir_src};;
-		bin)        pushd ${dir_install_bin};;
-		lib)        pushd ${dir_install_lib};;
-		include)    pushd ${dir_install_include};;
-		pkgconfig)  pushd ${dir_install_pc};;
-		*)          exit 0;;
-	esac
+  case $1 in
+    src|source) pushd ${dir_src};;
+    bin)        pushd ${dir_install_bin};;
+    lib)        pushd ${dir_install_lib};;
+    include)    pushd ${dir_install_include};;
+    pkgconfig)  pushd ${dir_install_pc};;
+    *)          exit 0;;
+  esac
 #bash
 }
 
 utils_get_latest_release(){
-	if fn_defined 'latest_release'; then
-		latest_release && echo "${vrs}"
-	elif [ -z "${src}" ]; then
-		echo "Unknown source ${src}"
-	else
-		local paths=( ${src//\// } )
-		paths[3]=${paths[3]/\.git/}
-		case ${paths[1]} in
-			github.com) github_latest_release "${paths[2]}/${paths[3]}"
-				;;
-			*) echo $(git ls-remote --tags --sort "v:refname" $src | tail -n1 | rev | awk -v FS='/' '{print $1}' | rev)
-				;;
-		esac
-	fi
+  if fn_defined 'latest_release'; then
+    latest_release && echo "${vrs}"
+  elif [ -z "${src}" ]; then
+    echo "Unknown source ${src}"
+  else
+    local paths=( ${src//\// } )
+    paths[3]=${paths[3]/\.git/}
+    case ${paths[1]} in
+      github.com) github_latest_release "${paths[2]}/${paths[3]}"
+        ;;
+      *) echo $(git ls-remote --tags --sort "v:refname" $src | tail -n1 | rev | awk -v FS='/' '{print $1}' | rev)
+        ;;
+    esac
+  fi
+}
+
+build_dependencies_old(){
+  local pkgfile
+  local o_lib_link
+  local o_cbh
+  local cf
+  local ldir
+  while [ -n "${1}" ]; do
+    [ -f "./${1}.sh" ] || exit_err "no script file ${1}.sh.\n  Aborting..."
+    pkgfile=$(./${1}.sh ${arch} --get pc)
+    libname=$(./${1}.sh --get libname)
+    if [ ! -f "${pkgfile}" ]; then
+      o_lib_link=$lib_link
+      o_cbh=$CBH
+      ${build_download} && local dl="--dl" || local dl=''
+      unset lib_link CBH
+      
+      ./${1}.sh ${arch} ${dep_build} ${dl}
+      
+      lib_link=$o_lib_link
+      CBH=$o_cbh
+    fi
+    if [ -f "${pkgfile}" ]; then
+      local cmi=$(./${1}.sh ${arch} --get cmake_include)
+      [ -n "$cmi" ] && cmake_includes="$cmi $cmake_includes"
+      ldir="$(dirname ${pkgfile})"
+      str_contains $PKG_CONFIG_LIBDIR ${ldir} || PKG_CONFIG_LIBDIR="${ldir}:${PKG_CONFIG_LIBDIR}"
+    fi
+    shift
+  done
 }

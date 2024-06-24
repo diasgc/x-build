@@ -74,7 +74,7 @@ function splash {
 }
 
 function show_banner {
-	echo -ne "\n\n${CW}Cross Build scripts ${vsh} for Linux${C0}\n"
+  echo -ne "\n\n${CW}Cross Build scripts ${vsh} for Linux${C0}\n"
   [ -n "$(command -v lsb_release)" ] && echo -ne "$(lsb_release -sd) "
   if [ -n "$(uname -r | grep 'microsoft')" ];then
     echo -ne "WSL2 "
@@ -110,13 +110,13 @@ function usage {
 # usage bool2int <condition>
 # returns 1 for true and 0 for false
 function bool2int {
-	$1 && echo 1 || echo 0
+  $1 && echo 1 || echo 0
 }
 
 # usage bool2str <condition> <string-true> <string-false>
 # returns string-true for true and string-false for false
 function bool2str {
-	${1} && echo "${2}" || echo "${3}"
+  ${1} && echo "${2}" || echo "${3}"
 }
 
 function safe_cd {
@@ -144,32 +144,32 @@ function safe_mkdir {
 }
 
 function request_cmd {
-	local c1=${1}
-	local c2=${2}
-	test -z "${c2}" && c2=${c1}
+  local c1=${1}
+  local c2=${2}
+  test -z "${c2}" && c2=${c1}
   if [ -z $(command -v ${c1}) ]; then
     ${sudo} ${apt_install} ${1} -y >/dev/null 2>&1 
   fi
-	#test -z $(command -v ${c1}) && apt_install ${c2}
-	return 0
+  #test -z $(command -v ${c1}) && apt_install ${c2}
+  return 0
 }
 
 function apt_install {
-	while [ "$1" != "" ];do
-		#echo -ne "  ${CT0}install $1${C0}"
-		#echo -n " "
-		stty size | {
-		read y x
-		echo -ne "${CY1}"
-		tput sc
-		tput cup "$((y - 1))" 0
-		$sudo apt -qq install ${1} -y >/dev/null 2>&1
-		echo -ne "${C0}"
-		tput rc
-		}
-		#echo -ne "${C0} ok"
-		shift
-	done
+  while [ "$1" != "" ];do
+    #echo -ne "  ${CT0}install $1${C0}"
+    #echo -n " "
+    stty size | {
+    read y x
+    echo -ne "${CY1}"
+    tput sc
+    tput cup "$((y - 1))" 0
+    $sudo apt -qq install ${1} -y >/dev/null 2>&1
+    echo -ne "${C0}"
+    tput rc
+    }
+    #echo -ne "${C0} ok"
+    shift
+  done
 }
 
 function check_pkg_deb {
@@ -194,53 +194,53 @@ function generate_script {
   sed -i 's,@pkg_deb@,'${pkgname}',g' ${scriptname}
 
   case ${giturl} in
-		*github*)
-			local json=$(github_json $srcname)
-			local libdesc=$(cat ${json} | jq .description | xargs)
-			local lic=$(cat ${json} | jq .license.name | xargs)
-			test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
-			test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname};;
-	esac
+    *github*)
+      local json=$(github_json $srcname)
+      local libdesc=$(cat ${json} | jq .description | xargs)
+      local lic=$(cat ${json} | jq .license.name | xargs)
+      test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
+      test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname};;
+  esac
 
   echo -e "${CD}${ind}${CD}    Done.New script generated: \e[4m${scriptname}\e[24m${C0}\n\n"
 }
 
 #usage xbuild --new <github_url>
 generate_script_old(){
-	test -z "${1}" && exit_err "Usage: xbuild --new <git-url>"
-	local giturl="${1}"
-	local srcname="${giturl/\.git/}"
-	local libname="${srcname##*/}"
-	libname="${libname,,}"
-	case ${libname} in *.git) libname=${libname/\.git/};; esac
-	local scriptname="${dir_root}/${libname}.sh"
-	cp "${dir_root}/utils/script.template" ${scriptname}
-	chmod +x "${scriptname}"
-	sed -i 's,@src@,'${giturl}',g;s,@lib@,'${libname}',g' ${scriptname}
-	local pkgname="lib${libname//lib/}-dev"
-	test -z "$(apt-cache show ${pkgname} 2>/dev/null | grep ${pkgname})" && pkgname=
-	sed -i 's,@pkg_deb@,'${pkgname}',g' ${scriptname}
-	case $giturl in
-		*github*)
-			local json=$(github_json $srcname)
-			local libdesc=$(cat ${json} | jq .description | xargs)
-			local lic=$(cat ${json} | jq .license.name | xargs)
-			test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
-			test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname};;
-	esac
+  test -z "${1}" && exit_err "Usage: xbuild --new <git-url>"
+  local giturl="${1}"
+  local srcname="${giturl/\.git/}"
+  local libname="${srcname##*/}"
+  libname="${libname,,}"
+  case ${libname} in *.git) libname=${libname/\.git/};; esac
+  local scriptname="${dir_root}/${libname}.sh"
+  cp "${dir_root}/utils/script.template" ${scriptname}
+  chmod +x "${scriptname}"
+  sed -i 's,@src@,'${giturl}',g;s,@lib@,'${libname}',g' ${scriptname}
+  local pkgname="lib${libname//lib/}-dev"
+  test -z "$(apt-cache show ${pkgname} 2>/dev/null | grep ${pkgname})" && pkgname=
+  sed -i 's,@pkg_deb@,'${pkgname}',g' ${scriptname}
+  case $giturl in
+    *github*)
+      local json=$(github_json $srcname)
+      local libdesc=$(cat ${json} | jq .description | xargs)
+      local lic=$(cat ${json} | jq .license.name | xargs)
+      test -n "${libdesc}" && libdesc=${libdesc%%\. *} && sed -i 's/@desc@/'"${libdesc}"'/g' ${scriptname}
+      test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname};;
+  esac
 }
 
 
 function get_source {
   
   # test internet connection
-	wget -q --spider http://google.com
-	[ ! $? -eq 0 ] && exit_err 'No Internet Connection. Aborting...'
+  wget -q --spider http://google.com
+  [ ! $? -eq 0 ] && exit_err 'No Internet Connection. Aborting...'
 
-	# check whether to custom get source
-	if fn_defined 'source_get'; then
-		fn_log 'get' source_get
-		unset sty
+  # check whether to custom get source
+  if fn_defined 'source_get'; then
+    fn_log 'get' source_get
+    unset sty
     return 0
   fi
   
@@ -264,81 +264,81 @@ function get_source {
         *.git)        git_clone ${src} ${lib} ${src_opt} && return 0;;
       esac
     fi
-	elif [ -n "${git}" ]; then
-		git_clone "${git}" "${lib}" "${src_opt}"
-		return 0
-	elif [ -n "${svn}" ]; then
-		svn_clone "${svn}" "${lib}"
-		return 0
-	elif [ -n "${hg}" ]; then
+  elif [ -n "${git}" ]; then
+    git_clone "${git}" "${lib}" "${src_opt}"
+    return 0
+  elif [ -n "${svn}" ]; then
+    svn_clone "${svn}" "${lib}"
+    return 0
+  elif [ -n "${hg}" ]; then
     hg_clone "${hg}" "${lib}"
     return 0
   fi
-	case "${src}" in
-			*.tar.*|*.tgz) curl_tar  "${src}" "${lib}";;
-			*.git|*git*)   git_clone "${src}" "${lib}" "${src_opt}";;
-			*svn.*)        svn_clone "${src}" "${lib}";;
-			*)             exit_err "Unknown source type for ${src}";;
+  case "${src}" in
+      *.tar.*|*.tgz) curl_tar  "${src}" "${lib}";;
+      *.git|*git*)   git_clone "${src}" "${lib}" "${src_opt}";;
+      *svn.*)        svn_clone "${src}" "${lib}";;
+      *)             exit_err "Unknown source type for ${src}";;
   esac
 }
 
 # git_clone <source> <libname/destfolder> <options>
 function git_clone {
   local t="git"
-	echo -ne "${CD}${t}"
-	logf git clone --progress --verbose ${src} ${lib} ${src_opt}
-	git clone --progress --verbose ${src} ${lib} ${src_opt} |& tr '\r' '\n' | prt_git_progress
-	logok "${t}"
-	test -d "${lib}" && cd ${lib} || err
-	if [ -n "${bra}" ]; then
-		do_log ${bra} git checkout ${bra}
-		unset bra
-	elif [ -n "${vrs}" ]; then
-		do_log ${vrs} git checkout tags/${vrs}
-	fi
-	if [ -n "${sub}" ];then
-		do_log 'sub' git ${sub} |& tr '\r' '\n' | prt_git_progress
-	fi
+  echo -ne "${CD}${t}"
+  logf git clone --progress --verbose ${src} ${lib} ${src_opt}
+  git clone --progress --verbose ${src} ${lib} ${src_opt} |& tr '\r' '\n' | prt_git_progress
+  logok "${t}"
+  test -d "${lib}" && cd ${lib} || err
+  if [ -n "${bra}" ]; then
+    do_log ${bra} git checkout ${bra}
+    unset bra
+  elif [ -n "${vrs}" ]; then
+    do_log ${vrs} git checkout tags/${vrs}
+  fi
+  if [ -n "${sub}" ];then
+    do_log 'sub' git ${sub} |& tr '\r' '\n' | prt_git_progress
+  fi
   vrs="$(git tag -l | tail -n1)"
   echo -ne "${CT0}[${vrs}]${CD} "
-	cd ..
+  cd ..
 }
 
 function prt_git_progress {
-	tput civis
-	printf "%-8s"
-	local s0
-	local s1
-	local n1=0
-	while read -r ln; do
-		if ! [ "${ln%\'...}" == "${ln}" ]; then
-		printf "\e[7D"
-		printf "%-40s\e[40D"
-		s1=${ln#*\'}
-		s1=${s1##*/}
-		s1=${s1%\'...}
-		printf "\e[${n1}D"
-		n1=${#s1}
-		[ $n1 -gt 0 ] && printf " %-${n1}s" $s1
-		printf "%-6s"
-		else
-		s0=$(grep -oP '\d+%' <<< $ln)
-		[ -n "$s0" ] && printf "\e[5D%-5s" $s0
-		fi
-	done
-	[ $n1 -gt 0 ] && printf "\e[${n1}D"
-	printf "\e[7D"
-	tput cnorm
+  tput civis
+  printf "%-8s"
+  local s0
+  local s1
+  local n1=0
+  while read -r ln; do
+    if ! [ "${ln%\'...}" == "${ln}" ]; then
+      printf "\e[7D"
+      printf "%-40s\e[40D"
+      s1=${ln#*\'}
+      s1=${s1##*/}
+      s1=${s1%\'...}
+      printf "\e[${n1}D"
+      n1=${#s1}
+      [ ${n1} -gt 0 ] && printf " %-${n1}s" $s1
+      printf "%-6s"
+    else
+      s0=$(grep -oP '\d+%' <<< $ln)
+      [ -n "$s0" ] && printf "\e[5D%-5s" $s0
+    fi
+  done
+  [ $n1 -gt 0 ] && printf "\e[${n1}D"
+  printf "\e[7D"
+  tput cnorm
 }
 
 function svn_clone {
-	request_cmd svn subversion || err
-	do_log 'svn' svn checkout $1 $2
+  request_cmd svn subversion || err
+  do_log 'svn' svn checkout $1 $2
 }
 
 function hg_clone {
-	request_cmd hg mercurial || err
-	do_log 'clone' hg clone $1 $2
+  request_cmd hg mercurial || err
+  do_log 'clone' hg clone $1 $2
 }
 
 # usage: github_get_latest_tarball <git-url> <dest-dir>
@@ -360,13 +360,13 @@ function github_get_latest_tarball {
   else
     vrs=$(jq -r .tag_name <<<${json})
   fi
-	dir_src="${dir_sources}/${2}"
+  dir_src="${dir_sources}/${2}"
   local tag="get ${vrs}"
   echo -ne "${CD}${tag}${C0}"
   test -d "${dir_src}" && rm -rf "${dir_src}"
-	mkdir "${dir_src}"
-	curl -sL ${tarball_url} -w %{url_effective} 2>>"${log_file}" | tar -xz -C ${dir_src} --strip-components=1 2>>"${log_file}"
-	logok "${tag}"
+  mkdir "${dir_src}"
+  curl -sL ${tarball_url} -w %{url_effective} 2>>"${log_file}" | tar -xz -C ${dir_src} --strip-components=1 2>>"${log_file}"
+  logok "${tag}"
 }
 
 function gitlab_get_latest_tarball {
@@ -387,24 +387,24 @@ function tar_version {
 }
 
 function curl_tar {
-	local tag="get"
-	local args=
-	dir_src="${dir_sources}/${2}"
-	echo -ne "${CD}${tag}${C0}"
-	echo "$(date): $@" >> "${log_file}"
-	
-	case "${1}" in
-		*.tar.lz)        request_cmd 'lzip' && args='--lzip -xv';;
-		*.tar.gz|*.tgz)  args="-xz";;
-		*.tar.xz)        args="-xJ";;
-		*.tar.bz2)       args="-xj";;
-	esac
-	
-	test -d "${dir_src}" && rm -rf "${dir_src}"
-	mkdir "${dir_src}"
-	curl_tar_simple ${1} ${args}
-	
-	logok "${tag}"
+  local tag="get"
+  local args=
+  dir_src="${dir_sources}/${2}"
+  echo -ne "${CD}${tag}${C0}"
+  echo "$(date): $@" >> "${log_file}"
+  
+  case "${1}" in
+    *.tar.lz)        request_cmd 'lzip' && args='--lzip -xv';;
+    *.tar.gz|*.tgz)  args="-xz";;
+    *.tar.xz)        args="-xJ";;
+    *.tar.bz2)       args="-xj";;
+  esac
+  
+  test -d "${dir_src}" && rm -rf "${dir_src}"
+  mkdir "${dir_src}"
+  curl_tar_simple ${1} ${args}
+  
+  logok "${tag}"
 }
 
 function curl_tar_simple {
@@ -419,38 +419,38 @@ function curl_tar_simple {
 
 function curl_targz {
   local tag="get"
-	dir_src="${dir_sources}/${lib}"
-	echo -ne "${CD}${tag}${C0}"
-	echo "$(date): $@" >> "${log_file}"
+  dir_src="${dir_sources}/${lib}"
+  echo -ne "${CD}${tag}${C0}"
+  echo "$(date): $@" >> "${log_file}"
   test -d "${dir_src}" && rm -rf "${dir_src}"
-	mkdir "${dir_src}"
+  mkdir "${dir_src}"
   if ${tar_stripcomponents}; then
     curl -sL "${1}" 2>>"${log_file}" | tar -xz -C ${dir_src} --strip-components=1 2>>"${log_file}"
   else
-	  curl -sL "${1}" 2>>"${log_file}" | tar -xz --one-top-level=${dir_src} 2>>"${log_file}"
+    curl -sL "${1}" 2>>"${log_file}" | tar -xz --one-top-level=${dir_src} 2>>"${log_file}"
   fi
-	logok "${tag}"
+  logok "${tag}"
 }
 
 # git_latest_tgz <git-url>
 function git_latest_tgz {
   local src="${1}"
-	case "${src}" in
-		*github.*)
-			local dst="$(sed 's,.git$,,' <<<${src})"
-			local url=$(curl -ILs -o /dev/null -w %{url_effective} "${dst}/releases/latest")
-			local file=$(curl -s ${url} | grep -Po '(?<=>)[^<]*' | grep -Po '.*tar.gz$')
-			echo "${url}/${file}"
-		;;
-		*gitlab.*|*code.videolan.org*)
-			local v="$(git_version_remote ${src})"
-			echo "${src%%\.git}/-/archive/${v}/${lib}-${v}.tar.gz"
-		;;
-		*.googlesource.*)
-			local tag="$(git -c 'versionsort.suffix=-' ls-remote --refs --sort='v:refname' ${src} | tail -n1 | cut -f1)"
-			echo "${src}/+archive/${tag}.tar.gz"
-		;;
-	esac
+  case "${src}" in
+    *github.*)
+      local dst="$(sed 's,.git$,,' <<<${src})"
+      local url=$(curl -ILs -o /dev/null -w %{url_effective} "${dst}/releases/latest")
+      local file=$(curl -s ${url} | grep -Po '(?<=>)[^<]*' | grep -Po '.*tar.gz$')
+      echo "${url}/${file}"
+    ;;
+    *gitlab.*|*code.videolan.org*)
+      local v="$(git_version_remote ${src})"
+      echo "${src%%\.git}/-/archive/${v}/${lib}-${v}.tar.gz"
+    ;;
+    *.googlesource.*)
+      local tag="$(git -c 'versionsort.suffix=-' ls-remote --refs --sort='v:refname' ${src} | tail -n1 | cut -f1)"
+      echo "${src}/+archive/${tag}.tar.gz"
+    ;;
+  esac
 }
 
 function git_version_local(){
@@ -473,7 +473,7 @@ function github_latest_release {
   # extract id from url, in case it is not already given
   local s="$(sed 's,https://github\.com/,,;s,\.git$,,' <<<${1})"
   # get version tag name
-	echo $(curl --silent "https://api.github.com/repos/${s}/releases/latest" | jq -r .tag_name)
+  echo $(curl --silent "https://api.github.com/repos/${s}/releases/latest" | jq -r .tag_name)
 }
 
 git_getversion(){
@@ -481,79 +481,79 @@ git_getversion(){
 }
 
 function package_showinfo {
-	${banner} || return 0
-	local dp=
-	local vs=
-	local longdesc=$(package_longdesc)
-	[ -z "$(echo ${longdesc} | xargs 2>/dev/null)" ] && unset longdesc
+  ${banner} || return 0
+  local dp=
+  local vs=
+  local longdesc=$(package_longdesc)
+  [ -z "$(echo ${longdesc} | xargs 2>/dev/null)" ] && unset longdesc
 
-	# Main Description
-	[ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}\e[1m${lib^^} - ${C0}${dsc}\e[0m"
-	[ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
+  # Main Description
+  [ -n "${dsc}" ] && echo -e "\n${CD}${inds}${CW}\e[1m${lib^^} - ${C0}${dsc}\e[0m"
+  [ -n "${longdesc}" ] && echo -e "${CD}${longdesc}" | sed 's|\*|\u2605|g; s|\..\..|. |g' # sed 's|^|'${ind}|g'
 
-	# see links
-	echo -e "${CD}${ind}${CD}"
-	echo -e "${CD}${ind}${CD}see log   : \e[4m${log_file}\e[24m${C0}"
-	echo -e "${CD}${ind}${CD}    script: \e[4m${0}\e[24m${C0}"
-	echo -e "${CD}${ind}${CD}    source: \e[4m${dir_src}\e[24m${C0}"
-	echo -e "${CD}${ind}${CD}    build : \e[4m${dir_install}\e[24m${C0}"
-	echo -e "${CD}${ind}${CD}"
+  # see links
+  echo -e "${CD}${ind}${CD}"
+  echo -e "${CD}${ind}${CD}see log   : \e[4m${log_file}\e[24m${C0}"
+  echo -e "${CD}${ind}${CD}    script: \e[4m${0}\e[24m${C0}"
+  echo -e "${CD}${ind}${CD}    source: \e[4m${dir_src}\e[24m${C0}"
+  echo -e "${CD}${ind}${CD}    build : \e[4m${dir_install}\e[24m${C0}"
+  echo -e "${CD}${ind}${CD}"
 
-	# Licence
-	echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "
+  # Licence
+  echo -ne "${CD}${ind}${CT0}Licence ${C0}$lic "
 
-	# Build Tools
-	if [ -n "${tls}" ]; then
-		echo -ne "${CT0}build deps: "
-		tput sc; echo -ne "${CD}$tls "; tput rc
-		for t in ${tls}; do
-			request_cmd ${t}
-		shift
-		done
-	fi
+  # Build Tools
+  if [ -n "${tls}" ]; then
+    echo -ne "${CT0}build deps: "
+    tput sc; echo -ne "${CD}$tls "; tput rc
+    for t in ${tls}; do
+      request_cmd ${t}
+    shift
+    done
+  fi
 
-	# Build Deps
-	[ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}${dep}"
+  # Build Deps
+  [ -n "${dep}" ] && dp="${dp}${CT0}lib deps: ${C0}${dep}"
 
-	if [ -n "${vrs}" ]; then
-		log_info "version: ${vrs}"
-	elif [ -d "${dir_src}/.git" ]; then
-		local gitloc="$(git_version_local ${dir_src})"
-		local gitrem="$(git_version_remote ${src})"
-		if [ "${gitloc}" = "${gitrem}" ]; then
-			gitrem="updated"
-		else
-			gitrem="latest: ${gitrem}"
-		fi
-		log_info "version: ${C0}${gitloc} (${gitrem})"
-	elif str_contains ${src} "git"; then
-		local gitrem="$(git_version_remote ${src} | head -n1)"
-		log_info "version: ${C0}${gitrem}"
-	fi
+  if [ -n "${vrs}" ]; then
+    log_info "version: ${vrs}"
+  elif [ -d "${dir_src}/.git" ]; then
+    local gitloc="$(git_version_local ${dir_src})"
+    local gitrem="$(git_version_remote ${src})"
+    if [ "${gitloc}" = "${gitrem}" ]; then
+      gitrem="updated"
+    else
+      gitrem="latest: ${gitrem}"
+    fi
+    log_info "version: ${C0}${gitloc} (${gitrem})"
+  elif str_contains ${src} "git"; then
+    local gitrem="$(git_version_remote ${src} | head -n1)"
+    log_info "version: ${C0}${gitrem}"
+  fi
 }
 
 function package_longdesc {
-	if [ -n "${pkg_deb}" ]; then
-		echo -e $(apt-cache show ${pkg_deb} 2>/dev/null | \
-		grep -E "Description-..^|^ " | \
-		sed $'s/\*/\u2605/g' | \
-		sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/'"${ind}"'/g'
-	fi
-	return 0
+  if [ -n "${pkg_deb}" ]; then
+    echo -e $(apt-cache show ${pkg_deb} 2>/dev/null | \
+    grep -E "Description-..^|^ " | \
+    sed $'s/\*/\u2605/g' | \
+    sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/'"${ind}"'/g'
+  fi
+  return 0
 }
 
 function check_tools {
-	while [ -n "$1" ]; do
-		toolname=${1}
-		toolpkg=${1}
-		case "${1}" in
-			rust )      installRust && continue;;
-			libtool )   toolname=libtoolize;;
-			texinfo )   toolname=makeinfo;;
-		esac
-		request_cmd ${toolname} ${toolpkg}
-		shift
-	done
+  while [ -n "$1" ]; do
+    toolname=${1}
+    toolpkg=${1}
+    case "${1}" in
+      rust )      installRust && continue;;
+      libtool )   toolname=libtoolize;;
+      texinfo )   toolname=makeinfo;;
+    esac
+    request_cmd ${toolname} ${toolpkg}
+    shift
+  done
 }
 
 function patch_fromfilelist {
@@ -592,29 +592,29 @@ search_configfile(){
 function show_build_opts {
   : "${dir_src:=${dir_root}/sources/${lib}}"
   test ! -d "${dir_src}" && exit_err "${dir_src} does not exist. Download source first."
-	local cf
+  local cf
   local d
-	# search meson
-	cf="$(search_configfile meson_options.txt)"
-	if [ -n "${cf}" ]; then
+  # search meson
+  cf="$(search_configfile meson_options.txt)"
+  if [ -n "${cf}" ]; then
     d="${dir_root}/builds/${lib}_meson.opts"
-		cat "${cf}" | tr '\n' ' ' | sed 's/  */ /g;s/option(/\n/g;s/)/\n/g;s/'feature'/enabled|disabled/g;s/'boolean'/true|false/g;s/,/\n/g' >"${d}"
-		echo -e "\n\t${CY0}Found meson options: ${d}\n"
-	fi
-	# search cmake
-	cf="$(search_configfile CMakeLists.txt)"
-	if [ -n "${cf}" ]; then
+    cat "${cf}" | tr '\n' ' ' | sed 's/  */ /g;s/option(/\n/g;s/)/\n/g;s/'feature'/enabled|disabled/g;s/'boolean'/true|false/g;s/,/\n/g' >"${d}"
+    echo -e "\n\t${CY0}Found meson options: ${d}\n"
+  fi
+  # search cmake
+  cf="$(search_configfile CMakeLists.txt)"
+  if [ -n "${cf}" ]; then
     d="${dir_root}/builds/${lib}_cmake.opts"
-		cmake ${cf} -LA 2>/dev/null | awk '{if(f)print} /-- Cache values/{f=1}' >"${d}"
-		echo -e "\n\t${CY0}Found cmake options: ${d}\n"
-	fi
-	# search automake
-	cf="$(search_configfile configure)"
-	if [ -n "${cf}" ]; then
+    cmake ${cf} -LA 2>/dev/null | awk '{if(f)print} /-- Cache values/{f=1}' >"${d}"
+    echo -e "\n\t${CY0}Found cmake options: ${d}\n"
+  fi
+  # search automake
+  cf="$(search_configfile configure)"
+  if [ -n "${cf}" ]; then
     d="${dir_root}/builds/${lib}_am.opts"
-		${cf} --help | grep -o '\-\-.*' >"${d}"
-		echo -e "\n\t${CY0}Found automake options: ${d}\n"
-	fi
+    ${cf} --help | grep -o '\-\-.*' >"${d}"
+    echo -e "\n\t${CY0}Found automake options: ${d}\n"
+  fi
 }
 
 function am_config_guess {
@@ -634,25 +634,25 @@ function am_config_guess {
 }
 
 function do_am_autogen {
-	local tag='autoreconf'
-	echo -ne "${CD}${tag}${C0}"
-	pushdir ${1} && shift
-	case ${1} in
-		--noerr ) ./autogen.sh >>${log_file} 2>&1;;
-		--noconfigure ) NOCONFIGURE=1 log_this ./autogen.sh;;
-		* ) log_this ./autogen.sh;;
-	esac
-	popdir
-	logok ${tag}
+  local tag='autoreconf'
+  echo -ne "${CD}${tag}${C0}"
+  pushdir ${1} && shift
+  case ${1} in
+    --noerr ) ./autogen.sh >>${log_file} 2>&1;;
+    --noconfigure ) NOCONFIGURE=1 log_this ./autogen.sh;;
+    * ) log_this ./autogen.sh;;
+  esac
+  popdir
+  logok ${tag}
 }
 
 function do_am_autoreconf {
-	local tag='autoreconf'
-	echo -ne "${CD}${tag}${C0}"
-	pushdir ${1}
-	log_this autoreconf -fiv
-	popdir
-	logok ${tag}
+  local tag='autoreconf'
+  echo -ne "${CD}${tag}${C0}"
+  pushdir ${1}
+  log_this autoreconf -fiv
+  popdir
+  logok ${tag}
 }
 
 function config_guess {
@@ -667,13 +667,13 @@ function config_guess {
     cfg='ac'
     if [ -f "${dir_config}/autogen.sh" ]; then
       cfg_cmd="${dir_config}/autogen.sh"
-	    cfg='ag'
+      cfg='ag'
     elif [ -f "${dir_config}/bootstrap.sh" ]; then
       cfg_cmd="${dir_config}/bootstrap.sh"
     elif [ -f "${dir_config}/bootstrap" ]; then
       cfg_cmd="${dir_config}/bootstrap"
-	  elif [ -f "${dir_config}/configure.ac" ]; then
-	    cfg='ar'		
+    elif [ -f "${dir_config}/configure.ac" ]; then
+      cfg='ar'    
     elif [ ! -f "${dir_config}/configure" ]; then
       cfg_cmd="autoreconf -fiv ${dir_config}/bootstrap"
     else
@@ -685,215 +685,25 @@ function config_guess {
   return 0
 }
 
-function setup_cmake_config {
-  # build: make
-  
-  : "${cmake_builddir:=${dir_config}}"
-  : "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
-  : "${cmake_shared:=BUILD_SHARED_LIBS}"
-  
-  cfg_args=("${cmake_builddir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}")
-  
-  if ${host_cross}; then
-    [ -z "${cmake_toolchain_file}" ] && cmake_create_toolchain "${dir_build}"
-    [ -f "${cmake_toolchain_file}" ] && cfg_args+=( "-DCMAKE_TOOLCHAIN_FILE=${cmake_toolchain_file}" )
-  fi
 
-  test -n "${cmake_config}" && cfg_args+=( "${cmake_config}" )
-
-  case "${cmake_shared}" in
-    -D*=*) ${build_shared} && cfg_args+=( "${cmake_shared}" );;
-    *)     cfg_args+=( "-D${cmake_shared}=$(bool2str ${build_shared} ON OFF)" );;
-  esac
-  if [ -z "${cmake_static}" ]; then
-    cmake_static="$(grep -oP 'BUILD_STATIC_LIBS' ${dir_config}/CMakeLists.txt | head -n1)"
-  fi
-  if [ -n "${cmake_static}" ]; then
-    case "${cmake_static}" in
-      -D*=*) ${build_static} && cfg_args+=( "${cmake_static}" );;
-      *)     cfg_args+=( "-D${cmake_static}=$(bool2str ${build_static} ON OFF) ${lib_link}");;
-    esac
-  fi
-  if [ -n "${cmake_bin}" ]; then
-    case "${cmake_bin}" in
-      -D*=*) ${build_bin} && cfg_args+=( "${cmake_bin}" );;
-      *) cfg_args+=( "-D${cmake_bin}=$(bool2str ${build_bin} ON OFF)" );;
-    esac
-  fi
-  test -n "${CPACK}" && cfg_args+=( "${CPACK}" )
-  cfg_args+=( -Wno-dev )
-
-  : "${build_cmd:=${MAKE_EXECUTABLE}}"
-  : "${install_cmd:=${MAKE_EXECUTABLE}}"
-  : "${make_install:=install}"
-  : "${install_args:=${make_install}}" 
-
-  test -n "${make_args}" && build_args+=( "${make_args}")
-  build_args+=( "-j${HOST_NPROC}")
-  build_tag="make"
-  
-  
-  #do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
-  #case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
-}
-
-function setup_am_config {
-
-  # use autotools and configure executable to create makefile
-  ${ac_reconf} && autoreconf -fi 2>/dev/null >>${log_file}
-
-  cfg_cmd="${dir_config}/configure"
-
-	if [ -n "${ac_opts}" ]; then
-		for opt in $(echo ${ac_opts}); do
-			case $opt in
-				--update-config_sub)
-					logf 'Apply --update-config_sub'
-					local fpath=$(find ${dir_src} -name 'config.sub')
-					test -f "${fpath}" && cp -f /usr/share/automake*/config.sub ${fpath}
-					;;
-				--update-config_guess)
-					logf 'Apply --update-config_guess'
-					local fpath=$(find ${dir_src} -name 'config.guess')
-					test -f "${fpath}" && cp -f /usr/share/automake*/config.guess ${fpath}
-					;;
-				--no-sysroot)
-					am_nosysroot=true
-					;;
-				--no-pic)
-					am_nopic=true
-					;;
-				--no-host)
-					am_nohost=true
-					;;
-			esac
-		done
-	fi
-
-  cfg_args=("--prefix=${dir_install}")
-
-  if ! ${am_nohost} && ${host_cross} && [ -n "$(grep '\-\-host' ${cfg_cmd})" ]; then 
-    ${am_nohost} || cfg_args+=( "--host=${arch}" )
-  fi
-
-	if ! ${am_nosysroot}; then
-		if [ -n "$(grep '\-\-with-sysroot' ${cfg_cmd})" ]; then
-			cfg_args+=( "--with-sysroot=${SYSROOT}" )
-		elif [ -n "$(grep '\-\-sysroot' ${cfg_cmd})" ]; then
-			cfg_args+=( "--sysroot=${SYSROOT}" )
-		fi
-	fi
-
-	if ! ${am_nopic} && ! ${host_mingw} && [ -n "$(grep '\-\-with-pic' ${cfg_cmd})" ]; then
-		cfg_args+=( "--with-pic" )
-	fi
-	
-  # find static build option
-  : "${am_static:=static}"
-  cfg_args+=( "--$(bool2str ${build_static} enable disable)-${am_static}" )
-  
-  #if ${build_static}; then
-  #  if [ -n "${am_static}" ]; then
-  #    cfg_args+=( "${am_static}" )
-  #  elif [ -n "$(grep '\-\-enable-static' ${cfg_cmd})" ]; then
-  #    cfg_args+=( "--enable-static")
-  #  fi
-  #fi
-
-  # find shared build option
-  : "${am_shared:=shared}"
-  cfg_args+=( "--$(bool2str ${build_shared} enable disable)-${am_shared}" )
-
-  #if ${build_shared}; then
-  #  if [ -n "${am_shared}" ]; then
-  #    cfg_args+=( "${am_shared}" )
-  #  elif [ -n "$(grep '\-\-enable-shared' ${cfg_cmd})" ]; then
-  #    cfg_args+=( "--enable-shared")
-  #  fi
-  #fi
-  
-  if [ -n "${am_bin}" ]; then
-    case "${am_bin}" in
-      --*) cfg_args+=( "${am_bin}" );;
-      *)   cfg_args+=( "--$(bool2str ${build_bin} enable disable)-${am_bin}");;
-    esac
-  fi
-  test -n "${am_config}" && cfg_args+=( "${am_config}" )
-
-  : "${build_cmd:=${MAKE_EXECUTABLE}}"
-  : "${install_cmd:=${MAKE_EXECUTABLE}}"
-  : "${install_args:=${make_install}}"
-  test -n "${make_args}" && build_args+=( "${make_args}")
-  build_args+=( "-j${HOST_NPROC}")
-  build_tag="make"
-}
-
-# see https://mesonbuild.com/Commands.html for command line options
-function setup_meson_config {
-  
-  : "${build_cmd:=ninja}"
-  : "${install_cmd:=ninja}"
-  : "${make_install:=install}"
-  : "${install_args:=${make_install}}"
-  build_tag="ninja"
-  test -n "${make_args}" && build_args+=( "${make_args}")
-  build_args+=( "-j${HOST_NPROC}" )
-
-  cfg_cmd='meson'
-  cfg_args=('setup' '--buildtype=release' "--prefix=${dir_install}")
-  
-  if ${host_cross}; then
-    local cfg_file="${dir_config}/${arch}.meson"
-    meson_create_toolchain ${cfg_file}
-    cfg_args+=("--cross-file=${cfg_file}")
-  fi
-
-  ${host_clang} || LD="bfd"
-  
-  : "${meson_static:=-Ddefault_library=static}"
-  : "${meson_shared:=-Ddefault_library=shared}"
-
-  if ${build_static} && ${build_shared}; then
-    cfg_args+=( '-Ddefault_library=both' )
-  elif ${build_static}; then
-    cfg_args+=( "${meson_static}" ' --prefer-static')
-  elif ${build_shared}; then
-    cfg_args+=( "${meson_shared}" )
-  fi
-
-  if [ -n "${meson_bin}" ]; then
-    case "${meson_bin}" in
-      bool:*)
-        meson_bin="${meson_bin#bool:*}"
-        cfg_args+=( "-D${meson_bin}=$(bool2str ${build_bin} 'true' 'false')" )
-        ;;
-      *)
-        meson_bin="${meson_bin#*:*}"
-        cfg_args+=( "-D${meson_bin}=$(bool2str ${build_bin} enabled disabled)" )
-        ;;
-    esac
-  fi
-  
-  test -n "${meson_config}" && cfg_args+=( "${meson_config}" )
-}
 
 # check build system and set defaults - static and shared build options
 function config_init {
 
-	# if no cfg provided, try to guess
-	test -z "${cfg}" && config_guess
-	test -z "${cfg}" && exit_err 'No build system found. Exiting.'
-	
-	case "${cfg}" in
-		cm|ccm|cmake|ccmake)
-			build_system=cmake
-			;;
-		ab|am|ac|ar|ag|auto*)
-			build_system=automake
-			;;
-		meson)
-			build_system=meson
-			;;
+  # if no cfg provided, try to guess
+  test -z "${cfg}" && config_guess
+  test -z "${cfg}" && exit_err 'No build system found. Exiting.'
+  
+  case "${cfg}" in
+    cm|ccm|cmake|ccmake)
+      build_system=cmake
+      ;;
+    ab|am|ac|ar|ag|auto*)
+      build_system=automake
+      ;;
+    meson)
+      build_system=meson
+      ;;
     bazel)
       build_system=bazel
       ;;
@@ -901,55 +711,54 @@ function config_init {
       build_system=cargo
       lib_link="--library-type=$(bool2str ${build_static} staticlib dylib)"
       ;;
-		mk|make) build_system=make;;
-		other) build_system=other;;
-		*) unset build_system;;
-	esac
+    mk|make) build_system=make;;
+    other) build_system=other;;
+    *) unset build_system;;
+  esac
 }
 
 
 #usage build_pkgconfig [--filename=lib.pc][--prefix=install_dir]...[--libs=-la,-lb,-lc,...]
 function build_pkgconfig {
+  local pkgconfig_file="${lib}.pc"
+  local pkgconfig_prefix=${dir_install}
+  local pkgconfig_exec_prefix="\${prefix}"
+  local pkgconfig_libdir="\${prefix}/lib"
+  local pkgconfig_includedir="\${prefix}/include"
+  local pkgconfig_description="${dsc}"
+  local pkgconfig_url="${url}"
+  local pkgconfig_version="${vrs}"
+  local pkgconfig_requires=
+  local pkgconfig_requires_private=
+  local pkgconfig_libs="-l${lib/lib/}"
+  local pkgconfig_libs_private=
+  local pkgconfig_cflags="-I\${includedir}"
 
-	local pkgconfig_file="${lib}.pc"
-	local pkgconfig_prefix=${dir_install}
-	local pkgconfig_exec_prefix="\${prefix}"
-	local pkgconfig_libdir="\${prefix}/lib"
-	local pkgconfig_includedir="\${prefix}/include"
-	local pkgconfig_description="${dsc}"
-	local pkgconfig_url="${url}"
-	local pkgconfig_version="${vrs}"
-	local pkgconfig_requires=
-	local pkgconfig_requires_private=
-	local pkgconfig_libs="-l${lib/lib/}"
-	local pkgconfig_libs_private=
-	local pkgconfig_cflags="-I\${includedir}"
+  while [ -n "${1}" ]; do
+    case "${1}" in
+      --name=*) pkgconfig_file="${1#*=}.pc";;
+      --filename=*) pkgconfig_file="${1#*=}";;
+      --prefix=*) pkgconfig_prefix="${1#*=}";;
+      --exec_prefix=*) pkgconfig_exec_prefix="${1#*=}";;
+      --libdir=*) pkgconfig_libdir="${1#*=}";;
+      --includedir=*) pkgconfig_includedir="${1#*=}";;
+      --description=*) pkgconfig_description="${1#*=}";;
+      --url=*) pkgconfig_url="${1#*=}";;
+      --version=*) pkgconfig_version="${1#*=}";;
+      --requires=*) pkgconfig_requires="${1#*=}";;
+      --requires-private=*) pkgconfig_requires_private="${1#*=}";;
+      --libs=*) pkgconfig_libs="${1#*=}";;
+      --libs-private=*) pkgconfig_libs_private="${1#*=}";;
+      --cflags=*) pkgconfig_cflags="${1#*=}";;
+    esac
+    shift
+  done
+  
+  pkgconfig_libs="-L\${libdir} ${pkgconfig_libs//,/ }"
+  pkgconfig_file="${dir_install_pc}/${pkgconfig_file}"
+  test -f "${pkgconfig_file}" && rm -f "${pkgconfig_file}"
 
-	while [ -n "${1}" ]; do
-		case "${1}" in
-			--name=*) pkgconfig_file="${1#*=}.pc";;
-			--filename=*) pkgconfig_file="${1#*=}";;
-			--prefix=*) pkgconfig_prefix="${1#*=}";;
-			--exec_prefix=*) pkgconfig_exec_prefix="${1#*=}";;
-			--libdir=*) pkgconfig_libdir="${1#*=}";;
-			--includedir=*) pkgconfig_includedir="${1#*=}";;
-			--description=*) pkgconfig_description="${1#*=}";;
-			--url=*) pkgconfig_url="${1#*=}";;
-			--version=*) pkgconfig_version="${1#*=}";;
-			--requires=*) pkgconfig_requires="${1#*=}";;
-			--requires-private=*) pkgconfig_requires_private="${1#*=}";;
-			--libs=*) pkgconfig_libs="${1#*=}";;
-			--libs-private=*) pkgconfig_libs_private="${1#*=}";;
-			--cflags=*) pkgconfig_cflags="${1#*=}";;
-		esac
-		shift
-	done
-	
-	pkgconfig_libs="-L\${libdir} ${pkgconfig_libs//,/ }"
-	pkgconfig_file="${dir_install_pc}/${pkgconfig_file}"
-	test -f "${pkgconfig_file}" && rm -f "${pkgconfig_file}"
-
-	cat <<-EOF >"${pkgconfig_file}"
+  cat <<-EOF >"${pkgconfig_file}"
 		prefix=${pkgconfig_prefix}
 		exec_prefix=${pkgconfig_exec_prefix}
 		libdir=${pkgconfig_libdir}
@@ -968,44 +777,8 @@ function build_pkgconfig {
 		EOF
 }
 
-# usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
-function create_pkgconfig_file_old {
-	[ -z "${1}" ] && pc_file=${lib} || pc_file=${1}
-	[ -z "${2}" ] && pc_llib="-l${pc_file}" || pc_llib=${2}
-	[ -z "${3}" ] && pc_prefix=${dir_install} || pc_prefix=${3}
-	[ "${pc_llib}" == "null" ] && pc_llib=''
-	[ -z "$pc_libdir" ] && pc_libdir="/lib"
-	[ -z "$pc_incdir" ] && pc_incdir="/include"
-	[ -z "$pc_cflags" ] && pc_cflags="-I\${includedir}"
-	[ -z "$pc_libs" ] && pc_libs="-L\${libdir}"
-	[ -z "$pc_url" ] && pc_url=$(dirname $src)
-	fn_defined 'get_version' && get_version && pc_vrs=$vrs
-	[ -z "$pc_vrs" ] && {
-	[ -d "${dir_src}/.git" ] && pc_vrs=$(git_getversion ${dir_src}) || pc_vrs=$vrs
-	}
-	cat <<-EOF >${dir_install_pc}/${pc_file}.pc
-		prefix=${pc_prefix}
-		exec_prefix=\${prefix}
-		libdir=\${exec_prefix}${pc_libdir}
-		includedir=\${prefix}${pc_incdir}
-
-		Name: ${lib}
-		Description: ${dsc}
-		URL: ${pc_url}
-		Version: ${pc_vrs}
-		Requires: ${pc_requires}
-		Requires.private: ${pc_requiresprivate}
-		Libs: ${pc_libs} ${pc_llib}
-		Libs.private: ${pc_libsprivate}
-		Cflags: ${pc_cflags}
-
-		EOF
-	pc_filelist="${pc_file}.pc ${pc_filelist}"
-	unset pc_libdir pc_incdir pc_cflags pc_libs pc_url
-}
-
 function log {
-	echo -ne "$CD$@$C0"
+  echo -ne "$CD$@$C0"
 }
 
 # usage: log <logfile> [--noerr|--progress] <label> <commands....>
@@ -1019,41 +792,41 @@ function log_unused2 {
     esac
     shift
   done
-	local label=$1; shift
-	echo -ne "${CD}${label}${C0}"
-	echo -e "\n$(time_elapsed): $@" >> "$logfile"
+  local label=$1; shift
+  echo -ne "${CD}${label}${C0}"
+  echo -e "\n$(time_elapsed): $@" >> "$logfile"
   if $progress; then
-	  ("$@" |& log_progress) || err "in ${act}:\n\n...\n$(tail -n5 ${logfile}${C0})"
+    ("$@" |& log_progress) || err "in ${act}:\n\n...\n$(tail -n5 ${logfile}${C0})"
   else
-	  "$@" 2>> "$logfile" 1>> "$logfile" || err
+    "$@" 2>> "$logfile" 1>> "$logfile" || err
   fi
-	echo -ne "\e[${#label}D${CT0}${label}${C0} "
+  echo -ne "\e[${#label}D${CT0}${label}${C0} "
 }
 
 function logf {
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
 }
 
 function logok {
-	echo -ne "\e[${#1}D${CT0}${1}${C0} "
+  echo -ne "\e[${#1}D${CT0}${1}${C0} "
 }
 
 # usage logver /path/to/pkgconfigfile.pc
 function logver {
-	if [ -f ${1} ]; then
-		echo -ne "${CT1}version $(pkg-config --modversion ${1})${C0}"
-	else
-		echo -ne "${CS0} missing ${1} ${C0}"
-	fi
+  if [ -f ${1} ]; then
+    echo -ne "${CT1}version $(pkg-config --modversion ${1})${C0}"
+  else
+    echo -ne "${CS0} missing ${1} ${C0}"
+  fi
 }
 
 function log_vars {
-	local t;
-	while [ -n "$1" ]; do
-		echo "$1=${!1}" >>"${log_file}" 2>&1
-		shift
-	done
-	echo >>"${log_file}"
+  local t;
+  while [ -n "$1" ]; do
+    echo "$1=${!1}" >>"${log_file}" 2>&1
+    shift
+  done
+  echo >>"${log_file}"
 }
 
 function log_info {
@@ -1061,31 +834,31 @@ function log_info {
 }
 
 function log_start {
-	logtime_start=$(date +%s)
+  logtime_start=$(date +%s)
   local timefmt='+%H:%M'
   [ ${eta} -lt 60 ] && timefmt='+%H:%M:%S'
-	if ! ${inline}; then
-		echo -ne "${CD}${inde}${C0}$(date ${timefmt})"
-		[ ${eta} -gt 0 ] && echo -ne "-${CW}$(date ${timefmt} --date="${eta} seconds")"
-		printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
-	fi
-	echo $(date) >"${log_file}"
+  if ! ${inline}; then
+    echo -ne "${CD}${inde}${C0}$(date ${timefmt})"
+    [ ${eta} -gt 0 ] && echo -ne "-${CW}$(date ${timefmt} --date="${eta} seconds")"
+    printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
+  fi
+  echo $(date) >"${log_file}"
 }
 
 function log_end {
-	if ! ${inline} && [ -n "${logtime_start}" ]; then
-		logtime_end=$(date +%s)
-		local secs=$((${logtime_end}-${logtime_start}))
-		eta=$(secs2time ${secs})
-		echo -e "${CT1} done ${CD}in ${eta}"
-		eta="$((${secs}*$(nproc)))"
-	fi
+  if ! ${inline} && [ -n "${logtime_start}" ]; then
+    logtime_end=$(date +%s)
+    local secs=$((${logtime_end}-${logtime_start}))
+    eta=$(secs2time ${secs})
+    echo -e "${CT1} done ${CD}in ${eta}"
+    eta="$((${secs}*$(nproc)))"
+  fi
 }
 
 function log_this {
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-	"$@" 2>> "${log_file}" 1>> "${log_file}" || err
-	logok
+  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+  "$@" 2>> "${log_file}" 1>> "${log_file}" || err
+  logok
 }
 
 function log_progress {
@@ -1104,38 +877,38 @@ function log_progress {
 }
 
 function exit_err {
-	echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
-	if [ -f "${log_file}" ];then
-		if [ -f "${dir_build}/CMakeFiles/CMakeError.log" ];then
-		  echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> "${log_file}"
-		  cat "${dir_build}/CMakeFiles/CMakeError.log" >> "${log_file}"
-		fi
-		echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
-		[ "${openlog}" != "n" ] && nano "${log_file}"
-	fi
-	exit 1
+  echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
+  if [ -f "${log_file}" ];then
+    if [ -f "${dir_build}/CMakeFiles/CMakeError.log" ];then
+      echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> "${log_file}"
+      cat "${dir_build}/CMakeFiles/CMakeError.log" >> "${log_file}"
+    fi
+    echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
+    [ "${openlog}" != "n" ] && nano "${log_file}"
+  fi
+  exit 1
 }
 
 function err {
-	if [ -n "${logtime_start}" ]; then
+  if [ -n "${logtime_start}" ]; then
     # consider use of ${EPOCHREALTIME/.} instead
-		logtime_end=$(date +%s)
-		echo -e "${CR1} fail ${CR0}[$(secs2time $((${logtime_end}-${logtime_start})))]${C0}\n"
-	fi
-	if [ -f "${log_file}" ];then
-		if [ -f "${dir_build}/CMakeFiles/CMakeError.log" ];then
-		  echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> "${log_file}"
-		  cat "${dir_build}/CMakeFiles/CMakeError.log" >> "${log_file}"
-		fi
-		echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
-		[ "${openlog}" != "n" ] && nano ${log_file}
-	fi
-	echo
-	exit 1
+    logtime_end=$(date +%s)
+    echo -e "${CR1} fail ${CR0}[$(secs2time $((${logtime_end}-${logtime_start})))]${C0}\n"
+  fi
+  if [ -f "${log_file}" ];then
+    if [ -f "${dir_build}/CMakeFiles/CMakeError.log" ];then
+      echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> "${log_file}"
+      cat "${dir_build}/CMakeFiles/CMakeError.log" >> "${log_file}"
+    fi
+    echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
+    [ "${openlog}" != "n" ] && nano ${log_file}
+  fi
+  echo
+  exit 1
 }
 
 function secs2time {
-	[ $(($1/60%60)) -eq 0 ] && printf '%ds' $(($1%60)) || printf '%dm %ds' $(($1/60%60)) $(($1%60))
+  [ $(($1/60%60)) -eq 0 ] && printf '%ds' $(($1%60)) || printf '%dm %ds' $(($1/60%60)) $(($1%60))
 }
 
 function log_buildvars {
@@ -1144,143 +917,143 @@ function log_buildvars {
 }
 
 function print_vars {
-	while test -n "${1}"; do
-		printf "${CC0}%-20s: ${C0}%s\n" "  ${1}" ${!1}
-		shift
-	done
+  while test -n "${1}"; do
+    printf "${CC0}%-20s: ${C0}%s\n" "  ${1}" ${!1}
+    shift
+  done
 }
 
 function do_quietly {
-	local var="${1}"; shift
-	echo -ne "${CD}${var}${C0}"
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-	"$@" >/dev/null 2>&1
-	logok "${var}"
+  local var="${1}"; shift
+  echo -ne "${CD}${var}${C0}"
+  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+  "$@" >/dev/null 2>&1
+  logok "${var}"
 }
 
 function do_log {
-	local var="${1}"; shift
-	echo -ne "${CD}${var}${C0}"
-	log_this $@
-	logok "${var}"
+  local var="${1}"; shift
+  echo -ne "${CD}${var}${C0}"
+  log_this $@
+  logok "${var}"
 }
 
 function do_progress {
-	local var="${1}" && shift
-	echo -ne "${CD}${var}"
-	echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-	("$@" |& tee -a ${log_file} | prt_progress) || exit_err "in ${var}:\n\n...\n$(tail -n5 ${log_file})${C0}"
-	logok "${var}"
+  local var="${1}" && shift
+  echo -ne "${CD}${var}"
+  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+  ("$@" |& tee -a ${log_file} | prt_progress) || exit_err "in ${var}:\n\n...\n$(tail -n5 ${log_file})${C0}"
+  logok "${var}"
 }
 
 function prt_progress {
-	local sln
-	local grp
-	tput civis
-	printf "build_system: %10s; make: %7s" ${build_system} ${MAKE_EXECUTABLE} >>${log_file}
-	if [ "${build_system}" == "cmake" ] && [ "$(basename ${MAKE_EXECUTABLE})" == "make" ]; then
-		printf "%-6s"
-		while read -r ln; do
-			str_contains "${ln}" 'error: ' && printf ${CR1}
+  local sln
+  local grp
+  tput civis
+  printf "build_system: %10s; make: %7s" ${build_system} ${MAKE_EXECUTABLE} >>${log_file}
+  if [ "${build_system}" == "cmake" ] && [ "$(basename ${MAKE_EXECUTABLE})" == "make" ]; then
+    printf "%-6s"
+    while read -r ln; do
+      str_contains "${ln}" 'error: ' && printf ${CR1}
       str_contains "${ln}" 'warning: ' && printf ${CY6}
-			sln=$(grep -oP '\d+%' <<<${ln})
-			[ -n "$sln" ] && printf "\e[5D%-5s" ${sln}
-		done
-		printf "\e[6D"
-	elif [ "$(basename ${MAKE_EXECUTABLE})" == "ninja" ]; then
-		printf "%-12s"
-		while read -r ln; do
-			str_contains "${ln}" 'error: ' && printf ${CR1}
-			sln=$(grep -oP '\[\d+/\d+\]' <<< ${ln})
-			[ -n "${sln}" ] && printf "\e[11D%-11s" ${sln}
-		done
-		printf "\e[12D"
-	else
-		printf "%-6s"
-		while read -r ln; do
-			sln+="." # ·
-			[ ${#sln} -eq 5 ] && sln=''
-			[ -n "$sln" ] && printf "\e[5D%-5s" $sln
-		done
-		printf "\e[6D"
-	fi
-	tput cnorm
+      sln=$(grep -oP '\d+%' <<<${ln})
+      [ -n "$sln" ] && printf "\e[5D%-5s" ${sln}
+    done
+    printf "\e[6D"
+  elif [ "$(basename ${MAKE_EXECUTABLE})" == "ninja" ]; then
+    printf "%-12s"
+    while read -r ln; do
+      str_contains "${ln}" 'error: ' && printf ${CR1}
+      sln=$(grep -oP '\[\d+/\d+\]' <<< ${ln})
+      [ -n "${sln}" ] && printf "\e[11D%-11s" ${sln}
+    done
+    printf "\e[12D"
+  else
+    printf "%-6s"
+    while read -r ln; do
+      sln+="." # ·
+      [ ${#sln} -eq 5 ] && sln=''
+      [ -n "$sln" ] && printf "\e[5D%-5s" $sln
+    done
+    printf "\e[6D"
+  fi
+  tput cnorm
 }
 
 function build_packages_bin {
-	set -x
-	local xb_distdir=$(build_packages_getdistdir)
-	if fn_defined 'create_package'; then
-		fn_log 'pack' create_package ${xb_distdir}
-	else
-		if fn_defined 'build_make_package'; then
-			fn_log 'pack' build_make_package ${xb_distdir}
-		elif [ "$MAKE_EXECUTABLE" = "ninja" ];then
-			DESTDIR=${xb_distdir} ninja -C ${dir_build} install
-		else
-			[ -z "$mkd" ] && mkd="DESTDIR=${xb_distdir} install"
-			${MAKE_EXECUTABLE} $mkd
-			fi
-			[ -z "$mkd_suffix" ] && mkd_suffix=${dir_install}
-			pushdir "${xb_distdir}${mkd_suffix}"
+  set -x
+  local xb_distdir=$(build_packages_getdistdir)
+  if fn_defined 'create_package'; then
+    fn_log 'pack' create_package ${xb_distdir}
+  else
+    if fn_defined 'build_make_package'; then
+      fn_log 'pack' build_make_package ${xb_distdir}
+    elif [ "$MAKE_EXECUTABLE" = "ninja" ];then
+      DESTDIR=${xb_distdir} ninja -C ${dir_build} install
+    else
+      [ -z "$mkd" ] && mkd="DESTDIR=${xb_distdir} install"
+      ${MAKE_EXECUTABLE} $mkd
+      fi
+      [ -z "$mkd_suffix" ] && mkd_suffix=${dir_install}
+      pushdir "${xb_distdir}${mkd_suffix}"
 
-			# dont forget licence files
-			if [ -n "${lst_lic}" ]; then
-			[ -d "share/doc/${lib}" ] || mkdir -p "share/doc/${lib}"
-			for f in ${lst_lic}; do
-				[ -f "share/doc/${lib}/$f" ] || cp ${dir_src}/${f} "share/doc/${lib}/"
-			done
-		fi
-		
-		# also include .pc manually-built file
-		if fn_defined 'build_pkgconfig_file' || [ -n "$pc_llib" ]; then
-			local xb_pkgd=$(pwd)/lib/pkgconfig
-			[ ! -d "${xb_pkgd}" ] && mkdir -p $xb_pkgd
-			if [ -n "${pc_filelist}" ]; then
-				for pp in ${pc_filelist}; do
-					cp ${dir_install_pc}/${pp} ${xb_pkgd}/
-				done
-			else
-				cp ${dir_install_pc}/${pkg}.pc ${xb_pkgd}/
-			fi
-			fn_undef build_pkgconfig_file
-		fi
+      # dont forget licence files
+      if [ -n "${lst_lic}" ]; then
+      [ -d "share/doc/${lib}" ] || mkdir -p "share/doc/${lib}"
+      for f in ${lst_lic}; do
+        [ -f "share/doc/${lib}/$f" ] || cp ${dir_src}/${f} "share/doc/${lib}/"
+      done
+    fi
+    
+    # also include .pc manually-built file
+    if fn_defined 'build_pkgconfig_file' || [ -n "$pc_llib" ]; then
+      local xb_pkgd=$(pwd)/lib/pkgconfig
+      [ ! -d "${xb_pkgd}" ] && mkdir -p $xb_pkgd
+      if [ -n "${pc_filelist}" ]; then
+        for pp in ${pc_filelist}; do
+          cp ${dir_install_pc}/${pp} ${xb_pkgd}/
+        done
+      else
+        cp ${dir_install_pc}/${pkg}.pc ${xb_pkgd}/
+      fi
+      fn_undef build_pkgconfig_file
+    fi
 
-		if fn_defined 'on_editpack'; then
-			fn_log 'edit' on_editpack
-		fi
+    if fn_defined 'on_editpack'; then
+      fn_log 'edit' on_editpack
+    fi
 
-		build_packages_filelist
-		case ${pkg_fmt} in
-			tgz) tar -czvf "${xb_distdir}.tar.gz" *;;
-			tbz) tar -cvjSf "${xb_distdir}.tar.bz2" *;;
-			zip) zip -r "${xb_distdir}.zip" *;;
-		esac
-		rm -rf ${xb_distdir}
-		popdir
-	fi
-	set +x
+    build_packages_filelist
+    case ${pkg_fmt} in
+      tgz) tar -czvf "${xb_distdir}.tar.gz" *;;
+      tbz) tar -cvjSf "${xb_distdir}.tar.bz2" *;;
+      zip) zip -r "${xb_distdir}.zip" *;;
+    esac
+    rm -rf ${xb_distdir}
+    popdir
+  fi
+  set +x
 }
 
 function build_packages_getdistdir {
-	[ -f "${dir_install_pc}/${pkg}.pc" ] && vrs=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
-	[ -z "$vrs" ] && set_git_version
-	echo "${dir_root}/packages/${lib}_${vrs}_${arch}"
+  [ -f "${dir_install_pc}/${pkg}.pc" ] && vrs=$(pkg-config ${dir_install_pc}/${pkg}.pc --modversion)
+  [ -z "$vrs" ] && set_git_version
+  echo "${dir_root}/packages/${lib}_${vrs}_${arch}"
 }
 
 set_git_version(){
-	pushdir ${dir_src}
-	local v=$(git describe --abbrev=0 --tags 2>/dev/null)
-	[ -n "$v" ] && export vrs=$v
-	popdir
+  pushdir ${dir_src}
+  local v=$(git describe --abbrev=0 --tags 2>/dev/null)
+  [ -n "$v" ] && export vrs=$v
+  popdir
 }
 
 function build_packages_filelist {
-	local scfile="${dir_root}/${lib}.sh"
-	if [ -z "$(cat $scfile | grep '# Filelist')" ]; then
-		echo -e "\n\n# Filelist\n# --------" >> $scfile
-		find ./ -type f | sed 's|^./|# |g' >> $scfile
-	fi
+  local scfile="${dir_root}/${lib}.sh"
+  if [ -z "$(cat $scfile | grep '# Filelist')" ]; then
+    echo -e "\n\n# Filelist\n# --------" >> $scfile
+    find ./ -type f | sed 's|^./|# |g' >> $scfile
+  fi
 }
 
 
@@ -1294,12 +1067,12 @@ sourceforge_json(){
 
 # MENUS SECTION
 function menu_skip_options {
-	while [ -n "${1}" ] || [ -n "${1##--*}" ]; do
-		case $1 in
-		  dl|git|src) skip_dl=true;;
-		esac
-		shift
-	done
+  while [ -n "${1}" ] || [ -n "${1##--*}" ]; do
+    case $1 in
+      dl|git|src) skip_dl=true;;
+    esac
+    shift
+  done
 }
 
 
@@ -1321,16 +1094,16 @@ color_table(){
 }
 
 color_vars(){
-	local v
-	local box=
-	for c in R Y G C B M O F L; do
-		for i in 0 1 2 3 4 5 6; do
-			v="C${c}${i}"
-			printf "${!v}\u2605${v}\u2605   "
-		done
-		printf "\n"
-	done
-	echo
+  local v
+  local box=
+  for c in R Y G C B M O F L; do
+    for i in 0 1 2 3 4 5 6; do
+      v="C${c}${i}"
+      printf "${!v}\u2605${v}\u2605   "
+    done
+    printf "\n"
+  done
+  echo
 }
 
 hwinfoCountCoresReadable(){
@@ -1788,31 +1561,6 @@ version_parse(){
   echo "${arrv[@]:0:3}" | sed 's/ /./g'
 }
 
-git_vremote(){
-  local vrs_exclude='alpha|beta'
-  local lgit=$(git ls-remote $src)
-  local v=$(echo "${lgit}" | grep -oP '\d+\.\d+\.\d+.*' | grep -vP $vrs_exclude | tail -n1)
-  [ -z "${v}" ] && v=$(echo "${lgit}" | grep -oP '\d+\.\d+.*' | grep -vP $vrs_exclude | tail -n1)
-  if [ -n "${v}" ]; then
-    echo "${v}"
-  fi
-  return 0
-  awk -v vv="${lgit}" ss="${src}" -f - << 'EOF'
-BEGIN {
-  FS = "[ /^]+"
-  while ("echo " vv "| sort -Vk2" | getline) {
-    if (!sha)
-      sha = substr($0, 1, 7)
-    tag = $3
-  }
-  while ("curl -s " ss "/releases/tag/" tag | getline)
-    if ($3 ~ "commits")
-      com = $2
-  printf com ? "%s-%s-g%s\n" : "%s\n", tag, com, sha
-}
-EOF
-}
-
 get_patch(){
   local match=$(grep -oP "(?<=^<<').*?(?=')" $1)
   local out
@@ -1843,42 +1591,79 @@ test_c0(){
 c_printf(){
   #set -x
   local wdir="${dir_src}/${1}"
-  if [ -d "${wdir}" ]; then
-    local od="$(pwd)"
-    cd $wdir
-    local hfile=$2
-    local printf_expr=$3
-    local cc
-    if [ ! -f "testfile" ]; then
-      cat <<-testfile >>testfile.c
-				#include <stdio.h>
-				#include "${hfile}"
-				int main(){
-				  printf(${printf_expr});
-				}
-				testfile
-      [ -n "$(command -v clang)" ] && cc=clang || cc=gcc
-      $cc -c testfile.c && $cc -o testfile testfile.o && rm *.o
-    fi
-    ./testfile
-    cd $od
+  test -d "${wdir}" || return 0
+  local od="$(pwd)"
+  cd ${wdir}
+  local hfile="${2}"
+  local printf_expr="${3}"
+  local cc
+  if [ ! -f "testfile" ]; then
+    cat <<-testfile >>testfile.c
+			#include <stdio.h>
+			#include "${hfile}"
+			int main(){
+				printf(${printf_expr});
+			}
+			testfile
+    [ -n "$(command -v clang)" ] && cc=clang || cc=gcc
+    ${cc} -c testfile.c && ${cc} -o testfile testfile.o && rm *.o
   fi
-  #set +x
-  return 0
+  ./testfile
+  cd ${od}
 }
 
 
+
+
+
+
 unused_doErr(){
-	echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
-	if [ -f ${log_file} ];then
-		if [ -f ${dir_build}/CMakeFiles/CMakeError.log ];then
-		echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
-		cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
-		fi
-		echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
-		[ "$openlog" != "n" ] && nano ${log_file}
-	fi
-	exit 1
+  echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
+  if [ -f ${log_file} ];then
+    if [ -f ${dir_build}/CMakeFiles/CMakeError.log ];then
+    echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> ${log_file}
+    cat ${dir_build}/CMakeFiles/CMakeError.log >> ${log_file}
+    fi
+    echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
+    [ "$openlog" != "n" ] && nano ${log_file}
+  fi
+  exit 1
+}
+
+# usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
+function create_pkgconfig_file_old {
+  [ -z "${1}" ] && pc_file=${lib} || pc_file=${1}
+  [ -z "${2}" ] && pc_llib="-l${pc_file}" || pc_llib=${2}
+  [ -z "${3}" ] && pc_prefix=${dir_install} || pc_prefix=${3}
+  [ "${pc_llib}" == "null" ] && pc_llib=''
+  [ -z "$pc_libdir" ] && pc_libdir="/lib"
+  [ -z "$pc_incdir" ] && pc_incdir="/include"
+  [ -z "$pc_cflags" ] && pc_cflags="-I\${includedir}"
+  [ -z "$pc_libs" ] && pc_libs="-L\${libdir}"
+  [ -z "$pc_url" ] && pc_url=$(dirname $src)
+  fn_defined 'get_version' && get_version && pc_vrs=$vrs
+  [ -z "$pc_vrs" ] && {
+  [ -d "${dir_src}/.git" ] && pc_vrs=$(git_getversion ${dir_src}) || pc_vrs=$vrs
+  }
+  cat <<-EOF >${dir_install_pc}/${pc_file}.pc
+		prefix=${pc_prefix}
+		exec_prefix=\${prefix}
+		libdir=\${exec_prefix}${pc_libdir}
+		includedir=\${prefix}${pc_incdir}
+
+		Name: ${lib}
+		Description: ${dsc}
+		URL: ${pc_url}
+		Version: ${pc_vrs}
+		Requires: ${pc_requires}
+		Requires.private: ${pc_requiresprivate}
+		Libs: ${pc_libs} ${pc_llib}
+		Libs.private: ${pc_libsprivate}
+		Cflags: ${pc_cflags}
+
+		EOF
+  pc_filelist="${pc_file}.pc ${pc_filelist}"
+  unset pc_libdir pc_incdir pc_cflags pc_libs pc_url
 }
 
 # usage: github_set_src_release <git_url> <prefix> <ext>
