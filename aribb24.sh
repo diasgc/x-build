@@ -20,9 +20,12 @@ on_create_pc(){
 dev_bra='master'
 dev_vrs='v1.0.3'
 pkg_deb='libaribb24-dev'
-eta='32'
+eta='0'
 
-lst_inc='aribb24/*.h'
+lst_inc='aribb24/parser.h
+ aribb24/decoder.h
+ aribb24/bits.h
+ aribb24/aribb24.h'
 lst_lib='libaribb24'
 lst_bin=''
 lst_lic='COPYING README.md'

@@ -170,9 +170,6 @@ start(){
     ! ${git_checkout} && ! ${retry} && [ -f "${dir_install_pc}/${pkg}.pc" ] && exit
   fi
 
-  # Reset LOGFILE
-  safe_rm "${log_file}"
-
   # check build tools
   check_tools ${tls}
 
@@ -181,6 +178,7 @@ start(){
 
   # start log
   log_start "${arch}" "$((${eta}/$(nproc)))s"
+  check_pkg
 
   echo -ne "$(bool2str ${build_static} ${SSB} ${CD})[static]"
   echo -ne "$(bool2str ${build_shared} ${SSB} ${CD})[shared]"
@@ -813,6 +811,7 @@ while [ -n "${1}" ];do
   $optDnl)     build_download=true;;
 
   # script
+  --check)     ckeck_pkg; exit 0;;
   --break)     shift; set_break ${1};;
   --skip)      shift; menu_skip_options $@;;
   $optVrs)     shift; vrs="${1}";;
@@ -823,7 +822,8 @@ while [ -n "${1}" ];do
   --clear)     shift; menu_clear $@; exit 0;;
   --desc )     echo $dsc && exit 0;;
   --get)       shift; menu_get $@; exit 0;;
-  --check)     shift; check_install $@; exit 0;;
+  --check2)    shift; check_install $@; exit 0;;
+
   --list)      shift; menu_list $@; exit 0;;
   --patch)     shift; menu_patch $@;;
   --goto)      shift; menu_goto $@; exit 0;;
@@ -905,12 +905,15 @@ mingw_posix MAKE_EXECUTABLE cmake_includes
 
 # if pkg-config file exists and not rebuilding, exit
 test ! ${rebuild} && [ -f "$(menu_get pc)" ] && end_script
+#test ! ${rebuild} && check_pkg && end_script
 
 inc_tab
 
 # reset logfile
 export log_file="${dir_install}/${lib}.log"
 safe_rm "${log_file}"
+
+#check_pkg && end_script
 
 # show package info
 package_showinfo

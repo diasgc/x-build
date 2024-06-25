@@ -1,6 +1,73 @@
 #!/bin/bash
 
 
+
+
+# utils
+
+# checks for pkg installed components
+function check_pkg {
+  logf "Check for pkg installed components for ${arch}:"
+  local f
+  if [ -n "${lst_inc}" ]; then
+    for i in ${lst_inc}; do
+      f="${dir_install_include}/${i}"
+      test ! -f "${f}" && logf "missing ${f}" && return 1
+      echo "checking for ${f}: ok" >>${log_file}
+    done
+  fi
+  if [ -n "${lst_lib}" ]; then
+    if ${build_static}; then
+      for i in ${lst_lib}; do
+        f="${dir_install_lib}/${i}.a"
+        test ! -f "${f}" && logf "missing ${f}" && return 1
+        echo "checking for ${f}: ok" >>${log_file}
+      done
+    fi
+    if ${build_shared}; then
+      local e="$(bool2str ${host_mingw} dll so)"
+      for i in ${lst_lib}; do
+        f="${dir_install_lib}/${i}.${e}"
+        test ! -f "${f}" && logf "missing ${f}" && return 1
+        echo "checking for ${f}: ok" >>${log_file}
+      done
+    fi
+  fi
+  
+  ${rebuild} && return 0
+  if [ -n "${lst_pc}" ]; then
+    for i in ${lst_pc}; do
+      f="${dir_install_pc}/${i}"
+      test ! -f "${f}" && logf "missing ${f}" && return 1
+      echo "checking for ${f}: ok" >>${log_file}
+    done
+  fi
+  return 0
+}
+
+# usage check_pkg_h <dir_install_[include|lib|bin|pc]> <lst_[inc|lib|bin|pc]> 
+function check_pkg_h {
+  local d="${1}"; shift
+  if [ -n "${1}" ]; then
+    while [ -n "${1}" ]; do
+      test -f "${d}/${1}" || return 1
+      shift
+    done
+  fi
+  return 0
+}
+
+function check_pkg_lib {
+  local d="${1}"; shift
+  if [ -n "${1}" ]; then
+    while [ -n "${1}" ]; do
+      test -f "${d}/${1}" || return 1
+      shift
+    done
+  fi
+  return 0
+}
+
 # cmake utils
 
 function setup_cmake_config {
@@ -55,29 +122,16 @@ function setup_cmake_config {
   #case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
 }
 
-# usage cmake_create_toolchain <dir>
-cmake_create_toolchain(){
-  cmake_build_toolchainfile
-}
 
-cmake_clang_toolchain(){
+
+
+# usage cmake_create_toolchain
+function cmake_create_toolchain {
+
+  : "${cmake_fulltoolchain:=true}"
   export cmake_toolchain_file="${dir_build}/${arch}.cmake"
-  cat <<-EOF >${cmake_toolchain_file}
-	set(CMAKE_SYSTEM_NAME "${PLATFORM}")
-	set(CMAKE_SYSTEM_PROCESSOR "${cmake_system_processor}")
-	set(CMAKE_C_COMPILER ${CC})
-	set(CMAKE_CXX_COMPILER ${CXX})
-	set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
-	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-	set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
-	EOF
-}
 
-: "${cmake_fulltoolchain:=true}"
-
-cmake_build_toolchainfile(){
-  export cmake_toolchain_file="${dir_build}/${arch}.cmake"
+  # basic compiler
   cat <<-EOF >${cmake_toolchain_file}
 	set(CMAKE_SYSTEM_NAME "${PLATFORM}")
 	set(CMAKE_SYSTEM_PROCESSOR "${cmake_system_processor}")
@@ -86,6 +140,7 @@ cmake_build_toolchainfile(){
 	set(CMAKE_ASM_NASM_COMPILER ${ASM_NASM})
 	EOF
 	
+  # full binutils
   ${cmake_fulltoolchain} && cat <<-EOF >>${cmake_toolchain_file}
 	set(CMAKE_AR ${AR} CACHE FILEPATH Archiver)
 	set(CMAKE_RANLIB ${RANLIB} CACHE FILEPATH Indexer)
@@ -103,6 +158,7 @@ cmake_build_toolchainfile(){
 	set(CMAKE_POSITION_INDEPENDENT_CODE 1)
 	EOF
 	
+  # cross compile
   ${host_cross} && cat <<-EOF >>${cmake_toolchain_file}
 	set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ALWAYS)
@@ -110,11 +166,13 @@ cmake_build_toolchainfile(){
 	set(CMAKE_FIND_ROOT_PATH ${cmake_findrootpath})
 	EOF
 
+  # i686 compiler flats
   ${host_x86} && cat <<-EOF >>${cmake_toolchain_file}
 	set(CMAKE_C_COMPILER_ARG1 "-m32")
 	set(CMAKE_CXX_COMPILER_ARG1 "-m32")
 	EOF
 	
+  # ndk
   ${host_ndk} && cat <<-EOF >>${cmake_toolchain_file}
 	set(CMAKE_ANDROID_NDK OFF)
 	set(ANDROID_ABI ${ABI})
@@ -127,10 +185,11 @@ cmake_build_toolchainfile(){
 	include(${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake)
 	EOF
 	
-  #mingw_stdlibs='-lwsock32 -lws2_32 -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32'
+  # mingw
   mingw_stdlibs='-static-libgcc -static-libstdc++ -lwsock32 -lws2_32'
   mingw_exelink='-Wl,-Bstatic'
   #mingw_exelink='-static-libgcc -static-libstdc++ -Wl,-pdb='
+  #mingw_stdlibs='-lwsock32 -lws2_32 -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32'
   ${host_mingw} && cat <<-EOF >>${cmake_toolchain_file}
 	set(CMAKE_COMPILER_IS_MINGW ON)
 	set(CMAKE_FIND_ROOT_PATH \${CMAKE_FIND_ROOT_PATH} ${LLVM_MINGW_HOME}/generic-w64-mingw32 ${LLVM_MINGW_HOME}/${arch}-w64-mingw32/bin)
@@ -143,7 +202,7 @@ cmake_build_toolchainfile(){
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" ".dll.a" ".lib" ".a")
 	EOF
 	
-  #cmake_addcpack
+  # extra commands
   test -n "${cmake_definitions}"         && echo "add_definitions("${cmake_definitions[@]}")" >>${cmake_toolchain_file}
   test -n "${cmake_add_link_options}"    && echo "add_link_options("${cmake_add_link_options}")" >>${cmake_toolchain_file}
   test -n "${cmake_add_compile_options}" && echo "add_compile_options("${cmake_add_compile_options[@]}")" >>${cmake_toolchain_file}
@@ -177,6 +236,8 @@ cmake_generate_pkgconfig_pc_in(){
 	Cflags: -I${includedir}
 	EOF
 }
+
+
 
 version_parse(){
   local IFS='.|-|_'
@@ -270,21 +331,7 @@ cmake_check_cmakefiles(){
   return 0
 }
 
-#1=cmake_key 2=$build_key_bool 
-cmake_readkey(){
-  local arr
-  local ret
-  if [ -n "${!1}" ]; then
-    arr=(${!cfg_static//|/ })
-    case ${#arr[@]} in
-      1) ${!2} && ret="-D${arr[0]}=ON" || ret="-D${arr[0]}=OFF";;
-      2) ${!2} && ret="-D${arr[0]}" || ret="-D${arr[1]}";;
-    esac
-  fi
-  echo "${ret}"
-}
-
-cmake_include_directories(){
+fn_cmake_include_directories(){
   printf "include_directories($@)" >>${cmake_toolchain_file}
 }
 

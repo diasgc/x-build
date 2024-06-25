@@ -1,12 +1,4 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK  F   .   .   .  clang
-# GNU  .   .   .   .  gcc
-# WIN  .   .   .   .  clang/gcc
-
-# need to include_directories(<${dir_install_include}>) in CMakeLists.txt to avoid snappy.h not found error
-# add pc file
-# support dual static shared build 
 
 lib='leveldb'
 dsc='LevelDB is a fast key-value storage library written at Google that provides an ordered mapping from string keys to string values.'
@@ -17,16 +9,22 @@ dep='zlib snappy'
 
 cmake_config='-DLEVELDB_BUILD_TESTS=OFF -DLEVELDB_BUILD_BENCHMARKS=OFF'
 
-lst_inc=''
-lst_lib=''
+lst_inc='leveldb/c.h leveldb/cache.h
+ leveldb/table_builder.h leveldb/filter_policy.h
+ leveldb/status.h leveldb/dumpfile.h
+ leveldb/env.h leveldb/slice.h leveldb/export.h
+ leveldb/options.h leveldb/write_batch.h
+ leveldb/table.h leveldb/iterator.h leveldb/db.h
+ leveldb/comparator.h'
+lst_lib='libleveldb'
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
-lst_pc=''
+lst_pc='leveldb.pc'
 
 dev_bra='master'
 dev_vrs='1.23.0'
 pkg_deb='libleveldb-dev'
-eta='0'
+eta='112'
 
 on_create_pc(){
     vrs=$(grep -oP 'leveldb VERSION \K([0-9\.]+)' "${dir_src}/CMakeLists.txt")
@@ -34,6 +32,11 @@ on_create_pc(){
 }
 
 . xbuild && start
+
+# cpu av8 av7 x86 x64
+# NDK  +   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
 
 # Filelist
 # --------

@@ -9,10 +9,10 @@ src="https://github.com/lz4/lz4.git"
 cfg='cmake'
 config_dir='build/cmake'
 #config_dir='contrib/meson'
-eta='30'
+eta='112'
 
 dev_bra='master'
-dev_vrs='1.9.5'
+dev_vrs='1.9.4'
 
 lst_inc='lz4.h lz4frame.h lz4frame_static.h lz4hc.h'
 lst_lib='liblz4'

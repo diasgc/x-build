@@ -1459,6 +1459,8 @@ function build_pkgconfig {
 		Cflags: ${pkgconfig_cflags}
 
 		EOF
+  logf "Installed ${pkgconfig_file}:\n\n"
+  cat ${pkgconfig_file} >>${log_file}
 }
 
 function build_packages_bin {
