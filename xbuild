@@ -470,9 +470,9 @@ check_install(){
       ;;
   esac
   if [ -n "${ext}" ];then
-    for h in $lst_lib; do
-    echo "listing ${dir_install}/lib/${h}${ext}"
-    test -z "$(ls ${dir_install}/lib/${h}.* | grep ''${ext}'' 2>/dev/null)" && echo && return 0
+    for h in ${lst_lib}; do
+      echo "listing ${dir_install}/lib/${h}${ext}"
+      test -z "$(ls ${dir_install}/lib/${h}.* | grep ''${ext}'' 2>/dev/null)" && echo && return 0
     done
     echo 1
     return 0
@@ -483,18 +483,15 @@ check_install(){
 
 
 function build_dependencies {
-  local dep_args="${arch} ${dep_build} $(bool2str ${build_allshared} --shared --static) $(bool2str ${build_download} '--dl' '')"
-  local pkgfile libname old_lib_link old_csb
+  local dep_args
+  local pkgfile libname
   while [ -n "${1}" ]; do
     test -f "./${1}.sh" || exit_err "Fail to build dependency ${1}. Script file not found."
     pkgfile=$(./${1}.sh ${arch} --get pc)
     if [ ! -f "${pkgfile}" ]; then
-      old_lib_link=${lib_link}; old_csb=${CSB}
-      unset lib_link CSB
-
+      dep_args="${arch} $(bool2str ${build_allshared} --shared --static)"
+      ${build_download} && dep_args+=" --dl"
       ./${1}.sh ${dep_args}
-      
-      lib_link=${old_lib_link}; CSB=${old_csb}
     else
       log_info "${1}: ${C0} version $(pkg-config --modversion ${pkgfile})"
     fi
@@ -517,17 +514,14 @@ toolchain_android(){
   YASM=${CROSS_PREFIX}yasm
   ASM_NASM=${YASM}
 
-  CMAKE_TOOLCHAIN="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake"
   LT_SYS_LIBRARY_PATH="${TOOLCHAIN}/lib:${SYSROOT}/usr/lib/${arch}:${SYSROOT}/usr/lib/${arch}/${NDK_API}"
-  PKG_CONFIG_DIR="/usr/${arch}/local/lib/pkgconfig"
   CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/include -I${SYSROOT}/usr/include"
   LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
-  #test $build_static && LDFLAGS+=" -static-libstdc++ -lc++_static"
 
   cmake_system_processor="${host_trip[0]}${host_trip[1]}"
   $host_arm32 && cmake_system_processor="armv7-a"
-  cmake_findrootpath="/usr/${arch} /usr/${arch}/lib /usr/${arch}/lib/${API} /usr/${arch}/sysroot/usr ${dir_install}"
-  export NDK_API=${API}
+  cmake_findrootpath="/usr/${arch} /usr/${arch}/lib /usr/${arch}/lib/${ANDROID_NDK_API} /usr/${arch}/sysroot/usr ${dir_install}"
+  export NDK_API=${ANDROID_NDK_API}
 }
 
 toolchain_llvm_mingw(){
@@ -700,17 +694,22 @@ set_env(){
              ;;
   esac
   #LIBSDIR="$(pwd)/builds/${PLATFORM,,}/${host_trip[5]}"
-  safe_mkdir "${dir_install}"
-  export dir_install
-  export dir_install_bin="${dir_install}/bin"
-  export dir_install_include="${dir_install}/include"
-  export dir_install_lib="${dir_install}/lib"
-  export dir_install_pc="${dir_install_lib}/pkgconfig"
-  export PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
-  export PKG_CONFIG_PATH=
+  dir_install_bin="${dir_install}/bin"
+  dir_install_include="${dir_install}/include"
+  dir_install_lib="${dir_install}/lib"
+  dir_install_pc="${dir_install_lib}/pkgconfig"
+  PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
+  unset PKG_CONFIG_PATH
+
+  safe_mkdir "${dir_install}" "${dir_install_bin}" "${dir_install_include}" "${dir_install_lib}" "${dir_install_pc}"
+  
+  export dir_install dir_install_bin dir_install_include dir_install_lib dir_install_pc PKG_CONFIG_PATH
+  
 }
 
-
+function parse_arg {
+  fn_defined 'extra_options' && extra_options "${1}" || cfg_args+=( "${1}" )
+}
 
 
 
@@ -740,7 +739,6 @@ wx64='@(w64|wx64|*64-win*|*64-*mingw*|windows|win|w*64)'
 
 optVrs='@(--version|--vrs|--ver|-v)'
 optDnl='@(--download|--dl|-d)'
-optHelp='@(--help|-h)'
 
 # set host: must be first arg
 case "${1}" in
@@ -771,7 +769,7 @@ esac
 
 # Other options
 
-while [ ${1} ];do
+while [ -n "${1}" ];do
   case "${1}" in
 
   # build
@@ -779,13 +777,13 @@ while [ ${1} ];do
   --static)    build_static=true; build_shared=false;;
   --both)      build_static=true; build_shared=true;;
   --bin)       build_bin=true;;
+  --man)       build_man=true;;
   --full)      build_shared=true
                build_static=true
                build_bin=true
                build_dist=true
-               dep_build="--full"
                ;;
-  --man)       build_man=true;;
+  
 
   # compiler
   --clang)     use_clang=true;;
@@ -807,10 +805,11 @@ while [ ${1} ];do
   --release)   src_rel=true;;
   --git)       shift; menu_git $@; exit 0;;
   --bra*)      shift; export bra="${1}";;
-  --checkout)  git_checkout=true;;
-  --update)    update=true;;
-  --upd-all)   update=true; req_update_deps=true;;
-  --force)     [ -f "${dir_install_pc}/${pkg}.pc" ] && rm "${dir_install_pc}/${pkg}.pc" 2>/dev/null;;
+  --checkout)  git_checkout=true; rebuild=true;;
+  --update)    update=true; rebuild=true;;
+  --retry)     retry=true; rebuild=true;;
+  --upd-all)   update=true; req_update_deps=true; rebuild=true;;
+  --force)     safe_rm "${dir_install_pc}/${pkg}.pc"; rebuild=true;;
   $optDnl)     build_download=true;;
 
   # script
@@ -821,8 +820,6 @@ while [ ${1} ];do
   --checkPkg)  checkPkg; exit 0;;
   --libName)   echo "${lib}"; exit 0;;
   --var)       shift; echo "$($1)"; exit 0;;
-  --refresh)   update=true;;
-  --retry)     retry=true;;
   --clear)     shift; menu_clear $@; exit 0;;
   --desc )     echo $dsc && exit 0;;
   --get)       shift; menu_get $@; exit 0;;
@@ -839,17 +836,13 @@ while [ ${1} ];do
     
   --latest-release) utils_get_latest_release; exit 0;;
 
-  * ) if fn_defined 'extraOpts'; then
-        extraOpts "${1}"
-      else
-        cfg_args+=( "${1}" )
-      fi
-      ;;
+  *)           parse_arg "${1}";;
+
   esac
   shift
 done
 
-fn_undef 'extraOpts'
+fn_undef 'extra_options'
 
 if fn_defined 'compiler_config'; then
   compiler_config
@@ -892,14 +885,14 @@ test -n "${config_dir+x}" && dir_config="${dir_src}/${config_dir}"
 build_out=false
 
 case "${cfg}" in
-  cmake)   build_system=cmake; build_out=true;;
-  meson)   build_system=meson; build_out=true;;
-  bazel)   build_system=bazel;;
-  cargo)   build_system=cargo;;
-  mk|make) build_system=make;;
-  other)   build_system=other;;
+  cmake)   build_system='cmake'; build_out=true;;
+  meson)   build_system='meson'; build_out=true;;
+  bazel)   build_system='bazel';;
+  cargo)   build_system='cargo';;
+  mk|make) build_system='make';;
+  other)   build_system='other';;
   ab|am|ac|ar|ag|auto*)
-           build_system=automake; build_out=true;;
+           build_system='automake'; build_out=true;;
   *)       unset build_system;;
 esac
 
@@ -910,15 +903,14 @@ lib_link cfg_bin LIBSDIR PLATFORM CPU ABI EABI \
 host_arch host_64 host_eabi host_vnd host_arm host_os \
 mingw_posix MAKE_EXECUTABLE cmake_includes
 
+# if pkg-config file exists and not rebuilding, exit
+test ! ${rebuild} && [ -f "$(menu_get pc)" ] && end_script
+
 inc_tab
 
-# show package info
+# reset logfile
 export log_file="${dir_install}/${lib}.log"
+safe_rm "${log_file}"
 
-if [ -z "$(check_install pc)" ]; then
-  package_showinfo
-elif ${update} || ${retry} || ${git_checkout}; then
-  package_showinfo
-else
-  end_script    
-fi
+# show package info
+package_showinfo

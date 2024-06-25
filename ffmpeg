@@ -273,8 +273,8 @@ extLibsPrintList(){
 	done
 }
 
-extraOpts(){
-	case $1 in
+extra_options(){
+	case "${1}" in
 		--show-options) ffOpts; exit 0;;
 		--show-libs) ffExtLibs; exit 0;;
 		--list-libs) extLibsList; exit 0;;
@@ -285,7 +285,7 @@ extraOpts(){
 	return 0
 }
 
-case $1 in
+case "${1}" in
 	--config)   ffmpegConfig;;
 	--load)     shift; loadConfig $1;;
 esac

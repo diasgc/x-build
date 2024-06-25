@@ -12,8 +12,8 @@ cmake_config='-DHB_HAVE_FREETYPE=ON'
 cmake_bin='HB_BUILD_UTILS'
 cmake_definitions+=('-Wno-double-promotion')
 
-extraOpts(){
-	case $1 in
+extra_options(){
+	case "${1}" in
 		--all) dep='freetype fontconfig glib2 cairo libicu';;
 	esac
 }

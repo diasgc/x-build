@@ -11,8 +11,8 @@ cfg='cmake'
 #dep='libpng brotli bzip2'
 cmake_config='-DFT_DISABLE_ZLIB=TRUE -DFT_DISABLE_BZIP2=TRUE -DFT_DISABLE_PNG=TRUE -DFT_DISABLE_HARFBUZZ=TRUE -DFT_DISABLE_BROTLI=TRUE'
 
-extraOpts(){
-    case $1 in --all)
+extra_options(){
+    case "${1}" in --all)
         dep='zlib bzip2 libpng harfbuzz brotli'
         cmake_config='-DFT_REQUIRE_ZLIB=TRUE -DFT_REQUIRE_BZIP2=TRUE -DFT_REQUIRE=TRUE -DFT_REQUIRE_HARFBUZZ=TRUE -DFT_REQUIRE_BROTLI=TRUE'
         ;;

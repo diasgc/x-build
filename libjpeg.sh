@@ -21,8 +21,8 @@ lst_bin='rdjpgcom jpegtran wrjpgcom djpeg tjbench cjpeg'
 lst_lic='LICENSE.md'
 lst_pc='libjpeg.pc libturbojpeg.pc'
 
-extraOpts(){
-  case $1 in
+extra_options(){
+  case "${1}" in
     --jpeg7) cmake_config+=" -DWITH_JPEG7=ON";;
     --jpeg8) cmake_config+=" -DWITH_JPEG8=ON";;
     --12bit) cmake_config+=" -DWITH_12BIT=ON";;

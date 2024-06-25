@@ -26,8 +26,8 @@ cfg='meson'
 meson_fontconfig=disabled
 meson_config='-Dtest=false -Dprofile=false -Ddirectwrite=disabled -Dcoretext=disabled'
 
-extraOpts(){
-    case $1 in --all)
+extra_options(){
+    case "${1}" in --all)
         dep+=' fontconfig'
         meson_fontconfig=enabled
         ;;

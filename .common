@@ -375,7 +375,7 @@ sourceforge_json(){
 # MENUS SECTION
 function menu_skip_options {
   while [ -n "${1}" ] || [ -n "${1##--*}" ]; do
-    case $1 in
+    case "${1}" in
       dl|git|src) skip_dl=true;;
     esac
     shift
@@ -993,7 +993,6 @@ git_getversion(){
 function package_showinfo {
   ${banner} || return 0
   local dp=
-  local vs=
   local longdesc=$(package_longdesc)
   [ -z "$(echo ${longdesc} | xargs 2>/dev/null)" ] && unset longdesc
 
@@ -1003,10 +1002,10 @@ function package_showinfo {
 
   # see links
   echo -e "${CD}${ind}${CD}"
-  echo -e "${CD}${ind}${CD}see log   : \e[4m${log_file}\e[24m${C0}"
-  echo -e "${CD}${ind}${CD}    script: \e[4m${0}\e[24m${C0}"
-  echo -e "${CD}${ind}${CD}    source: \e[4m${dir_src}\e[24m${C0}"
-  echo -e "${CD}${ind}${CD}    build : \e[4m${dir_install}\e[24m${C0}"
+  echo -e "${CD}${ind}${CD}see logfile: \e[4m${log_file}\e[24m${C0}"
+  echo -e "${CD}${ind}${CD}    script : \e[4m${0}\e[24m${C0}"
+  echo -e "${CD}${ind}${CD}    source : \e[4m${dir_src}\e[24m${C0}"
+  echo -e "${CD}${ind}${CD}    build  : \e[4m${dir_install}\e[24m${C0}"
   echo -e "${CD}${ind}${CD}"
 
   # Licence
@@ -1044,7 +1043,7 @@ function package_showinfo {
 
 function package_longdesc {
   if [ -n "${pkg_deb}" ]; then
-    echo -e $(apt-cache show ${pkg_deb} 2>/dev/null | \
+    echo -e $(${apt_show} ${pkg_deb} 2>/dev/null | \
     grep -E "Description-..^|^ " | \
     sed $'s/\*/\u2605/g' | \
     sed '/^ *This package contains.*\./d') | fold -s -w120 | sed 's/^/'"${ind}"'/g'
@@ -1203,9 +1202,6 @@ function setup_cmake_config {
 function setup_am_config {
 
   cfg_cmd="${dir_config}/configure"
-  if [ ! -f "${cfg_cmd}" ]; then
-    test -f "${dir_config}/bootstrap" 
-  fi
   
   : "${build_cmd:=${MAKE_EXECUTABLE}}"
   test -n "${make_args}" && build_args+=( "${make_args}")
@@ -1567,14 +1563,14 @@ get_latest_release() {
   local s=$(echo "$1" | sed 's/https:\/\///g; s/\// /g; s/\.git$//')
   set -- $s
   #echo -ne "$1: $2/$3"
-  case $1 in
+  case "${1}" in
     github*) echo -e "$(curl --silent "https://api.github.com/repos/${2}/${3}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')";;
   esac                                # Pluck JSON value
 }
 
 wget_untar(){
   local args
-  case $1 in
+  case "${1}" in
     *.tar.lz) 
       [ -z $(command -v lzip) ] || exit 1
       args="--lzip -xv"
@@ -1734,7 +1730,7 @@ wget_pkg_debian(){
 
 list_pkgs(){
   local pd="${dir_root}/builds"
-  case $1 in
+  case "${1}" in
     *-android*) wget -q "https://sourceforge.net/projects/packages-${1}/rss?path=/" -O - | grep -Po '<title><!\[CDATA\[.*</title>' | grep -Po '/.*tar.gz' | sed 's|/||'> ${pd}/$1_pkglist.txt;;
     *) return 1;;
   esac
@@ -1926,7 +1922,7 @@ function log_unused2 {
   local noerr=false
   local progress=false
   while $(str_starts $1 '--');do
-    case $1 in
+    case "${1}" in
       --noerr) noerr=true;;
       --progress) progress=true;;
     esac

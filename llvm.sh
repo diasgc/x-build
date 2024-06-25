@@ -17,17 +17,17 @@ dev_vrs='18.1.7'
 pkg_deb='llvm-dev'
 eta='30'
 
-extraOpts(){
-    case $1 in
-        --15)   bra='fir-dev';;
-        --14)   bra='release/14.x';;
-        --13)   bra='release/13.x';;
-        --cxx)      runtimes+=(libcxx);;
-        --cxxabi)   runtimes+=(libcxxabi);;
-        --unwind)   runtimes+=(libunwind);;
-        --crt)      runtimes+=(compiler-rt);;
-        --openmp)   runtimes+=(openmp);;
-        --all)      runtimes=(all);;
+extra_options(){
+    case "${1}" in
+        --15)     bra='fir-dev';;
+        --14)     bra='release/14.x';;
+        --13)     bra='release/13.x';;
+        --cxx)    runtimes+=(libcxx);;
+        --cxxabi) runtimes+=(libcxxabi);;
+        --unwind) runtimes+=(libunwind);;
+        --crt)    runtimes+=(compiler-rt);;
+        --openmp) runtimes+=(openmp);;
+        --all)    runtimes=(all);;
     esac
 }
 

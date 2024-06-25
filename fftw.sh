@@ -20,8 +20,8 @@ lst_bin=''
 lst_lic='COPYING COPYRIGHT AUTHORS'
 lst_pc='fftw3.pc'
 
-extraOpts(){
-  case $1 in
+extra_options(){
+  case "${1}" in
     -f|--float ) cmake_config+=" -DENABLE_FLOAT=ON" pkg='fftwf';;
     -l|--long )  cmake_config+=" -DENABLE_LONG_DOUBLE=ON" pkg='fftwl';;
     -q|--quad )  cmake_config+=" -DENABLE_QUAD_PRECISION=ON" pkg='fftwq';;

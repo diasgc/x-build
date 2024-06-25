@@ -17,7 +17,7 @@ dev_vrs='1.3.204'
 pkg_deb=''
 eta='27497190384'
 
-extraOpts(){
+extra_options(){
   case "${1}" in
     --loader)
       src='https://github.com/KhronosGroup/Vulkan-Loader.git'

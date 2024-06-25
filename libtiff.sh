@@ -16,8 +16,8 @@ dev_vrs='4.6.0'
 pkg_deb="libtiff-dev"
 eta='12'
 
-extraOpts(){
-    case $1 in
+extra_options(){
+    case "${1}" in
         --all) dep='liblzma libjpeg libzstd libdeflate lerc' cmake_deps='ON';;
         --min) dep='' cmake_deps='OFF';;
     esac

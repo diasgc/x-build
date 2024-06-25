@@ -30,8 +30,8 @@ lst_pc='libssh.pc'
 
 cmake_definitions+=(-Wno-deprecated-declarations)
 
-extraOpts(){
-    case $1 in
+extra_options(){
+    case "${1}" in
      --dev*)    build_static=true;; 
      --gcrypt)  dep='libgcrypt'; dep_opt='-DWITH_GCRYP=ON -DWITH_MBEDTLS=OFF';;
      --mbedtls) dep='mbedtls'; dep_opt="-DWITH_GCRYP=OFF -DWITH_MBEDTLS=ON -DMBEDTLS_INCLUDE_DIR=${dir_install}/include";;

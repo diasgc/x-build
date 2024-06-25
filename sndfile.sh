@@ -39,9 +39,9 @@ lst_bin='sndfile-convert
 lst_lic='COPYING AUTHORS'
 lst_pc='sndfile.pc'
 
-#extraOpts(){
+#extra_options(){
 #	sndfile_extlibs=OFF
-#    case $1 in
+#    case "${1}" in
 #        --extlibs) sndfile_extlibs=ON;;
 #    esac
 #	cmake_config+=' -DENABLE_EXTERNAL_LIBS='${sndfile_extlibs}

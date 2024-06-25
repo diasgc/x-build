@@ -15,7 +15,7 @@ cfg_cmd="./autogen.sh -s"
 dev_bra='master'
 dev_vrs='1.0.20'
 pkg_deb='libsodium-dev'
-eta='352'
+eta='304'
 
 lst_inc='sodium.h sodium/*.h'
 lst_lib='libsodium'

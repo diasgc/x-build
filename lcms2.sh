@@ -5,28 +5,17 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='lcms2'
-pkg_deb='liblcms2-dev'
 dsc='A free, open source, CMM engine. It provides fast transforms between ICC profiles'
 lic='BSD-2c'
 src='https://github.com/mm2/Little-CMS.git'
+
 cfg='meson'
-#
-eta='90'
-
-lst_inc='lcms2_plugin.h lcms2.h'
-lst_lib='liblcms2'
-lst_bin='linkicc psicc tificc jpgicc transicc'
-lst_lic='COPYING AUTHORS'
-lst_pc='lcms2.pc'
-
-dev_bra='master'
-dev_vrs='2.13.1'
-
+meson_bin='bool:utils'
 meson_config='-Djpeg=disabled -Dtiff=disabled'
 
-extraOpts(){
-    case $1 in
-        --full)
+extra_options(){
+    case "${1}" in
+        --all)
             dep='libjpeg libtiff'
             meson_config='-Djpeg=enabled -Dtiff=enabled'
             ;;
@@ -36,9 +25,16 @@ extraOpts(){
     esac
 }
 
-on_build_bin(){
-    meson_config+=' -Dutils=true'
-}
+dev_bra='master'
+dev_vrs='2.16'
+pkg_deb='liblcms2-dev'
+eta='64'
+
+lst_inc='lcms2_plugin.h lcms2.h'
+lst_lib='liblcms2'
+lst_bin='linkicc psicc tificc jpgicc transicc'
+lst_lic='COPYING AUTHORS'
+lst_pc='lcms2.pc'
 
 . xbuild && start
 

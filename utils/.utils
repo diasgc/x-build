@@ -118,7 +118,7 @@ cmake_build_toolchainfile(){
   ${host_ndk} && cat <<-EOF >>${cmake_toolchain_file}
 	set(CMAKE_ANDROID_NDK OFF)
 	set(ANDROID_ABI ${ABI})
-	set(ANDROID_PLATFORM ${API})
+	set(ANDROID_PLATFORM ${ANDROID_NDK_API})
 	set(ANDROID_NDK ${ANDROID_NDK_HOME})
 	set(ANDROID_STL c++_$(bool2str ${build_shared} shared static))
 	set(ZLIB_INCLUDE_DIRS ${SYSROOT}/usr/include)
@@ -813,7 +813,7 @@ prompt_remove(){
 }
 
 function menu_patch {
-  case $1 in
+  case "${1}" in
     # usage libname.sh --patch a [sources/libname/]path/to/newfile [sources/libname/]path/to/oldfile
     a|add|append)       shift; patch_append $@;;
     m|make|e|embed)     shift; patch_embed $1;;
@@ -848,7 +848,7 @@ patch_embed(){
     exit_err "No sources/${lib}/xbuild.patch file to embed"
   fi
   hdr="STR_PATCH"
-  case $1 in
+  case "${1}" in
     xb64|XB64) echo -e "\n<<'XB64_PATCH'" >>${0}
         cat "sources/${lib}/xbuild.patch" | base64 -w 90 >>${0}
         echo -e "XB64_PATCH" >>${0}
@@ -934,7 +934,7 @@ patch_check_xbpatch(){
 }
 
 set_break(){
-    case $1 in
+    case "${1}" in
         git)    break_on_git=true;;
         patch)  break_on_patch=true;;
         config) break_on_config=true;;
@@ -945,7 +945,7 @@ set_break(){
 }
 
 menu_tune(){
-  case $1 in
+  case "${1}" in
     smd855)   CPPFLAGS+=" -mtune=cortex-a76.cortex-a55";;
     smd865)   CPPFLAGS+=" -mtune=cortex-a77.cortex-a55";;
     smd888)   CPPFLAGS+=" -mtune=cortex-a78.cortex-a55";;
@@ -955,7 +955,7 @@ menu_tune(){
 
 menu_clear(){
   while [ -n "$1" ];do
-    case $1 in
+    case "${1}" in
       source|srclib)   prompt_remove ${dir_src};;
       allsources|sources)  prompt_remove ${dir_sources};;
       builds)   prompt_remove ${dir_install};;
@@ -983,7 +983,7 @@ prt_hmenu(){
 menu_get(){
   local pkgfile="${dir_install_pc}/${pkg}.pc"
   [ -f "${pkgfile}" ] && local has_pc=true
-  case $1 in
+  case "${1}" in
     help)    prt_hmenu "${CW}usage: $0 --get ${CC0}<opt>" \
           'cflags' 'get pkg-config --cflags' 'ldflags' 'get pkg-config --libs' 'ldstatic' 'get pkg-config --libs --static' \
           'pc-ver' 'get package version' 'pc-path|pc' 'get pkg-config file path' 'pc-name' 'get pkg-config file name without .pc' \
@@ -1019,7 +1019,7 @@ menu_git(){
   local b=false
   [ -z "${lib}" ] && return 0
   [ -z "${src}" ] && return 0
-  case $1 in
+  case "${1}" in
     help)       prt_hmenu "${CW}usage: $0 --git ${CC0}<opt>" \
           'tar*' 'list current tarball contents' 'branches' 'list all local git available branches' \
           'tags' 'list all local git available branches' \
@@ -1037,7 +1037,7 @@ menu_git(){
 menu_list(){
   local b=false
   [ -n "${arch}" ] && [ -n "${lib}" ] && b=true
-  case $1 in
+  case "${1}" in
     help)       prt_hmenu "${CW}usage: $0 --list ${CC0}<opt>" \
           'tar*' 'list current tarball contents' 'branches' 'list all local git available branches' \
           'tags' 'list all local git available branches' \
@@ -1057,7 +1057,7 @@ menu_list(){
 }
 
 menu_goto(){
-  case $1 in
+  case "${1}" in
     src|source) pushd ${dir_src};;
     bin)        pushd ${dir_install_bin};;
     lib)        pushd ${dir_install_lib};;

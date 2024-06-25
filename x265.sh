@@ -34,8 +34,8 @@ dev_vrs='3.6'
 pkg_deb='libx265-dev'
 eta='130'
 
-extraOpts(){
-    case $1 in
+extra_options(){
+    case "${1}" in
         --multilib) multilib=true; eta='810';;
         --12bit) cmake_config="${cmake_config_12bit}";;
         --10bit) cmake_config="${cmake_config_10bit}";;

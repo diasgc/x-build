@@ -179,8 +179,8 @@ loadConfig(){
 }
 
 
-extraOpts(){
-    case $1 in
+extra_options(){
+    case "${1}" in
         --patch-vvc) applyVvcPatch=true;;
         --enable-*)  extlibs+=" $1"; addDep $1;;
         --disable-*) extlibs+=" $1";;
@@ -188,7 +188,7 @@ extraOpts(){
     return 0
 }
 
-case $1 in
+case "${1}" in
     --config)   ffmpegConfig;;
     --load)     shift; loadConfig $1;;
 esac
@@ -293,7 +293,7 @@ source_patch(){
     lensfun_patch
 }
 
-case $1 in
+case "${1}" in
 
 esac
 

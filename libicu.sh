@@ -13,7 +13,7 @@ config_dir='icu4c/source'
 
 on_config(){
     # android api 31+ has libicu, so exit
-    # test ${host_ndk} && [ ${API} -gt 30 ] && exit 0
+    test ${host_ndk} && [ ${ANDROID_NDK_API} -gt 30 ] && exit 0
     
     dir_build="${dir_src}/${config_dir}/build_${arch}"
     am_config+=" --with-data-packaging=archive"
@@ -22,7 +22,7 @@ on_config(){
     if ${host_cross}; then
         dir_cross="${dir_src}/${config_dir}/build_${build_arch}"
         a=${arch}
-        test -d "${dir_cross}" || ./libicu.sh native --full
+        test -d "${dir_cross}" || ./libicu.sh native --static
         arch=${a}
         am_config+=" --with-cross-build=${dir_cross}"
     fi

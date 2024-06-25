@@ -39,7 +39,7 @@ check_install(){
 
 update(){
     while [ -n "${1}" ]; do
-        case $1 in
+        case "${1}" in
             ndk|NDK)    install_ndk;;
             llvm-mingw) install_llvm_mingw;;
             llvm-gnu)   install_llvm_gnu;;
@@ -249,7 +249,7 @@ if [ -z "${cmd_install}" ];then
 fi
 
 
-case $1 in
+case "${1}" in
     -f|--force)		force=true
                     ;;
     --git-cleanup)  echo -e "size before cleanup: $(du -s .git)\n"
@@ -269,7 +269,7 @@ case $1 in
                     ;;
     --update)  		shift
 					while [ -n "${1}" ]; do
-						case $1 in
+						case "${1}" in
 							ndk|NDK)    install_ndk;;
 							llvm-mingw) install_llvm_mingw;;
 							llvm-gnu)   install_llvm_gnu;;
@@ -395,7 +395,7 @@ check_ndk_symlink(){
 }
 
 update_ndkhome(){
-    sed -i 's@^export ANDROID_NDK_HOME=.*$@export ANDROID_NDK_HOME='"$ANDROID_NDK_HOME"'@' ~/.bashrc
+    sed -i 's@^export ANDROID_NDK_HOME=.*$@export ANDROID_NDK_HOME='"${ANDROID_NDK_HOME}"'@' ~/.bashrc
     source ~/.bashrc
 }
 
@@ -414,9 +414,9 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
     fi
     if [ -n "${ANDROID_NDK_HOME}" ]; then
         r="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android"
-        API="$(find ${r} -maxdepth 1 -type d | sed 's,'${r}',,' | sort | tail -n1 | sed 's,/,,')"
+        ANDROID_NDK_API="$(find ${r} -maxdepth 1 -type d | sed 's,'${r}',,' | sort | tail -n1 | sed 's,/,,')"
         printf "${CH}%-20s: ${C0}%s\n" "  found at" ${ANDROID_NDK_HOME}
-        printf "${CH}%-20s: ${C0}%s\n" "  API level" ${API}
+        printf "${CH}%-20s: ${C0}%s\n" "  API level" ${ANDROID_NDK_API}
         ndk_release=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po '\.Revision.=.\K([0-9\.\-a-zA-Z]+)')
         NDK_RELEASE=$(cat ${ANDROID_NDK_HOME}/source.properties | grep -Po 'BaseRevision.=.\K([0-9\.]+)')
         printf "${CH}%-20s: ${C0}%s " '  version' ${ndk_release}
@@ -426,14 +426,14 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
             echo -e "(updated)"
         else
             echo -e "${CY1} latest is ${ndk_release_latest}${C0}"
-            ndk_parent="$(dirname $ANDROID_NDK_HOME)"
+            ndk_parent="$(dirname ${ANDROID_NDK_HOME})"
             if [ -d "${ndk_parent}/${ndk_release_latest}" ]; then
                 read -p "  Switch from ${ndk_version} to ${ndk_release_latest}? [Y|n]" yn;
                 case $yn in
                     y*|Y*)
                         export ANDROID_NDK_HOME="${ndk_parent}/${ndk_release_latest}"
                         vrs_ndk=${ndk_release_latest}
-                        sed -i 's@^export ANDROID_NDK_HOME=.*$@export ANDROID_NDK_HOME='"$ANDROID_NDK_HOME"'@' ~/.bashrc
+                        sed -i 's@^export ANDROID_NDK_HOME=.*$@export ANDROID_NDK_HOME='"${ANDROID_NDK_HOME}"'@' ~/.bashrc
                         source ~/.bashrc
                         ;;
                 esac
@@ -641,7 +641,7 @@ export config_lastupdate=$(date +%s) \\
     CLANG_MINGW_VERSION=${CLANG_MINGW_VERSION} \\
     LLVM_MINGW_HOME="${llvm_mingw}" \\
     ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
-    ANDROID_NDK_API="${API}" \\
+    ANDROID_NDK_API="${ANDROID_NDK_API}" \\
     NDK_RELEASE="${NDK_RELEASE}" \\
     TOOLCHAIN_NDK="${TOOLCHAIN_NDK}" \\
     SYSROOT_NDK="${SYSROOT_NDK}" \\

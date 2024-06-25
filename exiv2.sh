@@ -19,7 +19,7 @@ cfg='cmake'
 cmake_config="-DINSTALL_EXAMPLES=OFF -DEXIV2_BUILD_DOC=OFF \
 	-DEXIV2_BUILD_SAMPLES=OFF -DBUILD_TESTING=OFF"
 
-extraOpts(){
+extra_options(){
 	if [ "$1" == "--min" ];then
 		exiv2_png="OFF"
 		exiv2_xmp="OFF"
