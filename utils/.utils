@@ -178,6 +178,20 @@ cmake_generate_pkgconfig_pc_in(){
 	EOF
 }
 
+version_parse(){
+  local IFS='.|-|_'
+  export arrv=()
+  for f in $1; do
+    if [ ${#arrv[@]} -lt 3 ]; then
+      f=$(echo $f | grep -o '[0-9]*')
+    fi
+    if [ -n "$f" ]; then
+      arrv+=($f)
+    fi
+  done
+  echo "${arrv[@]:0:3}" | sed 's/ /./g'
+}
+
 cmake_build_package(){
   local brk=false
   local flist=

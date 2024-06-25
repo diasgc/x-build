@@ -172,6 +172,465 @@ function apt_install {
   done
 }
 
+
+function do_quietly {
+  local var="${1}"; shift
+  echo -ne "${CD}${var}${C0}"
+  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+  "$@" >/dev/null 2>&1
+  logok "${var}"
+}
+
+function do_log {
+  local var="${1}"; shift
+  echo -ne "${CD}${var}${C0}"
+  log_this $@
+  logok "${var}"
+}
+
+function do_progress {
+  local var="${1}" && shift
+  echo -ne "${CD}${var}"
+  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+  ("$@" |& tee -a ${log_file} | prt_progress) || exit_err "in ${var}:\n\n...\n$(tail -n5 ${log_file})${C0}"
+  logok "${var}"
+}
+
+function err {
+  if [ -n "${logtime_start}" ]; then
+    # consider use of ${EPOCHREALTIME/.} instead
+    logtime_end=$(date +%s)
+    echo -e "${CR1} fail ${CR0}[$(secs2time $((${logtime_end}-${logtime_start})))]${C0}\n"
+  fi
+  if [ -f "${log_file}" ];then
+    if [ -f "${dir_build}/CMakeFiles/CMakeError.log" ];then
+      echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> "${log_file}"
+      cat "${dir_build}/CMakeFiles/CMakeError.log" >> "${log_file}"
+    fi
+    echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
+    [ "${openlog}" != "n" ] && nano ${log_file}
+  fi
+  echo
+  exit 1
+}
+
+function exit_err {
+  echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
+  if [ -f "${log_file}" ];then
+    if [ -f "${dir_build}/CMakeFiles/CMakeError.log" ];then
+      echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> "${log_file}"
+      cat "${dir_build}/CMakeFiles/CMakeError.log" >> "${log_file}"
+    fi
+    echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
+    [ "${openlog}" != "n" ] && nano "${log_file}"
+  fi
+  exit 1
+}
+
+function exit_info {
+  echo -e "${CY1}  Info: ${CY0}${1}${C0}\n\n"
+  exit 0
+}
+
+function log {
+  echo -ne "$CD$@$C0"
+}
+
+function logf {
+  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+}
+
+function logok {
+  echo -ne "\e[${#1}D${CT0}${1}${C0} "
+}
+
+# usage logver /path/to/pkgconfigfile.pc
+function logver {
+  if [ -f ${1} ]; then
+    echo -ne "${CT1}version $(pkg-config --modversion ${1})${C0}"
+  else
+    echo -ne "${CS0} missing ${1} ${C0}"
+  fi
+}
+
+function log_vars {
+  local t;
+  while [ -n "$1" ]; do
+    echo "$1=${!1}" >>"${log_file}" 2>&1
+    shift
+  done
+  echo >>"${log_file}"
+}
+
+function log_info {
+  echo -e "${CD}${ind}${CT0}${1}${C0} "
+}
+
+function log_start {
+  logtime_start=$(date +%s)
+  local timefmt='+%H:%M'
+  [ ${eta} -lt 60 ] && timefmt='+%H:%M:%S'
+  if ! ${inline}; then
+    echo -ne "${CD}${inde}${C0}$(date ${timefmt})"
+    [ ${eta} -gt 0 ] && echo -ne "-${CW}$(date ${timefmt} --date="${eta} seconds")"
+    printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
+  fi
+  echo $(date) >"${log_file}"
+}
+
+function log_end {
+  if ! ${inline} && [ -n "${logtime_start}" ]; then
+    logtime_end=$(date +%s)
+    local secs=$((${logtime_end}-${logtime_start}))
+    eta=$(secs2time ${secs})
+    echo -e "${CT1} done ${CD}in ${eta}"
+    eta="$((${secs}*$(nproc)))"
+  fi
+}
+
+function log_this {
+  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+  "$@" 2>> "${log_file}" 1>> "${log_file}" || err
+  logok
+}
+
+function log_progress {
+  printf "%-6s"
+  local sln
+  IFS=$'\n'
+  while read -r ln; do
+    # $has_logfile && \
+    printf "%-6s: %s\n" $(time_elapsed) $ln >>${logfile}
+    str_contains $ln 'error: ' && printf $CR1
+    sln=$(grep -oP '\d+%' <<< $ln)
+    [ -n "$sln" ] && printf "\e[5D%-5s" $sln
+  done
+  printf "\e[6D"
+  unset IFS
+}
+
+function log_buildvars {
+  printf "Build system: ${build_system}\nConfig args:\n" >>${log_file}
+  printf '%s\n' "${cfg_args[@]}" >>${log_file}
+}
+
+function print_vars {
+  while test -n "${1}"; do
+    printf "${CC0}%-20s: ${C0}%s\n" "  ${1}" ${!1}
+    shift
+  done
+}
+
+function prt_progress {
+  local sln
+  local grp
+  tput civis
+  printf "build_system: %10s; make: %7s" ${build_system} ${MAKE_EXECUTABLE} >>${log_file}
+  if [ "${build_system}" == "cmake" ] && [ "$(basename ${MAKE_EXECUTABLE})" == "make" ]; then
+    printf "%-6s"
+    while read -r ln; do
+      str_contains "${ln}" 'error: ' && printf ${CR1}
+      str_contains "${ln}" 'warning: ' && printf ${CY6}
+      sln=$(grep -oP '\d+%' <<<${ln})
+      [ -n "$sln" ] && printf "\e[5D%-5s" ${sln}
+    done
+    printf "\e[6D"
+  elif [ "$(basename ${MAKE_EXECUTABLE})" == "ninja" ]; then
+    printf "%-12s"
+    while read -r ln; do
+      str_contains "${ln}" 'error: ' && printf ${CR1}
+      sln=$(grep -oP '\[\d+/\d+\]' <<< ${ln})
+      [ -n "${sln}" ] && printf "\e[11D%-11s" ${sln}
+    done
+    printf "\e[12D"
+  else
+    printf "%-6s"
+    while read -r ln; do
+      sln+="." # ·
+      [ ${#sln} -eq 5 ] && sln=''
+      [ -n "$sln" ] && printf "\e[5D%-5s" $sln
+    done
+    printf "\e[6D"
+  fi
+  tput cnorm
+}
+
+function secs2time {
+  [ $(($1/60%60)) -eq 0 ] && printf '%ds' $(($1%60)) || printf '%dm %ds' $(($1/60%60)) $(($1%60))
+}
+
+
+
+
+
+
+
+
+# usage: sourceforge_json <projectname>
+sourceforge_json(){
+  curl -qsL "https://sourceforge.net/projects/${1}/best_release.json"
+}
+
+
+# MENUS SECTION
+function menu_skip_options {
+  while [ -n "${1}" ] || [ -n "${1##--*}" ]; do
+    case $1 in
+      dl|git|src) skip_dl=true;;
+    esac
+    shift
+  done
+}
+
+
+
+
+color_table(){
+  local i=16
+  while [ $i -lt 52 ]; do
+    j=$i
+    k=0
+    until [ $k == 7 ]; do
+      printf "\e[38;5;%dm\u25cf %03d   " ${j} ${j}
+      j=$(((j+36)%256))
+      k=$((k+1))
+    done
+    i=$((i+1))
+    printf '\r\n'
+  done
+}
+
+color_vars(){
+  local v
+  local box=
+  for c in R Y G C B M O F L; do
+    for i in 0 1 2 3 4 5 6; do
+      v="C${c}${i}"
+      printf "${!v}\u2605${v}\u2605   "
+    done
+    printf "\n"
+  done
+  echo
+}
+
+hwinfoCountCoresReadable(){
+  case $(nproc) in
+    "1") echo "Single-Core";;
+    "2") echo "Dual-Core";;
+    "4") echo "Quad-Core";;
+    "6") echo "Hexa-Core";;
+    "8") echo "Octa-Core";;
+    *) echo "$(nproc)-Core";;
+  esac
+}
+
+hwinfoProcessor(){
+  local i=$(cat /proc/cpuinfo | grep -Po '^.odel.*: \K(.*)' | tail -n1)
+  [ -z "$i" ] && i=$(cat /proc/cpuinfo | grep -Po '^.ardware.*: \K(.*)' | tail -n1)
+  [ -z "$i" ] && i=Unknown
+  echo $i
+}
+
+banner(){
+    echo -ne "\n\n  ${CW}${1} for X-Build ${vsh}${C0}\n  "
+    echo -ne "Running on $(uname -m) $(uname -o) "
+    [ -n $(command -v lsb_release) ] && echo -ne "$(lsb_release -sd) "
+    if [ -n "$(uname -r | grep 'microsoft')" ];then
+        echo -ne "${CD}WSL2 "
+    elif [ -n "$(uname -r | grep 'Microsoft')" ];then
+        echo -ne "${CD}WSL "
+    else
+        echo -ne "${CD} "
+    fi
+    echo -e "$(uname -r)${C0}"
+    echo -e "${CW}  $(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
+}
+
+function fn_defined {
+  [ -n "${1}" ] && [ "$(type -t $1)" = 'function' ]
+}
+
+function fn_undef {
+  unset -f $1
+}
+
+function fn_log {
+  test -z "${1}" && ${2} || do_log "${1}" ${2}
+  unset -f $2
+}
+
+array_join(){
+  local IFS="${1}" && shift
+  echo "$@"
+}
+
+#usage: str_concat 'sep' [arg_list]
+str_concat(){
+  local IFS="$1" && shift
+  echo "$*"
+}
+
+# usage: str_contains str1 substr2
+str_contains(){
+   [ -z "${1##*${2}*}" ]
+}
+
+# usage: str_starts str1 substr2
+str_starts(){
+   [ "${1#${2}}" != "${1}" ]
+}
+
+str_ends(){
+   [ "${1%${2}}" != "${1}" ]
+}
+
+str_lowercase(){
+  echo ${1} | tr '[:upper:]' '[:lower:]'
+}
+
+str_uppercase(){
+  echo ${1} | tr '[:lower:]' '[:upper:]'
+}
+
+defvar(){
+  local k
+  while [ -n "${1}" ]; do
+    k=${1%=*}
+    [ -z ${k+x} ] && eval $k=${1#*=}
+  done
+}
+
+shell_dstack=
+
+pushdir(){
+  case $SHELL in
+    *bash) pushd $1 >/dev/null 2>&1;;
+    *) pushvar_f shell_dstack $1; cd $1;;
+  esac
+}
+
+popdir(){
+  case $SHELL in
+    *bash) popd >/dev/null 2>&1;;
+    *) local d=$(popvar_f shell_dstack); [ -n "$d" ] && cd $d;;
+  esac
+}
+
+# usage: set_bool <condition> <value_true> <value_false>
+set_bool(){
+  $1 && echo $2 || echo $3
+}
+
+inc_tab(){
+  export indent=$((indent+2))
+  export inds="${ind}┬─"
+  export inde="${ind}└─"
+  export ind+="│ "
+  #echo "inctab: $indent $ind............"
+}
+
+dec_tab(){
+  export indent=$((indent-2))
+  [ ${#ind} -gt 1 ] && export ind="${ind::-2}"
+  #echo "dectab: $indent $ind............"
+}
+
+
+# exclusive variable add substrings left var_xaddl <var> <substrings...>
+# appends substrings to the left/start of var iff main doesnt contains substring
+var_xaddl(){
+  local v=$1; shift
+    while [ -n "$1" ];do
+        [ -z "${!v##*${1}*}" ] || eval $v=\"${1} ${!v}\"
+        shift
+    done
+}
+
+# exclusive variable add substrings right var_xaddl <var> <substrings...>
+# appends substrings to the right/end of var variable iff main doesnt contains substring
+var_xaddr(){
+    local v=$1; shift
+    while [ -n "$1" ];do
+        [ -z "${!v##*${1}*}" ] || eval $v=\"${!v} ${1} \"
+        shift
+    done
+}
+
+var_addr(){
+    local v=$1; shift; eval $v=\"${!v} $@\"
+}
+
+var_addl(){
+    local v=$1; shift; eval $v=\"$@ ${!v}\"
+}
+
+# vercomp v1 v2 returns 0: v1=v2, 1: v1>v2, 2: v1<v2
+vercomp () {
+    test "$1" = "$2" && return 0
+    local IFS=.
+    local i ver1=($1) ver2=($2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++)); do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++)); do
+        test -z "${ver2[i]}" && ver2[i]=0
+        if ((10#${ver1[i]} > 10#${ver2[i]})); then return 1; fi
+        if ((10#${ver1[i]} < 10#${ver2[i]})); then return 2; fi
+    done
+    return 0
+}
+
+rm_quiet(){
+  rm -rf $@ 2>&1 >/dev/null
+}
+
+rm_log(){
+  local log=$1; shift
+  [ -f "${log}" ] && [ -n "$@" ] && rm -rf $@ 2>&1 >>${log}
+}
+
+time_elapsed(){
+  if [ -n "${log_timestart}" ] && [ ${log_timestart} -gt 0 ];then
+    local dt=$(($(date +%s) - ${log_timestart}))
+    printf "+%-10s" $(date -u -d @${dt} +"%m:%S")
+  else
+    printf " --:-- "
+  fi
+}
+
+url_dom(){
+  echo "$1" | awk -F/ '{print $3}'
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# xbuild functions
+
 function check_pkg_deb {
   for p in $@; do
     test -n $(apt search $p | grep -o "${p}") && echo "${p}" && break
@@ -290,11 +749,9 @@ function get_source {
   esac
 }
 
-
 function github_jinfo {
   local id="$(sed 's,https://github\.com/,,;s,\.git$,,' <<<${1})"
 }
-
 
 # usage: github_set_src_release <git_url>
 #   git_url: https://github.com/user/repo.git
@@ -619,18 +1076,9 @@ function patch_fromfilelist {
   popd 2>&1 >/dev/null
 }
 
-function install_rustc {
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  source $HOME/.cargo/env
-}
-
-function install_cargo_cbuild {
-  cargo install cargo-c --features=vendored-openssl  
-}
-
 # usage: search_configfile <config-file> (ex. CMakeLists.txt, configure, meson.build)
 # returns: nearest source root location of config file
-search_configfile(){
+function search_configfile {
   local cmd="${1}"
   local dest="$(find ${dir_src} -name ${cmd} -printf "%d %p\n"|sort -n|head -n1)"
   if [ -n "${dest}" ]; then
@@ -641,71 +1089,34 @@ search_configfile(){
   fi
 }
 
+# check build system and set defaults - static and shared build options
+function config_init {
 
-function show_build_opts {
-  : "${dir_src:=${dir_root}/sources/${lib}}"
-  test ! -d "${dir_src}" && exit_err "${dir_src} does not exist. Download source first."
-  local cf
-  local d
-  # search meson
-  cf="$(search_configfile meson_options.txt)"
-  if [ -n "${cf}" ]; then
-    d="${dir_root}/builds/${lib}_meson.opts"
-    cat "${cf}" | tr '\n' ' ' | sed 's/  */ /g;s/option(/\n/g;s/)/\n/g;s/'feature'/enabled|disabled/g;s/'boolean'/true|false/g;s/,/\n/g' >"${d}"
-    echo -e "\n\t${CY0}Found meson options: ${d}\n"
-  fi
-  # search cmake
-  cf="$(search_configfile CMakeLists.txt)"
-  if [ -n "${cf}" ]; then
-    d="${dir_root}/builds/${lib}_cmake.opts"
-    cmake ${cf} -LA 2>/dev/null | awk '{if(f)print} /-- Cache values/{f=1}' >"${d}"
-    echo -e "\n\t${CY0}Found cmake options: ${d}\n"
-  fi
-  # search automake
-  cf="$(search_configfile configure)"
-  if [ -n "${cf}" ]; then
-    d="${dir_root}/builds/${lib}_am.opts"
-    ${cf} --help | grep -o '\-\-.*' >"${d}"
-    echo -e "\n\t${CY0}Found automake options: ${d}\n"
-  fi
-}
-
-function am_config_guess {
-  if [ -f "${dir_config}/autogen.sh" ]; then
-    do_am_autogen ${dir_config} --noconfigure
-  elif [ -f "${dir_config}/bootstrap.sh" ]; then
-    do_log 'bootstrap' ${dir_config}/boostrap.sh
-  elif [ -f "${dir_config}/bootstrap" ]; then
-    do_log 'bootstrap' ${dir_config}/boostrap
-  elif [ -f "${dir_config}/configure.ac" ]; then
-    do_am_autoreconf ${dir_config}
-  elif [ -f "${dir_config}/configure" ]; then
-    cfg='ac'
-  else
-    exit_err "No automake configure file. Exiting..."
-  fi
-}
-
-function do_am_autogen {
-  local tag='autoreconf'
-  echo -ne "${CD}${tag}${C0}"
-  pushdir ${1} && shift
-  case ${1} in
-    --noerr ) ./autogen.sh >>${log_file} 2>&1;;
-    --noconfigure ) NOCONFIGURE=1 log_this ./autogen.sh;;
-    * ) log_this ./autogen.sh;;
-  esac
-  popdir
-  logok ${tag}
-}
-
-function do_am_autoreconf {
-  local tag='autoreconf'
-  echo -ne "${CD}${tag}${C0}"
-  pushdir ${1}
-  log_this autoreconf -fiv
-  popdir
-  logok ${tag}
+	# if no cfg provided, try to guess
+	test -z "${cfg}" && config_guess
+	test -z "${cfg}" && exit_err 'No build system found. Exiting.'
+	
+	case "${cfg}" in
+		cm|ccm|cmake|ccmake)
+			build_system=cmake
+			;;
+		ab|am|ac|ar|ag|auto*)
+			build_system=automake
+			;;
+		meson)
+			build_system=meson
+			;;
+    bazel)
+      build_system=bazel
+      ;;
+    cargo)
+      build_system=cargo
+      lib_link="--library-type=$(bool2str ${build_static} staticlib dylib)"
+      ;;
+		mk|make) build_system=make;;
+		other) build_system=other;;
+		*) unset build_system;;
+	esac
 }
 
 function config_guess {
@@ -869,8 +1280,6 @@ function setup_am_config {
   test -n "${am_config}" && cfg_args+=( "${am_config}" )
 }
 
-
-
 # see https://mesonbuild.com/Commands.html for command line options
 function setup_meson_config {
   
@@ -919,35 +1328,82 @@ function setup_meson_config {
   test -n "${meson_config}" && cfg_args+=( "${meson_config}" )
 }
 
-# check build system and set defaults - static and shared build options
-function config_init {
-
-	# if no cfg provided, try to guess
-	test -z "${cfg}" && config_guess
-	test -z "${cfg}" && exit_err 'No build system found. Exiting.'
-	
-	case "${cfg}" in
-		cm|ccm|cmake|ccmake)
-			build_system=cmake
-			;;
-		ab|am|ac|ar|ag|auto*)
-			build_system=automake
-			;;
-		meson)
-			build_system=meson
-			;;
-    bazel)
-      build_system=bazel
-      ;;
-    cargo)
-      build_system=cargo
-      lib_link="--library-type=$(bool2str ${build_static} staticlib dylib)"
-      ;;
-		mk|make) build_system=make;;
-		other) build_system=other;;
-		*) unset build_system;;
-	esac
+function show_build_opts {
+  : "${dir_src:=${dir_root}/sources/${lib}}"
+  test ! -d "${dir_src}" && exit_err "${dir_src} does not exist. Download source first."
+  local cf
+  local d
+  # search meson
+  cf="$(search_configfile meson_options.txt)"
+  if [ -n "${cf}" ]; then
+    d="${dir_root}/builds/${lib}_meson.opts"
+    cat "${cf}" | tr '\n' ' ' | sed 's/  */ /g;s/option(/\n/g;s/)/\n/g;s/'feature'/enabled|disabled/g;s/'boolean'/true|false/g;s/,/\n/g' >"${d}"
+    echo -e "\n\t${CY0}Found meson options: ${d}\n"
+  fi
+  # search cmake
+  cf="$(search_configfile CMakeLists.txt)"
+  if [ -n "${cf}" ]; then
+    d="${dir_root}/builds/${lib}_cmake.opts"
+    cmake ${cf} -LA 2>/dev/null | awk '{if(f)print} /-- Cache values/{f=1}' >"${d}"
+    echo -e "\n\t${CY0}Found cmake options: ${d}\n"
+  fi
+  # search automake
+  cf="$(search_configfile configure)"
+  if [ -n "${cf}" ]; then
+    d="${dir_root}/builds/${lib}_am.opts"
+    ${cf} --help | grep -o '\-\-.*' >"${d}"
+    echo -e "\n\t${CY0}Found automake options: ${d}\n"
+  fi
 }
+
+function am_config_guess {
+  if [ -f "${dir_config}/autogen.sh" ]; then
+    do_am_autogen ${dir_config} --noconfigure
+  elif [ -f "${dir_config}/bootstrap.sh" ]; then
+    do_log 'bootstrap' ${dir_config}/boostrap.sh
+  elif [ -f "${dir_config}/bootstrap" ]; then
+    do_log 'bootstrap' ${dir_config}/boostrap
+  elif [ -f "${dir_config}/configure.ac" ]; then
+    do_am_autoreconf ${dir_config}
+  elif [ -f "${dir_config}/configure" ]; then
+    cfg='ac'
+  else
+    exit_err "No automake configure file. Exiting..."
+  fi
+}
+
+function do_am_autogen {
+  local tag='autoreconf'
+  echo -ne "${CD}${tag}${C0}"
+  pushdir ${1} && shift
+  case ${1} in
+    --noerr ) ./autogen.sh >>${log_file} 2>&1;;
+    --noconfigure ) NOCONFIGURE=1 log_this ./autogen.sh;;
+    * ) log_this ./autogen.sh;;
+  esac
+  popdir
+  logok ${tag}
+}
+
+function do_am_autoreconf {
+  local tag='autoreconf'
+  echo -ne "${CD}${tag}${C0}"
+  pushdir ${1}
+  log_this autoreconf -fiv
+  popdir
+  logok ${tag}
+}
+
+function install_rustc {
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  source $HOME/.cargo/env
+}
+
+function install_cargo_cbuild {
+  cargo install cargo-c --features=vendored-openssl  
+}
+
+
 
 
 #usage build_pkgconfig [--filename=lib.pc][--prefix=install_dir]...[--libs=-la,-lb,-lc,...]
@@ -1007,214 +1463,6 @@ function build_pkgconfig {
 		Cflags: ${pkgconfig_cflags}
 
 		EOF
-}
-
-function log {
-  echo -ne "$CD$@$C0"
-}
-
-# usage: log <logfile> [--noerr|--progress] <label> <commands....>
-function log_unused2 {
-  local noerr=false
-  local progress=false
-  while $(str_starts $1 '--');do
-    case $1 in
-      --noerr) noerr=true;;
-      --progress) progress=true;;
-    esac
-    shift
-  done
-  local label=$1; shift
-  echo -ne "${CD}${label}${C0}"
-  echo -e "\n$(time_elapsed): $@" >> "$logfile"
-  if $progress; then
-    ("$@" |& log_progress) || err "in ${act}:\n\n...\n$(tail -n5 ${logfile}${C0})"
-  else
-    "$@" 2>> "$logfile" 1>> "$logfile" || err
-  fi
-  echo -ne "\e[${#label}D${CT0}${label}${C0} "
-}
-
-function logf {
-  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-}
-
-function logok {
-  echo -ne "\e[${#1}D${CT0}${1}${C0} "
-}
-
-# usage logver /path/to/pkgconfigfile.pc
-function logver {
-  if [ -f ${1} ]; then
-    echo -ne "${CT1}version $(pkg-config --modversion ${1})${C0}"
-  else
-    echo -ne "${CS0} missing ${1} ${C0}"
-  fi
-}
-
-function log_vars {
-  local t;
-  while [ -n "$1" ]; do
-    echo "$1=${!1}" >>"${log_file}" 2>&1
-    shift
-  done
-  echo >>"${log_file}"
-}
-
-function log_info {
-  echo -e "${CD}${ind}${CT0}${1}${C0} "
-}
-
-function log_start {
-  logtime_start=$(date +%s)
-  local timefmt='+%H:%M'
-  [ ${eta} -lt 60 ] && timefmt='+%H:%M:%S'
-  if ! ${inline}; then
-    echo -ne "${CD}${inde}${C0}$(date ${timefmt})"
-    [ ${eta} -gt 0 ] && echo -ne "-${CW}$(date ${timefmt} --date="${eta} seconds")"
-    printf " ${CT1}%-10s ${CT1}%-21s${CD} " ${lib} ${arch}
-  fi
-  echo $(date) >"${log_file}"
-}
-
-function log_end {
-  if ! ${inline} && [ -n "${logtime_start}" ]; then
-    logtime_end=$(date +%s)
-    local secs=$((${logtime_end}-${logtime_start}))
-    eta=$(secs2time ${secs})
-    echo -e "${CT1} done ${CD}in ${eta}"
-    eta="$((${secs}*$(nproc)))"
-  fi
-}
-
-function log_this {
-  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-  "$@" 2>> "${log_file}" 1>> "${log_file}" || err
-  logok
-}
-
-function log_progress {
-  printf "%-6s"
-  local sln
-  IFS=$'\n'
-  while read -r ln; do
-    # $has_logfile && \
-    printf "%-6s: %s\n" $(time_elapsed) $ln >>${logfile}
-    str_contains $ln 'error: ' && printf $CR1
-    sln=$(grep -oP '\d+%' <<< $ln)
-    [ -n "$sln" ] && printf "\e[5D%-5s" $sln
-  done
-  printf "\e[6D"
-  unset IFS
-}
-
-function exit_err {
-  echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
-  if [ -f "${log_file}" ];then
-    if [ -f "${dir_build}/CMakeFiles/CMakeError.log" ];then
-      echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> "${log_file}"
-      cat "${dir_build}/CMakeFiles/CMakeError.log" >> "${log_file}"
-    fi
-    echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
-    [ "${openlog}" != "n" ] && nano "${log_file}"
-  fi
-  exit 1
-}
-
-function exit_info {
-  echo -e "${CY1}  Info: ${CY0}${1}${C0}\n\n"
-  exit 0
-}
-
-function err {
-  if [ -n "${logtime_start}" ]; then
-    # consider use of ${EPOCHREALTIME/.} instead
-    logtime_end=$(date +%s)
-    echo -e "${CR1} fail ${CR0}[$(secs2time $((${logtime_end}-${logtime_start})))]${C0}\n"
-  fi
-  if [ -f "${log_file}" ];then
-    if [ -f "${dir_build}/CMakeFiles/CMakeError.log" ];then
-      echo -e "\n\n${dir_build}/CMakeFiles/CMakeError.log:\n" >> "${log_file}"
-      cat "${dir_build}/CMakeFiles/CMakeError.log" >> "${log_file}"
-    fi
-    echo -ne "${CD}${ind}${CY1}Open log? [Y|n]:${C0}" && read openlog
-    [ "${openlog}" != "n" ] && nano ${log_file}
-  fi
-  echo
-  exit 1
-}
-
-function secs2time {
-  [ $(($1/60%60)) -eq 0 ] && printf '%ds' $(($1%60)) || printf '%dm %ds' $(($1/60%60)) $(($1%60))
-}
-
-function log_buildvars {
-  printf "Build system: ${build_system}\nConfig args:\n" >>${log_file}
-  printf '%s\n' "${cfg_args[@]}" >>${log_file}
-}
-
-function print_vars {
-  while test -n "${1}"; do
-    printf "${CC0}%-20s: ${C0}%s\n" "  ${1}" ${!1}
-    shift
-  done
-}
-
-function do_quietly {
-  local var="${1}"; shift
-  echo -ne "${CD}${var}${C0}"
-  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-  "$@" >/dev/null 2>&1
-  logok "${var}"
-}
-
-function do_log {
-  local var="${1}"; shift
-  echo -ne "${CD}${var}${C0}"
-  log_this $@
-  logok "${var}"
-}
-
-function do_progress {
-  local var="${1}" && shift
-  echo -ne "${CD}${var}"
-  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
-  ("$@" |& tee -a ${log_file} | prt_progress) || exit_err "in ${var}:\n\n...\n$(tail -n5 ${log_file})${C0}"
-  logok "${var}"
-}
-
-function prt_progress {
-  local sln
-  local grp
-  tput civis
-  printf "build_system: %10s; make: %7s" ${build_system} ${MAKE_EXECUTABLE} >>${log_file}
-  if [ "${build_system}" == "cmake" ] && [ "$(basename ${MAKE_EXECUTABLE})" == "make" ]; then
-    printf "%-6s"
-    while read -r ln; do
-      str_contains "${ln}" 'error: ' && printf ${CR1}
-      str_contains "${ln}" 'warning: ' && printf ${CY6}
-      sln=$(grep -oP '\d+%' <<<${ln})
-      [ -n "$sln" ] && printf "\e[5D%-5s" ${sln}
-    done
-    printf "\e[6D"
-  elif [ "$(basename ${MAKE_EXECUTABLE})" == "ninja" ]; then
-    printf "%-12s"
-    while read -r ln; do
-      str_contains "${ln}" 'error: ' && printf ${CR1}
-      sln=$(grep -oP '\[\d+/\d+\]' <<< ${ln})
-      [ -n "${sln}" ] && printf "\e[11D%-11s" ${sln}
-    done
-    printf "\e[12D"
-  else
-    printf "%-6s"
-    while read -r ln; do
-      sln+="." # ·
-      [ ${#sln} -eq 5 ] && sln=''
-      [ -n "$sln" ] && printf "\e[5D%-5s" $sln
-    done
-    printf "\e[6D"
-  fi
-  tput cnorm
 }
 
 function build_packages_bin {
@@ -1278,7 +1526,7 @@ function build_packages_getdistdir {
   echo "${dir_root}/packages/${lib}_${vrs}_${arch}"
 }
 
-set_git_version(){
+function set_git_version {
   pushdir ${dir_src}
   local v=$(git describe --abbrev=0 --tags 2>/dev/null)
   [ -n "$v" ] && export vrs=$v
@@ -1296,270 +1544,7 @@ function build_packages_filelist {
 
 
 
-# usage: sourceforge_json <projectname>
-sourceforge_json(){
-  curl -qsL "https://sourceforge.net/projects/${1}/best_release.json"
-}
 
-
-# MENUS SECTION
-function menu_skip_options {
-  while [ -n "${1}" ] || [ -n "${1##--*}" ]; do
-    case $1 in
-      dl|git|src) skip_dl=true;;
-    esac
-    shift
-  done
-}
-
-
-
-
-color_table(){
-  local i=16
-  while [ $i -lt 52 ]; do
-    j=$i
-    k=0
-    until [ $k == 7 ]; do
-      printf "\e[38;5;%dm\u25cf %03d   " ${j} ${j}
-      j=$(((j+36)%256))
-      k=$((k+1))
-    done
-    i=$((i+1))
-    printf '\r\n'
-  done
-}
-
-color_vars(){
-  local v
-  local box=
-  for c in R Y G C B M O F L; do
-    for i in 0 1 2 3 4 5 6; do
-      v="C${c}${i}"
-      printf "${!v}\u2605${v}\u2605   "
-    done
-    printf "\n"
-  done
-  echo
-}
-
-hwinfoCountCoresReadable(){
-  case $(nproc) in
-    "1") echo "Single-Core";;
-    "2") echo "Dual-Core";;
-    "4") echo "Quad-Core";;
-    "6") echo "Hexa-Core";;
-    "8") echo "Octa-Core";;
-    *) echo "$(nproc)-Core";;
-  esac
-}
-
-hwinfoProcessor(){
-  local i=$(cat /proc/cpuinfo | grep -Po '^.odel.*: \K(.*)' | tail -n1)
-  [ -z "$i" ] && i=$(cat /proc/cpuinfo | grep -Po '^.ardware.*: \K(.*)' | tail -n1)
-  [ -z "$i" ] && i=Unknown
-  echo $i
-}
-
-banner(){
-    echo -ne "\n\n  ${CW}${1} for X-Build ${vsh}${C0}\n  "
-    echo -ne "Running on $(uname -m) $(uname -o) "
-    [ -n $(command -v lsb_release) ] && echo -ne "$(lsb_release -sd) "
-    if [ -n "$(uname -r | grep 'microsoft')" ];then
-        echo -ne "${CD}WSL2 "
-    elif [ -n "$(uname -r | grep 'Microsoft')" ];then
-        echo -ne "${CD}WSL "
-    else
-        echo -ne "${CD} "
-    fi
-    echo -e "$(uname -r)${C0}"
-    echo -e "${CW}  $(hwinfoCountCoresReadable) $(hwinfoProcessor)${C0}"
-}
-
-function fn_defined {
-  [ -n "${1}" ] && [ "$(type -t $1)" = 'function' ]
-}
-
-function fn_undef {
-  unset -f $1
-}
-
-function fn_log {
-  test -z "${1}" && ${2} || do_log "${1}" ${2}
-  unset -f $2
-}
-
-array_join(){
-  local IFS="${1}" && shift
-  echo "$@"
-}
-
-#usage: str_concat 'sep' [arg_list]
-str_concat(){
-  local IFS="$1" && shift
-  echo "$*"
-}
-
-# usage: str_contains str1 substr2
-str_contains(){
-   [ -z "${1##*${2}*}" ]
-}
-
-# usage: str_starts str1 substr2
-str_starts(){
-   [ "${1#${2}}" != "${1}" ]
-}
-
-str_ends(){
-   [ "${1%${2}}" != "${1}" ]
-}
-
-str_lowercase(){
-  echo ${1} | tr '[:upper:]' '[:lower:]'
-}
-
-str_uppercase(){
-  echo ${1} | tr '[:lower:]' '[:upper:]'
-}
-
-defvar(){
-  local k
-  while [ -n "${1}" ]; do
-    k=${1%=*}
-    [ -z ${k+x} ] && eval $k=${1#*=}
-  done
-}
-
-pushv(){
-  while [ -n "${1}" ]; do
-    shell_vstack+=("$1")
-    shift
-  done
-  return 0
-}
-
-popv(){
-  if [ -z "${1}" ]; then
-    local n=${#shell_vstack[@]}
-    if [ $n -gt 0 ]; then
-      echo ${shell_vstack[n-1]}
-      unset shell_vstack[-1]
-    fi
-  else while [ -n "${1}" ]; do
-    eval "$1"="'$(popv)'"
-    shift
-    done
-  fi
-  return 0
-}
-
-clearv(){
-  unset shell_vstack
-}
-
-shell_dstack=
-
-pushdir(){
-  case $SHELL in
-    *bash) pushd $1 >/dev/null 2>&1;;
-    *) pushvar_f shell_dstack $1; cd $1;;
-  esac
-}
-
-popdir(){
-  case $SHELL in
-    *bash) popd >/dev/null 2>&1;;
-    *) local d=$(popvar_f shell_dstack); [ -n "$d" ] && cd $d;;
-  esac
-}
-
-# usage: set_bool <condition> <value_true> <value_false>
-set_bool(){
-  $1 && echo $2 || echo $3
-}
-
-inc_tab(){
-  export indent=$((indent+2))
-  export inds="${ind}┬─"
-  export inde="${ind}└─"
-  export ind+="│ "
-  #echo "inctab: $indent $ind............"
-}
-
-dec_tab(){
-  export indent=$((indent-2))
-  [ ${#ind} -gt 1 ] && export ind="${ind::-2}"
-  #echo "dectab: $indent $ind............"
-}
-
-
-# exclusive variable add substrings left var_xaddl <var> <substrings...>
-# appends substrings to the left/start of var iff main doesnt contains substring
-var_xaddl(){
-  local v=$1; shift
-    while [ -n "$1" ];do
-        [ -z "${!v##*${1}*}" ] || eval $v=\"${1} ${!v}\"
-        shift
-    done
-}
-
-# exclusive variable add substrings right var_xaddl <var> <substrings...>
-# appends substrings to the right/end of var variable iff main doesnt contains substring
-var_xaddr(){
-    local v=$1; shift
-    while [ -n "$1" ];do
-        [ -z "${!v##*${1}*}" ] || eval $v=\"${!v} ${1} \"
-        shift
-    done
-}
-
-var_addr(){
-    local v=$1; shift; eval $v=\"${!v} $@\"
-}
-
-var_addl(){
-    local v=$1; shift; eval $v=\"$@ ${!v}\"
-}
-
-# vercomp v1 v2 returns 0: v1=v2, 1: v1>v2, 2: v1<v2
-vercomp () {
-    test "$1" = "$2" && return 0
-    local IFS=.
-    local i ver1=($1) ver2=($2)
-    # fill empty fields in ver1 with zeros
-    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++)); do
-        ver1[i]=0
-    done
-    for ((i=0; i<${#ver1[@]}; i++)); do
-        test -z "${ver2[i]}" && ver2[i]=0
-        if ((10#${ver1[i]} > 10#${ver2[i]})); then return 1; fi
-        if ((10#${ver1[i]} < 10#${ver2[i]})); then return 2; fi
-    done
-    return 0
-}
-
-rm_quiet(){
-  rm -rf $@ 2>&1 >/dev/null
-}
-
-rm_log(){
-  local log=$1; shift
-  [ -f "${log}" ] && [ -n "$@" ] && rm -rf $@ 2>&1 >>${log}
-}
-
-
-time_elapsed(){
-  if [ -n "${log_timestart}" ] && [ ${log_timestart} -gt 0 ];then
-    local dt=$(($(date +%s) - ${log_timestart}))
-    printf "+%-10s" $(date -u -d @${dt} +"%m:%S")
-  else
-    printf " --:-- "
-  fi
-}
-
-url_dom(){
-  echo "$1" | awk -F/ '{print $3}'
-}
 
 
 git_vendor(){
@@ -1747,12 +1732,6 @@ wget_pkg_debian(){
   fi
 }
 
-libname_2_packagename(){
-  if [ -n $(command -v apt) ]; then
-    pkglist=$(apt-cache search --names-only ${lib})
-  fi
-}
-
 list_pkgs(){
   local pd="${dir_root}/builds"
   case $1 in
@@ -1770,35 +1749,7 @@ get_link_pkg(){
   return 0
 }
 
-version_parse(){
-  local IFS='.|-|_'
-  export arrv=()
-  for f in $1; do
-    if [ ${#arrv[@]} -lt 3 ]; then
-      f=$(echo $f | grep -o '[0-9]*')
-    fi
-    if [ -n "$f" ]; then
-      arrv+=($f)
-    fi
-  done
-  echo "${arrv[@]:0:3}" | sed 's/ /./g'
-}
 
-test_c0(){
-  #set -x
-  local wdir="${dir_src}/${1}"
-  if [ -d "${wdir}" ]; then
-    local od="$(pwd)"
-    cd $wdir
-    echo -e "${2}" > testfile.c
-    [ -n "$(command -v clang)" ] && cc=clang || cc=gcc
-    $cc -c testfile.c && $cc -o testfile testfile.o && rm *.o
-    ./testfile
-    cd $od
-  fi
-  #set +x
-  return 0
-}
 
 c_printf(){
   #set -x
@@ -1828,6 +1779,70 @@ c_printf(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# unused and deprecated functions
+
+test_c0(){
+  #set -x
+  local wdir="${dir_src}/${1}"
+  if [ -d "${wdir}" ]; then
+    local od="$(pwd)"
+    cd $wdir
+    echo -e "${2}" > testfile.c
+    [ -n "$(command -v clang)" ] && cc=clang || cc=gcc
+    $cc -c testfile.c && $cc -o testfile testfile.o && rm *.o
+    ./testfile
+    cd $od
+  fi
+  #set +x
+  return 0
+}
+
+pushv(){
+  while [ -n "${1}" ]; do
+    shell_vstack+=("$1")
+    shift
+  done
+  return 0
+}
+
+popv(){
+  if [ -z "${1}" ]; then
+    local n=${#shell_vstack[@]}
+    if [ $n -gt 0 ]; then
+      echo ${shell_vstack[n-1]}
+      unset shell_vstack[-1]
+    fi
+  else while [ -n "${1}" ]; do
+    eval "$1"="'$(popv)'"
+    shift
+    done
+  fi
+  return 0
+}
+
+clearv(){
+  unset shell_vstack
+}
 
 unused_doErr(){
   echo -e "${CR1}  Error: ${CR0}${1}${C0}\n\n"
@@ -1894,6 +1909,7 @@ function github_set_src_release_unused {
   return 0
 }
 
+
 clean_unused(){
   echo -ne "${CT0}\n\tcleaning...\n"
   rm -rf builds/$arch/$lib builds/$arch/$lib.log
@@ -1902,6 +1918,35 @@ clean_unused(){
   popdir
   echo -e "$C0\tdone"
   clear
+}
+
+
+# usage: log <logfile> [--noerr|--progress] <label> <commands....>
+function log_unused2 {
+  local noerr=false
+  local progress=false
+  while $(str_starts $1 '--');do
+    case $1 in
+      --noerr) noerr=true;;
+      --progress) progress=true;;
+    esac
+    shift
+  done
+  local label=$1; shift
+  echo -ne "${CD}${label}${C0}"
+  echo -e "\n$(time_elapsed): $@" >> "$logfile"
+  if $progress; then
+    ("$@" |& log_progress) || err "in ${act}:\n\n...\n$(tail -n5 ${logfile}${C0})"
+  else
+    "$@" 2>> "$logfile" 1>> "$logfile" || err
+  fi
+  echo -ne "\e[${#label}D${CT0}${label}${C0} "
+}
+
+libname_2_packagename(){
+  if [ -n $(command -v apt) ]; then
+    pkglist=$(apt-cache search --names-only ${lib})
+  fi
 }
 
 # .language

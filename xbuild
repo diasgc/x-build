@@ -187,7 +187,7 @@ start(){
   echo -ne "$(bool2str ${build_bin} ${SSB} ${CD})[bin] ${C0}"
 
   safe_cd "${dir_sources}"
-
+  
   # remove the build dir only if different from source or config dir
   if [ ! ${retry} ]; then
     if [ "${dir_build}" != "${dir_src}" ] && [[ "${dir_build}" != "${dir_config}" ]]; then
@@ -216,11 +216,6 @@ start(){
     fi
   fi
 
-  # default dir_config is dir_src
-  : "${dir_config:=${dir_src}}"
-  
-  # check if defined custom dir_config location (config_dir)
-  test -n "${config_dir+x}" && dir_config="${dir_src}/${config_dir}"
   safe_cd "${dir_config}"
 
   # if there is no config selected, try guess
@@ -262,17 +257,17 @@ start(){
 
   ${break_on_patch} && end_script
 
-  if [ -z "${dir_build}" ];then
-    case ${build_system} in
-      cmake|meson|automake)
-        dir_build="${dir_config}/build_${arch}"
-        [ -d "${dir_build}" ] && rm -rf ${dir_build} 2>/dev/null
-        ;;
-      *) dir_build=${dir_config};;
-    esac
+  if [ -z "${build_dir}" ]; then
+    if ${build_out}; then
+      dir_build="${dir_config}/build_${arch}"
+      safe_rm ${dir_build}
+      safe_mkdir "${dir_build}"
+    else
+      dir_build=${dir_config}
+    fi
   fi
 
-  safe_mkdir "${dir_build}" && safe_cd "${dir_build}"
+  safe_cd "${dir_build}"
 
   log_vars dir_src dep PKG_CONFIG_LIBDIR SYSROOT TOOLCHAIN
   log_vars CC CXX LD AS AR NM ADDR2LINE OBJCOPY OBJDUMP RANLIB READELF SIZE STRINGS STRIP WINDRES API
@@ -888,14 +883,23 @@ fi
 test -z "${cfg}" && config_guess
 test -z "${cfg}" && exit_err 'No build system found. Exiting.'
 
+# check if defined custom dir_config location (config_dir)
+test -n "${config_dir+x}" && dir_config="${dir_src}/${config_dir}"
+# default dir_config is dir_src
+: "${dir_config:=${dir_src}}"
+
+# is build dir outside source dir
+build_out=false
+
 case "${cfg}" in
-  cmake)   build_system=cmake;;
-  meson)   build_system=meson;;
+  cmake)   build_system=cmake; build_out=true;;
+  meson)   build_system=meson; build_out=true;;
   bazel)   build_system=bazel;;
   cargo)   build_system=cargo;;
   mk|make) build_system=make;;
   other)   build_system=other;;
-  ab|am|ac|ar|ag|auto*) build_system=automake;;
+  ab|am|ac|ar|ag|auto*)
+           build_system=automake; build_out=true;;
   *)       unset build_system;;
 esac
 
