@@ -740,9 +740,18 @@ function config_guess {
 
 function setup_cmake_config {
   # build: make
-  
+
   : "${cmake_builddir:=${dir_config}}"
-  : "${cfg_cmd:=${CMAKE_EXECUTABLE}}"
+  : "${cfg_cmd:=${CMAKE_EXECUTABLE}}"  
+  : "${build_cmd:=${MAKE_EXECUTABLE}}"
+  : "${install_cmd:=${MAKE_EXECUTABLE}}"
+  : "${make_install:=install}"
+  : "${install_args:=${make_install}}" 
+
+  test -n "${make_args}" && build_args+=( "${make_args}")
+  build_args+=( "-j${HOST_NPROC}")
+  build_tag="make"
+
   : "${cmake_shared:=BUILD_SHARED_LIBS}"
   
   cfg_args=("${cmake_builddir}" "-DCMAKE_INSTALL_PREFIX=${dir_install}" "-DCMAKE_BUILD_TYPE=${cmake_build_type}")
@@ -775,16 +784,6 @@ function setup_cmake_config {
   fi
   test -n "${CPACK}" && cfg_args+=( "${CPACK}" )
   cfg_args+=( -Wno-dev )
-
-  : "${build_cmd:=${MAKE_EXECUTABLE}}"
-  : "${install_cmd:=${MAKE_EXECUTABLE}}"
-  : "${make_install:=install}"
-  : "${install_args:=${make_install}}" 
-
-  test -n "${make_args}" && build_args+=( "${make_args}")
-  build_args+=( "-j${HOST_NPROC}")
-  build_tag="make"
-  
   
   #do_log "${build_system}" "${cfg_cmd}" "${cfg_args[@]}"
   #case ${cfg} in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
@@ -792,11 +791,23 @@ function setup_cmake_config {
 
 function setup_am_config {
 
+  cfg_cmd="${dir_config}/configure"
+  if [ ! -f "${cfg_cmd}" ]; then
+    test -f "${dir_config}/bootstrap" 
+  fi
+  
+  : "${build_cmd:=${MAKE_EXECUTABLE}}"
+  test -n "${make_args}" && build_args+=( "${make_args}")
+  build_args+=( "-j${HOST_NPROC}")
+  build_tag="make"
+
+  : "${install_cmd:=${MAKE_EXECUTABLE}}"
+  : "${make_install:=install}"
+  : "${install_args:=${make_install}}" 
+  
   # use autotools and configure executable to create makefile
   ${ac_reconf} && autoreconf -fi 2>/dev/null >>${log_file}
-
-  cfg_cmd="${dir_config}/configure"
-
+  
 	if [ -n "${ac_opts}" ]; then
 		for opt in $(echo ${ac_opts}); do
 			case $opt in
@@ -844,26 +855,10 @@ function setup_am_config {
   # find static build option
   : "${am_static:=static}"
   cfg_args+=( "--$(bool2str ${build_static} enable disable)-${am_static}" )
-  
-  #if ${build_static}; then
-  #  if [ -n "${am_static}" ]; then
-  #    cfg_args+=( "${am_static}" )
-  #  elif [ -n "$(grep '\-\-enable-static' ${cfg_cmd})" ]; then
-  #    cfg_args+=( "--enable-static")
-  #  fi
-  #fi
 
   # find shared build option
   : "${am_shared:=shared}"
   cfg_args+=( "--$(bool2str ${build_shared} enable disable)-${am_shared}" )
-
-  #if ${build_shared}; then
-  #  if [ -n "${am_shared}" ]; then
-  #    cfg_args+=( "${am_shared}" )
-  #  elif [ -n "$(grep '\-\-enable-shared' ${cfg_cmd})" ]; then
-  #    cfg_args+=( "--enable-shared")
-  #  fi
-  #fi
   
   if [ -n "${am_bin}" ]; then
     case "${am_bin}" in
@@ -872,15 +867,9 @@ function setup_am_config {
     esac
   fi
   test -n "${am_config}" && cfg_args+=( "${am_config}" )
-
-  : "${build_cmd:=${MAKE_EXECUTABLE}}"
-  : "${install_cmd:=${MAKE_EXECUTABLE}}"
-  : "${make_install:=install}"
-  : "${install_args:=${make_install}}" 
-  test -n "${make_args}" && build_args+=( "${make_args}")
-  build_args+=( "-j${HOST_NPROC}")
-  build_tag="make"
 }
+
+
 
 # see https://mesonbuild.com/Commands.html for command line options
 function setup_meson_config {
