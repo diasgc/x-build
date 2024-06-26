@@ -1131,34 +1131,3 @@ utils_get_latest_release(){
     esac
   fi
 }
-
-build_dependencies_old(){
-  local pkgfile
-  local o_lib_link
-  local o_cbh
-  local cf
-  local ldir
-  while [ -n "${1}" ]; do
-    [ -f "./${1}.sh" ] || exit_err "no script file ${1}.sh.\n  Aborting..."
-    pkgfile=$(./${1}.sh ${arch} --get pc)
-    libname=$(./${1}.sh --get libname)
-    if [ ! -f "${pkgfile}" ]; then
-      o_lib_link=$lib_link
-      o_cbh=$CBH
-      ${build_download} && local dl="--dl" || local dl=''
-      unset lib_link CBH
-      
-      ./${1}.sh ${arch} ${dep_build} ${dl}
-      
-      lib_link=$o_lib_link
-      CBH=$o_cbh
-    fi
-    if [ -f "${pkgfile}" ]; then
-      local cmi=$(./${1}.sh ${arch} --get cmake_include)
-      [ -n "$cmi" ] && cmake_includes="$cmi $cmake_includes"
-      ldir="$(dirname ${pkgfile})"
-      str_contains $PKG_CONFIG_LIBDIR ${ldir} || PKG_CONFIG_LIBDIR="${ldir}:${PKG_CONFIG_LIBDIR}"
-    fi
-    shift
-  done
-}

@@ -59,17 +59,24 @@ export dir_src="${dir_sources}/${lib}"
 : "${API:=${ANDROID_NDK_API}}"
 : "${NDK_API:=${ANDROID_NDK_API}}"
 
+# am_no_host (autotools): dont add --host=arch flag on cross-compiling
 : "${am_nohost:=false}"
+# am_nosysroot (autotools): dont add --sysroot=<sysroot> or --with-sysroot=<sysroot> flag 
 : "${am_nosysroot:=false}"
+# am_nopic (autotools): dont add --with-pic flag
 : "${am_nopic:=false}"
+# default is running autoreconf -fiv before configure
 : "${ac_reconf:=true}"
 
-: "${build_allshared:=false}"
+# shared link to dependencies (default static link)
+: "${build_shared_deps:=false}"
+# strip libraries before install
 : "${build_strip:=false}"
+# build dist package
 : "${build_dist:=true}"
 : "${build_cpack:=false}"
+# dont build dependencies, download prebuilt
 : "${build_download:=false}"
-: "${dep_build:=--static}"
 
 : "${def_build_sys:=meson}"
 : "${cmake_build_type:=Release}"
@@ -104,12 +111,11 @@ export dir_src="${dir_sources}/${lib}"
 : "${skip_install:=false}"
 : "${skip_dl:=false}"
 
-# default build static, no shared, no executables
-: "${build_shared:=false}"
-: "${build_static:=true}"
-: "${build_bin:=false}"
-: "${build_man:=false}"
-: "${build_package:=true}"
+# make_install: rule for install 'make $make_install' (default: install)
+: "${make_install:=install}"
+# make_clean: rule for clean 'make $make_clean' (default: clean)
+: "${make_clean:=clean}"
+# make_args: additional rule for make
 
 : "${use_clang:=true}"
 : "${ndkcmake:=false}"
@@ -124,12 +130,6 @@ logtime_end=0
 
 
 # Variables
-# make_install: rule for install 'make $make_install' (default: install)
-# make_clean: rule for clean 'make $make_clean' (default: clean)
-# make_args: additional rule for make
-# no_host  : while using autotools, no host will be set for cross-compile if no_host is not empty
-
-gitjson=
 
 start(){
 
@@ -487,7 +487,7 @@ function build_dependencies {
     test -f "./${1}.sh" || exit_err "Fail to build dependency ${1}. Script file not found."
     pkgfile=$(./${1}.sh ${arch} --get pc)
     if [ ! -f "${pkgfile}" ]; then
-      dep_args="${arch} $(bool2str ${build_allshared} --shared --static)"
+      dep_args="${arch} $(bool2str ${build_shared_deps} --shared --static)"
       ${build_download} && dep_args+=" --dl"
       ./${1}.sh ${dep_args}
     else
@@ -765,15 +765,22 @@ case "${1}" in
   *)       exit_err "Unknown ${1} architecture";;
 esac
 
+# default build static, no shared, no executables
+: "${build_shared:=false}"
+: "${build_static:=false}"
+: "${build_bin:=false}"
+: "${build_man:=false}"
+: "${build_package:=true}"
+
 # Other options
 
 while [ -n "${1}" ];do
   case "${1}" in
 
   # build
-  --shared)    build_shared=true; build_static=false;;
-  --static)    build_static=true; build_shared=false;;
-  --both)      build_static=true; build_shared=true;;
+  --static)    build_static=true;;
+  --shared)    build_shared=true;;
+  --sharedd)   build_shared_deps=true;;
   --bin)       build_bin=true;;
   --man)       build_man=true;;
   --full)      build_shared=true
@@ -782,7 +789,6 @@ while [ -n "${1}" ];do
                build_dist=true
                ;;
   
-
   # compiler
   --clang)     use_clang=true;;
   --gcc)       use_clang=false;;
@@ -841,6 +847,9 @@ while [ -n "${1}" ];do
   esac
   shift
 done
+
+test ${build_allshared} && build_shared=true
+test ! ${build_shared} && ! ${build_static} && build_static=true
 
 fn_undef 'extra_options'
 
