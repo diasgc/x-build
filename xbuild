@@ -822,7 +822,6 @@ while [ -n "${1}" ];do
   --skip)      shift; menu_skip_options $@;;
   $optVrs)     shift; vrs="${1}";;
   --diff)      shift; create_diff $@; exit 0;;
-  --checkPkg)  checkPkg; exit 0;;
   --libName)   echo "${lib}"; exit 0;;
   --var)       shift; echo "$($1)"; exit 0;;
   --clear)     shift; menu_clear $@; exit 0;;
