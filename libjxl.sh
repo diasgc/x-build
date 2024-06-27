@@ -16,9 +16,9 @@ cmake_static='JPEGXL_STATIC'
 cmake_config="-DBUILD_TESTING=OFF -DJPEGXL_ENABLE_DOXYGEN=OFF -DJPEGXL_ENABLE_BENCHMARK=OFF -DJPEGXL_ENABLE_EXAMPLES=OFF -DJPEGXL_ENABLE_MANPAGES=OFF -DJPEGXL_ENABLE_TOOLS=OFF"
 
 dev_bra='main'
-dev_vrs='0.10.0'
+dev_vrs='0.10.2'
 pkg_deb='libjxl-dev'
-eta='164'
+eta='1760'
 
 lst_inc=''
 lst_lib=''

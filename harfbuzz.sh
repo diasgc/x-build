@@ -8,8 +8,8 @@ tls='ragel'
 dep='freetype'
 
 cfg='cmake'
-cmake_config='-DHB_HAVE_FREETYPE=ON'
 cmake_bin='HB_BUILD_UTILS'
+cmake_config='-DHB_HAVE_FREETYPE=ON'
 cmake_definitions+=('-Wno-double-promotion')
 
 extra_options(){
