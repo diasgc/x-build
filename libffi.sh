@@ -10,9 +10,9 @@ cfg='ar'
 am_config='--enable-portable-binary --disable-docs'
 
 dev_bra=''
-dev_vrs=''
+dev_vrs='3.4.6'
 pkg_deb='libffi-dev'
-eta='15'
+eta='256'
 
 lst_inc='ffitarget.h ffi.h'
 lst_lib='libffi'
