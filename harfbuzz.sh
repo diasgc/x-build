@@ -19,11 +19,23 @@ extra_options(){
 }
 
 dev_bra='main'
-dev_vrs='8.5.0'
+dev_vrs='9.0.0'
 pkg_deb='libharfbuzz-dev'
-eta='400'
+eta='1168'
 
-lst_inc='harfbuzz/*.h'
+
+lst_inc='harfbuzz/hb-subset.h harfbuzz/hb-ot-color.h
+harfbuzz/hb-ot-deprecated.h harfbuzz/hb-blob.h
+harfbuzz/hb-set.h harfbuzz/hb-aat-layout.h
+harfbuzz/hb-aat.h harfbuzz/hb-font.h harfbuzz/hb-shape-plan.h
+harfbuzz/hb.h harfbuzz/hb-ot.h harfbuzz/hb-face.h
+harfbuzz/hb-ot-layout.h harfbuzz/hb-unicode.h
+harfbuzz/hb-ot-shape.h harfbuzz/hb-version.h
+harfbuzz/hb-shape.h harfbuzz/hb-ot-name.h harfbuzz/hb-map.h
+harfbuzz/hb-ot-font.h harfbuzz/hb-ot-math.h
+harfbuzz/hb-ot-meta.h harfbuzz/hb-ot-metrics.h
+harfbuzz/hb-common.h harfbuzz/hb-buffer.h harfbuzz/hb-ot-var.h
+harfbuzz/hb-style.h harfbuzz/hb-draw.h harfbuzz/hb-deprecated.h'
 lst_lib='libharfbuzz libharfbuzz-subset'
 lst_bin=''
 lst_lic='COPYING AUTHORS'
