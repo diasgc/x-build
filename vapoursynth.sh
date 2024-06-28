@@ -16,9 +16,9 @@ WFLAGS='-Wno-macro-redefined -Wno-sign-compare -Wno-typedef-redefinition'
 build_strip=false
 
 dev_bra='main'
-dev_vrs='66'
+dev_vrs='68'
 pkg_deb=''
-eta='60'
+eta='192'
 
 on_config(){
     $host_arm && am_config+=" --enable-x86-asm=no"

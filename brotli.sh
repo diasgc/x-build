@@ -8,11 +8,12 @@ src='https://github.com/google/brotli.git'
 
 cfg='cmake'
 
-get_version(){
-    c_printf 'c/common' 'version.h' '"%d.%d.%d",
+set_version(){
+    vrs=$(c_printf 'c/common' 'version.h' '"%d.%d.%d",
         (BROTLI_VERSION>>24)&0xFF,
         (BROTLI_VERSION>>12)&0xFF,
         BROTLI_VERSION&0xFF'
+    )
 }
 
 dev_bra='master'

@@ -9,10 +9,14 @@ src_rel=false
 
 cfg='ag'
 
+on_config_ndk(){
+    export STL_LIBS="-lc++_$(bool2str ${build_static} static shared)"
+}
+
 dev_bra='main'
 dev_vrs='3.0.5'
 pkg_deb='libzimg-dev'
-eta='480'
+eta='208'
 
 lst_inc='zimg.h zimg++.hpp'
 lst_lib='libzimg'

@@ -394,7 +394,7 @@ lensfun_patch(){
 }
 
 source_patch(){
-	test ${patch_vvc} && vvc_patch
+	${patch_vvc} && vvc_patch
 	lensfun_patch
 }
 

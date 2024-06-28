@@ -21,11 +21,8 @@ pkg_deb='libzfp-dev'
 eta='190'
 dualbuild_support=false
 
-get_version(){
-    vrs="$(c_printf 'include/zfp' 'version.h' '"%s",ZFP_VERSION_STRING')"
-}
-
 on_create_pc(){
+    vrs="$(c_printf 'include/zfp' 'version.h' '"%s",ZFP_VERSION_STRING')"
     build_pkgconfig --libs=-llzf
 }
 

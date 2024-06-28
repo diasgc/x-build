@@ -352,6 +352,7 @@ start(){
   : "${skip_install:=false}"
   if fn_defined 'on_install'; then
     fn_log 'install' on_install
+    unset on_install
   elif [ -n "${install_cmd}" ]; then
     safe_cd "${dir_build}"
     do_log 'install' "${install_cmd}" "${install_args}"
@@ -359,32 +360,21 @@ start(){
 
   # check whether to create pkg-config .pc file
   if ! ${skip_pc}; then
-    fn_defined 'get_version' && vrs="$(get_version)"
-    
-    if fn_defined 'on_create_pc'; then
-      fn_log 'pkgconfig' on_create_pc
-    elif [ -n "$pc_llib" ]; then
-      do_log 'pkgconfig' create_pkgconfig_file $pkg $pc_llib
-    elif [ -n "${pc_llibs}" ]; then
-      local p
-      for f in ${pc_llibs}; do
-        [ "${f::2}" == "-l" ] && p="${f:2}" || p="$f"
-        create_pkgconfig_file $p $f
-      done
-    fi
+    fn_defined 'set_version' && set_version && unset set_version
+    fn_defined 'on_create_pc' && fn_log 'pkgconfig' on_create_pc && unset 'on_create_pc'
   fi
 
-  local pcfile=${dir_install_pc}/${pkg}.pc
+  local pcfile="${dir_install_pc}/${pkg}.pc"
 
   if [ ! -f "${pcfile}" ] && [ -f "${dir_install}/share/pkgconfig/${lib}.pc" ]; then
-    pcfile="${dir_install}/share/pkgconfig/${lib}.pc"
+    ln -sf "${dir_install}/share/pkgconfig/${lib}.pc" "${pcfile}"
   fi
 
   if ${build_cpack}; then
     if [ -z "${CPACK}" ]; then
       if fn_defined 'on_pack'; then
         fn_log 'pack' on_pack
-      elif $build_package; then
+      elif ${build_package}; then
         if [ -f "${dir_build}/install_manifest.txt" ]; then
           do_log 'cpack' cmake_build_package
         else
@@ -696,12 +686,12 @@ set_env(){
   dir_install_include="${dir_install}/include"
   dir_install_lib="${dir_install}/lib"
   dir_install_pc="${dir_install_lib}/pkgconfig"
-  PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
+  PKG_CONFIG_LIBDIR="${dir_install_pc}:${dir_install}/share/pkgconfig"
   unset PKG_CONFIG_PATH
 
   safe_mkdir "${dir_install}" "${dir_install_bin}" "${dir_install_include}" "${dir_install_lib}" "${dir_install_pc}"
   
-  export dir_install dir_install_bin dir_install_include dir_install_lib dir_install_pc PKG_CONFIG_PATH
+  export dir_install dir_install_bin dir_install_include dir_install_lib dir_install_pc PKG_CONFIG_PATH PKG_CONFIG_LIBDIR
   
 }
 
@@ -847,8 +837,8 @@ while [ -n "${1}" ];do
   shift
 done
 
-test ${build_allshared} && build_shared=true
-test ! ${build_shared} && ! ${build_static} && build_static=true
+${build_shared_deps} && build_shared=true
+! ${build_shared} && ! ${build_static} && build_static=true
 
 fn_undef 'extra_options'
 
