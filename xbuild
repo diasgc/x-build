@@ -334,22 +334,21 @@ start(){
 
   ${break_on_make} && end_script
   
+  ### install ###
+  # before install custom ops
+  fn_defined 'before_install' && fn_log 'preparing' before_install
 
-
-  if fn_defined 'before_install'; then
-    fn_log 'preparing' before_install
-  fi
-
-  # strip libs
+  # strip libs before install
   if ! ${host_mingw}; then
     if fn_defined 'on_strip'; then
       fn_log 'strip' on_strip
+      unset on_strip
     elif ${build_strip}; then
-      do_log 'strip'  do_strip
+      do_log 'strip' do_strip
     fi
   fi
 
-  : "${skip_install:=false}"
+  # install
   if fn_defined 'on_install'; then
     fn_log 'install' on_install
     unset on_install
@@ -402,8 +401,8 @@ start(){
 
  function do_strip {
   local libdir
-  for dd in $(find ${dir_build} \( -name "*.a" -o -name "*.so" \));do
-    ${STRIP} --strip-unneeded $dd
+  for dd in $(find "${dir_build}" \( -name "*.a" -o -name "*.so" \));do
+    ${STRIP} --strip-unneeded "${dd}" >>${log_file}
   done
 }
 
