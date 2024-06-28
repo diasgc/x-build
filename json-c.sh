@@ -16,8 +16,8 @@ lst_lic='COPYING AUTHORS'
 lst_pc='json-c.pc'
 
 dev_bra='master'
-dev_vrs='0.17.99'
-eta='80'
+dev_vrs='0.17'
+eta='208'
 pkg_deb="libnewtonsoft-json-cil-dev"
 
 

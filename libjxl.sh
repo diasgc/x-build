@@ -18,7 +18,7 @@ cmake_config="-DBUILD_TESTING=OFF -DJPEGXL_ENABLE_DOXYGEN=OFF -DJPEGXL_ENABLE_BE
 dev_bra='main'
 dev_vrs='0.10.2'
 pkg_deb='libjxl-dev'
-eta='1760'
+eta='1936'
 
 lst_inc=''
 lst_lib=''
