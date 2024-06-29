@@ -6,32 +6,43 @@ lic='Apache-2.0'
 src='https://github.com/KhronosGroup/Vulkan-Headers.git'
 cfg='cmake'
 
-# cmake option BUILD_LOADER "Build loader" ON
-# cmake BUILD_TESTS "Build tests" ON
-# cmake BUILD_LAYERS "Build layers" ON
-# cmake BUILD_DEMOS "Build demos" ON
-# cmake BUILD_VKJSON "Build vkjson" ON
+# Cmake Options
+# BUILD_LOADER "Build loader" ON
+# BUILD_TESTS "Build tests" ON
+# BUILD_LAYERS "Build layers" ON
+# BUILD_DEMOS "Build demos" ON
+# BUILD_VKJSON "Build vkjson" ON
 
 dev_bra='main'
 dev_vrs='1.3.204'
 pkg_deb=''
-eta='27497190384'
+eta='27513912240'
+
+vulkan_loader(){
+  dsc='Vulkan Loader'
+  src='https://github.com/KhronosGroup/Vulkan-Loader.git'
+  url='https://github.com/KhronosGroup/Vulkan-Loader'
+  pkg_deb='libvulkan-dev'
+  cmake_config='-DBUILD_TESTS=OFF -DBUILD_DEMOS=OFF' #-DBUILD_LOADER=OFF -DBUILD_VKJSON=OFF
+  dep='xcb'
+}
+
+vulkan_header(){
+  dsc='Khronos Vulkan-Headers'
+  lic='Apache-2.0'
+  src='https://github.com/KhronosGroup/Vulkan-Headers.git'
+}
 
 extra_options(){
   case "${1}" in
-    --loader)
-      src='https://github.com/KhronosGroup/Vulkan-Loader.git'
-      url='https://github.com/KhronosGroup/Vulkan-Loader'
-      pkg_deb='libvulkan-dev'
-      cmake_config='-DBUILD_TESTS=OFF -DBUILD_DEMOS=OFF' #-DBUILD_LOADER=OFF -DBUILD_VKJSON=OFF
-      dep='xcb'
-      ;;
+    --loader) vulkan_loader;;
+    --header) vulkan_header;;
   esac
 }
 
-_on_config_ndk(){
+on_config_ndk(){
     CFLAGS+=" -I${ANDROID_NDK_HOME}/sources/third_party/vulkan/src/include"
-    log_info 'ndk unsupported'
+    log_info 'android build not supported'
     end_script
 }
 
