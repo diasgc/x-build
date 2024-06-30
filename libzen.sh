@@ -1,13 +1,13 @@
 #!/bin/bash
 
 lib='libzen'
-pkg_deb="${lib}-dev"
 dsc='Zenlib for MediaInfo'
 lic='Zlib'
 src='https://github.com/MediaArea/ZenLib.git'
-cfg='cmake'
 patch="libzen-01"
-eta='27'
+
+cfg='cmake'
+cmake_static='BUILD_STATIC_LIBS'
 config_dir='Project/CMake'
 
 lst_inc='ZenLib/*.h ZenLib/Format/Html/*.h'
@@ -15,9 +15,11 @@ lst_lib='libzen'
 lst_bin=''
 lst_lic='License.txt'
 lst_pc='libzen.pc'
-dev_vrs='0.4.41'
 
-cmake_static='BUILD_STATIC_LIBS'
+dev_vrs='0.4.41'
+pkg_deb='libzen-dev'
+eta='27'
+
 
 . xbuild && start
 

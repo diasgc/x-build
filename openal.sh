@@ -16,7 +16,7 @@ WFLAGS+=" -Wno-deprecated-declarations -Wno-unused-function"
 dev_bra='master'
 dev_vrs='1.23.1'
 pkg_deb=' libopenal-dev'
-eta='0'
+eta='352'
 
 on_build_static(){
     cmake_config+=' -DLIBTYPE=STATIC'

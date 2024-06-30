@@ -20,9 +20,9 @@ lst_lic='AUTHORS.md LICENSE.txt'
 lst_pc='libvvenc.pc'
 
 dev_bra='master'
-dev_vrs='1.12.0-rc2'
+dev_vrs='1.12.0'
 pkg_deb=''
-eta='1328'
+eta='1184'
 
 on_config_gnu(){
     # debian pkg llvm-18.1.3: missing LLVMgold.so. Workaround: disable lto

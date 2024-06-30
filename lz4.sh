@@ -2,34 +2,34 @@
 
 lib='lz4'
 pkg='liblz4'
-pkg_deb='liblz4-dev'
 dsc='Fast LZ compression algorithm library'
 lic='BSD-2c GPL2.0'
 src="https://github.com/lz4/lz4.git"
-cfg='cmake'
-config_dir='build/cmake'
-#config_dir='contrib/meson'
-eta='112'
 
-dev_bra='master'
+cfg='cmake'
+cmake_bin='LZ4_BUILD_CLI'
+cmake_static='BUILD_STATIC_LIBS'
+config_dir='build/cmake'
+
+#cfg='meson'
+#config_dir='contrib/meson'
+#meson_config='-Ddebug_level=0 -Dbin_examples=false -Dbin_contrib=false -Dbin_tests=false'
+#meson_bin='bin_programs'
+
+on_build_bin(){
+    cmake_config+=' -DLZ4_BUILD_LEGACY_LZ4C=ON'
+}
+
+dev_bra='dev'
 dev_vrs='1.9.4'
+pkg_deb='liblz4-dev'
+eta='112'
 
 lst_inc='lz4.h lz4frame.h lz4frame_static.h lz4hc.h'
 lst_lib='liblz4'
 lst_bin='lz4'
 lst_lic='LICENSE'
 lst_pc='liblz4.pc'
-
-meson_config='-Ddebug_level=0 -Dbin_examples=false -Dbin_contrib=false -Dbin_tests=false'
-meson_bin='bin_programs'
-
-on_build_bin(){
-    cmake_config+=' -DLZ4_BUILD_CLI=ON -DLZ4_BUILD_LEGACY_LZ4C=ON'
-}
-
-on_build_static(){
-    cmake_config+=' -DBUILD_STATIC_LIBS=ON'
-}
 
 . xbuild && start
 
