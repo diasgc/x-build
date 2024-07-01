@@ -31,10 +31,33 @@ lst_lic='LICENSE PATENTS AUTHORS'
 
 . xbuild && start
 
-# v3.2.0      a8  a7  x86 x64
-# ndk-clang   +++ +++ +++ +++
-# linux-gnu   +++ +++ ... +.+
-# mingw-llvm  +.+ ... ... +.++
+<<JSONDATA
+{
+    "include": [
+        "aom/aom_decoder.h",
+        "aom/aom_integer.h",
+        "aom/aom_external_partition.h",
+        "aom/aom_frame_buffer.h",
+        "aom/aom_image.h",
+        "aom/aom.h",
+        "aom/aom_encoder.h",
+        "aom/aomcx.h",
+        "aom/aom_codec.h",
+        "aom/aomdx.h"
+        ],
+    "lib": {
+        "static": "libaom.a",
+        "shared": "libaom.so
+        },
+    "bin": [ "aodec", "aomenc" ],
+    "lic": [ "LICENSE", "PATENTS", "AUTHORS" ]
+}
+JSONDATA
+
+# cpu av8 av7 x86 x64
+# NDK +++ +++ +++ +++ clang
+# GNU +++ +++ ... +.+ clang/gcc
+# WIN +.+ ... ... ... clang/gcc
 
 
 # Filelist

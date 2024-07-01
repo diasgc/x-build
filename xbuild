@@ -49,8 +49,9 @@ function init {
 # first load .common functions and error trap
 test -z ${vsh+x} && init $@
 
-export CPPFLAGS=
-export host_trip=
+export CPPFLAGS
+export host_trip
+export json_heredoc="$(awk '/^<<JSONDATA/{flag=1; next} /^JSONDATA/{flag=0} flag' $0)"
 export this_script=${dir_root}/$(basename "$0")
 export dir_src="${dir_sources}/${lib}"
 
