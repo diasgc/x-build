@@ -15,9 +15,9 @@ cmake_config='-DENABLE_TESTS=OFF
  -DENABLE_DOCS=OFF'
 
 dev_bra='main'
-dev_vrs='3.9.0'
+dev_vrs='3.9.1'
 pkg_deb='libaom-dev'
-eta='240'
+eta='944'
 
 lst_inc='aom/aom_decoder.h aom/aom_integer.h
  aom/aom_external_partition.h
@@ -47,7 +47,7 @@ lst_lic='LICENSE PATENTS AUTHORS'
         ],
     "lib": {
         "static": "libaom.a",
-        "shared": "libaom.so
+        "shared": "libaom.so"
         },
     "bin": [ "aodec", "aomenc" ],
     "lic": [ "LICENSE", "PATENTS", "AUTHORS" ]

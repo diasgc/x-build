@@ -462,6 +462,27 @@ function fn_log {
   unset -f $2
 }
 
+function heredoc_extract {
+  local file=$1
+  local tag=$2
+  awk '/^<<'"$tag"'/{flag=1; next} /^'"$tag"'/{flag=0} flag' $file
+}
+
+function heredoc_remove {
+  local file=$1
+  local tag=$2
+  sed -i '/'"<<${tag}"'/,/'"${tag}"'/d' $file
+}
+
+function heredoc_append {
+  local file=$1
+  local tag=$2
+  local string=$3
+  echo -e "<<$tag\n$string\n$tag" >>$file
+}
+
+
+
 array_join(){
   local IFS="${1}" && shift
   echo "$@"

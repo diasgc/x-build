@@ -12,7 +12,7 @@ function init {
 
   source .common
   source ./utils/.utils
-  source ./utils/.cmake
+  # source ./utils/.cmake : to remove
   
   set -o pipefail
   trap err ERR
@@ -24,6 +24,7 @@ function init {
     --opts|-o)  show_build_opts; exit 0;;
   esac
   
+  # array of args first passed to scripts
   export root_args=( $@ )
 
   export dir_cmake="${dir_root}/cmake"
@@ -51,8 +52,8 @@ test -z ${vsh+x} && init $@
 
 export CPPFLAGS
 export host_trip
-export json_heredoc="$(awk '/^<<JSONDATA/{flag=1; next} /^JSONDATA/{flag=0} flag' $0)"
-export this_script=${dir_root}/$(basename "$0")
+export json_heredoc="$(heredoc_extract $0 JSONDATA)"
+export this_script="${dir_root}/$(basename $0)"
 export dir_src="${dir_sources}/${lib}"
 
 : "${MAKE_EXECUTABLE:=make}"
