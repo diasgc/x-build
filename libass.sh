@@ -14,13 +14,13 @@ lst_lic='COPYING README.md'
 lst_pc='libass.pc'
 
 dev_bra='master'
-dev_vrs='0.17.1'
+dev_vrs='0.17.3'
 pkg_deb='libass-dev'
-eta='4'
+eta='64'
 
 #cfg='ag'
 #am_nosysroot=true
-#dep='freetype fontconfig fribidi libpng harfbuzz'
+dep='freetype fontconfig fribidi libpng harfbuzz'
 
 cfg='meson'
 meson_fontconfig=disabled

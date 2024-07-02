@@ -4,13 +4,14 @@ lib='charls'
 dsc='C++ JPEG-LS (ISO/IEC 14495-1 / ITU-T.87) library implementation.'
 lic='BSD-3c'
 src='https://github.com/team-charls/charls.git'
+
 cfg='cmake'
 cmake_bin="CHARLS_BUILD_SAMPLES"
 make_install='install/strip'
 
-dev_vrs='3.0.0'
+dev_vrs='2.4.2'
 pkg_deb='libcharls-dev'
-eta='15'
+eta='192'
 
 lst_inc='charls/*.h'
 lst_lib='libcharls'

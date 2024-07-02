@@ -32,7 +32,7 @@ on_create_pc(){
 dev_bra='main'
 dev_vrs='v2.2'
 pkg_deb='flite'
-eta='248'
+eta='384'
 
 lst_inc='flite/cst_alloc.h flite/cst_args.h
  flite/cst_audio.h flite/cst_cart.h

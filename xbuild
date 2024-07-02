@@ -421,7 +421,7 @@ function end_script {
       req_pcforlibs make_clean make_install mingw_posix \
       cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
   dec_tab
-  echo -e "${C0}${ind}"
+  echo -e "${CD}${ind}"
   exit 0
 }
 

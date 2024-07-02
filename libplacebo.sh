@@ -13,7 +13,7 @@ meson_config="-Ddemos=false"
 dev_bra='main'
 dev_vrs='7.349.0'
 pkg_deb='libplacebo-dev'
-eta='60'
+eta='128'
 
 on_config_ndk(){
     dep='glslang vulkan'

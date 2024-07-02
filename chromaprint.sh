@@ -17,7 +17,7 @@ lst_pc='libchromaprint.pc'
 
 dev_bra='master'
 dev_vrs='1.5.1'
-eta='12'
+eta='544'
 pkg_deb='libchromaprint-dev'
 
 cmake_config="-DBUILD_TOOLS=OFF -DBUILD_TESTS=OFF -DFFT_LIB=fftw3" #-DKISSFFT_SOURCE_DIR=${dir_src}/src/3rdparty/kissfft

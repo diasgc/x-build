@@ -7,9 +7,9 @@ src='https://github.com/pkuvcl/davs2.git'
 #src_rel=false
 cfg='ac'
 
-am_bin="--disable-cli| "
-build_static=''
-build_shared='--enable-shared'
+am_bin="cli"
+am_static='--disable-shared'
+am_shared='--enable-shared'
 
 dev_bra='main'
 dev_vrs='1.6.0'

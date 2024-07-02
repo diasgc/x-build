@@ -16,7 +16,7 @@ cfg='cmake'
 dev_bra='main'
 dev_vrs='1.3.204'
 pkg_deb=''
-eta='27513912240'
+eta='27519155648'
 
 vulkan_loader(){
   dsc='Vulkan Loader'

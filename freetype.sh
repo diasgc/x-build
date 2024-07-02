@@ -27,7 +27,7 @@ lst_pc='freetype2.pc'
 
 dev_vrs='26.1.20'
 pkg_deb='libfreetype-dev'
-eta='60'
+eta='160'
 
 . xbuild && start
 

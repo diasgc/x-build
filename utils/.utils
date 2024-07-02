@@ -578,7 +578,7 @@ meson_create_toolchain(){
 	[properties]
 	needs_exe_wrapper = true
 	cmake_toolchain_file = '${cmake_toolchain_file}'
-	sys_root = '${SYSROOT}'
+	#sys_root = '${SYSROOT}'
 
 	[host_machine]
 	system = '$(str_lowercase ${PLATFORM})'

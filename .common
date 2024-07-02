@@ -657,7 +657,7 @@ url_dom(){
 
 function check_pkg_deb {
   for p in $@; do
-    test -n $(apt search $p | grep -o "${p}") && echo "${p}" && break
+    test -n $(apt search $p 2> /dev/null| grep -o "${p}") && echo "${p}" && break
   done
 }
 
@@ -691,7 +691,7 @@ function generate_script {
 
   case ${giturl} in
     *github*)
-      jsonf="$(github_create_info_json ${srcname})"
+      jsonf="$(github_create_info_json ${giturl})"
       dsc="$(jq -r .description <${jsonf})"
       lic="$(jq -r .license.name <${jsonf})"
       test -n "${dsc}" && dsc="${dsc%%\. *}" && sed -i 's/@desc@/'"${dsc}"'/g' ${scriptname}
@@ -708,7 +708,7 @@ function github_create_info_json {
   local paths=( ${1//\// } )
   local url="https://api.github.com/repos/${paths[2]}/${paths[3]}"
   local json="${dir_root}/builds/${libname}.info"
-  wget -q ${u} -O "${json}"
+  wget -q ${url} -O "${json}"
   echo ${json}
 }
 
@@ -1285,11 +1285,17 @@ function setup_am_config {
 	
   # find static build option
   : "${am_static:=static}"
-  cfg_args+=( "--$(bool2str ${build_static} enable disable)-${am_static}" )
+  case "${am_static}" in
+    --*) ${build_static} && cfg_args+=" ${am_static}";;
+    *)   cfg_args+=( "--$(bool2str ${build_static} enable disable)-${am_static}" );;
+  esac
 
   # find shared build option
   : "${am_shared:=shared}"
-  cfg_args+=( "--$(bool2str ${build_shared} enable disable)-${am_shared}" )
+  case "${am_shared}" in
+    --*) ${build_shared} && cfg_args+=" ${am_shared}";;
+    *)   cfg_args+=( "--$(bool2str ${build_shared} enable disable)-${am_shared}" );;
+  esac
   
   if [ -n "${am_bin}" ]; then
     case "${am_bin}" in
