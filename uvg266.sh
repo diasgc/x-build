@@ -20,9 +20,9 @@ cmake_definitions=( -Wno-switch
  -Wno-tautological-constant-out-of-range-compare )
 
 dev_bra='master'
-dev_vrs='0.8.0-63da667'
+dev_vrs='0.8.1'
 pkg_deb=''
-eta='128'
+eta='144'
 
 lst_inc='uvg266.h'
 lst_lib='libuvg266'

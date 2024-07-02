@@ -8,12 +8,12 @@ dsc='Image Processing/Coding Tool Kit'
 lic='JasPer'
 src='https://github.com/mdadams/jasper.git'
 cfg='cmake'
-eta='26'
+eta='72'
 #patch='jasper-01'
 
 cmake_static="BUILD_STATIC_LIBS"
 cmake_bin="JAS_ENABLE_PROGRAMS"
-cmake_config="-DBUILD_TESTING=OFF -DJAS_ENABLE_DOC=OFF -DJAS_STDC_VERSION=202202L -DALLOW_IN_SOURCE_BUILD=ON"
+cmake_config="-DBUILD_TESTING=OFF -DJAS_ENABLE_DOC=OFF -DJAS_STDC_VERSION=202406L -DALLOW_IN_SOURCE_BUILD=ON"
 
 dev_bra='master'
 dev_vrs='4.2.4'
