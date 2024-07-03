@@ -1,0 +1,24 @@
+#!/bin/bash
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+lib='lyra'
+dsc='A Very Low-Bitrate Codec for Speech Compression'
+lic='Apache License 2.0'
+src="https://github.com/google/lyra.git"
+
+cfg='bazel'
+
+dev_bra='master'
+dev_vrs='1.3.2'
+pkg_deb=''
+eta='0'
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE AUTHORS'
+lst_pc=''
+

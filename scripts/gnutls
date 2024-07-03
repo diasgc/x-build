@@ -1,0 +1,78 @@
+#!/bin/bash
+
+lib='gnutls'
+dsc='GnuTLS implements the TLS/SSL (Transport Layer Security aka Secure Sockets Layer) protocol'
+lic='LGPL-2.1'
+src='https://gitlab.com/gnutls/gnutls.git'
+url='https://www.gnupg.org'
+dep='libiconv gmp nettle'
+
+cfg='ac'
+#cfg_cmd='./bootstrap'
+am_bin='tools'
+am_config="--disable-hardware-acceleration --enable-local-libopts --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-doc --disable-manpages --disable-guile --disable-tests"
+WFLAGS='-Wno-tautological-constant-compare -Wno-unused-but-set-variable -Wno-unused-function -Wno-implicit-const-int-float-conversion -Wno-implicit-const-int-float-conversion -Wno-unused-but-set-parameter'
+
+on_config(){
+    local v="$(curl -sL ${url}/ftp/gcrypt/gnutls/ | grep -oP 'v[0-9]+\.[0-9]+' | tail -n1)"
+    local f="$(curl -sL ${url}/ftp/gcrypt/gnutls/${v}/ | grep -oP 'gnutls-[0-9\.]+tar..z' | head -n1)"
+    src="${url}/ftp/gcrypt/gnutls/${v}/${f}"
+    vrs="$(sed 's,gnutls-,,;s,.tar..z,,' <<<${f})"
+}
+
+on_config_ndk(){
+    API=35; NDK_API=35
+}
+
+dev_vrs='3.8.5'
+eta='690'
+pkg_deb="libsrt-gnutls-dev"
+
+lst_inc='gnutls/*.h'
+lst_lib='libgnutls libgnutlsxx'
+lst_bin='gnutls-serv srptool psktool gnutls-cli ocsptool certtool gnutls-cli-debug'
+lst_lic='LICENSE'
+lst_pc='gnutls.pc'
+
+
+
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+# Filelist
+# --------
+# include/gnutls/pkcs12.h
+# include/gnutls/crypto.h
+# include/gnutls/dtls.h
+# include/gnutls/x509.h
+# include/gnutls/gnutlsxx.h
+# include/gnutls/x509-ext.h
+# include/gnutls/self-test.h
+# include/gnutls/pkcs7.h
+# include/gnutls/urls.h
+# include/gnutls/system-keys.h
+# include/gnutls/tpm.h
+# include/gnutls/compat.h
+# include/gnutls/abstract.h
+# include/gnutls/openpgp.h
+# include/gnutls/ocsp.h
+# include/gnutls/gnutls.h
+# include/gnutls/socket.h
+# include/gnutls/pkcs11.h
+# lib/pkgconfig/gnutls.pc
+# lib/libgnutls.so
+# lib/libgnutlsxx.a
+# lib/libgnutlsxx.la
+# lib/libgnutls.a
+# lib/libgnutls.la
+# lib/libgnutlsxx.so
+# share/doc/gnutls/LICENSE
+# bin/gnutls-serv
+# bin/srptool
+# bin/psktool
+# bin/gnutls-cli
+# bin/ocsptool
+# bin/certtool
+# bin/gnutls-cli-debug

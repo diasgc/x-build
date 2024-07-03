@@ -1,0 +1,55 @@
+#!/bin/bash
+
+lib='pixman'
+pkg='pixman-1'
+dsc='Pixel-manipulation library for X and cairo'
+lic='GPL-2.0'
+src='https://gitlab.freedesktop.org/pixman/pixman.git'
+patch="pixman-01"
+#dep='libpng'
+
+cfg='meson'
+
+on_config(){
+    meson_config='-Dgtk=disabled
+     -Dlibpng=disabled
+     -Dtests=disabled
+     -Ddemos=disabled
+     -Dopenmp=disabled'
+    #-Dneon='$(bool2str ${host_arm} enabled disabled)'
+    #-Da64-neon='$(bool2str ${host_arm64} enabled disabled)''
+    #$host_arm && meson_config+=' -Dneon=enabled'
+    #$host_arm64 && am_config='--disable-arm-a64-neon' && meson_config='-Da64-neon=enabled'
+    #$host_arm32 && am_config='--disable-arm-neon --disable-arm-simd'
+    $use_clang && CFLAGS+=' -Wno-unknown-attributes'
+}
+
+dev_vrs='0.43.5'
+pkg_deb='libpixman-1-dev'
+eta='80'
+
+lst_inc='pixman-1/*.h'
+lst_lib='libpixman-1'
+lst_bin=''
+lst_lic='COPYING AUTHORS'
+lst_pc='pixman-1.pc'
+
+
+
+# cpu av8 av7 x86 x64
+# NDK ++   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+# Filelist
+# --------
+# include/pixman-1/pixman-version.h
+# include/pixman-1/pixman.h
+# lib/pkgconfig/pixman-1.pc
+# lib/libpixman-1.a
+# lib/libpixman-1.la
+# lib/libpixman-1.so
+# share/doc/pixman/AUTHORS
+# share/doc/pixman/COPYING
+
+

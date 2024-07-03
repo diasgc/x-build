@@ -1,0 +1,38 @@
+#!/bin/bash
+
+lib='libudfread'
+dsc='UDF filesystem access library'
+lic='LGPL-2.1'
+src='https://code.videolan.org/videolan/libudfread.git'
+url='https://www.videolan.org/developers/libudfread.html'
+cfg='ar'
+
+dev_bra='master'
+dev_vrs='1.1.2'
+pkg_deb='libudfread-dev'
+eta='40'
+
+lst_inc='udfread/*.h'
+lst_lib='libudfread'
+lst_bin=''
+lst_lic='COPYING'
+lst_pc='libudfread.pc'
+
+
+
+# cpu av8 av7 x86 x64
+# NDK ++   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+
+# Filelist
+# --------
+# include/udfread/udfread.h
+# include/udfread/blockinput.h
+# include/udfread/udfread-version.h
+# lib/libudfread.la
+# lib/pkgconfig/libudfread.pc
+# lib/libudfread.a
+# lib/libudfread.so
+# share/doc/libudfread/COPYING

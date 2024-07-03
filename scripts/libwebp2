@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# cpu av8 av7 x86 x64
+# NDK +++ +++  .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+lib='libwebp2'
+dsc='WebP 2 is the successor of the WebP image format'
+lic='TEST'
+src='https://chromium.googlesource.com/codecs/libwebp2.git'
+#dep='aom libavif libjpeg'
+
+cfg='cmake'
+cmake_config="-DWP2_BUILD_EXAMPLES=OFF -DWP2_BUILD_TESTS=OFF -DWP2_ENABLE_TESTS=OFF -DWP2_BUILD_EXTRAS=ON"
+#cmake_path='lib/wp2/cmake'
+
+dev_bra='main'
+dev_vrs='0.1.0'
+pkg_deb=''
+eta='0'
+
+#on_config_ndk(){
+#    cmake_config+=" -DWP2_ANDROID_NDK_PATH=${ANDROID_NDK_HOME}"
+#}
+
+on_create_pc(){
+    vrs=$(grep -oP '^  VERSION \K([0-9\.]+)' "${dir_src}/CMakeLists.txt")
+    build_pkgconfig --libs=-lwebp2
+}
+
+
+
+# Filelist
+# --------
+# include/wp2/decode.h
+# include/wp2/base.h
+# include/wp2/format_constants.h
+# include/wp2/debug.h
+# include/wp2/encode.h
+# lib/libcpufeatures.a
+# lib/libwebp2.so
+# lib/wp2/cmake/wp2Config.cmake
+# lib/wp2/cmake/wp2ConfigVersion.cmake
+# lib/wp2/cmake/wp2Targets-release.cmake
+# lib/wp2/cmake/wp2Targets.cmake
+# share/man/man1/dwp2.1
+# share/man/man1/cwp2.1
+# bin/dwp2
+# bin/cwp2
