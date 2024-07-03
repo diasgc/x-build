@@ -26,8 +26,6 @@ function init {
   # array of args first passed to scripts
   export root_args=( $@ )
 
-  export dir_cmake="${dir_root}/cmake"
-  test -d "${dir_cmake}" || exit_err "cmake dir is missing. Reinstall please."
   export dir_patches="${dir_root}/patches"
   test -d "${dir_patches}" || exit_err "patches dir is missing. Reinstall please."
   export dir_pkgdist="${dir_root}/dist"
@@ -35,13 +33,13 @@ function init {
   export dir_sources="${dir_root}/sources"
   test -d "${dir_sources}" || mkdir -p "${dir_sources}"
   
-  test -f ".config" || ./x-setup
+  test -f ".config" || ./xsetup
   test -f ".config" || exit_err 'Unable to initialize config file: .config not found'
   source .config
   if [ $(($(date +%s) - ${config_lastupdate})) -gt $((config_timeout * timeout_days)) ]; then
     test -f .config_old && rm -f .config_old
     mv -f .config .config_old
-    ./x-setup
+    ./xsetup
     source .config
   fi
 }
@@ -254,8 +252,8 @@ start(){
       unset source_patch
     fi
     # check if there is a cmake file
-    if [ -n "${cmake_file}" ] && [ -f "${dir_root}/cmake/${cmake_file}.cmake" ]; then
-      cp -f "${dir_root}/cmake/${cmake_file}.cmake" "${dir_src}/CMakeLists.txt" || exit_err "Unable to copy ${cmake_file}"
+    if [ -n "${cmake_file}" ] && [ -f "${dir_root}/patches/${cmake_file}.cmake" ]; then
+      cp -f "${dir_root}/patches/${cmake_file}.cmake" "${dir_src}/CMakeLists.txt" || exit_err "Unable to copy ${cmake_file}"
       unset cmake_file
     fi
     # check for patch file and apply

@@ -87,23 +87,7 @@ function show_banner {
 }
 
 function usage {
-  echo -e "\n\n${CW}Usage: ${0} <script> <host> [build] [options]${C0}\n\n"
-  echo -e "      host: native|[a-android|l-linux|w-windows][a-arm|x-x86][hf-armhf|7-armv7|8-armv8|86-x86|64-x64]"
-  echo -e "      build: --static:  static library"
-  echo -e "             --shared:  shared library (static dependencies)"
-  echo -e "             --sharedd: shared library (shared dependencies)"
-  echo -e "             --bin:     build executables"
-  echo -e "             --man:     build manuals"
-  echo -e "             --man:     build manuals"
-  printf "${CB1}system:  --api <api> --cmake  --ndkcmake  --ccmake\n"
-  printf "          --dist --strip --dirbuild <dir> \n\n"
-  printf "${CB1}compiler: --clang*|--gcc --cpus\n"
-  printf "          --tune <tune> --mcpu <mcpu> --mtune <mtune> \n\n"
-  printf "          --update --upd-all --refresh --retry --force --clear\n"
-  printf "          --patch <add|make|get> --diff --opts\n\n"
-  printf "${CM1}control:  --desc --get --list --libName --var <var> \n\n"
-  printf "${CM1}other:    --skip --goto \n\n"
-  printf "Example building lame targeting android armv8 build shared libs and executable:\n\n\n  ${CW}${0} lame aa8 --shared --bin --no-strip --no-dist\n\n\n${C0}"
+  cat ${dir_root}/README.md
 }
 
 

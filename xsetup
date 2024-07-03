@@ -14,10 +14,12 @@ clear
 #
 
 #
+
 : "${dir_root:=$(dirname $0)}"
 : "${verbose}:=false}"
 : "${NDK_API_DEFAULT:=34}"
-#export LLVM_MINGW_JSON=$(curl --silent "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
+#export LLVM_MINGW_JSON=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
+#llvm_mingw_targz=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest" | jq -r -M '.assets[] | .browser_download_url' | grep '.*ucrt.*ubuntu.*'$(uname -p))
 
 check_install(){
     local v0
@@ -230,7 +232,7 @@ p_install_llvm_gnu=false
 p_install_llvm_sysroot=false
 
 # load config
-[ -f ".config" ] && . .config || init=true
+#[ -f ".config" ] && . .config || init=true
 [ -n "$(command -v sudo)" ] && sudo echo -ne "Password: " && echo
 #export cmd_install="sudo apt install"
 
