@@ -5,6 +5,7 @@
 lib='libadrenotools'
 dsc='A library for applying rootless Adreno GPU driver modifications/replacements'
 lic='BSD-2c'
+spdx_id='BSD-2-Clause'
 src='https://github.com/bylaws/libadrenotools.git'
 src_opt='--recursive'
 src_rel=false

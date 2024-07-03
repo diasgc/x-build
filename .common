@@ -663,7 +663,7 @@ function generate_script {
   test -z "${1}" && exit_err "Usage: xbuild --new <git-url>"
   local giturl="${1/\.git}"
   local libname="${giturl##*/}" && libname="${libname,,}"
-  local scriptname="${dir_root}/${libname}.sh"
+  local scriptname="${dir_root}/scripts/${libname}"
   local jsonf
   
   cp "${dir_root}/utils/script.template" ${scriptname}
@@ -673,18 +673,28 @@ function generate_script {
   local pkgname="$(check_pkg_deb lib${libname//lib/}-dev ${libname}.-dev ${libname})"
   sed -i 's,@pkg_deb@,'${pkgname}',g' ${scriptname}
 
-  case ${giturl} in
-    *github*)
-      jsonf="$(github_create_info_json ${giturl})"
-      dsc="$(jq -r .description <${jsonf})"
-      lic="$(jq -r .license.name <${jsonf})"
-      test -n "${dsc}" && dsc="${dsc%%\. *}" && sed -i 's/@desc@/'"${dsc}"'/g' ${scriptname}
-      test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname}
-      ;;
-    *gitlab*)
-      ;;
-  esac
-
+  jsonf="$(git_api_tojson ${giturl})"
+  if [ -n "${jsonf}" ]; then
+    test -f "${dir_root}/builds/${libname}.info" || echo ${jsonf} >"${dir_root}/builds/${libname}.info"
+    case ${giturl} in
+      *github*)
+        dsc="$(jq -r .description <<<${jsonf})"
+        lic="$(jq -r .license.name <<<${jsonf})"
+        ;;
+      *gitlab*)
+          dsc="$(jq -r .description <<<${jsonf})"
+          lic="$(jq -r .license.name <<<${jsonf})"
+          url="$(jq -r .web_url <<<${jsonf})"
+          dev_bra="$(jg -r .default_branch <<<${jsonf})"
+        ;;
+    esac
+  fi
+  
+  test -n "${dsc}" && dsc="${dsc%%\. *}" && sed -i 's/@desc@/'"${dsc}"'/g' ${scriptname}
+  test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname}
+  test -n "${url}" && sed -i 's/@url@/'"${url}"'/g' ${scriptname}
+  test -n "${dev_bra}" && sed -i 's/@dev_bra@/'"${dev_bra}"'/g' ${scriptname}
+  
   exit_info "Done. New script generated: \e[4m${scriptname}\e[24m${C0}\n\n"
 }
 
@@ -696,7 +706,7 @@ function github_create_info_json {
   echo ${json}
 }
 
-git_api_tojson(){
+function git_api_tojson {
   local s=$(sed 's/https:\/\///g; s/\// /g; s/\.git$//' <<<"${1}")
   set -- $s
   case ${1} in
@@ -1361,7 +1371,8 @@ function show_build_opts {
   cf="$(search_configfile configure)"
   if [ -n "${cf}" ]; then
     d="${dir_root}/builds/${lib}_am.opts"
-    ${cf} --help | grep -o '\-\-.*' >"${d}"
+    #${cf} --help | grep -o '\-\-.*' >"${d}"
+    ${cf} --help
     echo -e "\n\t${CY0}Found automake options: ${d}\n"
   fi
 }

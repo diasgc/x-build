@@ -1,8 +1,4 @@
 #!/bin/bash
-# Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
-#  +   +   .   .   .   +   .   .   .   .   .  static
-#  +   +   .   .   .   +   .   .   .   .   .  shared
-#  +   +   .   .   .   +   .   .   .   .   .  bin
 
 lib='opencore-amr'
 pkg='opencore-amrwb'
@@ -17,7 +13,10 @@ dev_vrs='0.1.6'
 eta='100'
 pkg_deb='libopencore-amrwb-dev'
 
-
+# cpu av8 av7 x86 x64
+# NDK  +   +   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   +  clang/gcc
 
 # Filelist
 # --------

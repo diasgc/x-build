@@ -7,6 +7,7 @@
 lib='lcms2'
 dsc='A free, open source, CMM engine. It provides fast transforms between ICC profiles'
 lic='BSD-2c'
+spdx_id='BSD-2-Clause'
 src='https://github.com/mm2/Little-CMS.git'
 
 cfg='meson'

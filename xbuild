@@ -20,7 +20,6 @@ function init {
     --debug|-d) shift; set -x; debug=true;;
     --help|-h)  show_banner; usage; exit 0;;
     --new|-n)   shift; generate_script $@; exit 0;;
-    --opts|-o)  show_build_opts; exit 0;;
   esac
   
   # array of args first passed to scripts
@@ -55,6 +54,10 @@ fi
 
 source "${script_path}"
 shift
+
+case "${1}" in
+  --opts|-o)  show_build_opts; exit 0;;
+esac
 
 export script_name script_path
 export host_trip CPPFLAGS

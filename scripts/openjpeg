@@ -6,8 +6,9 @@ dsc='OpenJPEG is an open-source JPEG 2000 codec written in C language.'
 lic='BSD-2c'
 spdx_id='BSD-2-Clause'
 src='https://github.com/uclouvain/openjpeg.git'
-cfg='cmake'
 dep='lcms2 libtiff libpng'
+
+cfg='cmake'
 cmake_bin='BUILD_CODEC'
 WFLAGS='-Wno-implicit-const-int-float-conversion'
 

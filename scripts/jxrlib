@@ -9,6 +9,7 @@ lib='jxrlib'
 pkg='jpegxr'
 dsc='JPEG XR Image Codec reference implementation library released by Microsoft'
 lic='BSD-2c'
+spdx_id='BSD-2-Clause'
 src='https://github.com/4creators/jxrlib.git'
 
 cfg='cmake'

@@ -3,6 +3,7 @@
 lib='aom'
 dsc='Alliance for Open Media AV1 codec'
 lic='BSD-2c'
+spdx_id='BSD-2-Clause'
 src='https://aomedia.googlesource.com/aom.git'
 tls='perl'
 

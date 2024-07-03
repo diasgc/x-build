@@ -3,6 +3,7 @@
 lib='celt'
 dsc='CELT is a low-delay audio codec'
 lic='BSD-2c'
+spdx_id='BSD-2-Clause'
 src='https://gitlab.xiph.org/xiph/celt.git'
 cfg='ag'
 dep='ogg'

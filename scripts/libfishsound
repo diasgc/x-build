@@ -7,16 +7,22 @@
 
 lib='libfishsound'
 pkg='fishsound'
-pkg_deb='libfishsound1-dev'
 dsc='Simple API that wraps Xiph.Org audio codecs'
 lic='BSD-2c'
+spdx_id='BSD-2-Clause'
 src='https://gitlab.xiph.org/xiph/libfishsound.git'
+dep='ogg vorbis speex flac sndfile liboggz'
+
 cfg='ag'
-dep='ogg vorbis speex flac sndfile'
+CPPFLAGS='-Wno-unused-parameter -Wno-incompatible-function-pointer-types'
+LIBS='-logg -lvorbis -logg -lflac -lspeex -lsndfile -loggz' 
+
+dev_bra='master'
+dev_vrs=''
 eta='20'
+pkg_deb='libfishsound1-dev'
 
-am_nosysroot=true
-
+# ld.lld: error: undefined symbol: oggpack_***
 
 
 # Filelist
