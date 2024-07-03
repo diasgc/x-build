@@ -8,11 +8,9 @@ lib='libdecklink'
 dsc=''
 lic=''
 vrs=''
-src="https://gitlab.com/Polimi-dVRK/decklink/libdecklink.git"
-src_opt='--recursive'
-cfg='cmake'
+src="https://github.com/hhool/Blackmagic_DeckLink_SDK.git"
+cfg='other'
 
-dep='boost'
 
 dev_bra='master'
 dev_vrs=''
@@ -24,6 +22,4 @@ lst_lib=''
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
-
-eta='20'
 
