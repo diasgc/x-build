@@ -87,7 +87,7 @@ function show_banner {
 }
 
 function usage {
-  echo -e "\n\n${CW}Usage: ${0} <host> [build] [options]${C0}\n\n"
+  echo -e "\n\n${CW}Usage: ${0} <script> <host> [build] [options]${C0}\n\n"
   echo -e "      host: native|[a-android|l-linux|w-windows][a-arm|x-x86][hf-armhf|7-armv7|8-armv8|86-x86|64-x64]"
   echo -e "      build: --static:  static library"
   echo -e "             --shared:  shared library (static dependencies)"
@@ -103,7 +103,7 @@ function usage {
   printf "          --patch <add|make|get> --diff --opts\n\n"
   printf "${CM1}control:  --desc --get --list --libName --var <var> \n\n"
   printf "${CM1}other:    --skip --goto \n\n"
-  printf "Example targeting android armv8 build shared libs and executable:\n\n\n  ${CW}${0} aa8 --shared --bin --no-strip --no-dist\n\n\n${C0}"
+  printf "Example building lame targeting android armv8 build shared libs and executable:\n\n\n  ${CW}${0} lame aa8 --shared --bin --no-strip --no-dist\n\n\n${C0}"
 }
 
 
@@ -1027,7 +1027,7 @@ function package_showinfo {
   # see links
   echo -e "${CD}${ind}${CD}"
   echo -e "${CD}${ind}${CD}see logfile: \e[4m${log_file}\e[24m${C0}"
-  echo -e "${CD}${ind}${CD}    script : \e[4m${0}\e[24m${C0}"
+  echo -e "${CD}${ind}${CD}    script : \e[4m${script_path}\e[24m${C0}"
   echo -e "${CD}${ind}${CD}    source : \e[4m${dir_src}\e[24m${C0}"
   echo -e "${CD}${ind}${CD}    build  : \e[4m${dir_install}\e[24m${C0}"
   echo -e "${CD}${ind}${CD}"

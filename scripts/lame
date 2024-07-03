@@ -13,9 +13,9 @@ cmake_static='BUILD_STATIC_LIBS'
 cmake_bin='INSTALL_PROGRAMS'
 cmake_config='-DINSTALL_MANPAGES=OFF -DINSTALL_HTML=OFF'
 
-dev_vrs='3.101'
+dev_vrs='3.101.3'
 pkg_deb='libmp3lame-dev'
-eta='180'
+eta='528'
 
 lst_inc='lame/lame.h'
 lst_lib='libmp3lame'
