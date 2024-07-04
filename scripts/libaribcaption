@@ -19,7 +19,23 @@ dev_vrs='1.1.1'
 pkg_deb=''
 eta='0'
 
-lst_inc='aribcaption/*.h aribcaption/*.hpp'
+lst_inc='aribcaption/aribcc_config.h
+aribcaption/aribcc_export.h
+aribcaption/aribcaption.h
+aribcaption/aribcaption.hpp
+aribcaption/caption.h
+aribcaption/caption.hpp
+aribcaption/color.h
+aribcaption/color.hpp
+aribcaption/context.h
+aribcaption/context.hpp
+aribcaption/decoder.h
+aribcaption/decoder.hpp
+aribcaption/aligned_alloc.hpp
+aribcaption/image.h
+aribcaption/image.hpp
+aribcaption/renderer.h
+aribcaption/renderer.hpp'
 lst_lib='libaribcaption'
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
