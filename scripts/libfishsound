@@ -15,7 +15,6 @@ dep='ogg vorbis speex flac sndfile liboggz'
 
 cfg='ag'
 CPPFLAGS='-Wno-unused-parameter -Wno-incompatible-function-pointer-types'
-LIBS='-logg -lvorbis -logg -lflac -lspeex -lsndfile -loggz' 
 
 dev_bra='master'
 dev_vrs=''

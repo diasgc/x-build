@@ -5,6 +5,7 @@ dsc='Fast, whole-buffer DEFLATE-based compression and decompression'
 lic='MIT'
 src="https://github.com/ebiggers/libdeflate.git"
 dep='zlib'
+
 cfg='cmake'
 cmake_static='LIBDEFLATE_BUILD_STATIC_LIB'
 cmake_shared='LIBDEFLATE_BUILD_SHARED_LIB'
