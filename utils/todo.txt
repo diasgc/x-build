@@ -1,8 +1,9 @@
 Todo cmakelists.txt:
-cmake: libcap
-cmake: lodepng
-bazel: lyra
-bazel: skcms
-cmake: thor
+cmake: libavc1394.sh
+cmake: libcap.sh
+cmake: lodepng.sh
+bazel: lyra.sh
+bazel: skcms.sh
+cmake: thor.sh
 
 lzo.sh # todo src_rel
