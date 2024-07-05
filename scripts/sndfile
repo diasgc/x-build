@@ -9,20 +9,25 @@ pkg_deb='libsndfile1-dev'
 dsc='A library for reading and writing audio files'
 lic='LGPL-3.0'
 src='https://github.com/libsndfile/libsndfile.git'
-cfg='cmake'
 tls='python'
-#dep='ogg vorbis opus flac speex sqlite3 lame'
-make_install='install'
 
-cmake_static=''
+cfg='cmake'
 cmake_bin='BUILD_PROGRAMS'
-cmake_config="-DENABLE_PACKAGE_CONFIG=ON -DBUILD_TESTING=OFF -DINSTALL_MANPAGES=OFF -DBUILD_EXAMPLES=OFF -DENABLE_MPEG=OFF -DENABLE_EXTERNAL_LIBS=OFF"
+sndfile_extlibs=OFF
+cmake_config="-DENABLE_PACKAGE_CONFIG=ON -DBUILD_TESTING=OFF -DINSTALL_MANPAGES=OFF -DBUILD_EXAMPLES=OFF -DENABLE_MPEG=OFF"
 
-am_nosysroot=true
+extra_options(){
+	case "${1}" in
+		--extlibs) dep='ogg vorbis opus flac speex sqlite3 lame'; sndfile_extlibs=ON;;
+	esac
+}
+on_config(){
+	cmake_config+=" -DENABLE_EXTERNAL_LIBS=${sndfile_extlibs}"
+}
 
 dev_bra='main'
 dev_vrs='1.2.2'
-eta='78'
+eta='160'
 
 lst_inc='sndfile.h sndfile.hh'
 lst_lib='libsndfile'

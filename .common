@@ -1168,7 +1168,7 @@ function config_guess {
 
 function setup_cmake_config {
   # build: make
-
+  ${ndkcmake} && CMAKE_EXECUTABLE=${ANDROID_NDK_HOME}/../../cmake/3.22.1/bin/cmake
   : "${cmake_builddir:=${dir_config}}"
   : "${cfg_cmd:=${CMAKE_EXECUTABLE}}"  
   : "${build_cmd:=${MAKE_EXECUTABLE}}"

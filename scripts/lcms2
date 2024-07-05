@@ -29,7 +29,7 @@ extra_options(){
 dev_bra='master'
 dev_vrs='2.16'
 pkg_deb='liblcms2-dev'
-eta='64'
+eta='112'
 
 lst_inc='lcms2_plugin.h lcms2.h'
 lst_lib='liblcms2'

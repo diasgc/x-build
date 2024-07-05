@@ -5,28 +5,49 @@ dsc='Compressed numerical arrays that support high-speed random access'
 lic='BSD-3c'
 src='https://github.com/LLNL/zfp.git'
 url='http://oldhome.schmorp.de/marc/liblzf.html'
+
 cfg='cmake'
-
 cmake_config="-DBUILD_TESTING=OFF -DBUILD_GMOCK=OFF"
-
-lst_inc='zfp*.h zfp/*.h zfpcpp.h ieeecodec.h'
-lst_lib='libzfp'
-lst_bin='zfp'
-lst_lic='LICENSE'
-lst_pc='zfp.pc'
-
-dev_bra='master'
-dev_vrs='0.5.5'
-pkg_deb='libzfp-dev'
-eta='190'
-dualbuild_support=false
 
 on_create_pc(){
     vrs="$(c_printf 'include/zfp' 'version.h' '"%s",ZFP_VERSION_STRING')"
     build_pkgconfig --libs=-llzf
 }
 
+dev_bra='master'
+dev_vrs='1.0.1'
+pkg_deb='libzfp-dev'
+eta='112'
 
+lst_inc='zfp.hpp zfp.h zfp/array.h
+zfp/factory.hpp zfp/index.hpp zfp/bitstream.h
+zfp/array.hpp zfp/array1.hpp zfp/array2.hpp zfp/array3.hpp zfp/array4.hpp
+zfp/constarray1.hpp zfp/constarray2.hpp zfp/constarray3.hpp zfp/constarray4.hpp 
+zfp/bitstream.inl zfp/codec/gencodec.hpp zfp/codec/zfpcodec.hpp zfp/version.h
+zfp/internal/codec/genheader.hpp zfp/internal/codec/zfpheader.hpp
+zfp/internal/zfp/system.h zfp/internal/zfp/types.h
+zfp/internal/zfp/macros.h zfp/internal/zfp/inline.h
+zfp/internal/array/store4.hpp zfp/internal/array/view3.hpp
+zfp/internal/array/iterator3.hpp zfp/internal/array/handle2.hpp
+zfp/internal/array/pointer2.hpp zfp/internal/array/reference1.hpp
+zfp/internal/array/view4.hpp zfp/internal/array/pointer1.hpp
+zfp/internal/array/cache2.hpp zfp/internal/array/cache1.hpp
+zfp/internal/array/reference3.hpp zfp/internal/array/exception.hpp
+zfp/internal/array/pointer4.hpp zfp/internal/array/pointer3.hpp
+zfp/internal/array/cache3.hpp zfp/internal/array/handle1.hpp
+zfp/internal/array/iterator1.hpp zfp/internal/array/memory.hpp
+zfp/internal/array/iterator2.hpp zfp/internal/array/store2.hpp
+zfp/internal/array/cache4.hpp zfp/internal/array/store1.hpp
+zfp/internal/array/reference2.hpp zfp/internal/array/store3.hpp
+zfp/internal/array/iterator4.hpp zfp/internal/array/reference4.hpp
+zfp/internal/array/cache.hpp zfp/internal/array/view1.hpp
+zfp/internal/array/store.hpp zfp/internal/array/handle4.hpp
+zfp/internal/array/view2.hpp zfp/internal/array/header.hpp
+zfp/internal/array/traits.hpp zfp/internal/array/handle3.hpp'
+lst_lib='libzfp'
+lst_bin='zfp'
+lst_lic='LICENSE'
+lst_pc='zfp.pc'
 
 # Filelist
 # --------
