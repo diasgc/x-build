@@ -1,0 +1,58 @@
+#!/bin/bash
+
+lib='lz4'
+pkg='liblz4'
+dsc='Fast LZ compression algorithm library'
+lic='BSD-2c GPL2.0'
+src="https://github.com/lz4/lz4.git"
+
+cfg='cmake'
+cmake_bin='LZ4_BUILD_CLI'
+cmake_static='BUILD_STATIC_LIBS'
+config_dir='build/cmake'
+
+#cfg='meson'
+#config_dir='contrib/meson'
+#meson_config='-Ddebug_level=0 -Dbin_examples=false -Dbin_contrib=false -Dbin_tests=false'
+#meson_bin='bin_programs'
+
+on_build_bin(){
+    cmake_config+=' -DLZ4_BUILD_LEGACY_LZ4C=ON'
+}
+
+dev_bra='dev'
+dev_vrs='1.9.4'
+pkg_deb='liblz4-dev'
+eta='112'
+
+lst_inc='lz4.h lz4frame.h lz4frame_static.h lz4hc.h'
+lst_lib='liblz4'
+lst_bin='lz4'
+lst_lic='LICENSE'
+lst_pc='liblz4.pc'
+
+
+
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+# Filelist
+# --------
+# include/lz4.h
+# include/lz4frame.h
+# include/lz4hc.h
+# lib/pkgconfig/liblz4.pc
+# lib/liblz4.so
+# lib/cmake/lz4/lz4Config.cmake
+# lib/cmake/lz4/lz4ConfigVersion.cmake
+# lib/cmake/lz4/lz4Targets.cmake
+# lib/cmake/lz4/lz4Targets-release.cmake
+# lib/liblz4.a
+# share/man/man1/lz4.1
+# share/man/man1/unlz4.1
+# share/man/man1/lz4cat.1
+# share/doc/lz4/LICENSE
+# bin/lz4
+# bin/lz4c

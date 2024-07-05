@@ -1,0 +1,86 @@
+#!/bin/bash
+
+lib='libdrm'
+dsc='Direct Rendering Manager library and headers'
+lic='Other'
+src='https://gitlab.freedesktop.org/mesa/drm.git'
+
+cfg='meson'
+meson_config+=' -Dman-pages=disabled -Dnouveau=disabled -Dtests=false'
+
+dev_vrs='2.4.120'
+pkg_deb='libdrm-dev'
+eta='0'
+
+lst_inc='xf86drm.h xf86drmMode.h libsync.h libdrm/*.h'
+lst_lib='libdrm libdrm_freedreno libdrm_amdgpu libdrm_radeon'
+lst_bin=''
+lst_lic='README.rst'
+lst_pc='libdrm.pc libdrm_vc4.pc libdrm_amdgpu.pc libdrm_radeon.pc libdrm_freedreno.pc'
+
+
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+# Filelist
+# --------
+# share/man/man3/drmAvailable.3
+# share/man/man3/drmHandleEvent.3
+# share/man/man3/drmModeGetResources.3
+# share/man/man7/drm.7
+# share/man/man7/drm-kms.7
+# share/man/man7/drm-memory.7
+# share/libdrm/amdgpu.ids
+# share/doc/libdrm/README.rst
+# include/libdrm/amdgpu_drm.h
+# include/libdrm/r128_drm.h
+# include/libdrm/radeon_surface.h
+# include/libdrm/drm_mode.h
+# include/libdrm/drm_fourcc.h
+# include/libdrm/qxl_drm.h
+# include/libdrm/sis_drm.h
+# include/libdrm/amdgpu.h
+# include/libdrm/nouveau_drm.h
+# include/libdrm/r600_pci_ids.h
+# include/libdrm/radeon_cs_int.h
+# include/libdrm/radeon_bo_int.h
+# include/libdrm/vc4_packet.h
+# include/libdrm/savage_drm.h
+# include/libdrm/msm_drm.h
+# include/libdrm/drm_sarea.h
+# include/libdrm/radeon_bo.h
+# include/libdrm/radeon_bo_gem.h
+# include/libdrm/drm.h
+# include/libdrm/radeon_drm.h
+# include/libdrm/mga_drm.h
+# include/libdrm/vc4_drm.h
+# include/libdrm/i915_drm.h
+# include/libdrm/via_drm.h
+# include/libdrm/radeon_cs.h
+# include/libdrm/vmwgfx_drm.h
+# include/libdrm/vc4_qpu_defines.h
+# include/libdrm/virtgpu_drm.h
+# include/libdrm/radeon_cs_gem.h
+# include/libdrm/tegra_drm.h
+# include/libdrm/mach64_drm.h
+# include/freedreno/freedreno_ringbuffer.h
+# include/freedreno/freedreno_drmif.h
+# include/xf86drm.h
+# include/xf86drmMode.h
+# include/libsync.h
+# lib/pkgconfig/libdrm.pc
+# lib/pkgconfig/libdrm_vc4.pc
+# lib/pkgconfig/libdrm_amdgpu.pc
+# lib/pkgconfig/libdrm_radeon.pc
+# lib/pkgconfig/libdrm_freedreno.pc
+# lib/libdrm.so
+# lib/libdrm_freedreno.a
+# lib/libdrm_amdgpu.a
+# lib/libdrm_radeon.a
+# lib/libdrm_freedreno.so
+# lib/libdrm_radeon.so
+# lib/libdrm_amdgpu.so
+# lib/libdrm.a

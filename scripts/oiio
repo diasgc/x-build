@@ -1,0 +1,32 @@
+#!/bin/bash
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+lib='oiio'
+dsc='Reading, writing, and processing images in a wide variety of file formats, using a format-agnostic API, aimed at VFX applications'
+lic='BSD-3c'
+src='https://github.com/OpenImageIO/oiio.git'
+url='openimageio.readthedocs.org'
+dep='boost'
+
+cfg='cmake'
+cmake_config="-DBoost_NO_WARN_NEW_VERSIONS=ON"
+
+dev_bra='master'
+dev_vrs='2.5.12.0'
+pkg_deb=''
+eta='0'
+
+on_config(){
+    cmake_config+=" -DUSE_SIMD=$(bool2str ${host_arm32} OFF ON)"
+}
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE AUTHORS'
+lst_pc=''
+
+

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+lib='wavpack'
+dsc='WavPack encode/decode library, command-line programs, and several plugins'
+lic='BSD 3-clause'
+src='https://github.com/dbry/WavPack.git'
+#dep='libiconv'
+
+cfg='cmake'
+
+dev_vrs='5.7.0'
+pkg_deb='libwavpack-dev'
+eta='36'
+
+lst_inc='wavpack/wavpack.h'
+lst_lib='libwavpack'
+lst_bin='wavpack wvgain wvtag wvunpack'
+lst_lic='COPYING AUTHORS'
+lst_pc='wavpack.pc'
+
+
+
+# cpu av8 av7 x86 x64
+# NDK +++ +++ +++  .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .  +++ clang/gcc
+
+# Filelist
+# --------
+# include/wavpack/wavpack.h
+# lib/pkgconfig/wavpack.pc
+# lib/libwavpack.a
+# lib/libwavpack.la
+# lib/libwavpack.so
+# share/man/man1/wvtag.1
+# share/man/man1/wvgain.1
+# share/man/man1/wvunpack.1
+# share/man/man1/wavpack.1
+# share/doc/wavpack/AUTHORS
+# share/doc/wavpack/COPYING
+# bin/wavpack
+# bin/wvgain
+# bin/wvtag
+# bin/wvunpack

@@ -1,0 +1,251 @@
+#!/bin/bash
+
+lib='openssl'
+dsc='TLS/SSL and crypto library'
+lic='Apache-2.0'
+src='https://github.com/openssl/openssl.git'
+tls='nasm perl'
+#dep='cryptopp'
+
+cfg='other'
+openssl_config=
+CFLAGS='-Wno-macro-redefined'
+# install no docs
+make_install="install_sw"
+
+dev_bra='master'
+dev_vrs='3.3.0'
+pkg_deb='openssl'
+eta='360'
+
+on_config(){
+  dir_build="${dir_src}/build_${arch}"
+  PATH="${TOOLCHAIN}/bin:${PATH}"
+}
+
+on_config_ndk(){
+  openssl_config="android-${host_trip[0]} -D__ANDROID_API__=${ANDROID_NDK_API} no-tests" && openssl_config="${openssl_config/aarch64/arm64}"
+  export ANDROID_NDK_ROOT=${ANDROID_NDK_HOME}
+}
+
+on_config_mingw(){
+  case "${arch}" in
+    x86_64-w64-mingw32 ) openssl_config="no-idea no-mdc2 no-rc5 mingw64 --cross-compile-prefix=x86_64-w64-mingw32-";;
+    i686-w64-mingw32 )   openssl_config="no-idea no-mdc2 no-rc5 mingw --cross-compile-prefix=i686-w64-mingw32-";;
+  esac
+}
+
+on_build_static(){
+  openssl_config+=" no-shared"
+}
+
+build_config(){
+  do_log 'config' ${dir_src}/Configure ${openssl_config} --prefix=${dir_install}
+}
+
+lst_inc='openssl/rc5.h  openssl/rc4.h  openssl/pemerr.h
+  openssl/asn1_mac.h  openssl/provider.h  openssl/core.h  openssl/engine.h
+  openssl/dherr.h  openssl/dsaerr.h  openssl/proverr.h  openssl/pem2.h
+  openssl/ebcdic.h  openssl/asn1err.h  openssl/ui.h  openssl/core_object.h
+  openssl/encodererr.h  openssl/ssl.h  openssl/http.h  openssl/param_build.h
+  openssl/cmac.h  openssl/self_test.h  openssl/rc2.h  openssl/pem.h
+  openssl/sha.h  openssl/txt_db.h  openssl/params.h  openssl/modes.h
+  openssl/uierr.h  openssl/cast.h  openssl/ecdh.h  openssl/dh.h
+  openssl/kdferr.h  openssl/bio.h  openssl/rsa.h  openssl/cmserr.h
+  openssl/ripemd.h  openssl/conf.h  openssl/conf_api.h  openssl/rsaerr.h
+  openssl/crypto.h  openssl/err.h  openssl/ecdsa.h  openssl/opensslconf.h
+  openssl/ts.h  openssl/esserr.h  openssl/seed.h  openssl/idea.h
+  openssl/kdf.h  openssl/engineerr.h  openssl/md5.h  openssl/stack.h
+  openssl/pkcs12.h  openssl/x509v3err.h  openssl/rand.h  openssl/bnerr.h
+  openssl/des.h  openssl/x509v3.h  openssl/ocsperr.h  openssl/pkcs7.h
+  openssl/ossl_typ.h  openssl/lhash.h  openssl/fips_names.h  openssl/storeerr.h
+  openssl/mdc2.h  openssl/decoder.h  openssl/macros.h  openssl/asn1.h
+  openssl/cterr.h  openssl/md2.h  openssl/prov_ssl.h  openssl/dsa.h
+  openssl/comp.h  openssl/cms.h  openssl/ssl2.h  openssl/conferr.h
+  openssl/srtp.h  openssl/conftypes.h  openssl/x509.h  openssl/objects.h
+  openssl/sslerr_legacy.h  openssl/camellia.h  openssl/ocsp.h  openssl/ess.h
+  openssl/fipskey.h  openssl/e_os2.h  openssl/cryptoerr.h  openssl/store.h
+  openssl/buffer.h  openssl/bioerr.h  openssl/hmac.h  openssl/whrlpool.h
+  openssl/opensslv.h  openssl/core_names.h  openssl/cmperr.h  openssl/pkcs12err.h
+  openssl/sslerr.h  openssl/cmp_util.h  openssl/pkcs7err.h  openssl/safestack.h
+  openssl/randerr.h  openssl/dtls1.h  openssl/evp.h  openssl/async.h
+  openssl/asyncerr.h  openssl/md4.h  openssl/tls1.h  openssl/comperr.h
+  openssl/ct.h  openssl/srp.h  openssl/cryptoerr_legacy.h  openssl/cmp.h
+  openssl/x509_vfy.h  openssl/blowfish.h  openssl/objectserr.h  openssl/trace.h
+  openssl/httperr.h  openssl/x509err.h  openssl/configuration.h  openssl/ec.h
+  openssl/obj_mac.h  openssl/buffererr.h  openssl/aes.h  openssl/decodererr.h
+  openssl/asn1t.h  openssl/crmferr.h  openssl/encoder.h  openssl/symhacks.h
+  openssl/ecerr.h  openssl/ssl3.h  openssl/core_dispatch.h  openssl/bn.h
+  openssl/tserr.h  openssl/crmf.h  openssl/evperr.h  openssl/types.h'
+lst_lib='libssl libcrypto ossl-modules/legacy.so
+  engines-3/capi.so engines-3/padlock.so engines-3/loader_attic.so'
+lst_bin='c_rehash openssl'
+lst_lic='LICENSE.txt AUTHORS.md'
+lst_pc='libssl.pc libcrypto.pc openssl.pc'
+
+
+
+# cpu av8 av7 x86 x64
+# NDK  +   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
+
+# Filelist
+# --------
+# share/doc/openssl/LICENSE.txt
+# share/doc/openssl/AUTHORS.md
+# include/openssl/rc5.h
+# include/openssl/rc4.h
+# include/openssl/pemerr.h
+# include/openssl/asn1_mac.h
+# include/openssl/provider.h
+# include/openssl/core.h
+# include/openssl/engine.h
+# include/openssl/dherr.h
+# include/openssl/dsaerr.h
+# include/openssl/proverr.h
+# include/openssl/pem2.h
+# include/openssl/ebcdic.h
+# include/openssl/asn1err.h
+# include/openssl/ui.h
+# include/openssl/core_object.h
+# include/openssl/encodererr.h
+# include/openssl/ssl.h
+# include/openssl/http.h
+# include/openssl/param_build.h
+# include/openssl/cmac.h
+# include/openssl/self_test.h
+# include/openssl/rc2.h
+# include/openssl/pem.h
+# include/openssl/sha.h
+# include/openssl/txt_db.h
+# include/openssl/params.h
+# include/openssl/modes.h
+# include/openssl/uierr.h
+# include/openssl/cast.h
+# include/openssl/ecdh.h
+# include/openssl/dh.h
+# include/openssl/kdferr.h
+# include/openssl/bio.h
+# include/openssl/rsa.h
+# include/openssl/cmserr.h
+# include/openssl/ripemd.h
+# include/openssl/conf.h
+# include/openssl/conf_api.h
+# include/openssl/rsaerr.h
+# include/openssl/crypto.h
+# include/openssl/err.h
+# include/openssl/ecdsa.h
+# include/openssl/opensslconf.h
+# include/openssl/ts.h
+# include/openssl/esserr.h
+# include/openssl/seed.h
+# include/openssl/idea.h
+# include/openssl/kdf.h
+# include/openssl/engineerr.h
+# include/openssl/md5.h
+# include/openssl/stack.h
+# include/openssl/pkcs12.h
+# include/openssl/x509v3err.h
+# include/openssl/rand.h
+# include/openssl/bnerr.h
+# include/openssl/des.h
+# include/openssl/x509v3.h
+# include/openssl/ocsperr.h
+# include/openssl/pkcs7.h
+# include/openssl/ossl_typ.h
+# include/openssl/lhash.h
+# include/openssl/fips_names.h
+# include/openssl/storeerr.h
+# include/openssl/mdc2.h
+# include/openssl/decoder.h
+# include/openssl/macros.h
+# include/openssl/asn1.h
+# include/openssl/cterr.h
+# include/openssl/md2.h
+# include/openssl/prov_ssl.h
+# include/openssl/dsa.h
+# include/openssl/comp.h
+# include/openssl/cms.h
+# include/openssl/ssl2.h
+# include/openssl/conferr.h
+# include/openssl/srtp.h
+# include/openssl/conftypes.h
+# include/openssl/x509.h
+# include/openssl/objects.h
+# include/openssl/sslerr_legacy.h
+# include/openssl/camellia.h
+# include/openssl/ocsp.h
+# include/openssl/ess.h
+# include/openssl/fipskey.h
+# include/openssl/e_os2.h
+# include/openssl/cryptoerr.h
+# include/openssl/store.h
+# include/openssl/buffer.h
+# include/openssl/bioerr.h
+# include/openssl/hmac.h
+# include/openssl/whrlpool.h
+# include/openssl/opensslv.h
+# include/openssl/core_names.h
+# include/openssl/cmperr.h
+# include/openssl/pkcs12err.h
+# include/openssl/sslerr.h
+# include/openssl/cmp_util.h
+# include/openssl/pkcs7err.h
+# include/openssl/safestack.h
+# include/openssl/randerr.h
+# include/openssl/dtls1.h
+# include/openssl/evp.h
+# include/openssl/async.h
+# include/openssl/asyncerr.h
+# include/openssl/md4.h
+# include/openssl/tls1.h
+# include/openssl/comperr.h
+# include/openssl/ct.h
+# include/openssl/srp.h
+# include/openssl/cryptoerr_legacy.h
+# include/openssl/cmp.h
+# include/openssl/x509_vfy.h
+# include/openssl/blowfish.h
+# include/openssl/objectserr.h
+# include/openssl/trace.h
+# include/openssl/httperr.h
+# include/openssl/x509err.h
+# include/openssl/configuration.h
+# include/openssl/ec.h
+# include/openssl/obj_mac.h
+# include/openssl/buffererr.h
+# include/openssl/aes.h
+# include/openssl/decodererr.h
+# include/openssl/asn1t.h
+# include/openssl/crmferr.h
+# include/openssl/encoder.h
+# include/openssl/symhacks.h
+# include/openssl/ecerr.h
+# include/openssl/ssl3.h
+# include/openssl/core_dispatch.h
+# include/openssl/bn.h
+# include/openssl/tserr.h
+# include/openssl/crmf.h
+# include/openssl/evperr.h
+# include/openssl/types.h
+# ssl/openssl.cnf
+# ssl/ct_log_list.cnf.dist
+# ssl/ct_log_list.cnf
+# ssl/misc/CA.pl
+# ssl/misc/tsget.pl
+# ssl/openssl.cnf.dist
+# bin/c_rehash
+# bin/openssl
+# lib/pkgconfig/openssl.pc
+# lib/pkgconfig/libssl.pc
+# lib/pkgconfig/libcrypto.pc
+# lib/libssl.a
+# lib/libssl.so
+# lib/libcrypto.so
+# lib/libcrypto.a
+# lib/ossl-modules/legacy.so
+# lib/engines-3/capi.so
+# lib/engines-3/padlock.so
+# lib/engines-3/loader_attic.so
+

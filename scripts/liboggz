@@ -1,0 +1,34 @@
+#!/bin/bash
+
+lib='liboggz'
+pkg='oggz'
+dsc='A library and tools for working with Ogg encapsulation, with support for seeking, chopping and validation'
+lic='BSD-3c'
+src='https://github.com/evpobr/oggz.git'
+src_rel=false
+
+cfg='cmake'
+cmake_config='-DBUILD_TESTING=OFF'
+
+dev_bra='master'
+dev_vrs=''
+pkg_deb='liboggz-dev'
+eta='144'
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE AUTHORS'
+lst_pc=''
+
+xiph_on_src_release(){
+    src="https://gitlab.xiph.org/xiph/liboggz"
+    vrs="1.1.1"
+    src="https://downloads.xiph.org/releases/liboggz/liboggz-${vrs}.tar.gz"
+    tar_stripcomponents=true
+}
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc

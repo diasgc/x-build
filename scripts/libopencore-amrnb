@@ -1,0 +1,37 @@
+#!/bin/bash
+
+lib='opencore-amr'
+pkg='opencore-amrnb'
+dsc='OpenCORE Adaptive Multi Rate (AMR) speech codec'
+lic='Apache-2'
+src='https://git.code.sf.net/p/opencore-amr/code.git'
+
+cfg='ar'
+am_bin="examples"
+
+dev_vrs='0.1.6'
+eta='100'
+pkg_deb='libopencore-amrnb-dev'
+
+# cpu av8 av7 x86 x64
+# NDK  +   +   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   +  clang/gcc
+
+# Filelist
+# --------
+# include/opencore-amrnb/interf_dec.h
+# include/opencore-amrnb/interf_enc.h
+# include/opencore-amrwb/dec_if.h
+# include/opencore-amrwb/if_rom.h
+# lib/pkgconfig/opencore-amrnb.pc
+# lib/pkgconfig/opencore-amrwb.pc
+# lib/libopencore-amrwb.la
+# lib/libopencore-amrnb.la
+# lib/libopencore-amrnb.so
+# lib/libopencore-amrnb.a
+# lib/libopencore-amrwb.so
+# lib/libopencore-amrwb.a
+# bin/amrnb-enc
+# bin/amrnb-dec
+# bin/amrwb-dec

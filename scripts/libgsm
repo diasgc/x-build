@@ -1,0 +1,52 @@
+#!/bin/bash
+
+lib='libgsm'
+dsc='GSM 06.10 lossy speech compression'
+lic='LGPL-2.1'
+url='http://www.quut.com/gsm'
+patch="libgsm-01"
+
+cfg='cmake'
+cmake_static='BUILD_STATIC_LIBS'
+cmake_bin='BUILD_TOOLS'
+
+dev_bra='master'
+dev_vrs='1.0.22'
+pkg_deb='libgsm1-dev'
+eta='32'
+
+lst_inc='gsm.h'
+lst_lib='libgsm'
+lst_bin='toast untoast tcat'
+lst_lic='COPYRIGHT'
+lst_pc='libgsm.pc'
+
+on_config(){
+    vrs="$(curl -sL ${url} | grep -oP 'gsm-[0-9\.]+.tar.gz' | tail -n1)"
+    src="${url}/${vrs}"
+    vrs="$(sed 's/gsm-//;s/.tar.gz//' <<<"${vrs}")"
+    LD=${CC}
+    tar_stripcomponents=true
+}
+
+on_create_pc(){
+  build_pkgconfig --libs=-lgsm
+}
+
+
+
+# cpu av8 av7 x86 x64
+# NDK +++  .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+# Filelist
+# --------
+# include/gsm.h
+# lib/pkgconfig/libgsm.pc
+# lib/libgsm.so
+# lib/libgsm.a
+# share/doc/libgsm/COPYRIGHT
+# bin/toast
+# bin/untoast
+# bin/tcat

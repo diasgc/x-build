@@ -1,0 +1,25 @@
+#!/bin/bash
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  gcc
+# WIN  .   .   .   .  clang/gcc
+
+lib='libdecklink'
+dsc=''
+lic=''
+vrs=''
+src="https://github.com/hhool/Blackmagic_DeckLink_SDK.git"
+cfg='other'
+
+
+dev_bra='master'
+dev_vrs=''
+pkg_deb=''
+eta='0'
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE AUTHORS'
+lst_pc=''
+

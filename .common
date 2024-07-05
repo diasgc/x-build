@@ -87,23 +87,7 @@ function show_banner {
 }
 
 function usage {
-  echo -e "\n\n${CW}Usage: ${0} <host> [build] [options]${C0}\n\n"
-  echo -e "      host: native|[a-android|l-linux|w-windows][a-arm|x-x86][hf-armhf|7-armv7|8-armv8|86-x86|64-x64]"
-  echo -e "      build: --static:  static library"
-  echo -e "             --shared:  shared library (static dependencies)"
-  echo -e "             --sharedd: shared library (shared dependencies)"
-  echo -e "             --bin:     build executables"
-  echo -e "             --man:     build manuals"
-  echo -e "             --man:     build manuals"
-  printf "${CB1}system:  --api <api> --cmake  --ndkcmake  --ccmake\n"
-  printf "          --dist --strip --dirbuild <dir> \n\n"
-  printf "${CB1}compiler: --clang*|--gcc --cpus\n"
-  printf "          --tune <tune> --mcpu <mcpu> --mtune <mtune> \n\n"
-  printf "          --update --upd-all --refresh --retry --force --clear\n"
-  printf "          --patch <add|make|get> --diff --opts\n\n"
-  printf "${CM1}control:  --desc --get --list --libName --var <var> \n\n"
-  printf "${CM1}other:    --skip --goto \n\n"
-  printf "Example targeting android armv8 build shared libs and executable:\n\n\n  ${CW}${0} aa8 --shared --bin --no-strip --no-dist\n\n\n${C0}"
+  cat ${dir_root}/README.md
 }
 
 
@@ -679,7 +663,7 @@ function generate_script {
   test -z "${1}" && exit_err "Usage: xbuild --new <git-url>"
   local giturl="${1/\.git}"
   local libname="${giturl##*/}" && libname="${libname,,}"
-  local scriptname="${dir_root}/${libname}.sh"
+  local scriptname="${dir_root}/scripts/${libname}"
   local jsonf
   
   cp "${dir_root}/utils/script.template" ${scriptname}
@@ -689,18 +673,28 @@ function generate_script {
   local pkgname="$(check_pkg_deb lib${libname//lib/}-dev ${libname}.-dev ${libname})"
   sed -i 's,@pkg_deb@,'${pkgname}',g' ${scriptname}
 
-  case ${giturl} in
-    *github*)
-      jsonf="$(github_create_info_json ${giturl})"
-      dsc="$(jq -r .description <${jsonf})"
-      lic="$(jq -r .license.name <${jsonf})"
-      test -n "${dsc}" && dsc="${dsc%%\. *}" && sed -i 's/@desc@/'"${dsc}"'/g' ${scriptname}
-      test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname}
-      ;;
-    *gitlab*)
-      ;;
-  esac
-
+  jsonf="$(git_api_tojson ${giturl})"
+  if [ -n "${jsonf}" ]; then
+    test -f "${dir_root}/builds/${libname}.info" || echo ${jsonf} >"${dir_root}/builds/${libname}.info"
+    case ${giturl} in
+      *github*)
+        dsc="$(jq -r .description <<<${jsonf})"
+        lic="$(jq -r .license.name <<<${jsonf})"
+        ;;
+      *gitlab*)
+          dsc="$(jq -r .description <<<${jsonf})"
+          lic="$(jq -r .license.name <<<${jsonf})"
+          url="$(jq -r .web_url <<<${jsonf})"
+          dev_bra="$(jg -r .default_branch <<<${jsonf})"
+        ;;
+    esac
+  fi
+  
+  test -n "${dsc}" && dsc="${dsc%%\. *}" && sed -i 's/@desc@/'"${dsc}"'/g' ${scriptname}
+  test -n "${lic}" && sed -i 's/@lic@/'"${lic}"'/g' ${scriptname}
+  test -n "${url}" && sed -i 's/@url@/'"${url}"'/g' ${scriptname}
+  test -n "${dev_bra}" && sed -i 's/@dev_bra@/'"${dev_bra}"'/g' ${scriptname}
+  
   exit_info "Done. New script generated: \e[4m${scriptname}\e[24m${C0}\n\n"
 }
 
@@ -712,7 +706,7 @@ function github_create_info_json {
   echo ${json}
 }
 
-git_api_tojson(){
+function git_api_tojson {
   local s=$(sed 's/https:\/\///g; s/\// /g; s/\.git$//' <<<"${1}")
   set -- $s
   case ${1} in
@@ -1027,7 +1021,7 @@ function package_showinfo {
   # see links
   echo -e "${CD}${ind}${CD}"
   echo -e "${CD}${ind}${CD}see logfile: \e[4m${log_file}\e[24m${C0}"
-  echo -e "${CD}${ind}${CD}    script : \e[4m${0}\e[24m${C0}"
+  echo -e "${CD}${ind}${CD}    script : \e[4m${script_path}\e[24m${C0}"
   echo -e "${CD}${ind}${CD}    source : \e[4m${dir_src}\e[24m${C0}"
   echo -e "${CD}${ind}${CD}    build  : \e[4m${dir_install}\e[24m${C0}"
   echo -e "${CD}${ind}${CD}"
@@ -1377,7 +1371,8 @@ function show_build_opts {
   cf="$(search_configfile configure)"
   if [ -n "${cf}" ]; then
     d="${dir_root}/builds/${lib}_am.opts"
-    ${cf} --help | grep -o '\-\-.*' >"${d}"
+    #${cf} --help | grep -o '\-\-.*' >"${d}"
+    ${cf} --help
     echo -e "\n\t${CY0}Found automake options: ${d}\n"
   fi
 }
