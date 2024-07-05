@@ -12,12 +12,14 @@ lic='GNU Lesser General Public License v2.1'
 src="https://svn.code.sf.net/p/libavc1394/code/trunk/libavc1394"
 dep='libraw1394'
 
-cfg='ar' # consider create cmake build
+cfg='cmake' # consider create cmake build
+cmake_file='libavc1394'
+cmake_bin="BUILD_EXAMPLES"
 
 dev_bra='master'
-dev_vrs=''
+dev_vrs='0.5.4'
 pkg_deb='libavc1394-dev'
-eta='0'
+eta='48'
 
 lst_inc=''
 lst_lib=''
@@ -30,3 +32,7 @@ on_config(){
     LDFLAGS+=" -L${dir_root}/sources/gnulib/native/argp/gllib -lgnu"
 }
 
+source_patch(){
+    ./bootstrap
+    autoreconf -fiv
+}
