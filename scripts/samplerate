@@ -4,11 +4,12 @@ lib='samplerate'
 dsc='An audio Sample Rate Conversion library'
 lic='BSD'
 src='https://github.com/libsndfile/libsamplerate.git'
-cfg='cmake'
 dep='sndfile fftwf'
-pkg='samplerate'
 
+cfg='cmake'
+cmake_config="-DBUILD_TESTING=OFF -DLIBSAMPLERATE_EXAMPLES=OFF"
 #cmake_bin="LIBSAMPLERATE_EXAMPLES"
+
 dev_bra='master'
 dev_vrs='0.2.2'
 pkg_deb='libsamplerate0-dev'
@@ -19,10 +20,6 @@ lst_lib='libsamplerate'
 lst_bin=''
 lst_lic='COPYING AUTHORS'
 lst_pc='samplerate.pc'
-
-cmake_config="-DBUILD_TESTING=OFF -DLIBSAMPLERATE_EXAMPLES=OFF"
-
-
 
 # cpu av8 av7 x86 x64
 # NDK ++   .   .   .  clang

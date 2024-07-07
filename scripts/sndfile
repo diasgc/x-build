@@ -5,7 +5,6 @@
 # WIN  .   .   .   .  clang/gcc
 
 lib='sndfile'
-pkg_deb='libsndfile1-dev'
 dsc='A library for reading and writing audio files'
 lic='LGPL-3.0'
 src='https://github.com/libsndfile/libsndfile.git'
@@ -27,6 +26,7 @@ on_config(){
 
 dev_bra='main'
 dev_vrs='1.2.2'
+pkg_deb='libsndfile1-dev'
 eta='160'
 
 lst_inc='sndfile.h sndfile.hh'
