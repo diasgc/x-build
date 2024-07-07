@@ -17,6 +17,7 @@ clear
 
 : "${dir_root:=$(dirname $0)}"
 : "${verbose}:=false}"
+# cat $ANDROID_NDK_HOME/build/cmake/platforms.cmake | grep -oP 'NDK_MAX_PLATFORM_LEVEL "[0-9]+"'
 : "${NDK_API_DEFAULT:=34}"
 #export LLVM_MINGW_JSON=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
 #llvm_mingw_targz=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest" | jq -r -M '.assets[] | .browser_download_url' | grep '.*ucrt.*ubuntu.*'$(uname -p))
