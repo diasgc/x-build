@@ -9,6 +9,7 @@ dsc='A library for reading and writing audio files'
 lic='LGPL-3.0'
 src='https://github.com/libsndfile/libsndfile.git'
 tls='python'
+patch='sndfile'
 
 cfg='cmake'
 cmake_bin='BUILD_PROGRAMS'
@@ -27,7 +28,7 @@ on_config(){
 dev_bra='main'
 dev_vrs='1.2.2'
 pkg_deb='libsndfile1-dev'
-eta='160'
+eta='176'
 
 lst_inc='sndfile.h sndfile.hh'
 lst_lib='libsndfile'
@@ -43,17 +44,6 @@ lst_bin='sndfile-convert
 	sndfile-salvage'
 lst_lic='COPYING AUTHORS'
 lst_pc='sndfile.pc'
-
-#extra_options(){
-#	sndfile_extlibs=OFF
-#    case "${1}" in
-#        --extlibs) sndfile_extlibs=ON;;
-#    esac
-#	cmake_config+=' -DENABLE_EXTERNAL_LIBS='${sndfile_extlibs}
-#    return 0
-#}
-
-
 
 # Filelist
 # --------

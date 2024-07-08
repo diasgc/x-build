@@ -18,6 +18,7 @@ clear
 : "${dir_root:=$(dirname $0)}"
 : "${verbose}:=false}"
 # cat $ANDROID_NDK_HOME/build/cmake/platforms.cmake | grep -oP 'NDK_MAX_PLATFORM_LEVEL "[0-9]+"'
+# NDK_MAX_API=$(grep 'NDK_MAX_PLATFORM_LEVEL' $ANDROID_NDK_HOME/build/cmake/platforms.cmake | grep -oP '[0-9]+')
 : "${NDK_API_DEFAULT:=34}"
 #export LLVM_MINGW_JSON=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
 #llvm_mingw_targz=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest" | jq -r -M '.assets[] | .browser_download_url' | grep '.*ucrt.*ubuntu.*'$(uname -p))
@@ -27,7 +28,7 @@ check_install(){
     local v1
     for p in $@; do
         v0=$(dpkg-query -W $p 2>/dev/null | cut -f 2)
-        v1=$(apt-cache madison $p | cut -d '|' -f 2 | xargs)
+        v1=$(dpkg-query --showformat='${Version}' --show ${p})
         if [ -z "${v0}" ];then
             printf "${CH}%-20s: ${C0}%s\n" "  $p" "installing..."
             printf "$(${cmd_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
