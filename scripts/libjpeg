@@ -6,7 +6,7 @@ dsc='JPEG image codec that uses SIMD instructions'
 lic='BSD'
 src='https://github.com/libjpeg-turbo/libjpeg-turbo.git'
 cfg='cmake'
-eta='78'
+eta='144'
 cmake_static="ENABLE_STATIC"
 cmake_shared="ENABLE_SHARED"
 #patch='libjpeg-01'
@@ -14,7 +14,7 @@ make_install='install/strip'
 
 cmake_config="-DWITH_JPEG8=ON -DWITH_JPEG7=ON -DWITH_DOCS=OFF -DWITH_MAN=OFF"
 
-dev_vrs='3.0.4'
+dev_vrs='3.0.3'
 lst_inc='jerror.h jconfig.h jpeglib.h jmorecfg.h turbojpeg.h'
 lst_lib='libjpeg libturbojpeg'
 lst_bin='rdjpgcom jpegtran wrjpgcom djpeg tjbench cjpeg'

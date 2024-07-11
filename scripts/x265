@@ -11,6 +11,7 @@ lic='GPL-2.0'
 tls='yasm libnuma-dev'
 src='https://bitbucket.org/multicoreware/x265_git.git' # mirror at 'https://github.com/videolan/x265.git'
 src_rel=false
+dep='libnuma'
 #patch="x265-01"
 
 config_dir='source'
@@ -43,20 +44,19 @@ extra_options(){
     return 0
 }
 
-set_x265_releasefile(){
+on_src_release(){
     vrs="$(curl -s 'http://ftp.videolan.org/pub/videolan/x265/' | grep -oP 'x265_[0-9\.]+.tar.gz' | tail -n1)"
     src="http://ftp.videolan.org/pub/videolan/x265/${vrs}"
     vrs="$(sed 's/x265_//;s/\.tar\.gz//' <<<"${vrs}")"
 }
 
+on_config_mingw(){
+    cmake_add_compile_options+=( -Wno-sign-compare )
+    cmake_config+=" -DENABLE_PIC=OFF"
+    unset dep
+}
+
 on_config(){
-    ${src_rel} && set_x265_releasefile
-    if ${host_mingw}; then
-        cmake_add_compile_options+=( -Wno-sign-compare )
-        cmake_config+=" -DENABLE_PIC=OFF"
-    else
-        dep='libnuma'
-    fi
     if ${host_arm}; then
         cmake_config+=" -DCROSS_COMPILE_ARM=ON -DENABLE_ASSEMBLY=OFF"
     else
@@ -64,6 +64,7 @@ on_config(){
     fi
     
     $host_native && cmake_config+=' -DNATIVE_BUILD=ON'
+    return 0
 }
 
 build_nbit(){
