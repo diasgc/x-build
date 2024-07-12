@@ -16,9 +16,9 @@ on_config_ndk(){
 }
 
 dev_bra='main'
-dev_vrs='1.17.6'
+dev_vrs='1.18.0'
 pkg_deb='libheif-dev'
-eta='60'
+eta='572'
 
 lst_inc='libheif/*.h'
 lst_lib='libheif'

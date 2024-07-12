@@ -23,7 +23,7 @@ lst_pc='libde265.pc'
 
 dev_bra='main'
 dev_vrs='1.0.15'
-eta='176'
+eta='224'
 pkg_deb='libde265-dev'
 
 
