@@ -33,11 +33,11 @@ cmake_add_compile_options=(
 dev_bra='master'
 dev_vrs='3.6'
 pkg_deb='libx265-dev'
-eta='130'
+eta='132'
 
 extra_options(){
     case "${1}" in
-        --multilib) multilib=true; eta='810';;
+        --multilib) multilib=true; eta='132';;
         --12bit) cmake_config="${cmake_config_12bit}";;
         --10bit) cmake_config="${cmake_config_10bit}";;
     esac
@@ -99,6 +99,7 @@ build_config(){
 			EOF
         skip_make=true
     else
+        setup_cmake_config
         do_log 'cmake' cmake ${dir_config} ${cmake_config} ${link} ${bin} -Wno-dev
         case $cfg in ccm|ccmake) tput sc; ccmake ..; tput rc;; esac
     fi

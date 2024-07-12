@@ -338,7 +338,7 @@ start(){
 
   if fn_defined 'on_make'; then
     fn_log 'make' on_make
-  else
+  elif [ -n "${build_cmd}" ]; then
     do_progress "${build_tag}" "${build_cmd}" "${build_args[@]}" || err
   fi
 
