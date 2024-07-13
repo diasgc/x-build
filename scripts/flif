@@ -1,20 +1,20 @@
 #!/bin/bash
-# cpu av8 av7 x86 x64
-# NDK +++ +++  .   .  clang
-# GNU +++  .   .   .  gcc
-# WIN +++  .   .   .  clang/gcc
-# warning: Warning static builds of getopt violate the Lesser GNU Public License
 
 lib='flif'
 dsc='Free Lossless Image Format'
 lic='BSD-2c Apache-2.0 GPL-2.0 LGPL-2.1'
 src='https://github.com/FLIF-hub/FLIF.git'
-cfg='cmake'
 patch='flif-01'
 dep='libpng'
 
+cfg='cmake'
 config_dir='src'
 cmake_definitions+=('-Wno-sign-compare' '-Wno-type-limits' '-Wno-unused-but-set-variable')
+
+on_create_pc(){
+    build_pkgconfig --name=flif --libs=-lflif
+    build_pkgconfig --name=flif_dec --libs=-lflif_dec
+}
 
 dev_vrs='v0.4'
 pkg_deb=''
@@ -29,12 +29,11 @@ lst_lic='share/licenses/FLIF/LICENSE_Apache2
     share/licenses/FLIF/LICENSE_LGPL
     share/licenses/FLIF/FLIF-CLA-template.txt'
 
-on_create_pc(){
-    build_pkgconfig --name=flif --libs=-lflif
-    build_pkgconfig --name=flif_dec --libs=-lflif_dec
-}
-
-
+# cpu av8 av7 x86 x64
+# NDK +++ +++  .   .  clang
+# GNU +++  .   .   .  gcc
+# WIN +++  .   .   .  clang/gcc
+# warning: Warning static builds of getopt violate the Lesser GNU Public License
 
 # Filelist
 # --------

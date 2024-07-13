@@ -13,9 +13,9 @@ cmake_static='BUILD_STATIC_LIBS'
 cmake_config="-DAVIF_ENABLE_WERROR=OFF -DAVIF_BUILD_EXAMPLES=OFF -DAVIF_BUILD_TESTS=OFF -DAVIF_CODEC_AOM=ON"
 LDFLAGS+=" -lpthread"
 
-dev_vrs='1.0.4'
+dev_vrs='1.1.0'
 pkg_deb='libavif-dev'
-eta='30'
+eta='96'
 
 lst_inc='avif/avif.h'
 lst_lib='libavif'

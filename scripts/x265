@@ -12,32 +12,31 @@ tls='yasm libnuma-dev'
 src='https://bitbucket.org/multicoreware/x265_git.git' # mirror at 'https://github.com/videolan/x265.git'
 src_rel=false
 dep='libnuma'
-#patch="x265-01"
 
-config_dir='source'
 
 cfg='cmake'
 cmake_config_10bit='-DHIGH_BIT_DEPTH=ON -DEXPORT_C_API=OFF -DENABLE_SHARED=OFF -DENABLE_CLI=OFF'
 cmake_config_12bit="${cmake_config_10bit} -DMAIN12=ON"
 multilib=false
+config_dir='source'
 # disable warnings
 cmake_add_compile_options=( 
-    -Wno-absolute-value 
-    -Wno-unused-but-set-variable 
-    -Wno-shadow 
-    -Wno-unused-parameter 
-    -Wno-unused-variable 
-    -Wno-bitwise-instead-of-logical
+ -Wno-absolute-value
+ -Wno-unused-but-set-variable
+ -Wno-shadow
+ -Wno-unused-parameter
+ -Wno-unused-variable
+ -Wno-bitwise-instead-of-logical
 )
 
 dev_bra='master'
 dev_vrs='3.6'
 pkg_deb='libx265-dev'
-eta='132'
+eta='224'
 
 extra_options(){
     case "${1}" in
-        --multilib) multilib=true; eta='132';;
+        --multilib) multilib=true; eta='224';;
         --12bit) cmake_config="${cmake_config_12bit}";;
         --10bit) cmake_config="${cmake_config_10bit}";;
     esac
@@ -48,6 +47,8 @@ on_src_release(){
     vrs="$(curl -s 'http://ftp.videolan.org/pub/videolan/x265/' | grep -oP 'x265_[0-9\.]+.tar.gz' | tail -n1)"
     src="http://ftp.videolan.org/pub/videolan/x265/${vrs}"
     vrs="$(sed 's/x265_//;s/\.tar\.gz//' <<<"${vrs}")"
+    tar_stripcomponents=true
+    ${host_ndk} && cmake_definitions+=( -DHAVE_STRTOK_R )
 }
 
 on_config_mingw(){

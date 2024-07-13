@@ -59,10 +59,10 @@ case "${1}" in
   --opts|-o)  show_build_opts; exit 0;;
 esac
 
-export script_name script_path
-export host_trip CPPFLAGS
-export json_heredoc="$(heredoc_extract ${script_path} JSONDATA)"
-export dir_src="${dir_sources}/${lib}"
+json_heredoc="$(heredoc_extract ${script_path} JSONDATA)"
+dir_src="${dir_sources}/${lib}"
+
+export script_name script_path host_trip CPPFLAGS json_heredoc dir_src
 
 : "${MAKE_EXECUTABLE:=make}"
 : "${CMAKE_EXECUTABLE:=cmake}"

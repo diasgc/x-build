@@ -5,20 +5,24 @@ dsc='HEIF and AVIF file format decoder and encoder'
 lic='LGPL-3.0'
 src='https://github.com/strukturag/libheif.git'
 dep='libpng libjpeg x265 libde265 aom'
-mingw_posix=true
 
 cfg='cmake'
-cmake_config='-DWITH_AOM=ON -DWITH_X265=ON -DWITH_DAV1D=OFF -DWITH_LIBDE265=ON -DWITH_RAV1E=OFF -DBUILD_TESTING=OFF'
+cmake_config='-DBUILD_TESTING=OFF'
 cmake_bin='WITH_EXAMPLES'
 
 on_config_ndk(){
     LIBS+=" -llog"
+    cmake_config+=" -DWITH_GDK_PIXBUF=OFF"
+}
+on_config_mingw(){
+    mingw_posix=true
+    cmake_config+=" -DWITH_GDK_PIXBUF=OFF"
 }
 
 dev_bra='main'
 dev_vrs='1.18.0'
 pkg_deb='libheif-dev'
-eta='572'
+eta='208'
 
 lst_inc='libheif/*.h'
 lst_lib='libheif'
