@@ -17,8 +17,8 @@ set_version(){
 }
 
 dev_bra='master'
-dev_vrs='1.0.9'
-eta='60'
+dev_vrs='1.1.0'
+eta='76'
 pkg_deb="libbrotli-dev"
 
 lst_inc='brotli/shared_dictionary.h

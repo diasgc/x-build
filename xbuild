@@ -23,15 +23,17 @@ function init {
   esac
   
   # array of args first passed to scripts
-  export root_args=( $@ )
-
-  export dir_patches="${dir_root}/patches"
+  root_args=( $@ )
+  
+  dir_patches="${dir_root}/patches"
   test -d "${dir_patches}" || exit_err "patches dir is missing. Reinstall please."
-  export dir_pkgdist="${dir_root}/dist"
+  dir_pkgdist="${dir_root}/dist"
   test -d "${dir_pkgdist}" || mkdir -p "${dir_pkgdist}"
-  export dir_sources="${dir_root}/sources"
+  dir_sources="${dir_root}/sources"
   test -d "${dir_sources}" || mkdir -p "${dir_sources}"
   
+  export root_args dir_patches dir_pkgdist dir_sources
+
   test -f ".config" || ./xsetup
   test -f ".config" || exit_err 'Unable to initialize config file: .config not found'
   source .config
@@ -46,7 +48,18 @@ function init {
 # first load .common functions and error trap
 test -z ${vsh+x} && init $@
 
+
+
+
+# read script name
 script_name=${1}
+
+case "${script_name}" in
+  *-dev)  script_name=${script_name//-dev/}; build_bin=false; build_docs=false;;
+  *-bin)  script_name=${script_name//-bin/}; build_bin=true; build_docs=false;;
+  *-full) script_name=${script_name//-bin/}; build_bin=true; build_docs=true;;
+esac
+
 script_path="${dir_root}/scripts/${script_name}"
 if [ ! -f "${script_path}" ]; then
   usage && exit 0
@@ -54,6 +67,7 @@ fi
 
 source "${script_path}"
 shift
+
 
 case "${1}" in
   --opts|-o)  show_build_opts; exit 0;;
