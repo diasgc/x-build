@@ -433,9 +433,6 @@ start(){
 function end_script {
   log_end
   sed -i "s/eta='.*'/eta='"${eta}"'/g" ${script_path}
-  # check if parent process is shell script
-  local parent=$(ps -o comm= ${PPID})
-  [ "${parent: -3}" == ".sh" ] || echo -e "\n${CT1}::Done ${C0}${lib} ${vrs}\n"
   ${debug} && set +x
   unset  dir_config dir_build dir_src \
       lib_link cfg_bin exec_config vrs vnd \
@@ -444,6 +441,8 @@ function end_script {
       cfg_args LIBS CFLAGS CXXFLAGS LDFLAGS WFLAGS
   dec_tab
   echo -e "${CD}${ind}"
+  # test if is main script and not a dependency
+  [ ${#ind} -eq 0 ] && echo -e "\n${CT1}::Done ${C0}${lib} ${vrs}\n"
   exit 0
 }
 

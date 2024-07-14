@@ -21,7 +21,7 @@ lst_pc='flac.pc flac++.pc'
 dev_bra='main'
 dev_vrs='1.4.3'
 pkg_deb="libflac-dev"
-eta='176'
+eta='112'
 
 
 

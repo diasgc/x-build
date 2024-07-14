@@ -17,7 +17,7 @@ function trap_sigint_common {
 shopt -s extglob
 trap trap_sigint_common SIGINT
 
-vsh='1.2.0-main'
+vsh='2.0.0-main'
 
 #b="\u25ba"
 b="\u2605"
@@ -74,7 +74,7 @@ function splash {
 }
 
 function show_banner {
-  echo -ne "\n\n${CW}Cross Build scripts ${vsh} for Linux${C0}\n"
+  echo -ne "\n\n${CW}\e[1mX-Build scripts ${vsh} for Linux${C0}\e[0m\n"
   [ -n "$(command -v lsb_release)" ] && echo -ne "$(lsb_release -sd) "
   if [ -n "$(uname -r | grep 'microsoft')" ];then
     echo -ne "WSL2 "

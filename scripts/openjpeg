@@ -6,23 +6,21 @@ dsc='OpenJPEG is an open-source JPEG 2000 codec written in C language.'
 lic='BSD-2c'
 spdx_id='BSD-2-Clause'
 src='https://github.com/uclouvain/openjpeg.git'
-dep='lcms2 libtiff libpng'
+#dep='lcms2 libtiff libpng'
 
 cfg='cmake'
 cmake_bin='BUILD_CODEC'
 WFLAGS='-Wno-implicit-const-int-float-conversion'
+
+dev_vrs='2.5.2'
+pkg_deb='libopenjp2-7-dev'
+eta='160'
 
 lst_inc='openjpeg-2.5/*.h'
 lst_lib='libopenjp2'
 lst_bin='opj_dump opj_decompress opj_compress'
 lst_lic='LICENSE AUTHORS'
 lst_pc='libopenjp2.pc'
-
-dev_vrs='2.5.0'
-pkg_deb='libopenjp2-7-dev'
-eta='123'
-
-
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang
