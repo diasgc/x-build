@@ -9,7 +9,7 @@ lib='libraw'
 dsc='LibRaw is a library for reading RAW files from digital cameras'
 lic='Other'
 src="https://github.com/LibRaw/LibRaw.git"
-dep='libjpeg lcms2 zlib jasper'
+dep='lcms2' # libjpeg zlib jasper
 
 cfg='ar'
 am_config='--disable-examples --disable-openmp'
@@ -17,7 +17,7 @@ am_config='--disable-examples --disable-openmp'
 dev_bra='master'
 dev_vrs='0.21.2'
 pkg_deb='libraw-dev'
-eta='0'
+eta='368'
 
 lst_inc='libraw/libraw_alloc.h \
     libraw/libraw_const.h \

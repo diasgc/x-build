@@ -4,11 +4,12 @@ lib='flac'
 dsc='Free Lossless Audio Codec'
 lic='BSD'
 src='https://github.com/xiph/flac.git'
-cfg='cmake'
 dep='ogg libiconv'
-eta='60'
-pkg_deb="librust-symphonia-bundle-flac-dev"
 
+cfg='cmake'
+cmake_config='-DBUILD_CXXLIBS=ON -DBUILD_DOCS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DINSTALL_MANPAGES=OFF -DWITH_ASM=ON -DWITH_OGG=ON'
+cmake_bin='BUILD_PROGRAMS'
+cmake_static='BUILD_STATIC_LIBS'
 
 lst_inc='FLAC++/*.h FLAC/*.h'
 lst_lib='libFLAC libFLAC++'
@@ -16,14 +17,11 @@ lst_bin='flac metaflac'
 lst_lic='COPYING.FDL COPYING.GPL COPYING.LGPL COPYING.Xiph AUTHORS'
 lst_pc='flac.pc flac++.pc'
 
-cmake_config='-DBUILD_CXXLIBS=ON -DBUILD_DOCS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DINSTALL_MANPAGES=OFF -DWITH_ASM=ON -DWITH_OGG=ON'
-cmake_bin='BUILD_PROGRAMS'
-cmake_static='BUILD_STATIC_LIBS'
 
 dev_bra='main'
 dev_vrs='1.4.3'
-stb_bra=''
-stb_vrs=''
+pkg_deb="libflac-dev"
+eta='60'
 
 
 

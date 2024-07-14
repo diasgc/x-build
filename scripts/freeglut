@@ -17,24 +17,6 @@ cmake_config='-DFREEGLUT_BUILD_DEMOS=OFF'
 cmake_shared='FREEGLUT_BUILD_SHARED_LIBS'
 cmake_static='FREEGLUT_BUILD_STATIC_LIBS'
 
-
-dev_bra='main'
-dev_vrs='3.2.2'
-
-lst_inc='GL/freeglut.h
- GL/freeglut_ucall.h
- GL/freeglut_ext.h
- GL/freeglut_std.h
- GL/glut.h'
-lst_lib=''
-lst_bin=''
-lst_lic='COPYING AUTHORS'
-lst_pc=''
-
-eta='20'
-pkg_deb="freeglut3-dev"
-
-
 on_config(){
     local f="$(sourceforge_json freeglut | jq -r .release.filename)"
     vrs=$(grep -oP '[0-9]+\.[0-9]+\.[0-9]' <<<${f} | tail -n1)
@@ -46,6 +28,20 @@ on_config_ndk(){
     lst_lib='libfreeglut-gles.a'
 }
 
+dev_bra='main'
+dev_vrs='3.2.2'
+eta='20'
+pkg_deb="freeglut3-dev"
+
+lst_inc='GL/freeglut.h
+ GL/freeglut_ucall.h
+ GL/freeglut_ext.h
+ GL/freeglut_std.h
+ GL/glut.h'
+lst_lib=''
+lst_bin=''
+lst_lic='COPYING AUTHORS'
+lst_pc=''
 
 
 # ndk: https://sourceforge.net/p/freeglut/bugs/257/

@@ -737,7 +737,7 @@ function get_source {
   
   # git sub command requires git to apply
   test -n "${sub}" && src_rel=false
-  
+
   if ${src_rel}; then
     if fn_defined 'on_src_release'; then
       on_src_release

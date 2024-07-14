@@ -4,7 +4,7 @@ lib='avisynth'
 dsc='A powerful nonlinear scripting language for video'
 lic='GPL'
 src='https://github.com/AviSynth/AviSynthPlus.git'
-url='http://avisynth.nl/index.php/Main_Page'
+url='https://avs-plus.net'
 
 cfg='cmake'
 cmake_bin='ENABLE_PLUGINS'
@@ -13,10 +13,6 @@ cmake_config="-DHEADERS_ONLY=OFF"
 on_src_release(){
     vrs="$(github_latest_release AviSynth/AviSynthPlus)"
     src="https://github.com/AviSynth/AviSynthPlus/archive/refs/tags/${vrs}.tar.gz"
-}
-
-on_config(){
-    ${src_rel} && on_src_release
 }
 
 on_config_mingw(){
