@@ -13,7 +13,7 @@ cmake_static='BUILD_STATIC_LIBS'
 
 dev_vrs='1.3.7'
 pkg_deb='libvorbis-dev'
-eta='80'
+eta='44'
 
 lst_inc='vorbis/*.h'
 lst_lib='libvorbisfile libvorbisenc libvorbis'

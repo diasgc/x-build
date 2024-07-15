@@ -16,7 +16,7 @@ lst_pc='ogg.pc'
 dev_bra='master'
 dev_vrs='1.3.5'
 pkg_deb='libogg-dev'
-eta='96'
+eta='6884311024'
 
 cmake_static='BUILD_STATIC_LIBS'
 cmake_config='-DBUILD_TESTING=OFF -DINSTALL_DOCS=OFF'

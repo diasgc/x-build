@@ -12,7 +12,7 @@ cmake_bin='OPUS_BUILD_PROGRAMS'
 dev_bra='master'
 dev_vrs='1.4'
 pkg_deb='libopus-dev'
-eta='60'
+eta='80'
 
 lst_inc='opus/opus_projection.h
  opus/opus.h

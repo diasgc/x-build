@@ -18,6 +18,7 @@ shopt -s extglob
 trap trap_sigint_common SIGINT
 
 vsh='2.0.0-main'
+#export vsh
 
 #b="\u25ba"
 b="\u2605"

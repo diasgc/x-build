@@ -60,10 +60,20 @@ case "${script_name}" in
   *-full) script_name=${script_name//-bin/}; build_bin=true; build_docs=true;;
 esac
 
-script_path="${dir_root}/scripts/${script_name}"
-if [ ! -f "${script_path}" ]; then
+# support search for libname/name
+if [ -f "${dir_root}/scripts/${script_name}" ]; then
+  script_path="${dir_root}/scripts/${script_name}"
+elif [ -f "${dir_root}/scripts/lib${script_name}" ]; then
+  script_name="lib${script_name}"
+  script_path="${dir_root}/scripts/${script_name}"
+elif [ -f "${dir_root}/scripts/${script_name//lib/}" ]; then
+  script_name="${script_name//lib/}"
+  script_path="${dir_root}/scripts/${script_name}"
+else
   usage && exit 0
 fi
+
+#export script_name script_path
 
 source "${script_path}"
 shift

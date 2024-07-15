@@ -11,7 +11,7 @@ dep='ogg'
 dev_bra='master'
 dev_vrs='0.11.4'
 pkg_deb=''
-eta='60'
+eta='192'
      
 lst_inc='celt/*.h'
 lst_lib='libcelt0'
