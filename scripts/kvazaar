@@ -8,12 +8,6 @@ src='https://github.com/ultravideo/kvazaar.git'
 cfg='cmake'
 cmake_config='-DBUILD_TESTS=OFF'
 
-lst_inc='kvazaar.h'
-lst_lib='libkvazaar'
-lst_bin='kvazaar'
-lst_lic='COPYING CREDITS README.md'
-lst_pc='kvazaar.pc'
-
 dev_vrs='2.3.0'
 pkg_deb=''
 eta='70'
@@ -21,6 +15,12 @@ eta='70'
 on_config_ndk(){
     vrs='v2.3.0' # v2.3.1 fails to cmake find_package threads not found
 }
+
+lst_inc='kvazaar.h'
+lst_lib='libkvazaar'
+lst_bin='kvazaar'
+lst_lic='COPYING CREDITS README.md'
+lst_pc='kvazaar.pc'
 
 
 

@@ -6,38 +6,28 @@ pkg_deb='libleptonica-dev'
 dsc='An open source C library for efficient image processing and image analysis operations'
 lic='copyleft'
 src='https://github.com/DanBloomberg/leptonica.git'
+
 cfg='cmake'
-make_install='install-strip'
-
-lst_inc='leptonica/*.h'
-lst_lib='liblept'
-lst_bin='converttops converttopdf convertsegfilestops
-  convertfilestops convertsegfilestopdf imagetops
-  xtractprotos fileinfo convertformat convertfilestopdf'
-lst_lic='leptonica-license.txt'
-lst_pc='lept_Release.pc'
-eta='180'
-
-dev_vrs='1.84.1'
-
+lept_deps=OFF
+#make_install='install'
 cmake_bin="BUILD_PROG"
-cmake_config="-DBUILD_TESTS=OFF -DENABLE_GIF=OFF -DENABLE_ZLIB=OFF \
-  -DENABLE_PNG=OFF -DENABLE_JPEG=OFF -DENABLE_TIFF=OFF \
-  -DENABLE_WEBP=OFF -DENABLE_OPENJPEG=OFF -DSW_BUILD=OFF"
-cmake_definitions+=('-Wno-address-of-packed-member')
+cmake_config="-DBUILD_TESTS=OFF"
+cmake_definitions+=( -Wno-address-of-packed-member -Wno-empty-body -Wno-literal-range )
 
-am_nosysroot=true
-am_config+=" --disable-programs \
-    --without-giflib \
-    --without-libwebp \
-    --without-zlib \
-    --without-libopenjpeg"
+on_build_bin(){
+  dep='zlib libjpeg libpng libwebp libtiff giflib openjpeg'
+  lept_deps=ON
+}
 
-extra_options(){
-  case "${1}" in --all)
-    dep='zlib libjpeg libpng libwebp libtiff giflib openjpeg'
-    cmake_config='-DBUILD_TESTS=OFF';;
-  esac
+on_config(){
+  cmake_config="-DENABLE_GIF=${lept_deps} \
+  -DENABLE_ZLIB=${lept_deps} \
+  -DENABLE_PNG=${lept_deps} \
+  -DENABLE_JPEG=${lept_deps} \
+  -DENABLE_TIFF=${lept_deps} \
+  -DENABLE_WEBP=${lept_deps} \
+  -DENABLE_OPENJPEG=${lept_deps} \
+  -DSW_BUILD=${lept_deps}"
 }
 
 on_end(){
@@ -47,7 +37,17 @@ on_end(){
   return 0
 }
 
+dev_vrs='1.84.1'
+pkg_deb='libleptonica-dev'
+eta='164'
 
+lst_inc='leptonica/*.h'
+lst_lib='liblept'
+lst_bin='converttops converttopdf convertsegfilestops
+  convertfilestops convertsegfilestopdf imagetops
+  xtractprotos fileinfo convertformat convertfilestopdf'
+lst_lic='leptonica-license.txt'
+lst_pc='lept_Release.pc'
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

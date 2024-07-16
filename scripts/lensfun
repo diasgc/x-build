@@ -4,10 +4,10 @@ lib='lensfun'
 dsc='An open source database of photographic lenses and their characteristics'
 lic='LGPL-3.0'
 src='https://github.com/lensfun/lensfun.git'
-cfg='cmake'
 patch="lensfun-01"
 dep='glib2'
 
+cfg='cmake'
 cmake_bin='BUILD_LENSTOOL'
 cmake_static='BUILD_STATIC'
 cmake_config="-DBUILD_TESTS=OFF -DBUILD_DOC=OFF -DINSTALL_HELPER_SCRIPTS=OFF -DINSTALL_PYTHON_MODULE=OFF -DBUILD_AUXFUN=ON"

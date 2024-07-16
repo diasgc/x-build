@@ -10,9 +10,9 @@ cfg='cmake'
 cmake_bin='OPUS_BUILD_PROGRAMS'
 
 dev_bra='master'
-dev_vrs='1.4'
+dev_vrs='1.5.2-11-g2554a89e'
 pkg_deb='libopus-dev'
-eta='80'
+eta='240'
 
 lst_inc='opus/opus_projection.h
  opus/opus.h

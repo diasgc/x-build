@@ -17,7 +17,6 @@ function init {
   trap err ERR
 
   case "${1}" in
-    --debug|-d) shift; set -x; debug=true;;
     --help|-h)  show_banner; usage; exit 0;;
     --new|-n)   shift; generate_script $@; exit 0;;
   esac
@@ -45,6 +44,11 @@ function init {
   fi
 }
 
+# test first arg is debug 
+case "${1}" in
+  --debug|-d) shift; set -x; debug=true;;
+esac
+
 # first load .common functions and error trap
 test -z ${vsh+x} && init $@
 
@@ -54,10 +58,12 @@ test -z ${vsh+x} && init $@
 # read script name
 script_name=${1}
 
+# support search libname-dev -bin or full suffixes
 case "${script_name}" in
   *-dev)  script_name=${script_name//-dev/}; build_bin=false; build_docs=false;;
   *-bin)  script_name=${script_name//-bin/}; build_bin=true; build_docs=false;;
-  *-full) script_name=${script_name//-bin/}; build_bin=true; build_docs=true;;
+  *-full) script_name=${script_name//-full/}; build_bin=true; build_docs=true;;
+  *-doc) script_name=${script_name//-full/}; build_bin=false; build_docs=true;;
 esac
 
 # support search for libname/name
@@ -178,6 +184,10 @@ start(){
   fi
 
   # Apply custom configurations
+  ${build_bin} && fn_defined 'on_build_bin' && unset cfg_bin && fn_log '' on_build_bin 
+  ${build_static} && fn_defined 'on_build_static' && unset lib_link && fn_log '' on_build_static
+  ${build_shared} && fn_defined 'on_build_shared' && unset lib_link && fn_log '' on_build_shared
+
   fn_defined 'on_config' && fn_log '' on_config
 
   case ${host_trip[3]} in
@@ -191,10 +201,6 @@ start(){
   else
     fn_defined 'on_config_x86x' && fn_log '' on_config_x86x
   fi
-
-  fn_defined 'on_build_bin' && unset cfg_bin && fn_log '' on_build_bin 
-  fn_defined 'on_build_static' && unset lib_link && fn_log '' on_build_static
-  fn_defined 'on_build_shared' && unset lib_link && fn_log '' on_build_shared
 
   # check whether to update source of main lib and dependencies
   if ${update}; then
@@ -827,8 +833,8 @@ while [ -n "${1}" ];do
   --cpack)     build_cpack=true;;
     
   # source
-  --devel)     src_rel=false;;
-  --release)   src_rel=true;;
+  --devel)     src_rel=false; update=true; rebuild=true;;
+  --release)   src_rel=true;  update=true; rebuild=true;;
   --git)       shift; menu_git $@; exit 0;;
   --bra*)      shift; export bra="${1}";;
   --checkout)  git_checkout=true; rebuild=true;;
@@ -915,15 +921,15 @@ test -n "${config_dir+x}" && dir_config="${dir_src}/${config_dir}"
 build_out=false
 
 case "${cfg}" in
-  cmake)   build_system='cmake'; build_out=true;;
-  meson)   build_system='meson'; build_out=true;;
-  bazel)   build_system='bazel';;
-  cargo)   build_system='cargo';;
-  mk|make) build_system='make';;
-  other)   build_system='other';;
+  cmake|ccm) build_system='cmake'; build_out=true;;
+  meson)     build_system='meson'; build_out=true;;
+  bazel)     build_system='bazel';;
+  cargo)     build_system='cargo';;
+  mk|make)   build_system='make';;
+  other)     build_system='other';;
   ab|am|ac|ar|ag|auto*)
-           build_system='automake'; build_out=true;;
-  *)       unset build_system;;
+             build_system='automake'; build_out=true;;
+  *)         unset build_system;;
 esac
 
 export arch update retry \
