@@ -352,13 +352,24 @@ check_install 'gcc-arm-linux-gnueabihf' 'g++-arm-linux-gnueabihf' 'libstdc++6-ar
 check_install 'gcc-i686-linux-gnu' 'g++-i686-linux-gnu'
 
 echo -e "\n${CC1}LLVM-Clang:"
-$XB_HAS_GNU_CLANG && check_install clang-format clang-tidy clang-tools clang clangd \
-                        libc++-dev libstdc++-12-dev libc++1 libc++abi-dev libc++abi1 libclang-dev \
-                        libclang-common-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 \
-                        lld lldb llvm-dev llvm-runtime llvm python3-clang
 
 echo
 cclang=$(command -v clang)
+
+if [ -z "${cclang}" ]; then
+    PS3='LLVM not installed: '
+    select o in 'Do not install' 'Install latest OS package' 'Install devel from llvm.org'; do
+      case ${REPLY} in
+        2) check_install clang-format clang-tidy clang-tools clang clangd \
+                         libc++-dev libstdc++-12-dev libc++1 libc++abi-dev libc++abi1 libclang-dev \
+                         libclang-common-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 \
+                         lld lldb llvm-dev llvm-runtime llvm python3-clang
+                         ;;
+        3) sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)";;
+      esac
+    done
+fi
+
 if [ -n "${cclang}" ]; then
     printf "${CH}%-20s: ${C0}%s\n" "  found at" ${cclang}
     CLANG_GNU_VERSION_FULL=$(clang -dumpversion)
