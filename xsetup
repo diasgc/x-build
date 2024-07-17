@@ -340,7 +340,7 @@ printf "${CH}%-20s: ${C0}%s\n" '  build cpu' ${build_cpu}
 
 
 check_install gcc g++
-gcc_version=$(gcc -dumpversion)
+gcc_version=$(gcc -dumpversion)#[ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -s -f "${TOOLCHAIN_NDK}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
 printf "${CH}%-20s: ${C0}%s\n" '  gcc version' ${gcc_version}
 
 safe_mkdir ${dir_root}/builds/toolchain
@@ -447,8 +447,7 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
         CLANG_NDK_VERSION_FULL="$(${TOOLCHAIN_NDK}/bin/clang -dumpversion)"
         CLANG_NDK_VERSION="${CLANG_NDK_VERSION_FULL%%\.*}"
 
-        #TOOLCHAIN_NDK="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/${ndk_build}"
-        #ndk_sysroot="${TOOLCHAIN_NDK}/sysroot"
+        ndk_sysroot="${TOOLCHAIN_NDK}/sysroot"
         #ndk_clang_version=$(${TOOLCHAIN_NDK}/bin/clang -dumpversion)
         printf "${CH}%-20s: ${C0}%s\n" '  clang' "${CLANG_NDK_VERSION_FULL}"
 
@@ -466,34 +465,32 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
             dir_toolchain="/usr/${c_lib[${i}]}"
             #
             [ -d "${dir_toolchain}/bin" ] || sudo mkdir -p "${dir_toolchain}/bin"
-            test $verbose && printf "\n       clang"
-            if $force || [ ! -f "${dir_toolchain}/bin/clang" ]; then
+            ${verbose} && echo -ne "\n     ${CD}clang"
+            if ${force} || [ ! -f "${dir_toolchain}/bin/clang" ]; then
                 check_wrapper_ndk "clang" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang"
             fi
-            test $verbose && printf " clang++"
-            if $force || [ ! -f "${dir_toolchain}/bin/clang++" ]; then 
+            ${verbose} && printf " clang++"
+            if ${force} || [ ! -f "${dir_toolchain}/bin/clang++" ]; then 
                 check_wrapper_ndk "clang++" "${c_clang[${i}]}" "${dir_toolchain}/bin/clang++"
-                
             fi
             #[ -f "${dir_toolchain}/bin/as" ] || sudo ln -s "${TOOLCHAIN_NDK}/bin/${c_lib[${i}]}-as" "${dir_toolchain}/bin/as"
             #[ -f "${dir_toolchain}/bin/ld" ] || sudo ln -s -f "${TOOLCHAIN_NDK}/bin/lld" "${dir_toolchain}/bin/ld"
             check_ndk_symlink "${dir_toolchain}/bin/ld" && sudo ln -sfn "${TOOLCHAIN_NDK}/bin/ld" "${dir_toolchain}/bin/ld"
-            test $verbose && printf " ld"
+            ${verbose} && printf " ld"
             check_ndk_symlink "${dir_toolchain}/bin/yasm" && sudo ln -sfn "${TOOLCHAIN_NDK}/bin/yasm" "${dir_toolchain}/bin/yasm"
-            test $verbose && printf " yasm"
+            ${verbose} && printf " yasm"
             
             for j in as ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
-                test $verbose && printf " $j"
                 check_ndk_symlink "${dir_toolchain}/bin/${j}" && sudo ln -sfn "${TOOLCHAIN_NDK}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
-                #[ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -s -f "${TOOLCHAIN_NDK}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
+                ${verbose} && printf " $j"
             done
             
             check_ndk_symlink "${dir_toolchain}/lib" && sudo ln -sfn "${TOOLCHAIN_NDK}/sysroot/usr/lib/${c_lib[${i}]}" "${dir_toolchain}/lib"
             [ -f "${dir_toolchain}/lib/libpthread.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/libpthread.a"
             [ -f "${dir_toolchain}/lib/librt.a" ] || sudo ${dir_toolchain}/bin/ar cr "${dir_toolchain}/lib/librt.a"
             
-            check_ndk_symlink "${dir_toolchain}/sysroot" && sudo ln -sfn "${ndk_sysroot}" "${dir_toolchain}/sysroot"
-            check_ndk_symlink "${dir_toolchain}/include" && sudo ln -sfn "${ndk_sysroot}/usr/include" "${dir_toolchain}/include"
+            check_ndk_symlink "${dir_toolchain}/sysroot" && sudo ln -sfn "${SYSROOT_NDK}" "${dir_toolchain}/sysroot"
+            check_ndk_symlink "${dir_toolchain}/include" && sudo ln -sfn "${SYSROOT_NDK}/usr/include" "${dir_toolchain}/include"
             
             [ -d "${dir_root}/builds/android/${c_abi[${i}]}" ] || mkdir -p "${dir_root}/builds/android/${c_abi[${i}]}"
             
@@ -501,7 +498,7 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
             sudo ln -sf "${dir_root}/builds/android/${c_abi[${i}]}" "${dir_toolchain}/local"
             echo -e "${CH} ok${C0}"
         done
-        printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
+        printf "${CH}%-20s: ${C0}%s\n" '  toolchain symlinks' ok
         
         [ -f "${dir_toolchain}/include/sys/soundcard.h" ] || printf "#include <linux/soundcard.h>" >"${dir_toolchain}/include/sys/soundcard.h"
     else

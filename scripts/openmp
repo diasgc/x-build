@@ -9,7 +9,6 @@ src='https://github.com/llvm-mirror/openmp.git'
 
 cfg='cmake'
 cmake_shared='LIBOMP_ENABLE_SHARED'
-
 # openmp does not support static build
 build_static=false
 build_shared=true

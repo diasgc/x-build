@@ -41,7 +41,7 @@ on_end(){
 dev_bra='main'
 dev_vrs='0.5.0'
 pkg_deb=''
-eta=''
+eta='156'
 
 lst_inc="xeveb${sfx}/*.h"
 lst_lib="libxeve${sfx}"

@@ -217,6 +217,7 @@ start(){
   build_dependencies ${dep}
 
   # start log
+  : "${eta:=1}"
   log_start "${arch}" "$((${eta}/$(nproc)))s"
   check_pkg
 
