@@ -1,0 +1,29 @@
+#!/bin/bash
+
+lib='acl'
+pkg='libacl'
+dsc='Commands for Manipulating POSIX Access Control Lists'
+lic='GPLv2.0'
+src="https://git.savannah.nongnu.org/git/acl"
+dep='attr'
+#sub=''
+#src_opt=''
+#src_rel=true|false
+
+cfg='ag'
+
+dev_bra='master'
+dev_vrs=''
+pkg_deb='libacl1-dev'
+eta='32'
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE AUTHORS'
+lst_pc=''
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc

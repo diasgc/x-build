@@ -1,0 +1,34 @@
+#!/bin/bash
+
+clear
+splash
+
+# load first time .common helper
+test -z ${vsh+x} && source .common
+# theme mnain color
+CH=${CC0}
+
+: "${build_arch:=$(uname -m)-${OSTYPE,,}}"
+: "${build_os:=$(uname -s)}"
+: "${build_cpu:=$(uname -m)}"
+
+# Header
+printf "\n${CC1}This Machine:\n"
+printf "${CH}%-20s: ${C0}%s\n" '  build arch' ${build_arch}
+printf "${CH}%-20s: ${C0}%s\n" '  build os' ${build_os}
+printf "${CH}%-20s: ${C0}%s\n" '  build cpu' ${build_cpu}
+
+# check for installed components
+: "${XB_BUILD_GCC:=$(command -v gcc)}"
+: "${XB_BUILD_GPP:=$(command -v g++)}"
+
+printf "\n${CC1}Gnu compiler"
+if [ -z "${XB_BUILD_GCC}" ]; then
+  printf "${CH}%-20s: ${C0}%s\n" '  gcc/g++' "installing"
+  sudo apt install -y gcc g++
+fi
+
+printf "${CH}%-20s: ${C0}%s\n" '  gcc' "found at ${XB_BUILD_GCC} version $(${XB_BUILD_GCC} -dumpversion)"
+printf "${CH}%-20s: ${C0}%s\n" '  g++' "found at ${XB_BUILD_GPP} version $(${XB_BUILD_GPP} -dumpversion)"
+
+

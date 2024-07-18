@@ -1,12 +1,12 @@
 #!/bin/bash
 
 lib='libarchive'
-pkg_deb='libarchive-dev'
 dsc='Multi-format archive and compression library'
 lic='Other'
 src='https://github.com/libarchive/libarchive.git'
 url='http://www.libarchive.org/'
-dep='libiconv bzip2 libb2 liblzma libzstd lz4 lzo zlib'
+dep='bzip2 libb2 liblzma libzstd lz4 lzo zlib'
+#dep='libbz2 liblz4 liblzma libxml2 libzstd zlib1g libacl1 libext2fs nettle'
 
 cfg='ar'
 am_nosysroot=true
@@ -15,14 +15,8 @@ am_nosysroot=true
 #cmake_config='-DBUILD_TESTING=OFF -DENABLE_TEST=OFF'
 
 eta='100'
-
-lst_inc='archive.h archive_entry.h'
-lst_lib='libarchive'
-lst_bin='bsdcat bsdtar bsdcpio'
-lst_lic='COPYING'
-lst_pc='libarchive.pc'
-
 dev_vrs='3.7.5dev'
+pkg_deb='libarchive-dev'
 
 on_config_ndk(){
     CPPFLAGS+=" -I${dir_src}/contrib/android/include"
@@ -36,7 +30,11 @@ on_editpack(){
     return 0
 }
 
-
+lst_inc='archive.h archive_entry.h'
+lst_lib='libarchive'
+lst_bin='bsdcat bsdtar bsdcpio'
+lst_lic='COPYING'
+lst_pc='libarchive.pc'
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang
