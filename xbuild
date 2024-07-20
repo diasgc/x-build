@@ -378,10 +378,10 @@ script_name=${1}
 
 # support search libname-dev -bin or full suffixes
 case "${script_name}" in
-  *-dev)  script_name=${script_name//-dev/}; build_bin=false; build_docs=false;;
-  *-bin)  script_name=${script_name//-bin/}; build_bin=true; build_docs=false;;
-  *-full) script_name=${script_name//-full/}; build_bin=true; build_docs=true;;
-  *-doc) script_name=${script_name//-full/}; build_bin=false; build_docs=true;;
+  *-dev)  script_name=${script_name//-dev/};  build_bin=false; build_docs=false;;
+  *-bin)  script_name=${script_name//-bin/};  build_bin=true;  build_docs=false;;
+  *-full) script_name=${script_name//-full/}; build_bin=true;  build_docs=true;;
+  *-doc)  script_name=${script_name//-full/}; build_bin=false; build_docs=true;;
 esac
 
 # support search for libname/name
@@ -400,15 +400,29 @@ fi
 source "${script_path}"
 shift
 
-
+# parse options arch-independent
 case "${1}" in
-  --opts|-o)  show_build_opts; exit 0;;
+  --opts|-o)
+    show_build_opts
+    exit 0
+    ;;
+  --diff)
+    shift
+    create_diff $@
+    exit 0
+    ;;
 esac
 
 json_heredoc="$(heredoc_extract ${script_path} JSONDATA)"
 dir_src="${dir_sources}/${lib}"
 
-export script_name script_path host_trip CPPFLAGS json_heredoc dir_src
+export script_name \
+       script_path \
+       host_trip \
+       CPPFLAGS \
+       json_heredoc \
+       dir_src
+
 : "${verbose:=true}"
 : "${MAKE_EXECUTABLE:=make}"
 : "${CMAKE_EXECUTABLE:=cmake}"
@@ -484,44 +498,57 @@ retry=false
 logtime_start=0
 logtime_end=0
 
-aa64='@(aa64|aa8|a*64-*android|android*-a*64|arm*8*android|android*arm*8)'
-aa32='@(aa32|aa7|arm-*android*|arm*7*-android*|android*arm*7*)'
-ax86='@(a86|ax86|*86-*android|android*86)'
-ax64='@(a64|ax64|*64-*android|android*64)'
-la64='@(la8|la64|a*64-linux|arm*8*-linux|a*64-linux|a*64-*gnu|arm*8*-*gnu)'
-la32='@(la7|lahf|arm*hf|arm-linux*)'
-lx86='@(l86|lx86|*86-linux*|linux*32)'
-lx64='@(l64|lx64|*64-linux*|linux*64|linux)'
-wa64='@(wa8|a*64-w64*|a*64-*mingw*)'
-wa32='@(wa7|arm*-w64*|arm*-*mingw*)'
-wx86='@(w86|wx86|*86-win*|*86-*mingw*|w*32)'
-wx64='@(w64|wx64|*64-win*|*64-*mingw*|windows|win|w*64)'
-
-optVrs='@(--version|--vrs|--ver|-v)'
-optDnl='@(--download|--dl|-d)'
 
 # set host: must be first arg
 case "${1}" in
+  
   # native host=build
-  native)  set_host_build; host_native=true;;
+  native)
+    set_host_build
+    host_native=true
+    ;;
 
   # android host: aarch64, arm, i686, x86_64. todo: add riscv
-  $aa64 )  set_host '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6;;
-  $aa32 )  set_host '1' 'arm' 'v7a' 'linux' 'android' 'eabi' 'armeabi-v7a' '32' $CG2 $CG5;;
-  $ax86 )  set_host '2' 'i686' '' 'linux' 'android' '' 'x86' '32' $CG0 $CG1;;
-  $ax64 )  set_host '3' 'x86_64' '' 'linux' 'android' '' 'x86_64' '64' $CG0 $CG1;;
+  aa64|aa8|a*64-*android|android*-a*64|arm*8*android|android*arm*8)
+    set_host '0' 'aarch64' '' 'linux' 'android' '' 'arm64-v8a' '64' $CG3 $CG6
+    ;;
+  aa32|aa7|arm-*android*|arm*7*-android*|android*arm*7*)  
+    set_host '1' 'arm' 'v7a' 'linux' 'android' 'eabi' 'armeabi-v7a' '32' $CG2 $CG5
+    ;;
+  a86|ax86|*86-*android|android*86)
+    set_host '2' 'i686' '' 'linux' 'android' '' 'x86' '32' $CG0 $CG1
+    ;;
+  a64|ax64|x*64-*android|android*64)
+    set_host '3' 'x86_64' '' 'linux' 'android' '' 'x86_64' '64' $CG0 $CG1
+    ;;
 
   # linux gnu host: aarch64, arm, i686, x86_64
-  $la64 )  set_host '4' 'aarch64' '' 'linux' 'gnu' '' 'aarch64' '64' $CM4 $CM6;;
-  $la32 )  set_host '5' 'arm' '' 'linux' 'gnu' 'eabihf' 'armv7' '32' $CM4 $CM6;;
-  $lx86 )  set_host '6' 'i686' '' 'linux' 'gnu' '' 'x86' '32' $CM0 $CM1;;
-  $lx64 )  set_host '7' 'x86_64' '' 'linux' 'gnu' '' 'x86_64' '64' $CM0 $CM1;;
+  la8|la64|a*64-linux|arm*8*-linux|a*64-linux|a*64-*gnu|arm*8*-*gnu)
+    set_host '4' 'aarch64' '' 'linux' 'gnu' '' 'aarch64' '64' $CM4 $CM6
+    ;;
+  la7|lahf|arm*hf|arm-linux*)
+    set_host '5' 'arm' '' 'linux' 'gnu' 'eabihf' 'armv7' '32' $CM4 $CM6
+    ;;
+  l86|lx86|*86-linux*|linux*32)
+    set_host '6' 'i686' '' 'linux' 'gnu' '' 'x86' '32' $CM0 $CM1
+    ;;
+  l64|lx64|x*64-linux*|linux*64|linux)
+    set_host '7' 'x86_64' '' 'linux' 'gnu' '' 'x86_64' '64' $CM0 $CM1
+    ;;
 
   # mingw windows host: aarch64, arm, i686, x86_64
-  $wa64 )  set_host '8' 'aarch64' '' 'w64' 'mingw32' '' 'arm64' '64' $CC0 $CC1;;
-  $wa32 )  set_host '9' 'arm' 'v7' 'w64' 'mingw32' '' 'armv7' '32' $CC0 $CC1;;
-  $wx86 )  set_host '10' 'i686' '' 'w64' 'mingw32' '' 'x86' '32' $CB0 $CB1;;
-  $wx64 )  set_host '11' 'x86_64' '' 'w64' 'mingw32' '' 'x86_64' '64' $CB0 $CB1;;
+  wa8|a*64-w64*|a*64-*mingw*|a*64-win*)
+    set_host '8' 'aarch64' '' 'w64' 'mingw32' '' 'arm64' '64' $CC0 $CC1
+    ;;
+  wa7|arm*-w64*|arm*-*mingw*|arm-win*|arm*7*-win*)
+    set_host '9' 'arm' 'v7' 'w64' 'mingw32' '' 'armv7' '32' $CC0 $CC1
+    ;;
+  w86|wx86|*86-win*|*86-*mingw*|w*32)
+    set_host '10' 'i686' '' 'w64' 'mingw32' '' 'x86' '32' $CB0 $CB1
+    ;;
+  w64|wx64|x*64-win*|x*64-*mingw*|windows|win|w*64)
+    set_host '11' 'x86_64' '' 'w64' 'mingw32' '' 'x86_64' '64' $CB0 $CB1
+    ;;
 
   # error: unknown host
   *)       exit_err "Unknown ${1} architecture";;
@@ -534,77 +561,214 @@ esac
 : "${build_man:=false}"
 : "${build_package:=true}"
 
-# Other options
+# General options
 
-while [ -n "${1}" ];do
+while [ -n "${1}" ]; do
   case "${1}" in
 
   # build
-  --static)    build_static=true;;
-  --shared)    build_shared=true;;
-  --sharedd)   build_shared_deps=true;;
-  --bin)       build_bin=true;;
-  --man)       build_man=true;;
-  --full)      build_shared=true
-               build_static=true
-               build_bin=true
-               build_dist=true
-               ;;
+  --static)
+    build_static=true
+    ;;
+  --shared)
+    build_shared=true
+    ;;
+  --sharedd)
+    build_shared_deps=true
+    ;;
+  --bin)
+    build_bin=true
+    ;;
+  --man)
+    build_man=true
+    ;;
+  --full)      
+    build_shared=true
+    build_static=true
+    build_bin=true
+    build_dist=true
+    ;;
   
   # compiler
-  --clang)     use_clang=true;;
-  --gcc)       use_clang=false;;
-  --strip)     build_strip=true;;
-  --api)       shift; export API=$1;;
-  --tune)      shift; menu_tune $1;;
-  --cpus)      loadToolchain; ${CC} --print-supported-cpus; exit 0;;
-  --mcpu)      shift; export CPPFLAGS+=" -mcpu=${1}";;
-  --mtune)     shift; export CPPFLAGS+=" -mtune=${1}";;
+  --clang)
+    use_clang=true
+    ;;
+  --gcc)
+    use_clang=false
+    ;;
+  --strip)
+    build_strip=true
+    ;;
+  --api)
+    shift
+    export API=${1} NDK_API=${1}
+    ;;
+  --tune)
+    shift
+    menu_tune ${1}
+    ;;
+  --cpus)
+    loadToolchain
+    ${CC} --print-supported-cpus
+    exit 0
+    ;;
+  --mcpu)
+    shift
+    export CPPFLAGS+=" -mcpu=${1}"
+    ;;
+  --mtune)
+    shift
+    export CPPFLAGS+=" -mtune=${1}"
+    ;;
 
   # install
-  --prefix)    shift; dir_install="${1}";;
-  --dist)      build_dist=true;;
-  --cpack)     build_cpack=true;;
+  --prefix)
+    shift
+    dir_install="${1}"
+    ;;
+  --dist)
+    build_dist=true
+    ;;
+  --cpack)
+    build_cpack=true
+    ;;
     
   # source
-  --devel)     src_rel=false; update=true; rebuild=true;;
-  --release)   src_rel=true;  update=true; rebuild=true;;
-  --git)       shift; menu_git $@; exit 0;;
-  --bra*)      shift; export bra="${1}";;
-  --checkout)  git_checkout=true; rebuild=true;;
-  --update)    update=true; rebuild=true;;
-  --retry)     retry=true; rebuild=true;;
-  --upd-all)   update=true; req_update_deps=true; rebuild=true;;
-  --force)     safe_rm "${dir_install_pc}/${pkg}.pc"; rebuild=true;;
-  $optDnl)     build_download=true;;
+  --devel)
+    src_rel=false
+    update=true
+    rebuild=true
+    ;;
+  --release)
+    src_rel=true
+    update=true
+    rebuild=true
+    ;;
+  --git)
+    shift
+    menu_git $@
+    exit 0
+    ;;
+  --bra*)
+    shift
+    export bra="${1}"
+    ;;
+  --checkout)
+    git_checkout=true
+    rebuild=true
+    ;;
+  --update|--retry)
+    update=true
+    rebuild=true
+    ;;
+  --upd-all)
+    update=true
+    rebuild=true
+    req_update_deps=true
+    ;;
+  --force)
+    safe_rm "${dir_install_pc}/${pkg}.pc"
+    rebuild=true
+    ;;
+  --download|--dl)
+    build_download=true
+    ;;
 
   # script
-  --check)     ckeck_pkg; exit 0;;
-  --break)     shift; set_break ${1};;
-  --skip)      shift; menu_skip_options $@;;
-  $optVrs)     shift; vrs="${1}";;
-  --diff)      shift; create_diff $@; exit 0;;
-  --libName)   echo "${lib}"; exit 0;;
-  --var)       shift; echo "$($1)"; exit 0;;
-  --depends)   [ -n "${pkg_deb}" ] && apt-cache show ${pkg_deb} | grep 'Depends' && exit 0;;
-  --clear)     shift; menu_clear $@; exit 0;;
-  --desc )     echo $dsc && exit 0;;
-  --get)       shift; menu_get $@; exit 0;;
-  --check2)    shift; check_install $@; exit 0;;
+  --check)
+    ckeck_pkg
+    exit 0
+    ;;
+  --break)
+    shift
+    set_break ${1}
+    ;;
+  --skip)
+    shift
+    menu_skip_options $@
+    ;;
+  --version|--vrs|--ver|-v)
+    shift
+    vrs="${1}"
+    ;;
+  --diff)
+    shift
+    create_diff $@
+    exit 0
+    ;;
+  --libName)
+    echo "${lib}"
+    exit 0
+    ;;
+  --var)
+    shift
+    echo "$($1)"
+    exit 0
+    ;;
+  --depends)
+    [ -n "${pkg_deb}" ] && apt-cache show ${pkg_deb} | grep 'Depends'
+    exit 0
+    ;;
+  --clear)
+    shift
+    menu_clear $@
+    exit 0
+    ;;
+  --desc)
+    echo "${dsc}"
+    exit 0
+    ;;
+  --get)
+    shift
+    menu_get $@
+    exit 0
+    ;;
+  --check2)
+    shift
+    check_install $@
+    exit 0
+    ;;
 
-  --list)      shift; menu_list $@; exit 0;;
-  --patch)     shift; menu_patch $@;;
-  --goto)      shift; menu_goto $@; exit 0;;
-  --dir-build) shift; dir_build=$1;;
-  --inline)    inline=true;;
-  --cmake)     cfg='cmake';;
-  --ndk-cmake) ndkcmake=true;;
-  --ccmake)    cfg='ccm';;
-  --nobanner)  banner=false;;
+  --list)
+    shift
+    menu_list $@
+    exit 0
+    ;;
+  --patch)
+    shift
+    menu_patch $@
+    ;;
+  --goto)
+    shift
+    menu_goto $@
+    exit 0
+    ;;
+  --dir-build)
+    shift
+    dir_build="${1}"
+    ;;
+  --inline)
+    inline=true
+    ;;
+  --cmake)
+    cfg='cmake'
+    ;;
+  --ndk-cmake)
+    ndkcmake=true
+    ;;
+  --ccmake)
+    cfg='ccm'
+    ;;
+  --nobanner)
+    banner=false
+    ;;
     
-  --latest-release) utils_get_latest_release; exit 0;;
+  --latest-release)
+    utils_get_latest_release
+    exit 0
+    ;;
 
-  *)           parse_arg "${1}";;
+  *) parse_arg "${1}";;
 
   esac
   shift

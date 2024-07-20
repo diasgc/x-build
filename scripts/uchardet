@@ -16,7 +16,7 @@ on_config(){
 dev_bra=''
 dev_vrs='0.0.8'
 pkg_deb='libuchardet-dev'
-eta='48'
+eta='92'
 
 lst_inc='uchardet/uchardet.h'
 lst_lib='libuchardet'
