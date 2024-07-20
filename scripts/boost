@@ -35,13 +35,13 @@ on_config(){
 }
 
 on_create_pc(){
-    build_package --libs= --version=${vrs}
+    build_pkgconfig --libs= --version=${vrs}
 }
 
 dev_bra='master'
 dev_vrs='1.85.0'
 pkg_deb='libboost-dev'
-eta='0'
+eta='1444'
 
 lst_inc='boost/*'
 lst_lib='libboost_*'
