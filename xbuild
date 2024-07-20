@@ -93,7 +93,7 @@ json_heredoc="$(heredoc_extract ${script_path} JSONDATA)"
 dir_src="${dir_sources}/${lib}"
 
 export script_name script_path host_trip CPPFLAGS json_heredoc dir_src
-
+: "${verbose:=true}"
 : "${MAKE_EXECUTABLE:=make}"
 : "${CMAKE_EXECUTABLE:=cmake}"
 : "${API:=${ANDROID_NDK_API}}"
@@ -441,6 +441,7 @@ start(){
 }
 
  function do_strip {
+  ${verbose} && logf "do_strip $@"
   local libdir
   for dd in $(find "${dir_build}" \( -name "*.a" -o -name "*.so" \));do
     ${STRIP} --strip-unneeded "${dd}" >>${log_file}
@@ -448,6 +449,7 @@ start(){
 }
 
 function end_script {
+  ${verbose} && logf "end_script $@"
   log_end
   sed -i "s/eta='.*'/eta='"${eta}"'/g" ${script_path}
   ${debug} && set +x
@@ -463,7 +465,8 @@ function end_script {
   exit 0
 }
 
-check_install(){
+function check_install {
+  ${verbose} && logf "check_install $@"
   local ext=''
   case "${1}" in
     # check includes
@@ -510,6 +513,7 @@ check_install(){
 
 
 function build_dependencies {
+  ${verbose} && logf "build_dependencies $@"
   local dep_args
   local pkgfile libname
   while [ -n "${1}" ]; do
@@ -526,10 +530,11 @@ function build_dependencies {
   done
 }
 
-toolchain_android(){
-  PLATFORM='Android'
+function toolchain_android {
+  ${verbose} && logf "toolchain_android $@"
   [ -d "${ANDROID_NDK_HOME}" ] || exit_err "No ANDROID NDK Toolchain found. Aborting."
 
+  PLATFORM='Android'
   TOOLCHAIN="/usr/${arch}"
   SYSROOT="${TOOLCHAIN}/sysroot"
   CROSS_PREFIX="${TOOLCHAIN}/bin/"
@@ -551,11 +556,12 @@ toolchain_android(){
   export NDK_API=${ANDROID_NDK_API}
 }
 
-toolchain_llvm_mingw(){
+function toolchain_llvm_mingw {
+  ${verbose} && logf "toolchain_llvm_mingw $@"
   local ltsdir
-  local cargs=
-  PLATFORM='Windows'
+  local cargs
 
+  PLATFORM='Windows'
   SYSROOT="/usr/${arch}"
   TOOLCHAIN="${SYSROOT}/bin/"
   CROSS_PREFIX="${LLVM_MINGW_HOME}/bin/${arch}-"
@@ -581,7 +587,8 @@ toolchain_llvm_mingw(){
 
 }
 
-toolchain_linux(){
+function toolchain_linux {
+  ${verbose} && logf "toolchain_linux $@"
   ${host_cross} && cross="-cross"
   ltsdir=$(gcc -dumpversion)
   if ${use_clang}; then
@@ -615,8 +622,8 @@ toolchain_linux(){
   cmake_findrootpath="${SYSROOT} ${LT_SYS_LIBRARY_PATH} ${dir_install}"
 }
 
-loadToolchain(){
-
+function loadToolchain {
+  ${verbose} && logf "loadToolchain $@"
   CMAKE_EXECUTABLE=cmake
   YASM=yasm
   PKG_CONFIG=pkg-config
@@ -671,7 +678,8 @@ loadToolchain(){
     CROSS_PREFIX LT_SYS_LIBRARY_PATH CPPFLAGS LDFLAGS
 }
 
-set_host(){
+function set_host {
+  ${verbose} && logf "set_host $@"
   cpu_id="${1}"
   host_trip=("${2}" "${3}" "${4}" "${5}" "${6}" "${7}" "${8}")
   arch="${2}-${4}-${5}${6}"
@@ -683,7 +691,8 @@ set_host(){
   set_env
 }
 
-set_host_build(){
+function set_host_build {
+  ${verbose} && logf "set_host_build $@"
   host_trip[5]=$(uname -m)
   arch="${host_trip[5]}-${OSTYPE}"
   host_trip[0]=${host_trip[5]}
@@ -702,7 +711,8 @@ set_host_build(){
   set_env
 }
 
-set_env(){
+function set_env {
+  ${verbose} && logf "set_env $@"
   case ${host_trip[0]} in
     aarch64) host_arm=true;  host_arm32=false; host_arm64=true;  host_x86=false; host_x64=false; host_bits=64;;
     arm)     host_arm=true;  host_arm32=true;  host_arm64=true;  host_x86=false; host_x64=false; host_bits=32;;
@@ -735,6 +745,7 @@ set_env(){
 }
 
 function parse_arg {
+  ${verbose} && logf "parse_arg $@"
   fn_defined 'extra_options' && extra_options "${1}" || cfg_args+=( "${1}" )
 }
 
@@ -853,6 +864,7 @@ while [ -n "${1}" ];do
   --diff)      shift; create_diff $@; exit 0;;
   --libName)   echo "${lib}"; exit 0;;
   --var)       shift; echo "$($1)"; exit 0;;
+  --depends)   [ -n "${pkg_deb}" ] && apt-cache show ${pkg_deb} | grep 'Depends' && exit 0;;
   --clear)     shift; menu_clear $@; exit 0;;
   --desc )     echo $dsc && exit 0;;
   --get)       shift; menu_get $@; exit 0;;

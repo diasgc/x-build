@@ -5,6 +5,7 @@ dsc='Character set conversion library'
 lic='LGPL2.1'
 src='https://git.savannah.gnu.org/git/libiconv.git'
 url='https://www.gnu.org/software/libiconv'
+tar_stripcomponents=true
 
 cfg='ac'
 am_config=" --enable-extra-encodings"
@@ -18,7 +19,7 @@ lst_pc='libiconv.pc'
 
 dev_vrs='1.17'
 pkg_deb=''
-eta='90'
+eta='152'
 
 on_config(){
 	vrs="$(curl https://ftp.gnu.org/gnu/libiconv/ 2>/dev/null | grep -oP 'libiconv-[0-9\.]+.tar.gz' | tail -n 1 | grep -oP '[0-9]+.[0-9]+')"

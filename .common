@@ -355,6 +355,7 @@ function secs2time {
 
 # usage: sourceforge_json <projectname>
 sourceforge_json(){
+  ${verbose} && logf "sourceforge_json $@"
   curl -qsL "https://sourceforge.net/projects/${1}/best_release.json"
 }
 
@@ -640,6 +641,7 @@ url_dom(){
 # xbuild functions
 
 function check_pkg_deb {
+  ${verbose} && logf "check_pkg_deb $@"
   for p in $@; do
     test -n $(apt search $p 2> /dev/null| grep -o "${p}") && echo "${p}" && break
   done
@@ -647,6 +649,7 @@ function check_pkg_deb {
 
 
 function pkg_github_info {
+  ${verbose} && logf "pkg_github_info $@"
   if [ -z "${lic}" ] || [ -z "${dsc}" ];then
     local gitjson="$(git_api_tojson ${src})"
     if [ -n "${gitjson}" ];then
@@ -660,6 +663,7 @@ function pkg_github_info {
 
 #usage xbuild --new <github_url>
 function generate_script {
+  ${verbose} && logf "generate_script $@"
   test -z "${1}" && exit_err "Usage: xbuild --new <git-url>"
   local giturl="${1/\.git}"
   local libname="${giturl##*/}" && libname="${libname,,}"
@@ -699,6 +703,7 @@ function generate_script {
 }
 
 function github_create_info_json {
+  ${verbose} && logf "github_create_info_json $@"
   local paths=( ${1//\// } )
   local url="https://api.github.com/repos/${paths[2]}/${paths[3]}"
   local json="${dir_root}/builds/${libname}.info"
@@ -707,6 +712,7 @@ function github_create_info_json {
 }
 
 function git_api_tojson {
+  ${verbose} && logf "git_api_tojson $@"
   local s=$(sed 's/https:\/\///g; s/\// /g; s/\.git$//' <<<"${1}")
   set -- $s
   case ${1} in
@@ -717,7 +723,7 @@ function git_api_tojson {
 }
 
 function get_source {
-  
+  ${verbose} && logf "get_source $@"
   # test internet connection
   wget -q --spider http://google.com
   [ ! $? -eq 0 ] && exit_err 'No Internet Connection. Aborting...'
@@ -743,10 +749,10 @@ function get_source {
       on_src_release
     else
       case "${src}" in
-        *github.com*) github_get_latest_tarball "${src}" "${lib}" && return 0;;
-        *gitlab.com*) gitlab_get_latest_tarball "${src}" "${lib}" && return 0;;
-        *googlesource.com*) googlesource_get_latest_tarball "${src}" "${lib}" && return 0;;
-        *.git)        git_clone ${src} ${lib} ${src_opt} && return 0;;
+        *github*) github_get_latest_tarball "${src}" "${lib}" && return 0;;
+        *gitlab*) gitlab_get_latest_tarball "${src}" "${lib}" && return 0;;
+        *googlesource**) googlesource_get_latest_tarball "${src}" "${lib}" && return 0;;
+        #"*.git)        git_clone ${src} ${lib} ${src_opt} && return 0;;
       esac
     fi
   elif [ -n "${git}" ]; then
@@ -769,6 +775,7 @@ function get_source {
 }
 
 function github_jinfo {
+  ${verbose} && logf "github_jinfo $@"
   local id="$(sed 's,https://github\.com/,,;s,\.git$,,' <<<${1})"
 }
 
@@ -803,6 +810,7 @@ function github_set_src_release {
 
 # git_clone <source> <libname/destfolder> <options>
 function git_clone {
+  ${verbose} && logf "git_clone $@"
   local t="git"
   echo -ne "${CD}${t}"
   logf git clone --progress --verbose ${src} ${lib} ${src_opt}
@@ -865,6 +873,7 @@ function hg_clone {
 # result: from the git-url, set vrs to the latest release
 # and downloads + extracts tarball to dest-dir
 function github_get_latest_tarball {
+  ${verbose} && logf "github_get_latest_tarball $@"
   local s="$(sed 's,https://github\.com/,,;s,\.git$,,' <<<${1})"
   local json="$(curl -s https://api.github.com/repos/${s}/releases/latest)"
   local tarball_url=$(jq -r .tarball_url <<<${json})
@@ -889,12 +898,14 @@ function github_get_latest_tarball {
 }
 
 function gitlab_get_latest_tarball {
+  ${verbose} && logf "gitlab_get_latest_tarball $@"
   vrs="$(git_version_remote ${src})"
   src="${src%%\.git}/-/archive/${v}/${vrs}.tar.gz"
   curl_tar ${src} ${lib}
 }
 
 function googlesource_get_latest_tarball {
+  ${verbose} && logf "googlesource_get_latest_tarball $@"
   vrs="$(git_version_remote ${1})"
   src="${src%%\.git}/+archive/${vrs}.tar.gz"
   curl_tar "${src}" "${lib}"
@@ -906,6 +917,7 @@ function tar_version {
 }
 
 function curl_tar {
+  ${verbose} && logf "curl_tar $@"
   local tag="get"
   local args=
   dir_src="${dir_sources}/${2}"
@@ -927,6 +939,7 @@ function curl_tar {
 }
 
 function curl_tar_simple {
+  ${verbose} && logf "curl_tar_simple $@"
   local args=(${2:=-xz})
   if ${tar_stripcomponents}; then
     args+=('-C' "${dir_src}" '--strip-components=1')
@@ -937,17 +950,21 @@ function curl_tar_simple {
 }
 
 function curl_targz {
+  ${verbose} && logf "curl_targz $@"
   local tag="get"
+  local tar_args
   dir_src="${dir_sources}/${lib}"
   echo -ne "${CD}${tag}${C0}"
-  echo "$(date): $@" >> "${log_file}"
   test -d "${dir_src}" && rm -rf "${dir_src}"
   mkdir "${dir_src}"
-  if ${tar_stripcomponents}; then
-    curl -sL "${1}" 2>>"${log_file}" | tar -xz -C ${dir_src} --strip-components=1 2>>"${log_file}"
-  else
-    curl -sL "${1}" 2>>"${log_file}" | tar -xz --one-top-level=${dir_src} 2>>"${log_file}"
-  fi
+  tar_args=$(bool2str ${tar_stripcomponents} "-C ${dir_src} --strip-components=1" "--one-top-level=${dir_src}" )
+  logf "curl -sL ${1} | tar -xz ${tar_args}" 
+  curl -sL "${1}" 2>>"${log_file}" | tar -xz ${tar_args} 2>>"${log_file}"
+  #if ${tar_stripcomponents}; then
+  #  curl -sL "${1}" 2>>"${log_file}" | tar -xz -C ${dir_src} --strip-components=1 2>>"${log_file}"
+  #else
+  #  curl -sL "${1}" 2>>"${log_file}" | tar -xz --one-top-level=${dir_src} 2>>"${log_file}"
+  #fi
   logok "${tag}"
 }
 

@@ -1,40 +1,30 @@
 #!/bin/bash
 
 lib='libxml2'
+pkg='libxml-2.0'
 dsc='GNOME XML library'
 lic='GPL'
 src='https://gitlab.gnome.org/GNOME/libxml2.git'
-cfg='am'
-dep='liblzma'
-pkg='libxml-2.0'
+tar_stripcomponents=true
 
+cfg='cmake'
 cmake_config='-DLIBXML2_WITH_TESTS=OFF -DLIBXML2_WITH_PYTHON=OFF'
 cmake_bin='LIBXML2_WITH_PROGRAMS'
-am_config='--without-debug --without-python'
+
+on_config_mingw(){
+  dep='libiconv'
+}
 
 dev_bra='master'
-dev_vrs='2.9.12'
+dev_vrs='2.13.2'
 pkg_deb="${lib}-dev"
-eta='90'
+eta='124'
 
 lst_inc='libxml2/libxml/*.h'
 lst_lib='libxml2'
 lst_bin='xmllint xmlcatalog xml2-config'
 lst_lic='Copyright'
 lst_pc='libxml-2.0.pc'
-
-before_make(){
-  case $build_system in
-    cmake)    sed -i 's/xdocumentationx/xx/g' cmake_install.cmake;;
-    automake) sed -i -E '/SUBDIRS/ {s/(doc |examples )//}' Makefile
-  esac
-}
-
-on_editpack(){
-  rm -rf share/doc/libxml2/examples
-}
-
-
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang
