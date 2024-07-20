@@ -338,7 +338,7 @@ printf "${CH}%-20s: ${C0}%s\n" '  build cpu' ${build_cpu}
 
 
 check_install gcc g++
-gcc_version=$(gcc -dumpversion)#[ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -s -f "${TOOLCHAIN_NDK}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
+gcc_version=$(gcc -dumpversion)#[ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -sf "${TOOLCHAIN_NDK}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
 printf "${CH}%-20s: ${C0}%s\n" '  gcc version' ${gcc_version}
 
 safe_mkdir ${dir_root}/builds/toolchain
@@ -380,12 +380,12 @@ if [ -n "${cclang}" ]; then
 	abi=(gnu gnueabihf gnu gnu)
     cclang_args=''
 	for a in 0 1 2 3; do
-		t="${cl[$a]}-linux-${abi[$a]}"
-		if [ "${t}" != "${build_arch}" ]; then
-			check_install libc6-dev-${ab[$a]}-cross libstdc++6-${ab[$a]}-cross
-			[ -d "/usr/${t}/bin" ] || sudo mkdir -p "/usr/${t}/bin"
-			for e in ar as nm addr2line objcopy objdump ranlib readelf size strings strip windres; do
-				check_slink "/usr/${t}/bin/llvm-${e}" "/usr/bin/llvm-${e}"
+        t="${cl[$a]}-linux-${abi[$a]}"
+        if [ "${t}" != "${build_arch}" ]; then
+            check_install libc6-dev-${ab[$a]}-cross libstdc++6-${ab[$a]}-cross
+            [ -d "/usr/${t}/bin" ] || sudo mkdir -p "/usr/${t}/bin"
+            for e in ar as nm addr2line objcopy objdump ranlib readelf size strings strip windres; do
+                check_slink "/usr/${t}/bin/llvm-${e}" "/usr/bin/llvm-${e}"
 			done
             llvm_vrs=$(ls -lh ${cclang} | grep -oP 'llvm-\d+')
             if [ -n "${llvm_vrs}" ]; then
