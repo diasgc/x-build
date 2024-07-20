@@ -224,7 +224,7 @@ function log {
 }
 
 function logf {
-  echo -e "\n$(date +"%T"): $@" >> "${log_file}"
+  [ -f "${log_file}" ] && echo -e "\n$(date +"%T"): $@" >> "${log_file}"
 }
 
 function logok {
@@ -941,11 +941,12 @@ function curl_tar {
 function curl_tar_simple {
   ${verbose} && logf "curl_tar_simple $@"
   local args=(${2:=-xz})
-  if ${tar_stripcomponents}; then
-    args+=('-C' "${dir_src}" '--strip-components=1')
-  else
-    args+=("--one-top-level=${dir_src}")
-  fi
+  args+=( "--one-top-level=${dir_src}" "--strip-components=1" )
+  #if ${tar_stripcomponents}; then
+  #  args+=('-C' "${dir_src}" '--strip-components=1')
+  #else
+  #  args+=("--one-top-level=${dir_src}")
+  #fi
   curl -sL "${1}" 2>>"${log_file}" | tar ${args[@]} 2>>"${log_file}"
 }
 
@@ -956,7 +957,11 @@ function curl_targz {
   dir_src="${dir_sources}/${lib}"
   echo -ne "${CD}${tag}${C0}"
   test -d "${dir_src}" && rm -rf "${dir_src}"
+  curl_tar_simple "${1}" "-xz"
+  logok "${tag}"
+  return 0
   mkdir "${dir_src}"
+  tar_args="--one-top-level=${dir_src} --strip-components=1"
   tar_args=$(bool2str ${tar_stripcomponents} "-C ${dir_src} --strip-components=1" "--one-top-level=${dir_src}" )
   logf "curl -sL ${1} | tar -xz ${tar_args}" 
   curl -sL "${1}" 2>>"${log_file}" | tar -xz ${tar_args} 2>>"${log_file}"

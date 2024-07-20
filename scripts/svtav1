@@ -20,9 +20,9 @@ on_config_ndk() {
 }
 
 dev_bra='master'
-dev_vrs='2.1.0'
+dev_vrs='2.1.2'
 pkg_deb='libsvtav1-dev'
-eta='145'
+eta='300'
 
 lst_inc='svt-av1/*.h'
 lst_lib='libSvtAv1Dec libSvtAv1Enc'

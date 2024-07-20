@@ -1,0 +1,11 @@
+--- CMakeLists.txt	2024-07-20 22:16:54.366067887 +0100
++++ CMakeLists.txt	2024-07-20 22:16:57.541864021 +0100
+@@ -14,7 +14,7 @@
+ 		cmake_policy (SET CMP0091 OLD)
+ 	endif ()
+ endif ()
+-
++cmake_policy(SET CMP0057 NEW)
+ option (ENABLE_EXTERNAL_LIBS "Enable FLAC, Vorbis, and Opus codecs" ON)
+ if (ENABLE_EXTERNAL_LIBS)
+ 	list (APPEND VCPKG_MANIFEST_FEATURES "external-libs")
