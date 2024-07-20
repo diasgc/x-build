@@ -759,6 +759,7 @@ function get_source {
     hg_clone "${hg}" "${lib}"
     return 0
   fi
+
   case "${src}" in
       *.tar.*|*.tgz) curl_tar  "${src}" "${lib}";;
       *.git|*git*)   git_clone "${src}" "${lib}" "${src_opt}";;
@@ -1881,7 +1882,7 @@ unused_doErr(){
 }
 
 # usage create_pkgconfig_file <pkg>.pc [llibds][INSTALL_DIR]
-function create_pkgconfig_file_old {
+function create_pkgconfig_file {
   [ -z "${1}" ] && pc_file=${lib} || pc_file=${1}
   [ -z "${2}" ] && pc_llib="-l${pc_file}" || pc_llib=${2}
   [ -z "${3}" ] && pc_prefix=${dir_install} || pc_prefix=${3}

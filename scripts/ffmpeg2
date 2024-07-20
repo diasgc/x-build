@@ -20,7 +20,6 @@ patch_skip=true
 cfg='ac'
 am_nohost=true
 
-
 lst_inc=''
 lst_lib=''
 lst_bin=''

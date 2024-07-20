@@ -4,6 +4,7 @@ lib='bzip2'
 dsc='Lossless, block-sorting data compression'
 lic='Other'
 src='https://gitlab.com/bzip2/bzip2.git'
+src_rel=false # release file 1.0.8 missing cmakelists.txt
 
 cfg='cmake'
 cmake_static="ENABLE_STATIC_LIB"
@@ -14,7 +15,7 @@ cmake_definitions=('-Wno-sign-conversion')
 
 dev_bra='master'
 dev_vrs='1.1.0'
-eta='20'
+eta='80'
 pkg_deb="libbz2-dev"
 
 lst_inc='bzlib.h'

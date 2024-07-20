@@ -51,17 +51,11 @@ update(){
 }
 
 function cmake_latest {
-    logsc 'Cleaning old cmake...' sudo apt purge --auto-remove cmake -y
-    logsc 'Checking for updates...' sudo apt update
-    logsc 'Installing tools...' sudo apt install -y software-properties-common lsb-release
-    logsc 'Cleaning...' sudo apt clean all
-    logsc 'Add gpg kitware...' wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-    logsc 'Add kitware repository' sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ focal main"
-    logsc 'Updating...' sudo apt update
-    logsc 'Installing keyring...' sudo apt install kitware-archive-keyring
-    logsc 'Remove gpg kitware...'sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
-    logsc 'Updating...' sudo apt update
-    logsc 'Installing latest cmake...' sudo apt install cmake
+    sudo bash -c "$(wget -O - https://apt.kitware.com/kitware-archive.sh)"
+}
+
+function llvm_latest {
+    sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 }
 
 function libcheck {
@@ -198,7 +192,7 @@ check_wrapper_gnu() {
 	if [ ! -f "/usr/${1}/bin/${2}" ]; then
 		cat <<-eof | sudo tee /usr/${1}/bin/${2} >/dev/null
 		#!/bin/bash
-		${2} --target=${1} --sysroot=/usr/${1} ${3} "\$@"
+		${2} --target=${1} ${3} "\$@"
 		eof
 		sudo chmod +x "/usr/${1}/bin/${2}"
 	fi

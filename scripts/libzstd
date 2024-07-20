@@ -14,7 +14,7 @@ config_dir='build/cmake'
 
 dev_vrs='1.5.6'
 pkg_deb='libzstd-dev'
-eta='78'
+eta='148'
 
 lst_inc='zstd_errors.h zstd.h zdict.h'
 lst_lib='libzstd'

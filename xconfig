@@ -22,7 +22,7 @@ printf "${CH}%-20s: ${C0}%s\n" '  build cpu' ${build_cpu}
 : "${XB_BUILD_GCC:=$(command -v gcc)}"
 : "${XB_BUILD_GPP:=$(command -v g++)}"
 
-printf "\n${CC1}Gnu compiler"
+printf "\n${CC1}Gnu compiler\n"
 if [ -z "${XB_BUILD_GCC}" ]; then
   printf "${CH}%-20s: ${C0}%s\n" '  gcc/g++' "installing"
   sudo apt install -y gcc g++
@@ -30,5 +30,4 @@ fi
 
 printf "${CH}%-20s: ${C0}%s\n" '  gcc' "found at ${XB_BUILD_GCC} version $(${XB_BUILD_GCC} -dumpversion)"
 printf "${CH}%-20s: ${C0}%s\n" '  g++' "found at ${XB_BUILD_GPP} version $(${XB_BUILD_GPP} -dumpversion)"
-
 
