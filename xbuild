@@ -944,7 +944,8 @@ safe_cd "${dir_config}"
 # if there is no config selected, try guess
 test -z "${cfg}" && config_guess
 
-if ${request_config}; then  
+if ${request_config}; then
+  ${verbose} && logf "checking for custom source config"
   # check whether to custom config source
   if fn_defined 'source_config'; then
     fn_log 'config' source_config
@@ -964,18 +965,23 @@ if ${request_config}; then
 fi
 
 if ${request_patch}; then
+  ${verbose} && logf "checking for available patches"
   # check if there is a source_patch function
   if fn_defined 'source_patch'; then
     fn_log 'patch' source_patch
     unset source_patch
   fi
   # check if there is a cmake file
-  if [ -n "${cmake_file}" ] && [ -f "${dir_root}/patches/${cmake_file}.cmake" ]; then
-    cp -f "${dir_root}/patches/${cmake_file}.cmake" "${dir_src}/CMakeLists.txt" || exit_err "Unable to copy ${cmake_file}"
+  if [ -n "${cmake_file}" ] && [ -f "${dir_patches}/${cmake_file//\.cmake/}.cmake" ]; then
+    cmake_file="${dir_patches}/${cmake_file//\.cmake/}.cmake"
+    ${verbose} && logf "found ${cmake_file}"
+    cp -f "${cmake_file}" "${dir_src}/CMakeLists.txt" || exit_err "Unable to copy ${cmake_file}"
     unset cmake_file
   fi
   # check for patch file and apply
-  test -n "${patch[@]}" && fn_log '' patch_fromfilelist
+  if [ -n "${patch[@]}" ]; then
+    fn_log '' patch_fromfilelist
+  fi 
 fi
 
 ${break_on_patch} && end_script

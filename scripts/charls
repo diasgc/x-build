@@ -13,7 +13,14 @@ dev_vrs='2.4.2'
 pkg_deb='libcharls-dev'
 eta='192'
 
-lst_inc='charls/*.h'
+lst_inc='charls/charls_jpegls_decoder.h
+ charls/api_abi.h
+ charls/annotations.h
+ charls/jpegls_error.h
+ charls/public_types.h
+ charls/charls.h
+ charls/charls_jpegls_encoder.h
+ charls/version.h'
 lst_lib='libcharls'
 lst_bin=''
 lst_lic='LICENSE.md'

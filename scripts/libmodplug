@@ -9,12 +9,13 @@ pkg_deb="${lib}-dev"
 dsc='The ModPlug mod file playing library.'
 lic='Public'
 src='https://github.com/Konstanty/libmodplug.git'
+src_rel=false
+
 cfg='ar'
-eta='40'
 
 dev_bra='main'
 dev_vrs='0.8.9.1'
-
+eta='40'
 
 
 # Filelist

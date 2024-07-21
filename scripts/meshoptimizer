@@ -1,0 +1,30 @@
+#!/bin/bash
+
+lib='meshoptimizer'
+dsc='Mesh optimization library that makes meshes smaller and faster to render'
+lic='MIT License'
+src="https://github.com/zeux/meshoptimizer"
+
+cfg='cmake'
+cmake_shared='MESHOPT_BUILD_SHARED_LIBS'
+cmake_bin='MESHOPT_BUILD_DEMO'
+
+on_create_pc(){
+    build_pkgconfig --lib=-lmeshoptimizer
+}
+
+dev_bra='master'
+dev_vrs='v0.21'
+pkg_deb='libmeshoptimizer-dev'
+eta='24'
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE AUTHORS'
+lst_pc=''
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
