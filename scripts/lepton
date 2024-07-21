@@ -6,6 +6,7 @@ lic='Apache License 2.0'
 src="https://github.com/dropbox/lepton"
 
 cfg='cmake'
+cmake_config='-DUSE_SYSTEM_DEPENDENCIES=ON'; dep='brotli openssl zlib'
 on_config_arm(){
     cmake_config+=' -DSSE_VECTORIZATION=OFF'
 }

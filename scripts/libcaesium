@@ -1,0 +1,27 @@
+#!/bin/bash
+
+lib='libcaesium'
+dsc='Caesium is an image compression software that helps you store, send and share digital pictures, supporting JPG, PNG, WebP and TIFF formats'
+lic='GNU General Public License v3.0'
+src="https://github.com/Lymphatus/caesium-image-compressor"
+#sub=''
+#src_opt=''
+#src_rel=true|false
+
+cfg='cmake'
+
+dev_bra='master'
+dev_vrs=''
+pkg_deb=''
+eta='0'
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE AUTHORS'
+lst_pc=''
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc

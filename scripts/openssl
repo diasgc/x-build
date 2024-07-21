@@ -9,9 +9,10 @@ tls='nasm perl'
 
 cfg='other'
 openssl_config=
+build_cmd=make
+install_cmd=make
+install_args="install_sw" # install no docs
 CFLAGS='-Wno-macro-redefined'
-# install no docs
-make_install="install_sw"
 
 dev_bra='master'
 dev_vrs='3.3.0'
@@ -24,8 +25,9 @@ on_config(){
 }
 
 on_config_ndk(){
-  openssl_config="android-${host_trip[0]} -D__ANDROID_API__=${ANDROID_NDK_API} no-tests" && openssl_config="${openssl_config/aarch64/arm64}"
+  PATH=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
   export ANDROID_NDK_ROOT=${ANDROID_NDK_HOME}
+  openssl_config="android-${host_trip[0]} -D__ANDROID_MIN_SDK_VERSION__=${ANDROID_NDK_API} no-tests" && openssl_config="${openssl_config/aarch64/arm64}"
 }
 
 on_config_mingw(){
@@ -36,7 +38,7 @@ on_config_mingw(){
 }
 
 on_build_static(){
-  openssl_config+=" no-shared"
+  openssl_config+=" no-shared -static"
 }
 
 build_config(){
