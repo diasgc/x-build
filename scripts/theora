@@ -4,7 +4,8 @@ lib='theora'
 dsc='Theora video compression format'
 lic='BSD'
 src='https://github.com/xiph/theora.git'
-bra='tags/v1.1.1'
+url='https://theora.org'
+bra='tags/v1.1.1' # current version is 1.2 alpha
 src_rel=false
 dep='ogg vorbis'
 
@@ -22,13 +23,20 @@ dev_vrs='1.1.1'
 pkg_deb='libtheora-dev'
 eta='208'
 
-lst_inc='theora/*.h'
-lst_lib='libvorbisfile libvorbisenc libvorbis'
-lst_bin='libtheoraenc libtheoradec libtheora'
+lst_inc='theora/theoraenc.h
+ theora/theora.h
+ theora/theoradec.h
+ theora/codec.h'
+lst_lib='libvorbisfile
+ libvorbisenc
+  libvorbis'
+lst_bin='libtheoraenc
+ libtheoradec
+ libtheora'
 lst_lic='COPYING LICENCE AUTHORS'
-lst_pc='theora.pc theoraenc.pc theoradec.pc'
-
-
+lst_pc='theora.pc
+ theoraenc.pc
+ theoradec.pc'
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang

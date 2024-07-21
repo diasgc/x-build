@@ -16,7 +16,7 @@ on_config_ndk(){
 dev_bra='main'
 dev_vrs='3.0.5'
 pkg_deb='libzimg-dev'
-eta='448'
+eta='304'
 
 lst_inc='zimg.h zimg++.hpp'
 lst_lib='libzimg'

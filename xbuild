@@ -55,7 +55,7 @@ function init {
 function end_script {
   ${verbose} && logf "end_script $@"
   log_end
-  sed -i "s/eta='.*'/eta='"${eta}"'/g" ${script_path}
+  ${update_eta} && sed -i "s/eta='.*'/eta='"${eta}"'/g" ${script_path}
   ${debug} && set +x
   unset  dir_config dir_build dir_src \
       lib_link cfg_bin exec_config vrs vnd \
@@ -839,7 +839,10 @@ host_arch host_64 host_eabi host_vnd host_arm host_os \
 mingw_posix MAKE_EXECUTABLE cmake_includes
 
 # if pkg-config file exists and not rebuilding, exit
-test ! ${rebuild} && [ -f "$(menu_get pc)" ] && end_script
+if ! ${rebuild} && [ -f "$(menu_get pc)" ]; then
+  log_info "${lib} version: $(pkg-config ${pkg} --modversion)" 
+  end_script
+fi
 #test ! ${rebuild} && check_pkg && end_script
 
 inc_tab
@@ -847,6 +850,7 @@ inc_tab
 # reset logfile
 export log_file="${dir_install}/${lib}.log"
 safe_rm "${log_file}"
+update_eta=false
 
 #check_pkg && end_script
 
@@ -897,7 +901,7 @@ check_tools ${tls}
 build_dependencies ${dep}
 
 # start log
-: "${eta:=1}"
+: "${eta:=0}"
 log_start "${arch}" "$((${eta}/$(nproc)))s"
 check_pkg
 
@@ -1044,11 +1048,11 @@ ${host_clang} && ${build_static} && LDFLAGS="-static ${LDFLAGS}"
 
 log_vars CFLAGS CXXFLAGS WFLAGS CPPFLAGS LDFLAGS LIBS
 
-: "${install_args:=install}"
 : "${skip_make:=false}"
 
 if fn_defined 'on_make'; then
   fn_log 'make' on_make
+  unset on_make
 elif [ -n "${build_cmd}" ]; then
   do_progress "${build_tag}" "${build_cmd}" "${build_args[@]}" || err
 fi
@@ -1056,6 +1060,7 @@ fi
 ${break_on_make} && end_script
 
 ### install ###
+
 # before install custom ops
 fn_defined 'before_install' && fn_log 'preparing' before_install
 
@@ -1070,11 +1075,13 @@ if ! ${host_mingw}; then
 fi
 
 # install
+
 if fn_defined 'on_install'; then
   fn_log 'install' on_install
   unset on_install
 elif [ -n "${install_cmd}" ]; then
   safe_cd "${dir_build}"
+  : "${install_args:=install}"
   do_log 'install' "${install_cmd}" "${install_args}"
 fi
 
@@ -1116,5 +1123,6 @@ fn_defined 'on_end' && fn_log '' on_end
 
 vrs=$(pkg-config --modversion ${pcfile})
 test -n "${vrs}" && sed -i "s/dev_vrs='.*'/dev_vrs='"${vrs}"'/g" ${script_path}
+update_eta=true
 
 end_script

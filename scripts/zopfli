@@ -12,13 +12,13 @@ cmake_static='BUILD_STATIC_LIBS'
 
 on_create_pc(){
     build_pkgconfig --name=zopflipng --libs=-lzopflipng
-    build_pkgconfig --name=zopfli--libs=-lzopfli
+    build_pkgconfig --name=zopfli --libs=-lzopfli
 }
 
 dev_bra='main'
 dev_vrs='1.0.3'
 pkg_deb='libzopfli-dev'
-eta='45'
+eta='40'
 
 lst_inc='zopflipng_lib.h zopfli.h'
 lst_lib='libzopflipng libzopfli'

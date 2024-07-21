@@ -14,9 +14,12 @@ src_rel=false
 cfg='cmake'
 cmake_definitions=( -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter )
 
+on_config_arm(){
+    exit_err "Unsupported for arm processors"
+}
 on_config_ndk(){
     # unsupported pthread_setaffinity_np on ndk
-    exit_err "Not available for Android ${arch}"
+    exit_err "Unsupported for Android"
 }
 
 dev_bra='master'
@@ -31,7 +34,3 @@ lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
 eta='20'
-
-
-
-

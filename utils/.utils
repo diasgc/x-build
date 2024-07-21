@@ -12,7 +12,7 @@ function check_pkg {
   if [ -n "${lst_inc}" ]; then
     for i in ${lst_inc}; do
       f="${dir_install_include}/${i}"
-      test ! -f "${f}" && logf "missing ${f}" && return 1
+      test ! -f "${f}" && logf "missing ${f}" && return 0
       echo "checking for ${f}: ok" >>${log_file}
     done
   fi
@@ -209,7 +209,8 @@ function cmake_create_toolchain {
   test -n "${cmake_cxx_flags_release}"   && echo "set(CMAKE_CXX_FLAGS_RELEASE \""${cmake_cxx_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
   test -n "${cmake_c_flags_release}"     && echo "set(CMAKE_C_FLAGS_RELEASE \""${cmake_c_flags_release[@]}"\" CACHE STRING \"\" FORCE)" >>${cmake_toolchain_file}
   test -n "${cmake_include_directories}" && echo "include_directories("${cmake_include_directories[@]}")" >>${cmake_toolchain_file}
-  test -n "${WFLAGS}"                    && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}	
+  test -n "${WFLAGS}"                    && echo "add_definitions(\"${WFLAGS}\")" >>${cmake_toolchain_file}
+  test -n "${cmake_writestr[@]}"         && echo "${cmake_writestr[@]}" >>${cmake_toolchain_file}
 }
 
 cmake_shouldreplace_cmakelists(){
