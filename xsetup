@@ -2,7 +2,6 @@
 # ................................................
 # setup util 1.0 2021-diasgc
 # ................................................
-clear
 
 # Target Triple
 #   <arch><sub-arch>-<vendor>-<os>-<environ>
@@ -12,16 +11,9 @@ clear
 #       <os>        darwin, linux, openbsd
 #       <environ>   android, elf, gnu, gnueabihf
 #
-
 #
 
-: "${dir_root:=$(dirname $0)}"
-: "${verbose}:=false}"
-: "${NDK_API_DEFAULT:=34}"
-#export LLVM_MINGW_JSON=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
-#llvm_mingw_targz=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest" | jq -r -M '.assets[] | .browser_download_url' | grep '.*ucrt.*ubuntu.*'$(uname -p))
-
-check_install(){
+function check_install {
     local v0
     local v1
     for p in $@; do
@@ -29,17 +21,17 @@ check_install(){
         v1=$(apt-cache madison $p | cut -d '|' -f 2 | xargs)
         if [ -z "${v0}" ];then
             printf "${CH}%-20s: ${C0}%s\n" "  $p" "installing..."
-            printf "$(${cmd_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
+            printf "$(${apt_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
         elif [ "${v1}" == "${v0}" ]; then
             printf "${CH}%-20s: ${C0}%s\n" "  $p" "${v0}"
         else
             printf "${CH}%-20s: ${C0}%s" "  $p" "${v0} upgrading to..."
-            printf "$(${cmd_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
+            printf "$(${apt_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
         fi  
     done
 }
 
-update(){
+function update {
     while [ -n "${1}" ]; do
         case "${1}" in
             ndk|NDK)    install_ndk;;
@@ -144,7 +136,7 @@ function install_ndk {
 }
 
 function install_llvm_gnu {
-    $cmd_install llvm clang libc6-dev-arm64-cross libc6-dev-armhf-cross
+    ${apt_install} llvm clang libc6-dev-arm64-cross libc6-dev-armhf-cross
 }
 
 function llvm_mingw_get_latest_version {
@@ -174,21 +166,32 @@ function build_utils {
     cd ..
 }
 
-check_slink() {
+function do_git_cleanup {
+    echo -e "size before cleanup: $(du -s .git)\n"
+    git filter-branch --index-filter 'git rm --cached --ignore-unmatch *.tar.gz' -- --all
+    rm -Rf .git/refs/original
+    rm -Rf .git/logs/
+    git gc --aggressive --prune=now
+    echo -e "\nDone\n\n"
+    echo -e "size after cleanup: $(du -s .git)\n"
+    exit 0
+}
+
+function check_slink {
     local status
 	if [ ! -f "${1}" ]; then
-		sudo ln -s "${2}" "${1}" 2>&1 >/dev/null && status="created" || status="failed"
-        test $verbose && printf "${CH}%-50s-> ${C1}%s\n" "    $1" "${2} ${status}"
+		sudo ln -s "${2}" "${1}" 2>&1 >/dev/null && status="new" || status="${CR1}err${C0}"
+        ${verbose} && printf "${CC1}%-6s ${C0}%-60s-> ${CW}%s\n" "    ${status}" "${1}" "${2}"
 	elif [ "$(readlink ${1})" == "${2}" ]; then
-        test $verbose && printf "${CH}%-50s-> ${C0}%s\n" "    $1" "${2} ok"
+        ${verbose} && printf "${CH}%-6s ${CD}%-60s-> ${C0}%s\n" "    ok" "${1}" "${2}"
     else
-        sudo ln -s "${2}" "${1}" 2>&1 >/dev/null && status="updated" || status="failed"
-        test $verbose && printf "${CH}%-50s-> ${C1}%s\n" "    $1" "${2} ${status}"
+        sudo ln -s "${2}" "${1}" 2>&1 >/dev/null && status="${CY1}upd${C0}" || status="${CR1}err${C0}"
+        ${verbose} && printf "${CC1}%-6s ${C0}%-60s-> ${CW}%s\n" "    ${status}" "${1}" "${2}"
     fi
     return 0
 }
 
-check_wrapper_gnu() {
+function check_wrapper_gnu {
     local overwrite=false
     case "${1}" in
         --overwrite) shift; overwrite=true;;
@@ -202,7 +205,7 @@ check_wrapper_gnu() {
 	fi
 }
 
-check_wrapper_ndk() {
+function check_wrapper_ndk {
     cat <<-eof | sudo tee ${3} >/dev/null
 		#!/bin/bash
 		\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${2}\${API:=${NDK_API_DEFAULT}}-${1} "\$@"
@@ -210,106 +213,32 @@ check_wrapper_ndk() {
 		sudo chmod +x ${3}
 }
 
-XB_HAS_NDK_CLANG=true
-XB_HAS_GNU_CLANG=true
-XB_HAS_MINGW_CLANG=true
-XB_HAS_MINGW_GCC=false
+function do_update {
+    while [ -n "${1}" ]; do
+      case "${1}" in
+        ndk|NDK)    install_ndk;;
+        llvm-mingw) install_llvm_mingw;;
+        llvm-gnu)   install_llvm_gnu;;
+      esac
+      shift
+    done
+    #exec ./x-setup
+    exit 0
+}
 
-# first-time load common functions
-test -z ${vsh+x} && source .common
+function xsetup_list {
+    v=$1
+    d=$2
+    [ -n "$d" ] && d="'$d'"
+    for f in *.sh; do
+    v=$(grep "$1=$d" $f)
+    [ -n "${v}" ] && echo "${f}: ${v}"
+    done
+    exit 0
+}
 
-# set cyan theme color
-CH=${CC0}
-force=false
-init=false
-ts=false
-
-p_install_ndk=false
-p_install_ndk_symlinks=false
-p_install_llvm_gnu=false
-p_install_llvm_sysroot=false
-
-# load config
-#[ -f ".config" ] && . .config || init=true
-[ -n "$(command -v sudo)" ] && sudo echo -ne "Password: " && echo
-#export cmd_install="sudo apt install"
-
-if [ -z "${cmd_install}" ];then
-    [ -n "$(command -v sudo)" ] && cmd_install="sudo "
-    case $OSTYPE in
-        linux-gnu)     cmd_install+="apt install"
-            ;;
-        linux-android) cmd_install="pkg install"
-            ;;
-        darwin)        cmd_install="brew install"
-            ;;
-    esac
-    #[ -n "$(which apt)" ] && cmd_install+="apt install " || cmd_install="exit 1;"
-    printf "\n${CH}%-20s: ${C0}%s\n" 'cmd install' "${cmd_install}"
-fi
-
-
-case "${1}" in
-    -f|--force)		force=true
-                    ;;
-    --git-cleanup)  echo -e "size before cleanup: $(du -s .git)\n"
-					git filter-branch --index-filter 'git rm --cached --ignore-unmatch *.tar.gz' -- --all
-					rm -Rf .git/refs/original
-					rm -Rf .git/logs/
-					git gc --aggressive --prune=now
-					echo -e "\nDone\n\n"
-					echo -e "size after cleanup: $(du -s .git)\n"
-					exit 0
-					;;
-    --install)		shift; check_install $@; exit 0
-                    ;;
-    --latest-cmake) cmake_latest; exit 0
-                    ;;
-	--latest-llvm)  sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"; exit 0
-                    ;;
-    --update)  		shift
-					while [ -n "${1}" ]; do
-						case "${1}" in
-							ndk|NDK)    install_ndk;;
-							llvm-mingw) install_llvm_mingw;;
-							llvm-gnu)   install_llvm_gnu;;
-						esac
-						shift
-					done
-					#exec ./x-setup
-					exit 0
-					;;
-    --libcheck)		libcheck; exit 0
-                    ;;
-    --list)         shift
-                    v=$1
-                    d=$2
-                    [ -n "$d" ] && d="'$d'"
-                    for f in *.sh; do
-                        v=$(grep "$1=$d" $f)
-                        [ -n "${v}" ] && echo "${f}: ${v}"
-                    done
-                    exit 0
-                    ;;
-    --build_utils)	build_utils; exit 0
-                    ;;
-    --init)			init=true
-                    ;;
-    --test)         ts=true
-                    ;;
-esac
-
-if $ts; then
-	select_ndk
-	if [ -n "${XB_NDK_URL}" ]; then
-		install_ndk
-	fi
-	exit 0
-fi
-
-if $init; then
-	splash
-	if	[ -z "${ANDROID_NDK_HOME}" ] || [ ! -d "${ANDROID_NDK_HOME}" ]; then
+function init_ndk {
+    if	[ -z "${ANDROID_NDK_HOME}" ] || [ ! -d "${ANDROID_NDK_HOME}" ]; then
         ndk_clang_bin_dir=$(find ~ -name "aarch64-linux-android??-clang" | tail -n1)
         if [ -f "${ndk_clang_bin_dir}" ]; then
             export ANDROID_NDK_HOME=$(echo ${ndk_clang_bin_dir} | sed 's|/toolchains/llvm/prebuilt.*||')
@@ -326,7 +255,156 @@ if $init; then
         test "${p_install_llvm_gnu,,}" == "y" && p_install_llvm_gnu=true || p_install_llvm_gnu=false
         XB_HAS_GNU_CLANG=${p_install_llvm_gnu}
 	fi
+}
+
+
+function check_ndk_symlink {
+    [[ -z "$(readlink "$1" | grep ${ANDROID_NDK_HOME})" ]]
+}
+
+function update_ndkhome {
+    sed -i 's@^export ANDROID_NDK_HOME=.*$@export ANDROID_NDK_HOME='"${ANDROID_NDK_HOME}"'@' ~/.bashrc
+    source ~/.bashrc
+}
+
+# usage create_symlink <src> <dst> will test if src and dst exists first
+function create_symlink {
+    if [ ! -f "${2}" ] || [ ! "$(readlink ${2})" == "${1}" ]; then
+        sudo ln -s "${1}" "${2}"
+        ${verbose} && printf "${CC1}%-6s ${C0}%-60s-> ${CW}%s\n" "    new" "${1}" "${2}"
+    else
+        ${verbose} && printf "${CH}%-6s ${CD}%-60s-> ${C0}%s\n" "    ok" "${1}" "${2}"
+    fi
+}
+
+function llvm_mingw_check_symlinks {
+    local cl_abi
+
+    if [ -z "$(ls -A ${LLVM_MINGW_HOME}/include)" ]; then
+        rm -r "${LLVM_MINGW_HOME}/include"
+        ln -s ${LLVM_MINGW_HOME}/generic-w64-mingw32/include ${LLVM_MINGW_HOME}/include
+    fi
+
+    for cl in aarch64 arm i686 x86_64; do
+
+        target_dir="/usr/${cl}-w64-mingw32"
+        cl_abi=${cl/arm/armv7}
+        source_dir="${LLVM_MINGW_HOME}/${cl_abi}-w64-mingw32"
+    
+        test -d "${target_dir}"         || sudo mkdir -p "${target_dir}/bin"
+        test -d "${target_dir}/dll"     || sudo ln -s "${source_dir}/bin"     "${target_dir}/dll"
+        test -d "${target_dir}/include" || sudo ln -s "${source_dir}/include" "${target_dir}/include"
+        test -d "${target_dir}/lib"     || sudo ln -s "${source_dir}/lib"     "${target_dir}/lib"
+        test -d "${target_dir}/share"   || sudo ln -s "${source_dir}/share"   "${target_dir}/share"
+        
+        printf "   ${CH}Checking symlinks for ${CW}${cl_abi}\n"
+        for e in addr2line ar as c++ clang clang++ dlltool g++ gcc ld llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf size strings strip widl windres; do
+    
+            create_symlink "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}"    "${target_dir}/bin/${e}"
+            create_symlink "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32uwp-${e}" "${target_dir}/bin/uwp-${e}"
+    
+        done
+        
+    done
+    
+    printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
+
+}
+
+
+
+
+
+
+# MAIN
+
+clear
+
+: "${dir_root:=$(dirname $0)}"
+: "${NDK_API_DEFAULT:=34}"
+#export LLVM_MINGW_JSON=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
+#llvm_mingw_targz=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest" | jq -r -M '.assets[] | .browser_download_url' | grep '.*ucrt.*ubuntu.*'$(uname -p))
+
+XB_HAS_NDK_CLANG=true
+XB_HAS_GNU_CLANG=true
+XB_HAS_MINGW_CLANG=true
+XB_HAS_MINGW_GCC=false
+
+# first-time load common functions
+test -z ${vsh+x} && source .common
+
+# set cyan theme color
+CH=${CC0}
+verbose=false
+force=false
+init=false
+ts=false
+
+p_install_ndk=false
+p_install_ndk_symlinks=false
+p_install_llvm_gnu=false
+p_install_llvm_sysroot=false
+
+splash
+# load config
+#[ -f ".config" ] && . .config || init=true
+: "${apt_install:='apt install'}"
+printf "\n${CH}%-20s: ${C0}%s\n" 'cmd install' "${apt_install}"
+if [ -n "$(command -v sudo)" ]; then
+  sudo echo -ne "Password: "
+  echo
+  apt_install="sudo ${apt_install}"
 fi
+
+# parse options
+while [ "${1}" ]; do
+case "${1}" in
+  --verbose|-v)
+    verbose=true
+    ;;
+  --force|-f)
+    force=true
+    ;;
+  --git-cleanup)
+    do_git_cleanup
+    ;;
+  --install)
+    shift
+    check_install $@
+    exit 0
+    ;;
+  --latest-cmake)
+    cmake_latest
+    exit 0
+    ;;
+  --latest-llvm)
+    llvm_latest
+    exit 0
+    ;;
+  --update)
+    shift
+    do_update $@
+    ;;
+  --libcheck)
+    libcheck
+    exit 0
+    ;;
+  --list)
+    shift
+    xsetup_list $@
+    ;;
+  --build_utils)
+    build_utils
+    exit 0
+    ;;
+  --init)
+    init=true
+    ;;
+esac
+shift
+done
+
+${init} && init_ndk
 
 echo -e "\n${CC1}This Machine:"
 [ -z "${build_arch}" ] && build_arch="$(uname -m)-${OSTYPE,,}"
@@ -336,18 +414,31 @@ printf "${CH}%-20s: ${C0}%s\n" '  build arch' ${build_arch}
 printf "${CH}%-20s: ${C0}%s\n" '  build os' ${build_os}
 printf "${CH}%-20s: ${C0}%s\n" '  build cpu' ${build_cpu}
 
-
-check_install gcc g++
-gcc_version=$(gcc -dumpversion)#[ -f "${dir_toolchain}/bin/${j}" ] || sudo ln -sf "${TOOLCHAIN_NDK}/bin/llvm-${j}" "${dir_toolchain}/bin/${j}"
-printf "${CH}%-20s: ${C0}%s\n" '  gcc version' ${gcc_version}
-
 safe_mkdir ${dir_root}/builds/toolchain
 export dir_toolchain="$(pwd)/builds/toolchain"
 
 echo -e "\n${CC1}GNU-GCC:"
-check_install 'gcc-aarch64-linux-gnu' 'g++-aarch64-linux-gnu' "libstdc++-${gcc_version}-dev-arm64-cross"
+check_install gcc g++
+# check for installed components
+: "${XB_BUILD_GCC:=$(command -v gcc)}"
+: "${XB_BUILD_GPP:=$(command -v g++)}"
+test -z "${XB_BUILD_GCC}" && exit_err "Unable to install GCC. Aborting."
+XB_GCC_VERSION=$(gcc -dumpversion)
+printf "${CH}%-20s: ${C0}%s\n\n" "  gcc $(gcc -print-multiarch)" "version ${XB_GCC_VERSION}"
+
+check_install 'gcc-aarch64-linux-gnu' 'g++-aarch64-linux-gnu' "libstdc++-${XB_GCC_VERSION}-dev-arm64-cross"
+printf "${CH}%-20s: ${C0}%s\n\n" "  gcc $(aarch64-linux-gnu-gcc -print-multiarch)" "version $(aarch64-linux-gnu-gcc -dumpversion)"
+
 check_install 'gcc-arm-linux-gnueabihf' 'g++-arm-linux-gnueabihf' 'libstdc++6-armhf-cross'
+printf "${CH}%-20s: ${C0}%s\n\n" "  gcc $(arm-linux-gnueabihf-gcc -print-multiarch)" "version $(arm-linux-gnueabihf-gcc -dumpversion)"
+
 check_install 'gcc-i686-linux-gnu' 'g++-i686-linux-gnu'
+printf "${CH}%-20s: ${C0}%s\n\n" "  gcc $(i686-linux-gnu-gcc -print-multiarch)" "version $(i686-linux-gnu-gcc -dumpversion)"
+
+XB_GCC_TOP_VER=$(apt search gcc 2>/dev/null | grep -oP 'gcc-[0-9\.]+' | sed 's,gcc-,,' | sort -n |tail -n1)
+if [ "${XB_GCC_VERSION}" != "${XB_GCC_TOP_VER}" ]; then
+  printf "${CH}%-20s: ${CY1}%s${C0}\n\n" "  gcc version ${XB_GCC_TOP_VER} is available." "Run 'xsetup --update gcc' to update"
+fi
 
 echo -e "\n${CC1}LLVM-Clang:"
 
@@ -400,15 +491,6 @@ if [ -n "${cclang}" ]; then
 	done
 fi
 
-
-check_ndk_symlink(){
-    [[ -z "$(readlink "$1" | grep ${ANDROID_NDK_HOME})" ]]
-}
-
-update_ndkhome(){
-    sed -i 's@^export ANDROID_NDK_HOME=.*$@export ANDROID_NDK_HOME='"${ANDROID_NDK_HOME}"'@' ~/.bashrc
-    source ~/.bashrc
-}
 
 if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
     echo -e "\n${CC1}Android NDK:"
@@ -515,51 +597,6 @@ if [ "${OSTYPE}" != "linux-android" ] && $XB_HAS_NDK_CLANG; then
     fi
 fi
 
-# usage create_symlink <src> <dst> will test if src and dst exists first
-function create_symlink {
-    if [ ! -f "${2}" ] || [ ! "$(readlink ${2})" == "${1}" ]; then
-        sudo ln -s "${1}" "${2}"
-        test $verbose && printf "${CC1}%-10s ${C0}%-60s-> ${CW}%s\n" "   created" "${1}" "${2}"
-    else
-        test $verbose && printf "${CH}%-10s ${C0}%-60s-> ${C0}%s\n" "   ok" "${1}" "${2}"
-    fi
-    #test ! -f "${2}" && test -f "${1}" && sudo ln -s "${1}" "${2}"
-}
-
-function llvm_mingw_check_symlinks {
-    local cl_abi
-
-    if [ -z "$(ls -A ${LLVM_MINGW_HOME}/include)" ]; then
-        rm -r "${LLVM_MINGW_HOME}/include"
-        ln -s ${LLVM_MINGW_HOME}/generic-w64-mingw32/include ${LLVM_MINGW_HOME}/include
-    fi
-
-    for cl in aarch64 arm i686 x86_64; do
-
-        target_dir="/usr/${cl}-w64-mingw32"
-        cl_abi=${cl/arm/armv7}
-        source_dir="${LLVM_MINGW_HOME}/${cl_abi}-w64-mingw32"
-    
-        test -d "${target_dir}"         || sudo mkdir -p "${target_dir}/bin"
-        test -d "${target_dir}/dll"     || sudo ln -s "${source_dir}/bin"     "${target_dir}/dll"
-        test -d "${target_dir}/include" || sudo ln -s "${source_dir}/include" "${target_dir}/include"
-        test -d "${target_dir}/lib"     || sudo ln -s "${source_dir}/lib"     "${target_dir}/lib"
-        test -d "${target_dir}/share"   || sudo ln -s "${source_dir}/share"   "${target_dir}/share"
-        
-        printf "   ${CH}Checking symlinks for ${CW}${cl_abi}\n"
-        for e in addr2line ar as c++ clang clang++ dlltool g++ gcc ld llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf size strings strip widl windres; do
-    
-            create_symlink "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}"    "${target_dir}/bin/${e}"
-            create_symlink "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32uwp-${e}" "${target_dir}/bin/uwp-${e}"
-    
-        done
-        
-    done
-    
-    printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
-
-}
-
 echo -e "\n${CC1}LLVM MINGW:"
 if [ -z "${LLVM_MINGW_HOME}" ]; then
     llvm_mingw_bin_dir=$(find ~ -name "aarch64-w64-mingw32uwp-dlltool" | head -n1)
@@ -594,38 +631,48 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
 fi
 
 echo -e "\n${CC1}${b} Build tools${C0}"
-check_install make cmake cmake-curses-gui meson build-essential automake autoconf autogen autopoint libtool-bin m4 nasm yasm pkg-config
-case "$(meson --version)" in 0.5*) sudo add-apt-repository ppa:ubuntu-support-team/meson -y 2>&1 >/dev/null
-    sudo apt update 2>&1 >/dev/null
-    sudo apt install meson -y 2>&1 >/dev/null
-    ;;
-esac
+check_install build-essential make pkg-config
+echo -e "\n${CC1}${b} Assembly compilers${C0}"
+check_install nasm yasm
+echo -e "\n${CC1}${b} Cmake${C0}"
+check_install cmake cmake-curses-gui
+echo -e "\n${CC1}${b} Meson${C0}"
+check_install meson ninja-build
+echo -e "\n${CC1}${b} Autotools${C0}"
+check_install automake autoconf autogen autopoint libtool-bin m4
 
 echo -e "\n${CC1}${b} Repository tools${C0}"
-check_install git subversion lzip unzip
+check_install git subversion mercurial lzip unzip
 
 echo -e "\n${CC1}${b} Other tools${C0}"
 check_install curl gperf bison texinfo patch jq gettext
 
-echo -e "\n${CC1}${b} Utilities${C0}"
-if [ ! -f "${dir_root}/utils/lz-string" ]; then
-    build_utils
-fi
+#echo -e "\n${CC1}${b} Utilities${C0}"
+#if [ ! -f "${dir_root}/utils/lz-string" ]; then
+#    build_utils
+#Sfi
 
 echo -ne "\n${CC1}${b} Writing config${C0}"
 
-[ -z "${llvm_mingw}" ] && [ -n "${LLVM_MINGW_HOME}" ] && llvm_mingw=${LLVM_MINGW_HOME}
+if [ -z "${llvm_mingw}" ] && [ -n "${LLVM_MINGW_HOME}" ]; then
+    llvm_mingw=${LLVM_MINGW_HOME}
+fi
 
 case "$(uname -s)" in
-    Linux)  build_arch=$(echo $(uname -m)-linux-gnu)
-    [ -n "$(grep -q BCM2708 /proc/cpuinfo)" ] && build_arch="${build_arch}eabihf"    
-    if [ -n "$(command -v getprop)" ];then
+    Linux)
+      build_arch=$(echo $(uname -m)-linux-gnu)
+      [ -n "$(grep -q BCM2708 /proc/cpuinfo)" ] && build_arch="${build_arch}eabihf"    
+      if [ -n "$(command -v getprop)" ]; then
         build_arch=$(echo $(uname -m)-linux-android)
         export API=$(getprop ro.build.version.sdk)
-    fi
-    ;;
-    Darwin) build_arch=$(echo $(uname -m)-darwin-gnu);;
-    CYGWIN*|MINGW32*|MSYS*|MINGW*) build_arch=$(echo $(uname -m)-w64-mingw32);;
+      fi
+      ;;
+    Darwin)
+      build_arch=$(echo $(uname -m)-darwin-gnu)
+      ;;
+    CYGWIN*|MINGW32*|MSYS*|MINGW*)
+      build_arch=$(echo $(uname -m)-w64-mingw32)
+      ;;
 esac
 
 #xv_x64_mingw=$(ls -t /usr/lib/gcc/x86_64-w64-mingw32 | grep -E "*-win32" | head -n1 2>/dev/null )
@@ -638,7 +685,7 @@ cat <<-EOF >${dir_root}/.config
 export config_lastupdate=$(date +%s) \\
     dir_root="$(pwd)" \\
     sudo=$(command -v sudo) \\
-    cmd_install="${cmd_install}" \\
+    apt_install="${apt_install}" \\
     build_arch="${build_arch}" \\
     XB_HAS_GNU_CLANG=${XB_HAS_GNU_CLANG} \\
     XB_HAS_MINGW_CLANG=${XB_HAS_MINGW_CLANG} \\
@@ -670,6 +717,13 @@ export config_lastupdate=$(date +%s) \\
 EOF
 
 echo -ne "... ${CC1}Done!${C0}\n\n"
+
+
+
+
+
+
+
 
 
 

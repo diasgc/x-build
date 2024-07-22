@@ -1,0 +1,25 @@
+#!/bin/bash
+
+lib='pkgconf'
+pkg='libpkgconf'
+dsc='package compiler and linker metadata toolkit'
+lic='Other'
+src="https://github.com/pkgconf/pkgconf"
+
+cfg='meson'
+
+dev_bra='master'
+dev_vrs='2.2.0'
+pkg_deb='libpkgconf-dev'
+eta='12'
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE AUTHORS'
+lst_pc=''
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc

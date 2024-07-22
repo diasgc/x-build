@@ -1367,8 +1367,9 @@ function setup_meson_config {
         ;;
     esac
   fi
-  
-  test -n "${meson_config}" && cfg_args+=( "${meson_config}" )
+  if [ -n "${meson_config}" ]; then
+    cfg_args+=( "${meson_config}" )
+  fi
 }
 
 function show_build_opts {

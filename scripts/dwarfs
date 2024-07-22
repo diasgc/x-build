@@ -1,10 +1,11 @@
 #!/bin/bash
 
-lib='libcaesium'
-dsc='Caesium is an image compression software that helps you store, send and share digital pictures, supporting JPG, PNG, WebP and TIFF formats'
+lib='dwarfs'
+dsc='A fast high compression read-only file system for Linux, Windows and macOS'
 lic='GNU General Public License v3.0'
-src="https://github.com/Lymphatus/caesium-image-compressor"
-tls='cargo'
+src="https://github.com/mhx/dwarfs"
+sub='submodule update --init'
+src_rel=false
 
 cfg='cmake'
 

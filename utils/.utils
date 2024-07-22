@@ -498,7 +498,7 @@ function setup_am_config {
 # meson utils
 
 # see https://mesonbuild.com/Commands.html for command line options
-function setup_meson_config {
+function setup_meson_config_old {
   
   : "${build_cmd:=ninja}"
   : "${install_cmd:=ninja}"

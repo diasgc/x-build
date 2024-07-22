@@ -3,9 +3,10 @@ Cross Platform build scripts
 
 usage: ./xbuild <script-name> <host-arch> <options>
 
-script-name: one of the listed in 'scripts' folder
+<script-name>:
+    one of the listed in 'scripts' folder
 
-host-arch:
+<host-arch>:
     Android:                     Alias:
         aarch64-linux-android    aa8 aa64 android-arm64 android-arm8
         armv7-linux-androideabi  aa7 aa32 android-arm android-armv7
@@ -24,7 +25,7 @@ host-arch:
         i686-w64-mingw32         w86 wx32 wx86 windows-x86 win-x86
         x86_64-w64-mingw32       w64 wx64 windows-x64 win-x64
 
-Options:
+<Options>:
 
 # build
   --static    build static libs
@@ -109,7 +110,7 @@ Options:
               vrs_git_n)  git latest remote version number
   --check2    check if <script> package is installed (v2)
 
-  --list  <option>:
+  --list <option>:
               tar*       list tarballs
               branches   list git available branches
               opt*       list options
