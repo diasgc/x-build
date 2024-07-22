@@ -20,7 +20,6 @@ on_src_release(){
     local u="$(sed 's,.git,/-,' <<<${src})"
     vrs="$(tar_version ${u}/tags libdvdnav-)"
     src="${u}/archive/${vrs}/libdvdnav-${vrs}.tar.gz"
-    tar_stripcomponents=true
 }
 
 

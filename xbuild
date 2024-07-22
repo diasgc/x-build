@@ -452,7 +452,6 @@ export script_name \
 : "${cmake_build_type:=Release}"
 
 : "${src_rel:=true}"
-: "${tar_stripcomponents:=false}"
 : "${req_update_deps:=false}"
 : "${update:=${req_update_deps}}"
 : "${git_checkout:=false}"

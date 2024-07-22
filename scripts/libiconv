@@ -5,7 +5,6 @@ dsc='Character set conversion library'
 lic='LGPL2.1'
 src='https://git.savannah.gnu.org/git/libiconv.git'
 url='https://www.gnu.org/software/libiconv'
-tar_stripcomponents=true
 
 cfg='ac'
 am_config=" --enable-extra-encodings"

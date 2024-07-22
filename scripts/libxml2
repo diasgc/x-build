@@ -5,7 +5,6 @@ pkg='libxml-2.0'
 dsc='GNOME XML library'
 lic='GPL'
 src='https://gitlab.gnome.org/GNOME/libxml2.git'
-tar_stripcomponents=true
 
 cfg='cmake'
 cmake_config='-DLIBXML2_WITH_TESTS=OFF -DLIBXML2_WITH_PYTHON=OFF'

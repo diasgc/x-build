@@ -25,7 +25,6 @@ xiph_on_src_release(){
     src="https://gitlab.xiph.org/xiph/liboggz"
     vrs="1.1.1"
     src="https://downloads.xiph.org/releases/liboggz/liboggz-${vrs}.tar.gz"
-    tar_stripcomponents=true
 }
 
 # cpu av8 av7 x86 x64

@@ -4,9 +4,7 @@ lib='lzo'
 pkg='lzo2'
 dsc='LZO is a portable lossless data compression library written in ANSI C'
 lic='GPL2+'
-vrs='2.10'
-src="http://www.oberhumer.com/opensource/lzo/download/lzo-${vrs}.tar.gz"
-tar_stripcomponents=true
+url='http://www.oberhumer.com/opensource/lzo'
 
 cfg='cmake'
 cmake_static='ENABLE_STATIC'
@@ -15,7 +13,7 @@ cmake_shared='ENABLE_SHARED'
 dev_bra='master'
 dev_vrs='2.10'
 pkg_deb='liblzo2-dev'
-eta='104'
+eta='72'
 
 lst_inc='lzo/*.h'
 lst_lib='liblzo2'
@@ -23,7 +21,10 @@ lst_bin='../libexec/lzo/examples/*'
 lst_lic='COPYING AUTHORS'
 lst_pc='lzo2.pc'
 
-
+on_config(){
+  vrs="$(curl -sL ${url} | grep -oP 'Version [0-9\.]+' | sed 's,Version ,,' )"
+  src="${url}/download/lzo-${vrs}.tar.gz"
+}
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang

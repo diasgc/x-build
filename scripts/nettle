@@ -21,7 +21,6 @@ on_src_release(){
   local f="$(curl -sL ${u}/tags | grep -oP 'nettle_[0-9\.]+_release_[0-9]+.tar.gz' | head -n1)"
   src="${u}/archive/${f%%\.tar\.gz}/nettle-${f}"
   vrs="$(sed 's,nettle_,,;s,_release_.*\.tar\.gz$,,' <<<${f})"
-  tar_stripcomponents=true
 }
 
 on_config(){

@@ -47,7 +47,6 @@ on_src_release(){
     vrs="$(curl -s 'http://ftp.videolan.org/pub/videolan/x265/' | grep -oP 'x265_[0-9\.]+.tar.gz' | tail -n1)"
     src="http://ftp.videolan.org/pub/videolan/x265/${vrs}"
     vrs="$(sed 's/x265_//;s/\.tar\.gz//' <<<"${vrs}")"
-    tar_stripcomponents=true
     ${host_ndk} && cmake_definitions+=( -DHAVE_STRTOK_R )
 }
 

@@ -51,7 +51,6 @@ on_config(){
 
 	vrs="$(curl -sL https://www.samba.org/ftp/tdb/ | grep -oP 'tdb-[0-9\.]+.tar.gz' | tail -n1)"
 	src="https://www.samba.org/ftp/tdb/${vrs}"
-	tar_stripcomponents=true
 	vrs="$(sed 's,tdb-,,;s,.tar.gz,,' <<<${vrs})"
 	cfg_cmd+=" --prefix=${dir_install} --disable-python" # --without-ad-dc"
 	${host_cross} && libtdb_cross

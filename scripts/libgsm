@@ -13,7 +13,7 @@ cmake_bin='BUILD_TOOLS'
 dev_bra='master'
 dev_vrs='1.0.22'
 pkg_deb='libgsm1-dev'
-eta='32'
+eta='24'
 
 lst_inc='gsm.h'
 lst_lib='libgsm'
@@ -26,7 +26,6 @@ on_config(){
     src="${url}/${vrs}"
     vrs="$(sed 's/gsm-//;s/.tar.gz//' <<<"${vrs}")"
     LD=${CC}
-    tar_stripcomponents=true
 }
 
 on_create_pc(){

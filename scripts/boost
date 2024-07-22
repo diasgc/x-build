@@ -14,7 +14,6 @@ on_src_release(){
     vrs="$(github_latest_release $src)"
     src="https://github.com/boostorg/boost/releases/download/${vrs}/${vrs}-cmake.tar.gz"
     vrs="${vrs//boost-/}"
-    tar_stripcomponents=true
 }
 
 _on_src_release(){
