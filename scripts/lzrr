@@ -1,0 +1,34 @@
+#!/bin/bash
+
+lib='lzrr'
+dsc='A new lossless data compression algorithm'
+lic='null'
+src="https://github.com/TNishimoto/lzrr"
+sub='submodule update --init'
+pkg='libdivsufsort'
+
+# issues: missing lib lzrr, missing installation: binaries and libfn 
+
+cfg='cmake'
+cmake_static='CPP_STATIC'
+cmake_definitions='-Wno-unused-variable
+ -Wno-unused-parameter 
+ -Wno-sign-compare 
+ -Wno-tautological-constant-out-of-range-compare
+ -Wno-unused-but-set-variable'
+
+dev_bra='master'
+dev_vrs='2.0.1-17-g21f294a'
+pkg_deb='liblzrr-dev'
+eta='64'
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE AUTHORS'
+lst_pc=''
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc

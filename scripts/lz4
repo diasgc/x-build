@@ -21,9 +21,9 @@ on_build_bin(){
 }
 
 dev_bra='dev'
-dev_vrs='1.9.4'
+dev_vrs='1.10.0'
 pkg_deb='liblz4-dev'
-eta='112'
+eta='48'
 
 lst_inc='lz4.h lz4frame.h lz4frame_static.h lz4hc.h'
 lst_lib='liblz4'

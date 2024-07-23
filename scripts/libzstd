@@ -4,12 +4,11 @@ lib='libzstd'
 dsc='Zstandard - Fast real-time compression algorithm'
 lic='BSD GPL-2.0'
 src='https://github.com/facebook/zstd.git'
-cfg='cmake'
 
+cfg='cmake'
 cmake_static="ZSTD_BUILD_STATIC"
 cmake_shared="ZSTD_BUILD_SHARED"
 cmake_bin="ZSTD_BUILD_PROGRAMS"
-
 config_dir='build/cmake'
 
 dev_vrs='1.5.6'

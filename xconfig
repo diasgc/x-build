@@ -1,12 +1,100 @@
 #!/bin/bash
 
+function check_install {
+    local v0
+    local v1
+    for p in $@; do
+        v0=$(dpkg-query -W $p 2>/dev/null | cut -f2)
+        v1=$(apt-cache madison $p | cut -d '|' -f2 | head -n1 | xargs)
+        if [ -z "${v0}" ];then
+            printf "${CH}${XBTAB}: ${C0}%s\n" "  $p" "installing..."
+            printf "$(${apt_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
+        elif [ "${v1}" == "${v0}" ]; then
+            printf "${CH}${XBTAB}: ${C0}%s\n" "  $p" "${v0}"
+        else
+            printf "${CH}${XBTAB}: ${C0}%s" "  $p" "${v0} upgrading to..."
+            printf "$(${apt_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
+        fi  
+    done
+}
+
+# synthax: check_slink <dest> <src>
+function check_slink {
+  local status
+	if [ ! -f "${1}" ]; then
+		sudo ln -s "${2}" "${1}" 2>&1 >/dev/null && status="new" || status="${CR1}err${C0}"
+    ${verbose} && printf "${CC1}%-6s ${C0}%-60s-> ${CW}%s\n" "    ${status}" "${1}" "${2}"
+	elif [ "$(readlink ${1})" == "${2}" ]; then
+    ${verbose} && printf "${CH}%-6s ${CD}%-60s-> ${C0}%s\n" "    ok" "${1}" "${2}"
+  else
+    sudo ln -s "${2}" "${1}" 2>&1 >/dev/null && status="${CY1}upd${C0}" || status="${CR1}err${C0}"
+    ${verbose} && printf "${CC1}%-6s ${C0}%-60s-> ${CW}%s\n" "    ${status}" "${1}" "${2}"
+  fi
+}
+
+function check_ndk_symlink {
+    [[ -z "$(readlink "$1" | grep ${ANDROID_NDK_HOME})" ]]
+}
+
+# synthax check_clang_wrapper [--overwrite] <triplet> <clang|clang++> <args>
+function check_clang_wrapper {
+  local overwrite=false
+  case "${1}" in
+    --overwrite) shift; overwrite=true;;
+  esac
+	if ${overwrite} || [ ! -f "/usr/${1}/bin/${2}" ]; then
+		cat <<-eof | sudo tee /usr/${1}/bin/${2} >/dev/null
+			#!/bin/bash
+			${2} ${3} "\$@"
+			eof
+		sudo chmod +x "/usr/${1}/bin/${2}"
+	fi
+}
+
+# synthax check_ndk_wrapper [--overwrite] <clang|clang++> <triplet> <dest>
+function check_ndk_wrapper {
+    local overwrite=false
+  case "${1}" in
+    --overwrite) shift; overwrite=true;;
+  esac
+  if ${overwrite} || [ ! -f "${3}" ]; then
+		cat <<-eof | sudo tee ${3} >/dev/null
+			#!/bin/bash
+			\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${2}\${API:=${NDK_API_DEFAULT}}-${1} "\$@"
+			eof
+    sudo chmod +x ${3}
+  fi
+}
+
 clear
-splash
 
 # load first time .common helper
 test -z ${vsh+x} && source .common
-# theme mnain color
-CH=${CC0}
+
+splash
+
+if [ -n "$(command -v sudo)" ]; then
+  sudo echo
+  apt_install="sudo ${apt_install}"
+fi
+
+: "${verbose:=false}"
+
+CH=${CC0}       # theme mnain color
+XBTAB="%-25s"   # tab lenght
+
+XB_GCC_PKGLIST='gcc g++'
+XB_GCC_I686_PKGLIST='gcc-i686-linux-gnu g++-i686-linux-gnu'
+XB_GCC_X86_64_PKGLIST='gcc-x86_64-linux-gnu g++-x86_64-linux-gnu'
+XB_GCC_ARM64_PKGLIST='gcc-aarch64-linux-gnu g++aarch64-linux-gnu
+  libc6-dev-arm64-cross libc6-arm64-cross libstdc++6-arm64-cross'
+XB_GCC_ARMHF_PKGLIST='gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+  libc6-dev-armhf-cross libc6-armhf-cross libstdc++6-armhf-cross'
+
+XB_CLANG_PKGLIST='clang-format clang-tidy clang-tools clang clangd libc++-dev
+  libc++1 libc++abi-dev libc++abi1 libclang-dev libclang1
+  liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 lld lldb
+  llvm-dev llvm-runtime llvm python3-clang'
 
 : "${build_arch:=$(uname -m)-${OSTYPE,,}}"
 : "${build_os:=$(uname -s)}"
@@ -14,20 +102,239 @@ CH=${CC0}
 
 # Header
 printf "\n${CC1}This Machine:\n"
-printf "${CH}%-20s: ${C0}%s\n" '  build arch' ${build_arch}
-printf "${CH}%-20s: ${C0}%s\n" '  build os' ${build_os}
-printf "${CH}%-20s: ${C0}%s\n" '  build cpu' ${build_cpu}
+printf "${CH}${XBTAB}: ${C0}%s\n" '  build arch' ${build_arch}
+printf "${CH}${XBTAB}: ${C0}%s\n" '  build os' ${build_os}
+printf "${CH}${XBTAB}: ${C0}%s\n" '  build cpu' ${build_cpu}
+
+echo -e "\n${CC1}${b} Basic tools${C0}"
+: "${apt_install:='apt install'}"
+printf "\n${CH}${XBTAB}: ${C0}%s\n" '  cmd install' "${apt_install}"
+check_install curl patch jq lzip unzip
+
+
 
 # check for installed components
-: "${XB_BUILD_GCC:=$(command -v gcc)}"
-: "${XB_BUILD_GPP:=$(command -v g++)}"
 
-printf "\n${CC1}Gnu compiler\n"
-if [ -z "${XB_BUILD_GCC}" ]; then
-  printf "${CH}%-20s: ${C0}%s\n" '  gcc/g++' "installing"
-  sudo apt install -y gcc g++
+
+
+
+# GNU gcc compiler
+
+printf "\n${CC1}${b}Gnu compiler\n"
+check_install gcc g++
+XB_BUILD_GCC="$(command -v gcc)"
+test -z "${XB_BUILD_GCC}" && exit_err "Unable to install gcc. Aborting."
+XB_GCC_VERSION="$(${XB_BUILD_GCC} -dumpversion)"
+printf "${CH}${XBTAB}: ${C0}%s\n\n" '  version' "${XB_GCC_VERSION}"
+
+# gcc cross-compiler
+gnu_cross_archlist="x86_64-linux-gnu i686-linux-gnu aarch64-linux-gnu arm-linux-gnueabihf"
+# remove native arch from list
+gnu_cross_archlist="${gnu_cross_archlist//$(gcc -print-multiarch)/}"
+
+for gcross in ${gnu_cross_archlist}; do
+  printf "${CC1} Gnu ${gcross} cross-compiler\n"
+  case "${gcross}" in
+    aarch64*) check_install ${XB_GCC_ARM64_PKGLIST};;
+    arm*)     check_install ${XB_GCC_ARMHF_PKGLIST};;
+    i686*)    check_install ${XB_GCC_I686_PKGLIST};;
+    x86_64*)  check_install ${XB_GCC_X86_64_PKGLIST};;
+  esac
+  printf "${CH}${XBTAB}: ${C0}%s\n\n" "  version" "$(${gcross}-gcc -dumpversion)"
+done
+
+XB_GCC_TOP_VER=$(apt search gcc 2>/dev/null | grep -oP 'gcc-[0-9\.]+' | sed 's,gcc-,,' | sort -n |tail -n1)
+if [ "${XB_GCC_VERSION}" != "${XB_GCC_TOP_VER}" ]; then
+  printf "${CH}${XBTAB}: ${CY1}%s${C0}\n\n" "  gcc version ${XB_GCC_TOP_VER} is available." "Run 'xsetup --update gcc' to update"
 fi
 
-printf "${CH}%-20s: ${C0}%s\n" '  gcc' "found at ${XB_BUILD_GCC} version $(${XB_BUILD_GCC} -dumpversion)"
-printf "${CH}%-20s: ${C0}%s\n" '  g++' "found at ${XB_BUILD_GPP} version $(${XB_BUILD_GPP} -dumpversion)"
+
+
+
+
+# LLVM-CLANG compiler
+
+printf "\n${CC1}${b}Clang compiler\n"
+XB_BUILD_CLANG="$(command -v clang)"
+if [ -z "${XB_BUILD_CLANG}" ]; then
+  PS3='LLVM not installed: '
+  select o in 'Do not install' 'Install latest OS package' 'Install devel from llvm.org'; do
+    case ${REPLY} in
+      2) check_install ${XB_CLANG_PKGLIST};;
+      3) sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)";;
+    esac
+  done
+fi
+
+XB_BUILD_CLANG="$(command -v clang)"
+if [ -n "${XB_BUILD_CLANG}" ]; then
+  XB_BUILD_CLANG_VERSION=$(clang -dumpversion)
+  XB_BUILD_CLANG_VERSION_MAJOR=${XB_BUILD_CLANG_VERSION%%\.*}
+  printf "${CH}${XBTAB}: ${C0}%s\n" "  found at" "${XB_BUILD_CLANG}"
+  printf "${CH}${XBTAB}: ${C0}%s\n\n" "  version" "$(${XB_BUILD_CLANG} -dumpversion)"
+  printf "\n${CC1} Clang components\n"
+  check_install ${XB_CLANG_PKGLIST} libllvmlibc-${XB_BUILD_CLANG_VERSION_MAJOR}-dev
+
+  # check symlinks
+  printf "\n${CC1} Clang symlinks"
+  
+  cl=(aarch64 arm i686 x86_64)
+	ab=(arm64 armhf i386 x86_64)
+	abi=(gnu gnueabihf gnu gnu)
+  exe='ar as nm addr2line objcopy objdump ranlib readelf size strings strip windres'
+	
+  # check if llvm-windres symlink exists
+  check_slink "/usr/bin/llvm-windres" "/usr/lib/llvm-${XB_BUILD_CLANG_VERSION_MAJOR}/bin/llvm-windres"
+
+  for a in 0 1 2 3; do
+    # set toolchain triplet
+    t="${cl[$a]}-linux-${abi[$a]}"
+    # skip native arch
+    test "${t}" = "${build_arch}" && continue
+    
+    printf "\n${CH}  ${t}\n"
+    
+    # create cross arch dir at /usr
+    [ -d "/usr/${t}/bin" ] || sudo mkdir -p "/usr/${t}/bin"
+
+    # symlinks for llvm utils
+    printf "    ${CD}"
+    for e in ${exe}; do
+      check_slink "/usr/${t}/bin/llvm-${e}" "/usr/bin/llvm-${e}"
+      ${verbose} || printf "${e} "
+    done
+    
+    # symlinks for ld
+    check_slink "/usr/${t}/bin/ld.lld" "/usr/bin/ld.lld"
+    
+    # clang/clang++ wrapper
+    wrapper_args="--target=${t}"
+    test "${ab[${a}]}" = "armhf" && wrapper_args+=' -mfloat-abi=hard -mfpu=neon' 
+    check_clang_wrapper --overwrite "${t}" 'clang' "${wrapper_args}"
+    check_clang_wrapper --overwrite "${t}" 'clang++' "${wrapper_args}"
+    ${verbose} || printf "\n    clang/clang++ wrapper with args: ${wrapper_args}\n"
+	done
+fi
+
+
+
+
+# Android NDK CLANG compiler
+
+printf "\n${CC1}${b}Android NDK compiler\n"
+if [ ! -d "${ANDROID_NDK_HOME}" ]; then
+  printf "${CH}ANDROID_NDK_HOME is not defined\n"
+  ndk_dir="$(find ~ -name 'ndk-lldb' | head -n1)"
+  if [ -f "${ndk_dir}" ]; then
+    ndk_dir="$(dirname ${ndk_dir})"
+    export ANDROID_NDK_HOME="${ndk_dir}"
+  else
+    printf "${CY1}Android NDK not found.\n"
+    url="$(curl -sL https://developer.android.com/ndk/downloads | grep -Po "https://dl.google.com/android/repository/android-ndk-r..*-linux.zip" | sed "/\"/d")"
+    printf "${CY0}Download latest version: ${url}\n"
+  fi
+fi
+
+if [ -d "${ANDROID_NDK_HOME}" ]; then
+  
+  ANDROID_NDK_RELEASE="$(basename ${ANDROID_NDK_HOME})"
+  ndk_root="$(dirname ${ANDROID_NDK_HOME})"
+  ndk_update=false
+  ndk_download=false
+  ndk_latest="$(curl -sL https://developer.android.com/ndk/downloads | grep -oP '(?<=ndkVersion..)\d+\.\d+\.\d+.*(?=")' | head -n1)"
+  if [ "${ANDROID_NDK_RELEASE}" = "${ndk_latest}" ]; then
+    status="(updated)"
+  elif [ "$(ls $ndk_root | tail -n1)" == "${ndk_latest}" ]; then
+    status="${CY1} found ${ndk_latest}${C0} at ${ndk_root}/${ndk_latest}"
+    ndk_update=true
+  else
+    status="${CY1} latest release is ${ndk_latest}${C0}"
+    ndk_download=true
+  fi
+
+  ndk_build="$(uname -s)-$(uname -m)"
+  ndk_build="${ndk_build,,}"
+  XB_NDK_TOOLCHAIN="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/${ndk_build}"
+  XB_NDK_SYSROOT="${XB_NDK_TOOLCHAIN}/sysroot"
+  XB_NDK_CLANG="${XB_NDK_TOOLCHAIN}/bin/clang"
+  XB_NDK_CLANG_VERSION="$(${XB_NDK_CLANG} -dumpversion)"
+ 
+  cmake_platforms="${ANDROID_NDK_HOME}/build/cmake/platforms.cmake"
+  XB_NDK_MIN_PLATFORM_LEVEL="$(grep -oP '(?<=NDK_MIN_PLATFORM_LEVEL ")[0-9]+' ${cmake_platforms})"
+  XB_NDK_MAX_PLATFORM_LEVEL="$(grep -oP '(?<=NDK_MAX_PLATFORM_LEVEL ")[0-9]+' ${cmake_platforms})"
+  NDK_API_DEFAULT="${XB_NDK_MAX_PLATFORM_LEVEL}"
+  
+  printf "${CH}${XBTAB}: ${C0}%s\n" "  found at" "${ANDROID_NDK_HOME}"
+  printf "${CH}${XBTAB}: ${C0}%s\n" "  release" "${ANDROID_NDK_RELEASE} ${status}"
+  printf "${CH}${XBTAB}: ${C0}%s\n" "  clang version" "${XB_NDK_CLANG_VERSION}"
+  printf "${CH}${XBTAB}: ${C0}%s\n" "  api range" "${XB_NDK_MIN_PLATFORM_LEVEL} to ${XB_NDK_MAX_PLATFORM_LEVEL}"
+
+  printf "\n${CC0} Check NDK symlinks\n"
+
+  c_arch=('aarch64' 'arm' 'i686' 'x86_64')
+  c_abi=('arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64')
+  c_clang=('aarch64-linux-android' 'armv7a-linux-androideabi' 'i686-linux-android' 'x86_64-linux-android')
+  c_lib=('aarch64-linux-android' 'arm-linux-androideabi' 'i686-linux-android' 'x86_64-linux-android')
+
+  for i in 0 1 2 3; do
+    t="${c_lib[${i}]}"
+    printf "  ${CH}${t}${C0}\n"
+    dir_toolchain="/usr/${t}"
+    
+    # create cross arch dir at /usr
+    if [ ! -d "/usr/${t}/bin" ]; then
+      sudo mkdir -p "/usr/${t}/bin"
+      printf "    ${CD}created /usr/${t}/bin"  
+    fi
+
+    tc_path="\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/${ndk_build,,}/bin"
+    tc_api="\${API:=${NDK_API_DEFAULT}}"
+    # synthax check_ndk_wrapper [--overwrite] <clang|clang++> <triplet> <dest>
+    check_ndk_wrapper --overwrite "clang" "${c_clang[${i}]}" "/usr/${t}/bin/clang"
+    check_ndk_wrapper --overwrite "clang++" "${c_clang[${i}]}" "/usr/${t}/bin/clang++"
+    # test 
+    printf "    ${C0}clang/clang++${CD} wrapper: $(/usr/${t}/bin/clang -dumpversion >/dev/null && echo -ne "${Cw}works${CD}" || echo -ne "${CR1}not working${CD}" )\n"
+
+    check_ndk_symlink "/usr/${t}/bin/ld" && sudo ln -sfn "${XB_NDK_TOOLCHAIN}/bin/ld" "/usr/${t}/bin/ld"
+    printf "    ${C0}ld${CD} at /usr/${t}/bin/ld: ${C0}$(/usr/${t}/bin/ld --version)${CD}\n"
+    check_ndk_symlink "/usr/${t}/bin/yasm" && sudo ln -sfn "${XB_NDK_TOOLCHAIN}/bin/yasm" "/usr/${t}/bin/yasm"
+    printf "    ${C0}yasm${CD} at /usr/${t}/bin/yasm: ${C0}$(/usr/${t}/bin/yasm --version | head -n1)${CD}\n"
+    
+    printf "    ${C0}binutils:${CD} "
+    for j in as ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
+      check_ndk_symlink "/usr/${t}/bin/${j}" && sudo ln -sfn "${XB_NDK_TOOLCHAIN}/bin/llvm-${j}" "/usr/${t}/bin/${j}"
+      printf "${j} "
+    done
+    
+    check_ndk_symlink "/usr/${t}/sysroot" && sudo ln -sfn "${XB_NDK_SYSROOT}" "/usr/${t}/sysroot"
+    printf "\n    ${C0}sysroot${CD} symlink /usr/${t}/sysroot -> ${XB_NDK_SYSROOT//${ANDROID_NDK_HOME}/NDK_HOME}"
+
+    check_ndk_symlink "/usr/${t}/include" && sudo ln -sfn "${XB_NDK_SYSROOT}/usr/include" "/usr/${t}/include"
+    printf "\n    ${C0}include${CD} symlink /usr/${t}/include -> NDK_SYSROOT/usr/include"
+    
+    check_ndk_symlink "/usr/${t}/lib" && sudo ln -sfn "${XB_NDK_TOOLCHAIN}/sysroot/usr/lib/${c_lib[${i}]}" "/usr/${t}/lib"
+    printf "\n    ${C0}lib${CD} symlink /usr/${t}/lib -> NDK_SYSROOT/usr/lib/${c_lib[${i}]}"
+    
+    if [ ! -d "${dir_root}/builds/android/${c_abi[${i}]}" ]; then
+      mkdir -p "${dir_root}/builds/android/${c_abi[${i}]}"
+    fi
+
+    [ -d "/usr/${t}/local" ] && sudo unlink /usr/${t}/local
+    sudo ln -sf "${dir_root}/builds/android/${c_abi[${i}]}" "/usr/${t}/local"
+    printf "\n    ${C0}local${CD} created at /usr/${t}/local -> ${dir_root}/builds/android/${c_abi[${i}]}"
+
+    if [ ! -f "/usr/${t}/lib/libpthread.a" ]; then
+      sudo /usr/${t}/bin/ar cr "/usr/${t}/lib/libpthread.a"
+    fi
+    printf "\n    ${C0}libthread${CD} /usr/${t}/lib/libpthread.a"
+    if [ ! -f "/usr/${t}/lib/librt.a" ]; then
+      sudo /usr/${t}/bin/ar cr "/usr/${t}/lib/librt.a"
+    fi
+    printf "\n    ${C0}librt${CD} /usr/${t}/lib/librt.a"
+    echo -e "\n${C0}    toolchain at /usr/${t} ${CH}ok${C0}\n"
+done
+printf "${CH}%-20s: ${C0}%s\n" '  all toolchain symlinks' ok
+fi
+
+
 

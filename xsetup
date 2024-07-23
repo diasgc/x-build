@@ -17,8 +17,8 @@ function check_install {
     local v0
     local v1
     for p in $@; do
-        v0=$(dpkg-query -W $p 2>/dev/null | cut -f 2)
-        v1=$(apt-cache madison $p | cut -d '|' -f 2 | xargs)
+        v0=$(dpkg-query -W $p 2>/dev/null | cut -f2)
+        v1=$(apt-cache madison $p | cut -d '|' -f2 | head -n1 | xargs)
         if [ -z "${v0}" ];then
             printf "${CH}%-20s: ${C0}%s\n" "  $p" "installing..."
             printf "$(${apt_install} $p -y 2>/dev/null | grep $p | sed "s/^$p//" | head -n1)\n"
@@ -426,7 +426,7 @@ test -z "${XB_BUILD_GCC}" && exit_err "Unable to install GCC. Aborting."
 XB_GCC_VERSION=$(gcc -dumpversion)
 printf "${CH}%-20s: ${C0}%s\n\n" "  gcc $(gcc -print-multiarch)" "version ${XB_GCC_VERSION}"
 
-check_install 'gcc-aarch64-linux-gnu' 'g++-aarch64-linux-gnu' "libstdc++-${XB_GCC_VERSION}-dev-arm64-cross"
+check_install 'gcc-aarch64-linux-gnu' 'g++-aarch64-linux-gnu' "libstdc++6-arm64-cross"
 printf "${CH}%-20s: ${C0}%s\n\n" "  gcc $(aarch64-linux-gnu-gcc -print-multiarch)" "version $(aarch64-linux-gnu-gcc -dumpversion)"
 
 check_install 'gcc-arm-linux-gnueabihf' 'g++-arm-linux-gnueabihf' 'libstdc++6-armhf-cross'
