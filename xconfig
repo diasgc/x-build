@@ -33,18 +33,13 @@ function llvm_mingw_latest {
 
 function llvm_mingw_install {
   # install llvm-mingw
-  XB_LLVM_MINGW_JSON=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
-  XB_LLVM_MINGW_LATEST="$(jq -r .tag_name <<<"${XB_LLVM_MINGW_JSON}")"
   : "${LLVM_MINGW_HOME:=${HOME}/llvm-mingw}"
   local url="$(jq -r -M '.assets[] | .browser_download_url' <<<"${XB_LLVM_MINGW_JSON}" | grep '.*ucrt.*ubuntu.*'"$(uname -p)")"
   pushdir "$(pwd)"
-  export LLVM_MINGW_HOME
   safe_cd "$(dirname ${LLVM_MINGW_HOME})"
   safe_rm "${LLVM_MINGW_HOME}"
-  
   wget_untar "${url}" "llvm-mingw"    
   echo "${XB_LLVM_MINGW_LATEST}" >"${LLVM_MINGW_HOME}/version"
-  export XB_LLVM_MINGW_CLANG_VERSION="$("${LLVM_MINGW_HOME}/bin/clang" -dumpversion)"
   popdir
 }
 
@@ -106,8 +101,7 @@ function check_ndk_symlink_dir {
   else
     sudo ln -sfn "${src}" "${dst}" && status="${CY1}created${CD}" || status="${CR1}failed${CD}"
   fi
-  echo -ne "\n    ${C0}$(basename "${dst}")${CD} symlink ${status}"
-  ! ${quiet} && echo -ne ": ${dst} -> ${srcname}"
+  ! ${quiet} && echo -ne "\n    ${C0}$(basename "${dst}")${CD} symlink ${status}: ${dst} -> ${srcname}"
 }
 
 # synthax check_clang_wrapper [--overwrite] <triplet> <clang|clang++> <args>
@@ -410,9 +404,14 @@ fi
 # Mingw LLCM compiler
 
 echo -e "\n${CC1}${b}LLVM-MINGW Clang compiler"
-XB_LLVM_MINGW_LATEST="$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
+printf "  ${C0}Checking remote repository..."
+XB_LLVM_MINGW_JSON=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
+XB_LLVM_MINGW_LATEST="$(jq -r .tag_name <<<"${XB_LLVM_MINGW_JSON}")"
+echo -e " latest version ${CH}${XB_LLVM_MINGW_LATEST}${C0}"
+export XB_LLVM_MINGW_JSON XB_LLVM_MINGW_LATEST
+
 if [ -z "${LLVM_MINGW_HOME}" ]; then
-  w64clang=$(findname "aarch64-w64-mingw32-clang" "~" "/")
+  w64clang=$(findname "aarch64-w64-mingw32-clang" "${HOME}" "/")
   if [ -z "${w64clang}" ]; then
     promptYN " not found. Install?" && install_llvm_mingw
   else
@@ -421,21 +420,48 @@ if [ -z "${LLVM_MINGW_HOME}" ]; then
 fi 
 
 if [ -n "${LLVM_MINGW_HOME}" ]; then
-    printf "${CH}%-20s: ${C0}%s\n" "  found at" ${LLVM_MINGW_HOME}
-    [ -f "${LLVM_MINGW_HOME}/version" ] || echo "$XB_LLVM_MINGW_LATEST" >>"${LLVM_MINGW_HOME}/version"
-    LLVM_MINGW_REL=$(cat ${LLVM_MINGW_HOME}/version)
-    printf "${CH}%-20s: ${C0}%s " '  release' ${LLVM_MINGW_REL}
-    if [ "${LLVM_MINGW_REL}" == "${XB_LLVM_MINGW_LATEST}" ]; then
-        echo -e "(updated)"
-    else
-        echo -e "${CY1} latest is ${XB_LLVM_MINGW_LATEST}${C0}"
-    fi
+  printf "${CH}%-20s: ${C0}%s\n" "  found at" ${LLVM_MINGW_HOME}
+  [ -f "${LLVM_MINGW_HOME}/version" ] || echo "$XB_LLVM_MINGW_LATEST" >>"${LLVM_MINGW_HOME}/version"
+  XB_LLVM_MINGW_LOCAL=$(cat ${LLVM_MINGW_HOME}/version)
+  printf "${CH}%-20s: ${C0}%s " '  release' ${XB_LLVM_MINGW_LOCAL}
+  if [ "${XB_LLVM_MINGW_LOCAL}" == "${XB_LLVM_MINGW_LATEST}" ]; then
+      echo -e "(updated)"
+  else
+      echo -e "${CY1} latest is ${XB_LLVM_MINGW_LATEST}${C0}"
+  fi
+  XB_LLVM_MINGW_CLANG_VERSION=$(${LLVM_MINGW_HOME}/bin/clang -dumpversion)
+  XB_LLVM_MINGW_CLANG_VERSION_MAJOR=${XB_LLVM_MINGW_CLANG_VERSION%%\.*}
+  printf "${CH}%-20s: ${C0}%s\n" '  clang' "${XB_LLVM_MINGW_CLANG_VERSION}"  
+ 
+  if [ -z "$(ls -A ${LLVM_MINGW_HOME}/include)" ]; then
+      rm -r "${LLVM_MINGW_HOME}/include"
+      ln -s ${LLVM_MINGW_HOME}/generic-w64-mingw32/include ${LLVM_MINGW_HOME}/include
+  fi
 
-    CLANG_MINGW_VERSION_FULL=$(${LLVM_MINGW_HOME}/bin/clang -dumpversion)
-    CLANG_MINGW_VERSION=${llvm_mingw_clang_version%%\.*}
-    printf "${CH}%-20s: ${C0}%s\n" '  clang' "${CLANG_MINGW_VERSION_FULL}"
-
+  for cl in aarch64 arm i686 x86_64; do
+    echo -ne "   ${CH}Checking symlinks for ${cl}-w64-mingw32"
+    target_dir="/usr/${cl}-w64-mingw32"
+    cl_abi=${cl/arm/armv7}
+    source_dir="${LLVM_MINGW_HOME}/${cl_abi}-w64-mingw32"
     
-    # check and create symlinks in toolchains dir if needed
-    llvm_mingw_check_symlinks
+    test -d "${target_dir}" || sudo mkdir -p "${target_dir}/bin"
+    check_ndk_symlink_dir "${target_dir}/dll" "${source_dir}/bin"
+    check_ndk_symlink_dir "${target_dir}/include" "${source_dir}/include"
+    check_ndk_symlink_dir "${target_dir}/lib" "${source_dir}/lib"
+    check_ndk_symlink_dir "${target_dir}/share" "${source_dir}/share"
+    
+    echo -ne "\n    ${C0}binutils:${CD} "
+    for e in addr2line ar as dlltool llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf size strings strip widl windres; do
+      sudo ln -sfn "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" "${dst_bin}/${j}"
+      test $? && echo -ne "${e} " || echo -ne "${CR1}${e}${CD} "   
+      #create_symlink "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32uwp-${e}" "${target_dir}/bin/uwp-${e}"
+    done
+    for e in c++ clang clang++ g++ gcc ld; do
+      sudo ln -sfn "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" "${dst_bin}/${j}"
+      test $? && status="$(${dst_bin}/${j} --version | head -n1)"
+      test $? && echo -ne "\n    ${C0}${e} ${CD}symlink ${C0}ok${CD}: ${status}" || echo -ne "\n${CR1}${e} failed: not working${CD} "
+    done
+    echo -e "\n    ${CH}ok${C0}"
+  done
+  printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
 fi
