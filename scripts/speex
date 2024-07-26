@@ -4,26 +4,25 @@ lib='speex'
 dsc='Speex is an audio codec tuned for speech'
 lic='BSD'
 src='https://gitlab.xiph.org/xiph/speex.git'
-cfg='meson'
 dep='speexdsp'
 
+cfg='meson'
 meson_config='-Dtest-binaries=disabled'
+meson_bin='tools'
+
+on_build_bin(){
+    dep+=' ogg'
+}
+
+dev_vrs='1.2.1'
+pkg_deb='libspeex-dev'
+eta='80'
 
 lst_inc='speex/*.h'
 lst_lib='libspeex'
 lst_bin='speexdec speexenc'
 lst_lic='COPYING AUTHORS'
 lst_pc='speex.pc'
-
-dev_vrs='1.2.1'
-pkg_deb='libspeex-dev'
-eta='90'
-
-on_config(){
-    ${build_bin} && dep+=' ogg' || meson_config+=" -Dtools=disabled"
-}
-
-
 
 #LDFLAGS+=" -lm"
 

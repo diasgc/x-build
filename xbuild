@@ -134,7 +134,7 @@ function build_dependencies {
 }
 
 function toolchain_android {
-  ${verbose} && logf "toolchain_android $@"
+  ${verbose} && logf "toolchain_android"
   [ -d "${ANDROID_NDK_HOME}" ] || exit_err "No ANDROID NDK Toolchain found. Aborting."
 
   PLATFORM='Android'
@@ -160,7 +160,7 @@ function toolchain_android {
 }
 
 function toolchain_llvm_mingw {
-  ${verbose} && logf "toolchain_llvm_mingw $@"
+  ${verbose} && logf "toolchain_llvm_mingw"
   local ltsdir
   local cargs
 
@@ -191,7 +191,7 @@ function toolchain_llvm_mingw {
 }
 
 function toolchain_linux {
-  ${verbose} && logf "toolchain_linux $@"
+  ${verbose} && logf "toolchain_linux"
   ${host_cross} && cross="-cross"
   ltsdir=$(gcc -dumpversion)
   if ${use_clang}; then
@@ -226,7 +226,7 @@ function toolchain_linux {
 }
 
 function loadToolchain {
-  ${verbose} && logf "loadToolchain $@"
+  ${verbose} && logf "loadToolchain"
   CMAKE_EXECUTABLE=cmake
   YASM=yasm
   PKG_CONFIG=pkg-config
@@ -295,7 +295,7 @@ function set_host {
 }
 
 function set_host_build {
-  ${verbose} && logf "set_host_build $@"
+  ${verbose} && logf "set_host_build"
   host_trip[5]=$(uname -m)
   arch="${host_trip[5]}-${OSTYPE}"
   host_trip[0]=${host_trip[5]}
@@ -315,7 +315,7 @@ function set_host_build {
 }
 
 function set_env {
-  ${verbose} && logf "set_env $@"
+  ${verbose} && logf "set_env"
   case ${host_trip[0]} in
     aarch64) host_arm=true;  host_arm32=false; host_arm64=true;  host_x86=false; host_x64=false; host_bits=64;;
     arm)     host_arm=true;  host_arm32=true;  host_arm64=true;  host_x86=false; host_x64=false; host_bits=32;;

@@ -14,7 +14,7 @@ cmake_static="BUILD_STATIC_LIBS"
 dev_bra='master'
 dev_vrs='2.3.0'
 pkg_deb=''
-eta='480'
+eta='448'
 
 lst_inc='vvdec/*.h'
 lst_lib='libvvdec'

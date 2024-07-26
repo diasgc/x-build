@@ -1,13 +1,15 @@
 #!/bin/bash
 
-lvr='1.2.0'
 lib='speexdsp'
-pkg_deb='libspeexdsp-dev'
 dsc='Speexdsp is a speech processing library that goes along with the Speex codec'
 lic='BSD'
 src='https://github.com/xiph/speexdsp.git'
-#cfg='ag'
-eta='62'
+
+cfg='ag'
+
+dev_vrs='1.2.1'
+pkg_deb='libspeexdsp-dev'
+eta='272'
 
 lst_inc='speex/*.h'
 lst_lib='libspeexdsp'
