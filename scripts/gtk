@@ -13,7 +13,7 @@ src='https://gitlab.gnome.org/GNOME/gtk.git'
 cfg='meson'
 meson_config='-Ddemos=false -Dbuild-examples=false -Dbuild-tests=false -Dx11-backend=false -Dwayland-backend=false'
 
-API=28
+ANDROID_NDK_API=28
 
 dev_vrs=''
 eta='0'

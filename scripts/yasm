@@ -1,0 +1,32 @@
+#!/bin/bash
+
+lib='yasm'
+dsc='Yasm Assembler mainline development tree'
+lic='Other'
+src="https://github.com/yasm/yasm"
+
+cfg='ar'
+#cmake_config='-DYASM_BUILD_TESTS=OFF'
+
+_on_config(){
+    cmake_config+=" -DCPP_PROG=${CC}"
+}
+
+# ndk-cross error:
+# /bin/sh: 1: ../tools/genmacro/genmacro: Exec format error
+# /bin/sh: 1: ./genversion: Exec format error
+
+dev_bra='master'
+dev_vrs=''
+pkg_deb='yasm'
+eta='0'
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_pc=''
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc

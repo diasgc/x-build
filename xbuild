@@ -150,7 +150,7 @@ function toolchain_android {
   ASM_NASM=${YASM}
 
   LT_SYS_LIBRARY_PATH="${TOOLCHAIN}/lib:${SYSROOT}/usr/lib/${arch}:${SYSROOT}/usr/lib/${arch}/${NDK_API}"
-  CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/include -I${SYSROOT}/usr/include"
+  CPPFLAGS+=" -I${SYSROOT}/usr/include -I/usr/${arch}/include" # -I${SYSROOT}/usr/include"
   LDFLAGS="-Wl,-rpath,${LT_SYS_LIBRARY_PATH} ${LDFLAGS}"
 
   cmake_system_processor="${host_trip[0]}${host_trip[1]}"
@@ -180,12 +180,12 @@ function toolchain_llvm_mingw {
     LD="${CROSS_PREFIX}ld"
   fi
   export RC=${CROSS_PREFIX}windres
-  LT_SYS_LIBRARY_PATH="${LLVM_MINGW_HOME}/lib/clang/${xv_llvm_mingw}"
+  LT_SYS_LIBRARY_PATH="${LLVM_MINGW_HOME}/lib/clang/${XB_LLVM_MINGW_CLANG_VERSION_MAJOR}"
   CPPFLAGS+=" -I${SYSROOT}/include"
   LDFLAGS="-L${LT_SYS_LIBRARY_PATH}/lib -L${SYSROOT}/lib ${LDFLAGS}"
   YASM=yasm
   NASM=nasm
-  ASM_NASM=${NASM}
+  ASM_NASM=nasm
   cmake_findrootpath="${SYSROOT} ${LT_SYS_LIBRARY_PATH} ${dir_install}"
 
 }

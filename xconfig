@@ -20,27 +20,18 @@ function findname {
 }
 
 function promptYN {
-  echo -ne "${1} "; read -p "[Y|n]" out
+  echo -ne "${1} "; read -rp "[Y|n]" out
   case $out in
     y|Y) echo -ne "\e[1A\e[2K"; return 0;;
     *)   return 1;;
   esac
 }
 
-function llvm_mingw_latest {
-  curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'
-}
-
-function llvm_mingw_install {
-  # install llvm-mingw
-  : "${LLVM_MINGW_HOME:=${HOME}/llvm-mingw}"
-  local url="$(jq -r -M '.assets[] | .browser_download_url' <<<"${XB_LLVM_MINGW_JSON}" | grep '.*ucrt.*ubuntu.*'"$(uname -p)")"
-  pushdir "$(pwd)"
-  safe_cd "$(dirname ${LLVM_MINGW_HOME})"
-  safe_rm "${LLVM_MINGW_HOME}"
-  wget_untar "${url}" "llvm-mingw"    
-  echo "${XB_LLVM_MINGW_LATEST}" >"${LLVM_MINGW_HOME}/version"
-  popdir
+# ex.: check_policy 'https://apt.kitware.com' '--update cmake'
+function check_policy {
+  if [ -z "$(apt policy 2>/dev/null | grep "${1}")" ]; then
+    echo -e "${CY1}  Run ${0} --update ${2} to get ultimate version${C0}"
+  fi
 }
 
 function check_install {
@@ -128,11 +119,35 @@ function check_ndk_wrapper {
   if ${overwrite} || [ ! -f "${3}" ]; then
 		cat <<-eof | sudo tee ${3} >/dev/null
 			#!/bin/bash
-			\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${2}\${API:=${NDK_API_DEFAULT}}-${1} "\$@"
+			\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${2}\${API:=${ANDROID_NDK_API}}-${1} "\$@"
 			eof
     sudo chmod +x "${3}"
   fi
 }
+
+function ndk_url {
+  echo "$(curl -sL https://developer.android.com/ndk/downloads | grep -Po "https://dl.google.com/android/repository/android-ndk-r..*-linux.zip" | sed "/\"/d")"
+}
+
+function llvm_mingw_install {
+  # install llvm-mingw
+  test -z "${XB_LLVM_MINGW_JSON}" && return 1
+  : "${LLVM_MINGW_HOME:=${HOME}/llvm-mingw}"
+  local url="$(jq -r -M '.assets[] | .browser_download_url' <<<"${XB_LLVM_MINGW_JSON}" | grep '.*ucrt.*ubuntu.*'"$(uname -p)")"
+  pushdir "$(pwd)"
+  safe_cd "$(dirname ${LLVM_MINGW_HOME})"
+  safe_rm "${LLVM_MINGW_HOME}"
+  wget_untar "${url}" "llvm-mingw"    
+  echo "${XB_LLVM_MINGW_LATEST}" >"${LLVM_MINGW_HOME}/version"
+  popdir
+}
+
+
+
+
+
+
+
 
 clear
 
@@ -179,12 +194,31 @@ echo -e "\n${CC1}${b} Basic tools${C0}"
 printf "\n${CH}${XBTAB}: ${C0}%s\n" '  cmd install' "${apt_install}"
 check_install curl patch jq lzip unzip
 
+echo -e "\n${CC1}${b} Build tools${C0}"
+check_install build-essential make pkg-config
+
+echo -e "\n${CC1}${b} Assembly compilers${C0}"
+check_install nasm yasm
+
+echo -e "\n${CC1}${b} Cmake${C0}"
+check_policy 'https://apt.kitware.com' 'cmake'
+check_install cmake cmake-curses-gui
+
+echo -e "\n${CC1}${b} Meson${C0}"
+check_install meson ninja-build
+
+echo -e "\n${CC1}${b} Autotools${C0}"
+check_install automake autoconf autogen autopoint libtool-bin m4
+
+echo -e "\n${CC1}${b} Repository tools${C0}"
+check_install git subversion mercurial
+
+echo -e "\n${CC1}${b} Other tools${C0}"
+check_install gperf bison texinfo gettext
 
 
-# check for installed components
 
-
-
+# Toolchains
 
 # GNU gcc compiler
 
@@ -234,6 +268,7 @@ if [ -z "${XB_BUILD_CLANG}" ]; then
   done
 fi
 
+check_policy '//apt.llvm.org' 'llvm'
 XB_BUILD_CLANG="$(command -v clang)"
 if [ -n "${XB_BUILD_CLANG}" ]; then
   XB_BUILD_CLANG_VERSION=$(clang -dumpversion)
@@ -289,15 +324,14 @@ fi
 
 echo -e "\n${CC1}${b}Android NDK compiler"
 if [ ! -d "${ANDROID_NDK_HOME}" ]; then
-  echo -e "${CH}ANDROID_NDK_HOME is not defined"
+  echo -e "   ${CY1}ANDROID_NDK_HOME is not defined or has changed.${C0} Searching..."
   ndk_dir="$(find ~ -name 'ndk-lldb' | head -n1)"
   if [ -f "${ndk_dir}" ]; then
     ndk_dir="$(dirname "${ndk_dir}")"
     export ANDROID_NDK_HOME="${ndk_dir}"
   else
     echo -e "${CY1}Android NDK not found."
-    url="$(curl -sL https://developer.android.com/ndk/downloads | grep -Po "https://dl.google.com/android/repository/android-ndk-r..*-linux.zip" | sed "/\"/d")"
-    echo -e "${CY0}Download latest version: ${url}"
+    echo -e "${CY0}Download latest version: $(ndk_url)"
   fi
 fi
 
@@ -305,12 +339,13 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
   
   ANDROID_NDK_RELEASE="$(basename "${ANDROID_NDK_HOME}")"
   ndk_root="$(dirname "${ANDROID_NDK_HOME}")"
+  sdk_root="$(dirname "${ndk_root}")"
   ndk_update=false
   ndk_download=false
   ndk_latest="$(curl -sL https://developer.android.com/ndk/downloads | grep -oP '(?<=ndkVersion..)\d+\.\d+\.\d+.*(?=")' | head -n1)"
   if [ "${ANDROID_NDK_RELEASE}" = "${ndk_latest}" ]; then
     status="(updated)"
-  elif [ "$(ls ${ndk_root} | tail -n1)" == "${ndk_latest}" ]; then
+  elif [ "$(ls -1 ${ndk_root} | sort | tail -n1)" == "${ndk_latest}" ]; then
     status="${CY1} found ${ndk_latest}${C0} at ${ndk_root}/${ndk_latest}"
     ndk_update=true
   else
@@ -328,13 +363,27 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
   cmake_platforms="${ANDROID_NDK_HOME}/build/cmake/platforms.cmake"
   XB_NDK_MIN_PLATFORM_LEVEL="$(grep -oP '(?<=NDK_MIN_PLATFORM_LEVEL ")[0-9]+' "${cmake_platforms}")"
   XB_NDK_MAX_PLATFORM_LEVEL="$(grep -oP '(?<=NDK_MAX_PLATFORM_LEVEL ")[0-9]+' "${cmake_platforms}")"
-  NDK_API_DEFAULT="${XB_NDK_MAX_PLATFORM_LEVEL}"
+  ANDROID_NDK_API="${XB_NDK_MAX_PLATFORM_LEVEL}"
   
   printf "${CH}${XBTAB}: ${C0}%s\n" "  found at" "${ANDROID_NDK_HOME}"
-  printf "${CH}${XBTAB}: ${C0}%s\n" "  release" "${ANDROID_NDK_RELEASE} ${status}"
+  printf "${CH}${XBTAB}: ${C0}%s" "  release" "${ANDROID_NDK_RELEASE}"
+  echo -e "${status}"
   printf "${CH}${XBTAB}: ${C0}%s\n" "  clang version" "${XB_NDK_CLANG_VERSION}"
   printf "${CH}${XBTAB}: ${C0}%s\n" "  api range" "${XB_NDK_MIN_PLATFORM_LEVEL} to ${XB_NDK_MAX_PLATFORM_LEVEL}"
-
+  
+  ndk_cmake="${sdk_root}/cmake"
+  if [ -d "${ndk_cmake}" ]; then
+    ndk_cmake_version="$(ls -1 ${ndk_cmake} | sort | tail -n1)"
+    if [ -f "${ndk_cmake}/${ndk_cmake_version}/bin/cmake" ]; then
+      XB_NDK_CMAKE_EXE="${ndk_cmake}/${ndk_cmake_version}/bin/cmake"
+      printf "${CH}${XBTAB}: ${C0}%s\n" "  sdk cmake" "${ndk_cmake_version} (${XB_NDK_CMAKE_EXE})"
+    fi
+  fi
+  
+  sdkmanager="${sdk_root}/cmdline-tools/latest/bin/sdkmanager"
+  test -f "${sdkmanager}" && printf "${CH}${XBTAB}: ${C0}%s\n" "  sdk cmdline-tools" "$(${sdkmanager} --version 2>/dev/null | head -n1) (${sdk_root}/cmdline-tools)"
+  
+  ${ndk_download} && printf "${CH}${XBTAB}: ${CY1}%s${C0}\n" "  download link" "$(ndk_url)}"
   echo -e "\n${CC0} Check NDK symlinks"
 
   #c_arch=('aarch64' 'arm' 'i686' 'x86_64')
@@ -348,32 +397,70 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
     dst_root="/usr/${t}"
     dst_bin="${dst_root}/bin"
     dst_lib="${dst_root}/lib"
-    
+    env_file="${dir_root}/builds/toolchain/${c_lib[${i}]}.env"
+
+    echo "#!/bin/bash" >"${env_file}"
+    echo "export PLATFORM='Android'" >>"${env_file}"
+    echo "export TOOLCHAIN=\"/usr/${t}\"" >>"${env_file}"
+    echo "export SYSROOT=\"\${TOOLCHAIN}/sysroot\"" >>"${env_file}"
+    echo "export CROSS_PREFIX=\"\${TOOLCHAIN}/bin/\"" >>"${env_file}"
+
     # create cross arch dir at /usr
     if [ ! -d "${dst_bin}" ]; then
       sudo mkdir -p "${dst_bin}"
       printf "    ${CD}created %s" "${dst_bin}"  
     fi
 
-    #tc_path="\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/${ndk_build,,}/bin"
-    #tc_api="\${API:=${NDK_API_DEFAULT}}"
+    # C/C++
     # synthax check_ndk_wrapper [--overwrite] <clang|clang++> <triplet> <dest>
     check_ndk_wrapper --overwrite "clang" "${c_clang[${i}]}" "${dst_bin}/clang"
     check_ndk_wrapper --overwrite "clang++" "${c_clang[${i}]}" "${dst_bin}/clang++"
-    # test
-    printf "    ${C0}clang/clang++${CD} wrapper: %s" "$("${dst_bin}/clang" -dumpversion >/dev/null && echo -e "${CW}works${CD}" || echo -e "${CR1}not working${CD}" )"
+    test_cmd="$("${dst_bin}/clang" -dumpversion)"
+    if [ $? ]; then
+      echo -e "    ${C0}clang/clang++${CD} wrapper: ${CW}ok${CD} version: ${test_cmd}"
+      echo "export CC=\"${dst_bin}/clang\"" >>"${env_file}"
+      echo "export CXX=\"${dst_bin}/clang++\"" >>"${env_file}"
+    else
+      echo -e "    ${C0}clang/clang++${CD} wrapper: ${CR1}not working${CD}"
+    fi
+    
 
+    # LD
     check_ndk_symlink_dir --quiet "${dst_bin}/ld" "${XB_NDK_TOOLCHAIN}/bin/ld" \
       "${ANDROID_NDK_HOME}" "ANDROID_NDK_HOME"
-    printf ": ${C0}%s${CD}" "$("${dst_bin}/ld" --version)"
+    test_cmd="$("${dst_bin}/ld" --version)"
+    if [ $? ]; then
+      echo "export LD=\"${dst_bin}/ld\"" >>"${env_file}"
+      echo -e "    ${C0}ld${CD} symlink ${C0}ok${CD} version: ${C0}${test_cmd}${CD}"
+    else
+      echo -e "    ${C0}ld${CD} symlink ${CR1}failed${CD}"
+    fi
+    
+    
+    # YASM
     check_ndk_symlink_dir --quiet "${dst_bin}/yasm" "${XB_NDK_TOOLCHAIN}/bin/yasm" \
       "${ANDROID_NDK_HOME}" "ANDROID_NDK_HOME"
-    printf ": ${C0}%s${CD}" "$("${dst_bin}/yasm" --version | head -n1)"
+    test_cmd="$("${dst_bin}/yasm" --version | head -n1)"
+    if [ $? ]; then
+      echo "export YASM=\"${dst_bin}/yasm\"" >>"${env_file}"
+      echo "export ASM_NASM=\"${dst_bin}/yasm\"" >>"${env_file}"
+      echo -e "    ${C0}yasm${CD} symlink ${C0}ok${CD} version: ${C0}${test_cmd}${CD}"
+    else
+      echo -e "    ${C0}yasm${CD} symlink ${CR1}failed${CD}"
+    fi
     
-    echo -ne "\n    ${C0}binutils:${CD} "
+    echo -ne "    ${C0}binutils:${CD} "
     for j in as ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
       check_ndk_symlink "${dst_bin}/${j}" && sudo ln -sfn "${XB_NDK_TOOLCHAIN}/bin/llvm-${j}" "${dst_bin}/${j}"
-      test $? && echo -ne "${j} " || echo -ne "${CR1}${j}${CD} "
+      if [ $? ]; then
+        echo -ne "${j} "
+        case "${j}" in
+          as) echo "export AS=\"${dst_bin}/clang\"" >>"${env_file}";;
+          *)  echo "export ${j^^}=\"${dst_bin}/${j}\"" >>"${env_file}";;
+        esac
+      else
+        echo -ne "${CR1}${j}${CD} "
+      fi
     done
 
     check_ndk_symlink_dir "/usr/${t}/sysroot" "${XB_NDK_SYSROOT}" \
@@ -383,59 +470,66 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
     check_ndk_symlink_dir "/usr/${t}/lib" "${XB_NDK_SYSROOT}/usr/lib/${c_lib[${i}]}" \
       "${XB_NDK_SYSROOT}" "NDK_SYSROOT"
     check_ndk_symlink_dir "${dst_root}/local" "${dir_root}/builds/android/${c_abi[${i}]}"
+
+    echo "export CPPFLAGS=\"-I\${SYSROOT}/usr/include -I/usr/${t}/include -I/usr/${t}/local/include\"" >>"${env_file}"
+    echo "export LT_SYS_LIBRARY_PATH=\"\${TOOLCHAIN}/lib:\${SYSROOT}/usr/lib/${t}:\${SYSROOT}/usr/lib/${t}/\${ANDROID_NDK_API}\"" >>"${env_file}"
+    echo "export LDFLAGS=\"-Wl,-rpath,\${LT_SYS_LIBRARY_PATH} -L /usr/${t}/local/lib \${LDFLAGS}\"" >>"${env_file}"
     
     if [ ! -f "${dst_lib}/libpthread.a" ]; then
       sudo "${dst_bin}/ar" cr "${dst_lib}/libpthread.a"
     fi
-    printf "\n    ${C0}libthread${CD} %s" "${dst_lib}/libpthread.a"
+    echo -e "\n    ${C0}libthread${CD} %s" "${dst_lib}/libpthread.a"
     
     if [ ! -f "${dst_lib}/librt.a" ]; then
       sudo "${dst_bin}/ar" cr "${dst_lib}/librt.a"
     fi
-    printf "\n    ${C0}librt${CD} %s" "${dst_lib}/librt.a"
-    
-    echo -e "\n${C0}    toolchain at /usr/${t} ${CH}ok${C0}\n"
-done
-printf "${CH}%-20s: ${C0}%s\n" '  all toolchain symlinks' ok
+    echo -e "    ${C0}librt${CD} %s" "${dst_lib}/librt.a"
+    echo -e "    ${C0}env file at ${CH}${env_file}${C0}\n"
+  done
+  printf "${CH}%-20s: ${C0}%s\n" '  all toolchain symlinks' "ok"
 fi
 
-#exit 0
+
+
 
 # Mingw LLCM compiler
 
 echo -e "\n${CC1}${b}LLVM-MINGW Clang compiler"
-printf "  ${C0}Checking remote repository..."
+echo -ne "  ${C0}Checking remote repository..."
 XB_LLVM_MINGW_JSON=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
-XB_LLVM_MINGW_LATEST="$(jq -r .tag_name <<<"${XB_LLVM_MINGW_JSON}")"
-echo -e " latest version ${CH}${XB_LLVM_MINGW_LATEST}${C0}"
-export XB_LLVM_MINGW_JSON XB_LLVM_MINGW_LATEST
+if [ -n "${XB_LLVM_MINGW_JSON}" ]; then
+  echo "${XB_LLVM_MINGW_JSON}" >"${dir_root}/builds/llvm_mingw.json"
+  XB_LLVM_MINGW_LATEST="$(jq -r .tag_name <<<"${XB_LLVM_MINGW_JSON}")"
+  echo -e " latest version ${CH}${XB_LLVM_MINGW_LATEST}${C0}"
+  export XB_LLVM_MINGW_JSON XB_LLVM_MINGW_LATEST
+fi
 
 if [ -z "${LLVM_MINGW_HOME}" ]; then
   w64clang=$(findname "aarch64-w64-mingw32-clang" "${HOME}" "/")
   if [ -z "${w64clang}" ]; then
     promptYN " not found. Install?" && install_llvm_mingw
   else
-    export LLVM_MINGW_HOME=$(dirname $(dirname $w64clang))
+    LLVM_MINGW_HOME="$(dirname $(dirname $w64clang))"
   fi
 fi 
 
 if [ -n "${LLVM_MINGW_HOME}" ]; then
-  printf "${CH}%-20s: ${C0}%s\n" "  found at" ${LLVM_MINGW_HOME}
+  printf "${CH}%-20s: ${C0}%s\n" "  found at" "${LLVM_MINGW_HOME}"
   [ -f "${LLVM_MINGW_HOME}/version" ] || echo "$XB_LLVM_MINGW_LATEST" >>"${LLVM_MINGW_HOME}/version"
-  XB_LLVM_MINGW_LOCAL=$(cat ${LLVM_MINGW_HOME}/version)
-  printf "${CH}%-20s: ${C0}%s " '  release' ${XB_LLVM_MINGW_LOCAL}
+  XB_LLVM_MINGW_LOCAL="$(cat "${LLVM_MINGW_HOME}/version")"
+  printf "${CH}%-20s: ${C0}%s " '  release' "${XB_LLVM_MINGW_LOCAL}"
   if [ "${XB_LLVM_MINGW_LOCAL}" == "${XB_LLVM_MINGW_LATEST}" ]; then
       echo -e "(updated)"
   else
       echo -e "${CY1} latest is ${XB_LLVM_MINGW_LATEST}${C0}"
   fi
-  XB_LLVM_MINGW_CLANG_VERSION=$(${LLVM_MINGW_HOME}/bin/clang -dumpversion)
-  XB_LLVM_MINGW_CLANG_VERSION_MAJOR=${XB_LLVM_MINGW_CLANG_VERSION%%\.*}
+  XB_LLVM_MINGW_CLANG_VERSION=$("${LLVM_MINGW_HOME}/bin/clang" -dumpversion)
+  XB_LLVM_MINGW_CLANG_VERSION_MAJOR="${XB_LLVM_MINGW_CLANG_VERSION%%\.*}"
   printf "${CH}%-20s: ${C0}%s\n" '  clang' "${XB_LLVM_MINGW_CLANG_VERSION}"  
  
-  if [ -z "$(ls -A ${LLVM_MINGW_HOME}/include)" ]; then
+  if [ -z "$(ls -A "${LLVM_MINGW_HOME}/include")" ]; then
       rm -r "${LLVM_MINGW_HOME}/include"
-      ln -s ${LLVM_MINGW_HOME}/generic-w64-mingw32/include ${LLVM_MINGW_HOME}/include
+      ln -s "${LLVM_MINGW_HOME}/generic-w64-mingw32/include" "${LLVM_MINGW_HOME}/include"
   fi
 
   for cl in aarch64 arm i686 x86_64; do
@@ -465,3 +559,48 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
   done
   printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
 fi
+
+
+
+
+
+# Write Config
+
+echo -e "\n${CC1}${b}Writing Config file"
+
+cat <<-EOF >${dir_root}/.config
+#!/bin/bash
+export config_lastupdate=$(date +%s) \\
+  dir_root="$(pwd)" \\
+  sudo=$(command -v sudo) \\
+  apt_install="${apt_install}" \\
+  build_arch="${build_arch}" \\
+  MAKE_EXECUTABLE="$(command -v make)" \\
+	CMAKE_EXECUTABLE="$(command -v cmake)" \\
+	NASM_EXECUTABLE="$(command -v nasm)" \\
+	PKG_CONFIG="$(command -v pkg-config)" \\
+	HOST_NPROC="$(nproc)"
+
+# GCC Toolchains
+export XB_BUILD_GCC="${XB_BUILD_GCC}" \\
+  XB_GCC_VERSION="${XB_GCC_VERSION}"
+
+# Build LLVM Toolchain
+export XB_BUILD_CLANG="${XB_BUILD_CLANG}" \\
+  XB_BUILD_CLANG_VERSION="${XB_BUILD_CLANG_VERSION}" \\
+  XB_BUILD_CLANG_VERSION_MAJOR="${XB_BUILD_CLANG_VERSION_MAJOR}"
+
+# MINGW LLVM Toolchain
+export LLVM_MINGW_HOME="${LLVM_MINGW_HOME}" \\
+  XB_LLVM_MINGW_CLANG_VERSION="${XB_LLVM_MINGW_CLANG_VERSION}" \\
+  XB_LLVM_MINGW_CLANG_VERSION_MAJOR="${XB_LLVM_MINGW_CLANG_VERSION_MAJOR}"
+
+# Android NDK Toolchain
+export ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
+  XB_NDK_SYSROOT="${XB_NDK_SYSROOT}" \\
+  XB_NDK_TOOLCHAIN="${XB_NDK_TOOLCHAIN}" \\
+  XB_NDK_CMAKE_EXE="${XB_NDK_CMAKE_EXE}" \\
+  ANDROID_NDK_API="${ANDROID_NDK_API}"
+EOF
+
+echo -ne "... ${CC1}Done!${C0}\n\n"

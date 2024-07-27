@@ -21,7 +21,7 @@ on_config(){
 }
 
 on_config_ndk(){
-    API=35; NDK_API=35
+    ANDROID_NDK_API=35; NDK_API=35
 }
 
 dev_vrs='3.8.5'

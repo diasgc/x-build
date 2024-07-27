@@ -20,7 +20,7 @@ pkg_deb='libtdb-dev'
 eta='688'
 
 libtdb_cross(){
-	API=33 # set < 34 because NDK API 34 introduces function with different args len
+	ANDROID_NDK_API=33 # set < 34 because NDK API 34 introduces function with different args len
 	cfg_cmd+=" --cross-compile --cross-answers cross-answers.txt --host=${arch} "
 	cat <<-EOF >"${dir_src}/cross-answers.txt"
 		Checking uname sysname type: "${PLATFORM}"

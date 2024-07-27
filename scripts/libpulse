@@ -9,7 +9,7 @@ cfg='meson'
 patch="libpulse-01"
 pkg='libpulse'
 eta='120'
-#API=28 # required pthread_mutexattr_setprotocol
+#ANDROID_NDK_API=28 # required pthread_mutexattr_setprotocol
 
 lst_inc='pulse/*.h'
 lst_lib='libpulse libpulse-simple libpulse-mainloop-glib pulseaudio/libpulsedsp pulseaudio/libpulsecommon-15.0'

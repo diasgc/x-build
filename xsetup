@@ -687,33 +687,22 @@ export config_lastupdate=$(date +%s) \\
     sudo=$(command -v sudo) \\
     apt_install="${apt_install}" \\
     build_arch="${build_arch}" \\
-    XB_HAS_GNU_CLANG=${XB_HAS_GNU_CLANG} \\
-    XB_HAS_MINGW_CLANG=${XB_HAS_MINGW_CLANG} \\
-    XB_HAS_MINGW_GCC=${XB_HAS_MINGW_GCC} \\
-    XB_HAS_NDK_CLANG=${XB_HAS_NDK_CLANG} \\
-    CLANG_NDK_VERSION=${CLANG_NDK_VERSION} \\
-    CLANG_GNU_VERSION=${CLANG_GNU_VERSION} \\
     CLANG_MINGW_VERSION=${CLANG_MINGW_VERSION} \\
     LLVM_MINGW_HOME="${llvm_mingw}" \\
     ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
     ANDROID_NDK_API="${ANDROID_NDK_API}" \\
-    NDK_RELEASE="${NDK_RELEASE}" \\
     TOOLCHAIN_NDK="${TOOLCHAIN_NDK}" \\
     SYSROOT_NDK="${SYSROOT_NDK}" \\
-    LLVM_MINGW_REL="${LLVM_MINGW_REL}" \\
     MAKE_EXECUTABLE="$(command -v make)" \\
     CMAKE_EXECUTABLE="$(command -v cmake)" \\
     NASM_EXECUTABLE="$(command -v nasm)" \\
     PKG_CONFIG="$(command -v pkg-config)" \\
     HOST_NPROC="$(nproc)" \\
-    xv_llvm_mingw="${xv_llvm_mingw}" \\
-    llvm_mingw_rel="${llvm_mingw_rel}" \\
+    XB_LLVM_MINGW_CLANG_VERSION_MAJOR="${xv_llvm_mingw}" \\
     GCC_AARCH64_REL="$(/usr/bin/aarch64-linux-gnu-gcc -dumpversion)" \\
     GCC_ARMHF_REL="$(/usr/bin/arm-linux-gnueabihf-gcc -dumpversion)" \\
     GCC_I686_REL="$(/usr/bin/i686-linux-gnu-gcc -dumpversion)" \\
-    GCC_X86_64_REL="$(/usr/bin/x86_64-linux-gnu-gcc -dumpversion)" \\
-    xv_x64_mingw="${xv_llvm_mingw}" \\
-    xv_x86_mingw="${xv_llvm_mingw}"
+    GCC_X86_64_REL="$(/usr/bin/x86_64-linux-gnu-gcc -dumpversion)"
 EOF
 
 echo -ne "... ${CC1}Done!${C0}\n\n"

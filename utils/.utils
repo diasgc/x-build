@@ -788,15 +788,15 @@ github_description(){
     github.com) url="https://api.github.com/repos/${paths[2]}/${paths[3]}";;
     *) return 0
   esac
-  local json=${dir_root}/builds/${libname}.info
-  test -f ${json} || wget -q $url -O ${json}
-   echo $(cat ${json} | jq .description | xargs)
+  local json="${dir_root}/builds/${libname}.info"
+  test -f "${json}" || wget -q "$url" -O "${json}"
+   echo $(cat ${json} | jq -r .description)
 }
 
 
 clearAll(){
   if [ -z "$lib" ];then
-    read -p 'Clear all data? (Builds, Sources and Logs) [Y|n] ' ca
+    read -rp 'Clear all data? (Builds, Sources and Logs) [Y|n] ' ca
     case $ca in Y|y) rm -rf builds sources && clear;;esac
   else
     rm -rf sources/$lib
@@ -806,46 +806,38 @@ clearAll(){
 
 checkPkg(){
   local pf="${dir_install_pc}/${pkg}.pc"
-  [ -f "$pf" ] && echo $pf
+  [ -f "$pf" ] && echo "${pf}"
   return 0
 }
 
 list_tarball(){
-  local lf=$(ls -1 ${dir_pkgdist}/${lib}*${arch}.tar.gz 2>/dev/null | tail -n1)
+  local lf="$(ls -1 ${dir_pkgdist}/${lib}*${arch}.tar.gz 2>/dev/null | tail -n1)"
   if [ -z "${lf}" ] || [ ! -f "${lf}" ]; then
     return 1
   fi
-  tar -ztvf ${lf} | grep -e "[^/]$"
+  tar -ztvf "${lf}" | grep -e "[^/]$"
   return 0
 }
 
 hwinfoCountCores(){
-  echo $(nproc)
+  echo "$(nproc)"
   # or cat /proc/cpuinfo | grep -Po -c 'model name\s+: \K(.*)'
 }
 
 hwinfoCountCoresReadable(){
   # How to get the number of physical cores
-  local n=$(lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l)
+  local n="$(lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l)"
   local c=( 0 Single Dual 3 Quad 5 Hexa 7 Octa 9 Deca )
-  if [ ${n} -gt 10 ]; then
+  if [ "${n}" -gt 10 ]; then
     echo "${n}-Core"
   else
     echo "${c[${n}]}-Core"
   fi
   return 0
-  case "${n}" in
-    1) echo "Single-Core";;
-    2) echo "Dual-Core";;
-    4) echo "Quad-Core";;
-    6) echo "Hexa-Core";;
-    8) echo "Octa-Core";;
-    *) echo "${n}-Core";;
-  esac
 }
 
 hwinfoProcessor(){
-  cat /proc/cpuinfo | grep -Po 'model name\s+: \K(.*)' | head -n1
+  grep -Po 'model name\s+: \K(.*)' /proc/cpuinfo | head -n1
 }
 
 prompt_remove(){
@@ -878,16 +870,16 @@ patch_append(){
   str_starts "${newfile}" "sources/${lib}/" && newfile="${newfile//sources\/${lib}\//}"
   [ -f "sources/${lib}/${newfile}" ] || exit_err "unable to find file sources/${lib}/${newfile}"
   shift
-  cd sources/${lib}
+  cd "sources/${lib}"
   if [ -z "${1}" ]; then
     oldfile="${newfile::-3}old"
-    touch sources/${lib}/${oldfile}
+    touch "sources/${lib}/${oldfile}"
   else
     oldfile=${1}
     str_starts "${oldfile}" "sources/${lib}/" && newfile="${oldfile//sources\/${lib}\//}"
     [ -f "${oldfile}" ] || exit_err "unable to find file sources/${lib}/${oldfile}"
   fi
-  diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" >>${dir_root}/sources/${lib}/xbuild.patch
+  diff -Naur "${oldfile}" "${newfile}" | sed "s|${oldfile}|${newfile}|" >>"${dir_root}/sources/${lib}/xbuild.patch"
   cd ../..
   echo -e "\n  ${CC1}Patch file updated at:${C0} $(pwd)/sources/${lib}/xbuild.patch\n\n"
 }
@@ -898,14 +890,16 @@ patch_embed(){
   fi
   hdr="STR_PATCH"
   case "${1}" in
-    xb64|XB64) echo -e "\n<<'XB64_PATCH'" >>${0}
-        cat "sources/${lib}/xbuild.patch" | base64 -w 90 >>${0}
-        echo -e "XB64_PATCH" >>${0}
-        ;;
-    lzs|LZS)   echo -e "\n<<'LZS_PATCH'" >>${0}
-        cat "sources/${lib}/xbuild.patch" | utils/lz-string -c -w 90 - >>${0}
-        echo -e "LZS_PATCH" >>${0}
-        ;;
+    xb64|XB64)
+      echo -e "\n<<'XB64_PATCH'" >>${0}
+      cat "sources/${lib}/xbuild.patch" | base64 -w 90 >>${0}
+      echo -e "XB64_PATCH" >>${0}
+      ;;
+    lzs|LZS)
+      echo -e "\n<<'LZS_PATCH'" >>${0}
+      cat "sources/${lib}/xbuild.patch" | utils/lz-string -c -w 90 - >>${0}
+      echo -e "LZS_PATCH" >>${0}
+      ;;
   esac
 }
 
@@ -929,27 +923,27 @@ create_diff(){
   local oldfile
   [ -f "sources/${lib}/${newfile}" ] || exit_err "unable to find file sources/${lib}/${newfile}"
   shift
-  pushdir sources/${lib}
+  pushdir "sources/${lib}"
   if [ -z "${1}" ]; then
     oldfile="${newfile::-3}old"
-    touch sources/${lib}/${oldfile}
+    touch "sources/${lib}/${oldfile}"
   else
     oldfile=${1}
     [ -f "${oldfile}" ] || exit_err "unable to find file sources/${lib}/${oldfile}"
   fi
   if $b64; then
-    diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" | base64 -w 90 >>"${newfile}.patch"
+    diff -Naur "${oldfile}" "${newfile}" | sed "s|${oldfile}|${newfile}|" | base64 -w 90 >>"${newfile}.patch"
   else
-    diff -Naur ${oldfile} ${newfile} | sed "s|${oldfile}|${newfile}|" >"${newfile}.patch"
+    diff -Naur "${oldfile}" "${newfile}" | sed "s|${oldfile}|${newfile}|" >"${newfile}.patch"
   fi
   echo -e "\n  ${CC1}Done${C0}\n"
-  read -p "Open file? y|n: " yn
+  read -rp "Open file? y|n: " yn
   case $yn in y|Y) nano "${newfile}.patch";; esac
   popdir
 }
 
 patch_check_xbpatch(){
-  pushdir ${dir_root}
+  pushdir "${dir_root}"
   local matches=( $(grep -oP "(?<=^<<').*?(?=')" $0) )
   if [ ${#matches[@]} -gt 0 ]; then
     for match in ${matches[@]}; do
@@ -957,23 +951,26 @@ patch_check_xbpatch(){
       local block=$(awk '/^<<.'${match}'./{flag=1; next} /^'{$match}'/{flag=0} flag' $0)
       case $match in
         XB_CREATE_CMAKELISTS|CMakeLists.txt)
-          echo "${block}" >${dir_src}/CMakeLists.txt
-          echo -e "\ncreate CMakeLists.txt: \n$block" >>${log_file}
+          echo "${block}" >"${dir_src}/CMakeLists.txt"
+          echo -e "\ncreate CMakeLists.txt: \n$block" >>"${log_file}"
           ;;
-        XB_PATCH) pushdir ${dir_src}
-          patch -p0 <<<$(echo "${block}") 2>&1 >${log_file}
-          echo -e "\npatch found: \n$block" >>${log_file}
+        XB_PATCH)
+          pushdir "${dir_src}"
+          patch -p0 <<<"$(echo "${block}")" 2>&1 >"${log_file}"
+          echo -e "\npatch found: \n$block" >>"${log_file}"
           popdir
           ;;
-        XB64_PATCH) pushdir ${dir_src}
-          patch -p0 <<<$(echo "${block}" | base64 -d) 2>&1 >${log_file}
+        XB64_PATCH)
+          pushdir "${dir_src}"
+          patch -p0 <<<"$(echo "${block}" | base64 -d)" 2>&1 >"${log_file}"
           popdir
           ;;
-        LZS_PATCH) pushdir ${dir_src}
-          patch -p0 <<<$(echo "${block}" | ${dir_root}/utils/lz-string -d -) 2>&1 >${log_file}
+        LZS_PATCH)
+          pushdir "${dir_src}"
+          patch -p0 <<<"$(echo "${block}" | "${dir_root}/utils/lz-string" -d -)" 2>&1 >>"${log_file}"
           popdir
           ;;
-        *) echo -e "\nUnknown block name ${match} with this contents (ignoring):\n$block" >>${log_file}
+        *) echo -e "\nUnknown block name ${match} with this contents (ignoring):\n$block" >>"${log_file}"
           ;;
       esac
     done
@@ -1005,11 +1002,16 @@ menu_tune(){
 menu_clear(){
   while [ -n "$1" ];do
     case "${1}" in
-      source|srclib)   prompt_remove ${dir_src};;
-      allsources|sources)  prompt_remove ${dir_sources};;
-      builds)   prompt_remove ${dir_install};;
-      packages) prompt_remove ${dir_pkgdist};;
-      wipe*)    prompt_remove ${dir_pkgdist} ${dir_install} ${dir_sources};;
+      source|srclib)
+        prompt_remove "${dir_src}";;
+      allsources|sources)
+        prompt_remove "${dir_sources}";;
+      builds)
+        prompt_remove "${dir_install}";;
+      packages)
+        prompt_remove "${dir_pkgdist}";;
+      wipe*)
+        prompt_remove "${dir_pkgdist}" "${dir_install}" "${dir_sources}";;
     esac
     shift
   done
