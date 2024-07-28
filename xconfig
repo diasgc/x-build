@@ -56,10 +56,10 @@ function check_install {
 # synthax: check_slink <dest> <src>
 function check_slink {
   local status
-	if [ ! -f "${1}" ]; then
-		sudo ln -s "${2}" "${1}" > /dev/null && status="new" || status="${CR1}err${C0}"
+  if [ ! -f "${1}" ]; then
+    sudo ln -s "${2}" "${1}" > /dev/null && status="new" || status="${CR1}err${C0}"
     ${verbose} && printf "${CC1}%-6s ${C0}%-60s-> ${CW}%s\n" "    ${status}" "${1}" "${2}"
-	elif [ "$(readlink "${1}")" == "${2}" ]; then
+  elif [ "$(readlink "${1}")" == "${2}" ]; then
     ${verbose} && printf "${CH}%-6s ${CD}%-60s-> ${C0}%s\n" "    ok" "${1}" "${2}"
   else
     sudo ln -s "${2}" "${1}" > /dev/null && status="${CY1}upd${C0}" || status="${CR1}err${C0}"
