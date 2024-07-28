@@ -6,24 +6,21 @@ lic='LGPL-2.1'
 src='https://github.com/njh/twolame.git'
 
 cfg='cmake'
-#cmake_file='twolame.cmake'
+cmake_file='twolame.cmake'
+on_build_bin(){
+    dep='sndfile'
+}
 
 dev_bra='master'
 dev_vrs='0.4.0'
 pkg_deb='libtwolame-dev'
-eta='225'
+eta='48'
 
 lst_inc='twolame.h'
 lst_lib='libtwolame'
 lst_bin='twolame'
 lst_lic='COPYING README AUTHORS'
 lst_pc='twolame.pc'
-
-on_config(){
-    $build_bin && dep='sndfile'
-}
-
-
 
 # cpu av8 av7 x86 x64
 # NDK +++  .   .   .  clang
