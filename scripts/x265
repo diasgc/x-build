@@ -22,21 +22,22 @@ config_dir='source'
 # disable warnings
 cmake_add_compile_options=( 
  -Wno-absolute-value
- -Wno-unused-but-set-variable
+ -Wno-bitwise-instead-of-logical
+ -Wno-shift-count-negative
  -Wno-shadow
+ -Wno-unused-but-set-variable
  -Wno-unused-parameter
  -Wno-unused-variable
- -Wno-bitwise-instead-of-logical
 )
 
 dev_bra='master'
 dev_vrs='3.6'
 pkg_deb='libx265-dev'
-eta='224'
+eta='720'
 
 extra_options(){
     case "${1}" in
-        --multilib) multilib=true; eta='224';;
+        --multilib) multilib=true; eta='720';;
         --12bit) cmake_config="${cmake_config_12bit}";;
         --10bit) cmake_config="${cmake_config_10bit}";;
     esac

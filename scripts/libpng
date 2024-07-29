@@ -23,7 +23,7 @@ lst_bin='png-fix-itxt libpng16-config pngfix'
 lst_lic='LICENSE AUTHORS'
 lst_pc='libpng16.pc'
 
-eta='184'
+eta='320'
 
 
 

@@ -18,7 +18,7 @@ cmake_config='-DENABLE_TESTS=OFF
 dev_bra='main'
 dev_vrs='3.9.1'
 pkg_deb='libaom-dev'
-eta='1192'
+eta='1056'
 
 lst_inc='aom/aom_decoder.h aom/aom_integer.h
  aom/aom_external_partition.h

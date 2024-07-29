@@ -6,9 +6,9 @@ dsc='Library for tuning for Non Uniform Memory Access machines (linux)'
 lic='GPL-2.0'
 src='https://github.com/numactl/numactl.git'
 cfg='ar'
-eta='80'
+eta='208'
 pkg='numa'
-eta='80'
+eta='208'
 make_install=install
 ANDROID_NDK_API=26 # min api necessary for declaration of functions like 'shmget'
 
