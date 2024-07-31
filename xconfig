@@ -143,6 +143,41 @@ function llvm_mingw_install {
 }
 
 
+function symlink_exportenv {
+  local silent=false
+  local ctest=false
+  local cargs=
+  case "${1}" in
+    --silent|-s)  silent=true; shift;;
+    --test|-t)    ctest=true; shift; cargs="${1}"; shift;;
+  esac
+  local src="${1}"
+  local dst="${2}"
+  local varname="${3}"
+  local envfile="${4}"
+  local status=false
+  local status_ok="${C0}ok${CD}"
+  local status_err="${CR1}err${CD}"
+  if [ ! -L "${dst}" ]; then
+    sudo ln "${src}" "${dst}"
+    test $? && status=true || status=false
+  elif [ "$(readlink "${dst}")" == "${src}" ]; then
+    status=true
+  else
+    sudo ln "${src}" "${dst}"
+    status_ok=${CY0}updated${CD}
+    test $? && status=true || status=false
+  fi
+  ${status} && status_msg="${status_ok}" || status_msg="${status_err}"
+  if ${silent}; then
+    echo -ne "${C0}${j}${CD} "
+  elif ${test}; then
+    echo -e "    ${C0}${varname,,}${CD} symlink ${status_msg}: $("${dst}" "${cargs}")"
+  else
+    echo -e "    ${C0}${varname,,}${CD} symlink ${status_msg} "
+  fi
+}
+
 
 
 
