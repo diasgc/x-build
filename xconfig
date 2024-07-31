@@ -144,6 +144,7 @@ function llvm_mingw_install {
 }
 
 
+# symlink_exportenv [--silent|--test] src dst varname envfile
 function symlink_exportenv {
   local silent=false
   local ctest=false
@@ -156,27 +157,45 @@ function symlink_exportenv {
   local dst="${2}"
   local varname="${3}"
   local envfile="${4}"
+
   local status=false
-  local status_ok="${C0}ok${CD}"
-  local status_err="${CR1}err${CD}"
+  local msg
+  local msg_ok="ok"
+  local req_ln=false
+  
   if [ ! -L "${dst}" ]; then
-    sudo ln "${src}" "${dst}"
-    test $? && status=true || status=false
+    req_ln=true
+    msg_ok="${CH}created${CD}"
+    msg="${CH}"
   elif [ "$(readlink "${dst}")" == "${src}" ]; then
     status=true
+    msg_ok="${C0}ok${CD}"
+    msg="${C0}"
   else
-    sudo ln "${src}" "${dst}"
-    status_ok=${CY0}updated${CD}
-    test $? && status=true || status=false
+    req_ln=true
+    msg_ok="${CY0}updated${CD}"
+    msg="${CY0}"
   fi
-  ${status} && status_msg="${status_ok}" || status_msg="${status_err}"
-  if ${silent}; then
-    echo -ne "${C0}${j}${CD} "
-  elif ${test}; then
-    echo -e "    ${C0}${varname,,}${CD} symlink ${status_msg}: $("${dst}" "${cargs}")"
-  else
-    echo -e "    ${C0}${varname,,}${CD} symlink ${status_msg} "
+  if ${req_ln}; then
+    sudo ln -sfn "${src}" "${dst}"
+    if [ $? ]; then
+      status=true
+    else
+      msg="${CR}"
+      msg_ok="fail"
+    fi
   fi
+  msg+="${varname,,}${CD} "
+  ${silent} || msg="    ${msg}symlink ${msg_ok}"
+  if ${status}; then
+    echo "export ${varname}=${dst}" >>"${envfile}"
+    if ${ctest}; then
+      ${ctest} && msg+=": ${C0}$("${dst}" "${cargs}" | head -n1)${CD}"
+      test $? || msg+=" ${CR1}failed${CD}"
+    fi
+  fi
+  ${silent} || msg+="\n"
+  echo -ne "${msg}"
 }
 
 
@@ -453,50 +472,24 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
     check_ndk_wrapper --overwrite "clang++" "${c_clang[${i}]}" "${dst_bin}/clang++"
     test_cmd="$("${dst_bin}/clang" -dumpversion)"
     if [ $? ]; then
-      echo -e "    ${C0}clang/clang++${CD} wrapper: ${CW}ok${CD} version: ${test_cmd}"
+      echo -e "    ${C0}clang/clang++${CD} wrapper ${C0}working${CD} version: ${test_cmd}"
       echo "export CC=\"${dst_bin}/clang\"" >>"${env_file}"
       echo "export CXX=\"${dst_bin}/clang++\"" >>"${env_file}"
     else
       echo -e "    ${C0}clang/clang++${CD} wrapper: ${CR1}not working${CD}"
     fi
     
-
     # LD
-    check_ndk_symlink_dir --quiet "${dst_bin}/ld" "${XB_NDK_TOOLCHAIN}/bin/ld" \
-      "${ANDROID_NDK_HOME}" "ANDROID_NDK_HOME"
-    test_cmd="$("${dst_bin}/ld" --version)"
-    if [ $? ]; then
-      echo "export LD=\"${dst_bin}/ld\"" >>"${env_file}"
-      echo -e "    ${C0}ld${CD} symlink ${C0}ok${CD} version: ${C0}${test_cmd}${CD}"
-    else
-      echo -e "    ${C0}ld${CD} symlink ${CR1}failed${CD}"
-    fi
-    
+    symlink_exportenv --test "--version" "${XB_NDK_TOOLCHAIN}/bin/ld" "${dst_bin}/ld" "LD" "${env_file}"
     
     # YASM
-    check_ndk_symlink_dir --quiet "${dst_bin}/yasm" "${XB_NDK_TOOLCHAIN}/bin/yasm" \
-      "${ANDROID_NDK_HOME}" "ANDROID_NDK_HOME"
-    test_cmd="$("${dst_bin}/yasm" --version | head -n1)"
-    if [ $? ]; then
-      echo "export YASM=\"${dst_bin}/yasm\"" >>"${env_file}"
-      echo "export ASM_NASM=\"${dst_bin}/yasm\"" >>"${env_file}"
-      echo -e "    ${C0}yasm${CD} symlink ${C0}ok${CD} version: ${C0}${test_cmd}${CD}"
-    else
-      echo -e "    ${C0}yasm${CD} symlink ${CR1}failed${CD}"
-    fi
+    symlink_exportenv --test "--version" "${XB_NDK_TOOLCHAIN}/bin/yasm" "${dst_bin}/yasm" "YASM" "${env_file}"
+    test $? && echo "export ASM_NASM=\"${dst_bin}/yasm\"" >>"${env_file}"
     
     echo -ne "    ${C0}binutils:${CD} "
     for j in as ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
-      check_ndk_symlink "${dst_bin}/${j}" && sudo ln -sfn "${XB_NDK_TOOLCHAIN}/bin/llvm-${j}" "${dst_bin}/${j}"
-      if [ $? ]; then
-        echo -ne "${j} "
-        case "${j}" in
-          as) echo "export AS=\"${dst_bin}/clang\"" >>"${env_file}";;
-          *)  echo "export ${j^^}=\"${dst_bin}/${j}\"" >>"${env_file}";;
-        esac
-      else
-        echo -ne "${CR1}${j}${CD} "
-      fi
+      # symlink_exportenv [--silent|--test] src dst varname envfile
+      symlink_exportenv --silent "${XB_NDK_TOOLCHAIN}/bin/llvm-${j}" "${dst_bin}/${j}" "${j^^}" "${env_file}"
     done
 
     check_ndk_symlink_dir "/usr/${t}/sysroot" "${XB_NDK_SYSROOT}" \
