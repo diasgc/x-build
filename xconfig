@@ -144,20 +144,28 @@ function llvm_mingw_install {
 }
 
 
-# symlink_exportenv [--silent|--test] src dst varname envfile
+# symlink_exportenv [--export varname envfile][--silent|--test args] src dst
 function symlink_exportenv {
   local silent=false
   local ctest=false
-  local cargs=
+  local showlink=false
+  local var_export=false
+  local cargs
+  local envfile
   case "${1}" in
-    --silent|-s)  silent=true; shift;;
-    --test|-t)    ctest=true; shift; cargs="${1}"; shift;;
+    --export|-e)
+      var_export=true; shift
+      envfile="${1}"; shift
+      ;;
+  esac
+  case "${1}" in
+    --silent|-s) silent=true; shift;;
+    --test|-t)   ctest=true; shift; cargs="${1}"; shift;;
+    --link|-l)   showlink=true; shift;; 
   esac
   local src="${1}"
   local dst="${2}"
   local varname="${3}"
-  local envfile="${4}"
-
   local status=false
   local msg
   local msg_ok="ok"
@@ -188,10 +196,12 @@ function symlink_exportenv {
   msg+="${varname,,}${CD} "
   ${silent} || msg="    ${msg}symlink ${msg_ok}"
   if ${status}; then
-    echo "export ${varname}=${dst}" >>"${envfile}"
+    ${var_export} && echo "export ${varname}=${dst}" >>"${envfile}"
     if ${ctest}; then
-      ${ctest} && msg+=": ${C0}$("${dst}" "${cargs}" | head -n1)${CD}"
-      test $? || msg+=" ${CR1}failed${CD}"
+      msg_ok="$("${dst}" "${cargs}" | head -n1)${CD}"
+      test $? && msg+=": ${C0}${msg_ok}"|| msg+=" ${CR1}failed${CD}"
+    elif ${showlink}; then
+      msg+="${CD}${dst} -> ${src}"
     fi
   fi
   ${silent} || msg+="\n"
@@ -457,7 +467,7 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
     echo "#!/bin/bash" >"${env_file}"
     echo "export PLATFORM='Android'" >>"${env_file}"
     echo "export TOOLCHAIN=\"/usr/${t}\"" >>"${env_file}"
-    echo "export SYSROOT=\"\${TOOLCHAIN}/sysroot\"" >>"${env_file}"
+    #echo "export SYSROOT=\"\${TOOLCHAIN}/sysroot\"" >>"${env_file}"
     echo "export CROSS_PREFIX=\"\${TOOLCHAIN}/bin/\"" >>"${env_file}"
 
     # create cross arch dir at /usr
@@ -480,25 +490,28 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
     fi
     
     # LD
-    symlink_exportenv --test "--version" "${XB_NDK_TOOLCHAIN}/bin/ld" "${dst_bin}/ld" "LD" "${env_file}"
+    symlink_exportenv --export "${env_file}" --test "--version" "${XB_NDK_TOOLCHAIN}/bin/ld" "${dst_bin}/ld" "LD" 
     
     # YASM
-    symlink_exportenv --test "--version" "${XB_NDK_TOOLCHAIN}/bin/yasm" "${dst_bin}/yasm" "YASM" "${env_file}"
+    symlink_exportenv --export "${env_file}" --test "--version" "${XB_NDK_TOOLCHAIN}/bin/yasm" "${dst_bin}/yasm" "YASM"
     test $? && echo "export ASM_NASM=\"${dst_bin}/yasm\"" >>"${env_file}"
     
     echo -ne "    ${C0}binutils:${CD} "
-    for j in as ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
+    symlink_exportenv --silent "${XB_NDK_TOOLCHAIN}/bin/llvm-as" "${dst_bin}/as" "AS"
+    echo "export AS=\"\${CC}\"" >>"${env_file}"
+    for j in ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
       # symlink_exportenv [--silent|--test] src dst varname envfile
-      symlink_exportenv --silent "${XB_NDK_TOOLCHAIN}/bin/llvm-${j}" "${dst_bin}/${j}" "${j^^}" "${env_file}"
+      symlink_exportenv --export "${env_file}" --silent "${XB_NDK_TOOLCHAIN}/bin/llvm-${j}" "${dst_bin}/${j}" "${j^^}"
     done
+    echo
 
-    check_ndk_symlink_dir "/usr/${t}/sysroot" "${XB_NDK_SYSROOT}" \
-      "${ANDROID_NDK_HOME}" "ANDROID_NDK_HOME"
-    check_ndk_symlink_dir "/usr/${t}/include" "${XB_NDK_SYSROOT}/usr/include" \
-      "${XB_NDK_SYSROOT}" "NDK_SYSROOT"
-    check_ndk_symlink_dir "/usr/${t}/lib" "${XB_NDK_SYSROOT}/usr/lib/${c_lib[${i}]}" \
-      "${XB_NDK_SYSROOT}" "NDK_SYSROOT"
-    check_ndk_symlink_dir "${dst_root}/local" "${dir_root}/builds/android/${c_abi[${i}]}"
+    symlink_exportenv --export "${env_file}" --link "${XB_NDK_SYSROOT}" "/usr/${t}/sysroot" "SYSROOT"
+    #check_ndk_symlink_dir "/usr/${t}/include" "${XB_NDK_SYSROOT}/usr/include" "${XB_NDK_SYSROOT}" "NDK_SYSROOT"
+    symlink_exportenv --link "${XB_NDK_SYSROOT}/usr/include" "/usr/${t}/include" "include"
+    #check_ndk_symlink_dir "/usr/${t}/lib" "${XB_NDK_SYSROOT}/usr/lib/${c_lib[${i}]}" "${XB_NDK_SYSROOT}" "NDK_SYSROOT"
+    symlink_exportenv --link "${XB_NDK_SYSROOT}/usr/lib/${c_lib[${i}]}" "/usr/${t}/lib" "lib"
+    #check_ndk_symlink_dir "${dst_root}/local" "${dir_root}/builds/android/${c_abi[${i}]}"
+    symlink_exportenv --link "${dir_root}/builds/android/${c_abi[${i}]}" "${dst_root}/local" "local"
 
     echo "export CPPFLAGS=\"-I\${SYSROOT}/usr/include -I/usr/${t}/include -I/usr/${t}/local/include\"" >>"${env_file}"
     echo "export LT_SYS_LIBRARY_PATH=\"\${TOOLCHAIN}/lib:\${SYSROOT}/usr/lib/${t}:\${SYSROOT}/usr/lib/${t}/\${ANDROID_NDK_API}\"" >>"${env_file}"
@@ -507,7 +520,7 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
     if [ ! -f "${dst_lib}/libpthread.a" ]; then
       sudo "${dst_bin}/ar" cr "${dst_lib}/libpthread.a"
     fi
-    echo -e "\n    ${C0}libthread${CD} %s" "${dst_lib}/libpthread.a"
+    echo -e "    ${C0}libthread${CD} %s" "${dst_lib}/libpthread.a"
     
     if [ ! -f "${dst_lib}/librt.a" ]; then
       sudo "${dst_bin}/ar" cr "${dst_lib}/librt.a"
