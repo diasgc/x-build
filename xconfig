@@ -145,7 +145,7 @@ function llvm_mingw_install {
 
 # do_symlink --src <source> --dst <dest-slink> [--var varname][--test cmd_args][--export envfile value][--silent][--link]
 function do_symlink {
-  local src dst msg showlink var silent ret do_test test_args do_export export_file export_val
+  local src dst msg showlink var silent ret do_test test_args test_out do_export export_file export_val 
   showlink=false
   silent=false
   do_test=false
@@ -155,27 +155,28 @@ function do_symlink {
   # parse option
   while [ "${1}" ]; do
     case "${1}" in
-      --src)
+      --src|--source)
         shift; src="${1}"
         ;;
-      --dst)
+      --dst|--dest)
         shift; dst="${1}"
         ;;
-      --var)
+      --var|--varname|-v)
         shift; var="${1}"
         ;;
-      --test)
+      --test|-t)
         shift; test_args="${1}"
         do_test=true
         ;;
-      --export) 
-        shift; exoprt_file="${1}"
+      --export|--exp|-e)
+        shift; export_file="${1}"
         shift; export_val="${1}"
+        do_export=true
         ;;
-      --silent)
+      --silent|--quiet|-q)
         silent=true
         ;;
-      --link)
+      --link|--show*link|--show)
         showlink=true
         ;;
     esac
@@ -203,90 +204,108 @@ function do_symlink {
   # do symlink, ret=0 if success
   test ${op} -gt 0 && sudo ln -sfn "${src}" "${dst}" && ret=0
   # if error set color and message
-  test ${ret} -eq 1 && clr="${CR1}" && msg_ok="failed"
+  if [ ${ret} -eq 1 ]; then
+    clr="${CR1}"
+    msg_ok="failed"
+    do_test=false
+    do_export=false
+    showlink=false
+  fi
 
   msg="${clr}${var}${CD} "
-  ${silent} || msg="    ${msg}symlink ${clr}${msg_ok}$"
-  if [ ${ret} -eq 0 ]; then
-    if ${do_test}; then
-      local test_out="$(${dst} "${test_args}")"
-
-
-      
+  ${silent} || msg="    ${msg}symlink ${clr}${msg_ok}${CD}"
+  if ${do_test}; then
+    test_out="$(${dst} "${test_args}" | head -n1)"
+    if [ $? ]; then
+      msg+=" ${C0}pass${CD}: ${test_out}"
+    else
+      msg+=" ${CR1}failed${CD}"
+      ret=1
+      do_export=false
     fi
-    ${showlink} && msg+=" ${src} -> ${dst}"
   fi
+  if ${do_export} && [ -f "${export_file}" ] && [ -n "${export_val}" ]; then
+    echo "export ${var^^}=\"${export_val}\"" >>"${export_file}" 
+  fi
+  ${showlink} && msg+=" ${src} -> ${dst}"
   ${silent} || msg+="\n"
   echo -ne "${msg}"
   return ${ret}
 }
 
-# symlink_exportenv [--export varname envfile][--silent|--test args] src dst
-function symlink_exportenv {
-  local silent=false
-  local ctest=false
-  local showlink=false
-  local var_export=false
-  local cargs
-  local envfile
-  case "${1}" in
-    --export|-e)
-      var_export=true; shift
-      envfile="${1}"; shift
-      ;;
-  esac
-  case "${1}" in
-    --silent|-s) silent=true; shift;;
-    --test|-t)   ctest=true; shift; cargs="${1}"; shift;;
-    --link|-l)   showlink=true; shift;; 
-  esac
-  local src="${1}"
-  local dst="${2}"
-  local varname="${3}"
-  local status=false
-  local msg
-  local msg_ok="ok"
-  local req_ln=false
+# do_wrapper --dst "${dst_bin}/clang" --cmd "clang ${wrapper_args} \"$@\"" --test "-dumpversion" --export "${env_file}" "CC"
+function do_wrapper {
+  local dst cmd msg var silent ret do_show do_test test_args test_out do_export export_file export_var
+  silent=false
+  do_test=false
+  do_export=false
+  do_show=false
+  ret=1
+
+  # parse option
+  while [ "${1}" ]; do
+    case "${1}" in
+      --dst|--dest)
+        shift; dst="${1}"
+        ;;
+      --cmd|--command)
+        shift; cmd="${1}"
+        ;;
+      --show)
+        do_show=true
+        ;;
+      --test|-t)
+        shift; test_args="${1}"
+        do_test=true
+        ;;
+      --export|--exp|-e)
+        shift; export_file="${1}"
+        shift; export_var="${1}"
+        do_export=true
+        ;;
+      --silent|--quiet|-q)
+        silent=true
+        ;;
+    esac
+    shift
+  done
   
-  if [ ! -L "${dst}" ]; then
-    req_ln=true
-    msg_ok="${CH}created${CD}"
-    msg="${CH}"
-  elif [ "$(readlink "${dst}")" == "${src}" ]; then
-    status=true
-    msg_ok="${C0}ok${CD}"
-    msg="${C0}"
+	cat <<-eof | sudo tee "${dst}" >/dev/null
+		#!/bin/bash
+		${cmd}
+		eof
+  sudo chmod +x "${dst}" && ret=0
+  
+  # if error set color and message
+  if [ ${ret} -eq 1 ]; then
+    clr="${CR1}"
+    msg_ok='failed'
+    do_test=false
+    do_export=false
   else
-    req_ln=true
-    msg_ok="${CY0}updated${CD}"
-    msg="${CY0}"
+    clr="${C0}"
+    msg_ok='created'
   fi
-  if ${req_ln}; then
-    sudo ln -sfn "${src}" "${dst}"
+  msg="${clr}$(basename "${dst}")${CD} "
+  ${silent} || msg="    ${msg}wrapper ${clr}${msg_ok}${CD}"
+  ${do_show} && msg+=" ${cmd}"
+  if ${do_test}; then
+    test_out="$(${dst} "${test_args}" | head -n1)"
     if [ $? ]; then
-      status=true
+      msg+=" ${C0}pass${CD}: ${test_out}"
     else
-      msg="${CR}"
-      msg_ok="fail"
+      msg+=" ${CR1}failed${CD}"
+      ret=1
+      do_export=false
     fi
   fi
-  msg+="${varname,,}${CD} "
-  ${silent} || msg="    ${msg}symlink ${msg_ok}"
-  if ${status}; then
-    ${var_export} && echo "export ${varname}=${dst}" >>"${envfile}"
-    if ${ctest}; then
-      msg_ok="$("${dst}" "${cargs}" | head -n1)${CD}"
-      test $? && msg+=": ${C0}${msg_ok}"|| msg+=" ${CR1}failed${CD}"
-    elif ${showlink}; then
-      msg+="${CD}${dst} -> ${src}"
-    fi
+  if ${do_export} && [ -f "${export_file}" ] && [ -n "${export_var}" ]; then
+    echo "export ${export_var}=\"${dst}\"" >>"${export_file}" 
   fi
   ${silent} || msg+="\n"
   echo -ne "${msg}"
-  ${status} && return 0 || return 1
+  return ${ret}
 }
-
-
 
 
 
@@ -430,35 +449,39 @@ if [ -n "${XB_BUILD_CLANG}" ]; then
   exe='ar as nm addr2line objcopy objdump ranlib readelf size strings strip windres'
 	
   # check if llvm-windres symlink exists
-  check_slink "/usr/bin/llvm-windres" "/usr/lib/llvm-${XB_BUILD_CLANG_VERSION_MAJOR}/bin/llvm-windres"
+  # do_symlink --src <source> --dst <dest-slink> [--var varname][--test cmd_args][--export envfile value][--silent][--link]
+  do_symlink --src "/usr/lib/llvm-${XB_BUILD_CLANG_VERSION_MAJOR}/bin/llvm-windres" --dst "/usr/bin/llvm-windres" --var "windres" --show
+  #check_slink "/usr/bin/llvm-windres" "/usr/lib/llvm-${XB_BUILD_CLANG_VERSION_MAJOR}/bin/llvm-windres"
 
   for a in 0 1 2 3; do
+
     # set toolchain triplet
     t="${cl[$a]}-linux-${abi[$a]}"
     # skip native arch
     test "${t}" = "${build_arch}" && continue
+
+    env_file="${dir_root}/builds/toolchain/clang-${t}.env"
+    echo "#!/bin/bash" >"${env_file}"
+    
     dst_bin="/usr/${t}/bin"
-    echo -ne "\n${CH}  ${t}"
+    echo -e "\n${CH}  ${t}"
     
     # create cross arch dir at /usr
     [ -d "${dst_bin}" ] || sudo mkdir -p "${dst_bin}"
 
-    # symlinks for llvm utils
-    echo -ne "    ${CD}"
-    for e in ${exe}; do
-      check_slink "${dst_bin}/llvm-${e}" "/usr/bin/llvm-${e}"
-      ${verbose} || echo -ne "${e} "
-    done
-    
-    # symlinks for ld
-    check_slink "${dst_bin}/ld.lld" "/usr/bin/ld.lld"
-    
     # clang/clang++ wrapper
     wrapper_args="--target=${t}"
     test "${ab[${a}]}" = "armhf" && wrapper_args+=' -mfloat-abi=hard -mfpu=neon' 
-    check_clang_wrapper --overwrite "${t}" 'clang' "${wrapper_args}"
-    check_clang_wrapper --overwrite "${t}" 'clang++' "${wrapper_args}"
-    ${verbose} || echo -e "\n    clang/clang++ wrapper with args: ${wrapper_args}"
+    do_wrapper --dst "${dst_bin}/clang" --cmd "clang ${wrapper_args} \"\$@\"" --test "-dumpversion" --export "${env_file}" "CC" --show
+    do_wrapper --dst "${dst_bin}/clang++" --cmd "clang++ ${wrapper_args} \"\$@\"" --test "-dumpversion" --export "${env_file}" "CXX" --show
+    # ld
+    do_symlink --src "/usr/bin/ld.lld" --dst "${dst_bin}/ld.lld" --var "ld" --export "${env_file}" "${dst_bin}/ld.lld"
+    # symlinks for llvm utils
+    echo -ne "    ${C0}binutils:${CD} "
+    for e in ${exe}; do
+      do_symlink --quiet --src "/usr/bin/llvm-${e}" --dst "${dst_bin}/llvm-${e}" --var "${e}" --export "${env_file}" "${dst_bin}/llvm-${e}"
+    done
+    echo -e "\n    ${C0}env file at ${CH}${env_file}${C0}"
 	done
 fi
 
@@ -555,41 +578,28 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
     fi
 
     # C/C++
-    # synthax check_ndk_wrapper [--overwrite] <clang|clang++> <triplet> <dest>
-    check_ndk_wrapper --overwrite "clang" "${c_clang[${i}]}" "${dst_bin}/clang"
-    check_ndk_wrapper --overwrite "clang++" "${c_clang[${i}]}" "${dst_bin}/clang++"
-    test_cmd="$("${dst_bin}/clang" -dumpversion)"
-    if [ $? ]; then
-      echo -e "    ${C0}clang/clang++${CD} wrapper ${C0}working${CD} version: ${test_cmd}"
-      echo "export CC=\"${dst_bin}/clang\"" >>"${env_file}"
-      echo "export CXX=\"${dst_bin}/clang++\"" >>"${env_file}"
-    else
-      echo -e "    ${C0}clang/clang++${CD} wrapper: ${CR1}not working${CD}"
-    fi
+    cmd_prefix="\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${c_clang[${i}]}\${API:=${ANDROID_NDK_API}}-"
+    do_wrapper --dst "${dst_bin}/clang" --cmd "${cmd_prefix}clang \"\$@\"" --test "-dumpversion" --export "${env_file}" "CC"
+    do_wrapper --dst "${dst_bin}/clang++" --cmd "${cmd_prefix}clang++ \"\$@\"" --test "-dumpversion" --export "${env_file}" "CXX"
     
     # LD
-    symlink_exportenv --export "${env_file}" --test "--version" "${XB_NDK_TOOLCHAIN}/bin/ld" "${dst_bin}/ld" "LD" 
+    do_symlink --src "${XB_NDK_TOOLCHAIN}/bin/ld" --dst "${dst_bin}/ld" --var "LD" --export "${env_file}" "\${CROSS_PREFIX}ld" --test "--version"
     
     # YASM
-    symlink_exportenv --export "${env_file}" --test "--version" "${XB_NDK_TOOLCHAIN}/bin/yasm" "${dst_bin}/yasm" "YASM"
+    do_symlink --src "${XB_NDK_TOOLCHAIN}/bin/yasm" --dst "${dst_bin}/yasm" --var "YASM" --export "${env_file}" "\${CROSS_PREFIX}yasm" --test "--version"
     test $? && echo "export ASM_NASM=\"${dst_bin}/yasm\"" >>"${env_file}"
     
     echo -ne "    ${C0}binutils:${CD} "
-    symlink_exportenv --silent "${XB_NDK_TOOLCHAIN}/bin/llvm-as" "${dst_bin}/as" "AS"
-    echo "export AS=\"\${CC}\"" >>"${env_file}"
+    do_symlink --quiet --src "${XB_NDK_TOOLCHAIN}/bin/llvm-as" --dst "${dst_bin}/as" --var "as" --export "${env_file}" "\${CROSS_PREFIX}clang"
     for j in ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
-      # symlink_exportenv [--silent|--test] src dst varname envfile
-      symlink_exportenv --export "${env_file}" --silent "${XB_NDK_TOOLCHAIN}/bin/llvm-${j}" "${dst_bin}/${j}" "${j^^}"
+      do_symlink --quiet --src "${XB_NDK_TOOLCHAIN}/bin/llvm-${j}" --dst "${dst_bin}/${j}" --var "${j}" --export "${env_file}" "\${CROSS_PREFIX}${j}"
     done
     echo
 
-    symlink_exportenv --export "${env_file}" --link "${XB_NDK_SYSROOT}" "/usr/${t}/sysroot" "SYSROOT"
-    #check_ndk_symlink_dir "/usr/${t}/include" "${XB_NDK_SYSROOT}/usr/include" "${XB_NDK_SYSROOT}" "NDK_SYSROOT"
-    symlink_exportenv --link "${XB_NDK_SYSROOT}/usr/include" "/usr/${t}/include" "include"
-    #check_ndk_symlink_dir "/usr/${t}/lib" "${XB_NDK_SYSROOT}/usr/lib/${c_lib[${i}]}" "${XB_NDK_SYSROOT}" "NDK_SYSROOT"
-    symlink_exportenv --link "${XB_NDK_SYSROOT}/usr/lib/${c_lib[${i}]}" "/usr/${t}/lib" "lib"
-    #check_ndk_symlink_dir "${dst_root}/local" "${dir_root}/builds/android/${c_abi[${i}]}"
-    symlink_exportenv --link "${dir_root}/builds/android/${c_abi[${i}]}" "${dst_root}/local" "local"
+    do_symlink --src "${XB_NDK_SYSROOT}" --dst "/usr/${t}/sysroot" --var "SYSROOT" --export "${env_file}" "/usr/${t}/sysroot" --showlink
+    do_symlink --src "${XB_NDK_SYSROOT}/usr/include" --dst "/usr/${t}/include" --showlink
+    do_symlink --src "${XB_NDK_SYSROOT}/usr/lib/${c_lib[${i}]}" --dst "/usr/${t}/lib" --showlink --var "lib"
+    do_symlink --src "${dir_root}/builds/android/${c_abi[${i}]}" --dst "${dst_root}/local" --showlink --var "local"
 
     echo "export CPPFLAGS=\"-I\${SYSROOT}/usr/include -I/usr/${t}/include -I/usr/${t}/local/include\"" >>"${env_file}"
     echo "export LT_SYS_LIBRARY_PATH=\"\${TOOLCHAIN}/lib:\${SYSROOT}/usr/lib/${t}:\${SYSROOT}/usr/lib/${t}/\${ANDROID_NDK_API}\"" >>"${env_file}"
@@ -598,12 +608,12 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
     if [ ! -f "${dst_lib}/libpthread.a" ]; then
       sudo "${dst_bin}/ar" cr "${dst_lib}/libpthread.a"
     fi
-    echo -e "    ${C0}libthread${CD} %s" "${dst_lib}/libpthread.a"
+    echo -e "    ${C0}libthread${CD} ${dst_lib}/libpthread.a"
     
     if [ ! -f "${dst_lib}/librt.a" ]; then
       sudo "${dst_bin}/ar" cr "${dst_lib}/librt.a"
     fi
-    echo -e "    ${C0}librt${CD} %s" "${dst_lib}/librt.a"
+    echo -e "    ${C0}librt${CD} ${dst_lib}/librt.a"
     echo -e "    ${C0}env file at ${CH}${env_file}${C0}\n"
   done
   printf "${CH}%-20s: ${C0}%s\n" '  all toolchain symlinks' "ok"
@@ -724,3 +734,76 @@ export ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
 EOF
 
 echo -ne "... ${CC1}Done!${C0}\n\n"
+
+
+
+
+
+
+
+
+
+# symlink_exportenv [--export varname envfile][--silent|--test args] src dst
+function symlink_exportenv {
+  local silent=false
+  local ctest=false
+  local showlink=false
+  local var_export=false
+  local cargs
+  local envfile
+  case "${1}" in
+    --export|-e)
+      var_export=true; shift
+      envfile="${1}"; shift
+      ;;
+  esac
+  case "${1}" in
+    --silent|-s) silent=true; shift;;
+    --test|-t)   ctest=true; shift; cargs="${1}"; shift;;
+    --link|-l)   showlink=true; shift;; 
+  esac
+  local src="${1}"
+  local dst="${2}"
+  local varname="${3}"
+  local status=false
+  local msg
+  local msg_ok="ok"
+  local req_ln=false
+  
+  if [ ! -L "${dst}" ]; then
+    req_ln=true
+    msg_ok="${CH}created${CD}"
+    msg="${CH}"
+  elif [ "$(readlink "${dst}")" == "${src}" ]; then
+    status=true
+    msg_ok="${C0}ok${CD}"
+    msg="${C0}"
+  else
+    req_ln=true
+    msg_ok="${CY0}updated${CD}"
+    msg="${CY0}"
+  fi
+  if ${req_ln}; then
+    sudo ln -sfn "${src}" "${dst}"
+    if [ $? ]; then
+      status=true
+    else
+      msg="${CR}"
+      msg_ok="fail"
+    fi
+  fi
+  msg+="${varname,,}${CD} "
+  ${silent} || msg="    ${msg}symlink ${msg_ok}"
+  if ${status}; then
+    ${var_export} && echo "export ${varname}=${dst}" >>"${envfile}"
+    if ${ctest}; then
+      msg_ok="$("${dst}" "${cargs}" | head -n1)${CD}"
+      test $? && msg+=": ${C0}${msg_ok}"|| msg+=" ${CR1}failed${CD}"
+    elif ${showlink}; then
+      msg+="${CD}${dst} -> ${src}"
+    fi
+  fi
+  ${silent} || msg+="\n"
+  echo -ne "${msg}"
+  ${status} && return 0 || return 1
+}
