@@ -143,6 +143,83 @@ function llvm_mingw_install {
   popdir
 }
 
+# do_symlink --src <source> --dst <dest-slink> [--var varname][--test cmd_args][--export envfile value][--silent][--link]
+function do_symlink {
+  local src dst msg showlink var silent ret do_test test_args do_export export_file export_val
+  showlink=false
+  silent=false
+  do_test=false
+  do_export=false
+  ret=1
+
+  # parse option
+  while [ "${1}" ]; do
+    case "${1}" in
+      --src)
+        shift; src="${1}"
+        ;;
+      --dst)
+        shift; dst="${1}"
+        ;;
+      --var)
+        shift; var="${1}"
+        ;;
+      --test)
+        shift; test_args="${1}"
+        do_test=true
+        ;;
+      --export) 
+        shift; exoprt_file="${1}"
+        shift; export_val="${1}"
+        ;;
+      --silent)
+        silent=true
+        ;;
+      --link)
+        showlink=true
+        ;;
+    esac
+    shift
+  done
+
+  # empty dst or non-exist src
+  test -f "${src}" || test ${dst} || return 1
+  # default value for var name
+  test ${var} || var="$(basename "${src}")"
+  
+  local op clr
+  if [ ! -L "${dst}" ]; then
+    op=1; clr="${CH}"
+    msg_ok="created"
+  elif [ "$(readlink "${dst}")" == "${src}" ]; then
+    op=0; clr="${C0}"
+    msg_ok="ok"
+    ret=0
+  else
+    op=2; clr="${CY0}"
+    msg_ok="updated"
+  fi
+  
+  # do symlink, ret=0 if success
+  test ${op} -gt 0 && sudo ln -sfn "${src}" "${dst}" && ret=0
+  # if error set color and message
+  test ${ret} -eq 1 && clr="${CR1}" && msg_ok="failed"
+
+  msg="${clr}${var}${CD} "
+  ${silent} || msg="    ${msg}symlink ${clr}${msg_ok}$"
+  if [ ${ret} -eq 0 ]; then
+    if ${do_test}; then
+      local test_out="$(${dst} "${test_args}")"
+
+
+      
+    fi
+    ${showlink} && msg+=" ${src} -> ${dst}"
+  fi
+  ${silent} || msg+="\n"
+  echo -ne "${msg}"
+  return ${ret}
+}
 
 # symlink_exportenv [--export varname envfile][--silent|--test args] src dst
 function symlink_exportenv {
@@ -206,6 +283,7 @@ function symlink_exportenv {
   fi
   ${silent} || msg+="\n"
   echo -ne "${msg}"
+  ${status} && return 0 || return 1
 }
 
 
