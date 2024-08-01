@@ -284,7 +284,7 @@ function do_wrapper {
     do_export=false
   else
     clr="${C0}"
-    msg_ok='created'
+    msg_ok='ok'
   fi
   msg="${clr}$(basename "${dst}")${CD} "
   ${silent} || msg="    ${msg}wrapper ${clr}${msg_ok}${CD}"
@@ -292,9 +292,9 @@ function do_wrapper {
   if ${do_test}; then
     test_out="$(${dst} "${test_args}" | head -n1)"
     if [ $? ]; then
-      msg+=" ${C0}pass${CD}: ${test_out}"
+      msg+=" ${C0}${test_args} pass${CD}: ${test_out}"
     else
-      msg+=" ${CR1}failed${CD}"
+      msg+=" ${CR1}${test_args} fails${CD}"
       ret=1
       do_export=false
     fi
