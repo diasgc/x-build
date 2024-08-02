@@ -670,9 +670,19 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
   for cl in aarch64 arm i686 x86_64; do
     echo -ne "   ${CH}Checking symlinks for ${cl}-w64-mingw32"
     target_dir="/usr/${cl}-w64-mingw32"
+    dst_bin="${target_dir}/bin"
     cl_abi=${cl/arm/armv7}
     source_dir="${LLVM_MINGW_HOME}/${cl_abi}-w64-mingw32"
     
+    env_file="${dir_root}/builds/toolchain/clang-${cl}-w64-mingw32.env"
+
+    echo "#!/bin/bash" >"${env_file}"
+    echo "export PLATFORM='Windows'" >>"${env_file}"
+    echo "export TOOLCHAIN=\"${target_dir}\"" >>"${env_file}"
+    #echo "export SYSROOT=\"\${TOOLCHAIN}/sysroot\"" >>"${env_file}"
+    echo "export CROSS_PREFIX=\"\${TOOLCHAIN}/bin/\"" >>"${env_file}"
+
+
     test -d "${target_dir}" || sudo mkdir -p "${target_dir}/bin"
 
     do_symlink \
@@ -706,6 +716,7 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
       #test $? && echo -ne "${e} " || echo -ne "${CR1}${e}${CD} "   
       #create_symlink "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32uwp-${e}" "${target_dir}/bin/uwp-${e}"
     done
+    echo
     cmd_bin=( clang clang++ ld)
     cmd_var=( CC CXX LD )
     cmd_test=( -dumpversion -dumpversion --version )
@@ -720,7 +731,7 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
       do_symlink \
         --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" \
         --dst "${dst_bin}/${e}" \
-        --test "--version"
+        --test "-dumpversion"
     done
       #for e in c++ clang clang++ g++ gcc ld; do
       #  do_symlink \
@@ -728,12 +739,14 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
       #    --dst "${dst_bin}/${e}" \
       #    --var "${e}" --export "${env_file}" "${dst_bin}/${e}"
       #  #sudo ln -sfn "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" "${dst_bin}/${j}"
-      #test $? && status="$("${dst_bin}/${j}" --version | head -n1)"
-      #test $? && echo -ne "\n    ${C0}${e} ${CD}symlink ${C0}ok${CD}: ${status}" || echo -ne "\n${CR1}${e} failed: not working${CD} "
-    done
+      #  #test $? && status="$("${dst_bin}/${j}" --version | head -n1)"
+      #  #st $? && echo -ne "\n    ${C0}${e} ${CD}symlink ${C0}ok${CD}: ${status}" || echo -ne "\n${CR1}${e} failed: not working${CD} "
+      #done
     echo -e "\n    ${CH}ok${C0}"
+    echo -e "    ${C0}env file at ${CH}${env_file}${C0}\n"
+    
   done
-  printf "${CH}%-20s: ${C0}%s\n" '  toolchain slinks' ok
+  printf "${CH}%-20s: ${C0}%s\n" '  toolchain symlinks' ok
 fi
 
 
