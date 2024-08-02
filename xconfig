@@ -53,25 +53,7 @@ function check_install {
   done
 }
 
-# synthax: check_slink <dest> <src>
-function check_slink {
-  local status
-  if [ ! -f "${1}" ]; then
-    sudo ln -s "${2}" "${1}" > /dev/null && status="new" || status="${CR1}err${C0}"
-    ${verbose} && printf "${CC1}%-6s ${C0}%-60s-> ${CW}%s\n" "    ${status}" "${1}" "${2}"
-  elif [ "$(readlink "${1}")" == "${2}" ]; then
-    ${verbose} && printf "${CH}%-6s ${CD}%-60s-> ${C0}%s\n" "    ok" "${1}" "${2}"
-  else
-    sudo ln -s "${2}" "${1}" > /dev/null && status="${CY1}upd${C0}" || status="${CR1}err${C0}"
-    ${verbose} && printf "${CC1}%-6s ${C0}%-60s-> ${CW}%s\n" "    ${status}" "${1}" "${2}"
-  fi
-}
-
 function check_ndk_symlink {
-  [[ -z "$(readlink "$1" | grep "${ANDROID_NDK_HOME}")" ]]
-}
-
-function check_ndk_symlink_test {
   [[ -z "$(readlink "$1" | grep "${ANDROID_NDK_HOME}")" ]]
 }
 
@@ -693,22 +675,61 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
     
     test -d "${target_dir}" || sudo mkdir -p "${target_dir}/bin"
 
-    do_symlink --
-    check_ndk_symlink_dir "${target_dir}/dll" "${source_dir}/bin"
-    check_ndk_symlink_dir "${target_dir}/include" "${source_dir}/include"
-    check_ndk_symlink_dir "${target_dir}/lib" "${source_dir}/lib"
-    check_ndk_symlink_dir "${target_dir}/share" "${source_dir}/share"
+    do_symlink \
+      --src "${source_dir}/bin" \
+      --dst "${target_dir}/dll" \
+      --showlink
+    do_symlink \
+      --src "${source_dir}/include" \
+      --dst "${target_dir}/include" \
+      --showlink
+    do_symlink \
+      --src "${source_dir}/lib" \
+      --dst "${target_dir}/lib" \
+      --showlink
+    do_symlink \
+      --src "${source_dir}/share" \
+      --dst "${target_dir}/share" \
+      --showlink
+    #check_ndk_symlink_dir "${target_dir}/dll" "${source_dir}/bin"
+    #check_ndk_symlink_dir "${target_dir}/include" "${source_dir}/include"
+    #check_ndk_symlink_dir "${target_dir}/lib" "${source_dir}/lib"
+    #check_ndk_symlink_dir "${target_dir}/share" "${source_dir}/share"
     
     echo -ne "\n    ${C0}binutils:${CD} "
     for e in addr2line ar as dlltool llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf size strings strip widl windres; do
-      sudo ln -sfn "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" "${dst_bin}/${j}"
-      test $? && echo -ne "${e} " || echo -ne "${CR1}${e}${CD} "   
+      do_symlink --quiet \
+        --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" \
+        --dst "${dst_bin}/${e}" \
+        --var "${e^^}" --export "${env_file}" "${dst_bin}/${e}"
+      #sudo ln -sfn "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" "${dst_bin}/${j}"
+      #test $? && echo -ne "${e} " || echo -ne "${CR1}${e}${CD} "   
       #create_symlink "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32uwp-${e}" "${target_dir}/bin/uwp-${e}"
     done
-    for e in c++ clang clang++ g++ gcc ld; do
-      sudo ln -sfn "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" "${dst_bin}/${j}"
-      test $? && status="$("${dst_bin}/${j}" --version | head -n1)"
-      test $? && echo -ne "\n    ${C0}${e} ${CD}symlink ${C0}ok${CD}: ${status}" || echo -ne "\n${CR1}${e} failed: not working${CD} "
+    cmd_bin=( clang clang++ ld)
+    cmd_var=( CC CXX LD )
+    cmd_test=( -dumpversion -dumpversion --version )
+    for e in 0 1 2; do
+      do_symlink \
+        --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${cmd_bin[${e}]}" \
+        --dst "${dst_bin}/${cmd_bin[${e}]}" \
+        --var "${cmd_var[${e}]}" --export "${env_file}" "${dst_bin}/${cmd_bin[${e}]}" \
+        --test "${cmd_test[${e}]}"
+    done
+    for e in c++ g++ gcc; do
+      do_symlink \
+        --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" \
+        --dst "${dst_bin}/${e}" \
+        --test "--version"
+    done
+      #for e in c++ clang clang++ g++ gcc ld; do
+      #  do_symlink \
+      #    --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" \
+      #    --dst "${dst_bin}/${e}" \
+      #    --var "${e}" --export "${env_file}" "${dst_bin}/${e}"
+      #  #sudo ln -sfn "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" "${dst_bin}/${j}"
+      #test $? && status="$("${dst_bin}/${j}" --version | head -n1)"
+      #test $? && echo -ne "\n    ${C0}${e} ${CD}symlink ${C0}ok${CD}: ${status}" || echo -ne "\n${CR1}${e} failed: not working${CD} "
     done
     echo -e "\n    ${CH}ok${C0}"
   done
