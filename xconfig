@@ -13,8 +13,9 @@ function findname {
   local out
   local name="${1}"; shift
   while [ "${1}" ]; do
-    out="$(find "${1}" -name "${name}" )"
+    out="$(find "${1}" -name "${name}" 2>/dev/null)"
     test -n "${out}" && break
+    shift
   done
   echo "${out}"
 }
@@ -47,41 +48,17 @@ function check_install {
       printf "${CH}${XBTAB}: ${C0}%s\n" "  $p" "${v0}"
     else
       printf "${CH}${XBTAB}: ${C0}%s" "  $p" "${v0} upgrading to..."
-      out=$(${apt_install} "${p}" -y 2>/dev/null | grep "${p}" | sed "s/^${p}//" | head -n1)
+      out=$("${apt_install}" "${p}" -y 2>/dev/null | grep "${p}" | sed "s/^${p}//" | head -n1)
       printf "%s\n" "${out}"
     fi  
   done
-}
-
-function check_ndk_symlink {
-  [[ -z "$(readlink "$1" | grep "${ANDROID_NDK_HOME}")" ]]
-}
-
-# syntax check_ndk_symlink_dir <dest-symlink> <src> [<src_root> <src_root_name>]
-function check_ndk_symlink_dir {
-  local quiet=false
-  test "${1}" = "--quiet" && quiet=true && shift
-  local dst="${1}"
-  local src="${2}"
-  local srcname="${src//${3}/${4}}"  
-  local status
-  if [ -L "${dst}" ]; then
-    if [ "$(readlink "${dst}")" == "${src}" ]; then
-      status="${CW}ok${CD}"
-    else
-      sudo ln -sfn "${src}" "${dst}" && status="${CY1}updated${CD}" || status="${CR1}failed${CD}"
-    fi
-  else
-    sudo ln -sfn "${src}" "${dst}" && status="${CY1}created${CD}" || status="${CR1}failed${CD}"
-  fi
-  ! ${quiet} && echo -ne "\n    ${C0}$(basename "${dst}")${CD} symlink ${status}: ${dst} -> ${srcname}"
 }
 
 function ndk_url {
   echo "$(curl -sL https://developer.android.com/ndk/downloads | grep -Po "https://dl.google.com/android/repository/android-ndk-r..*-linux.zip" | sed "/\"/d")"
 }
 
-function llvm_mingw_install {
+function install_llvm_mingw {
   # install llvm-mingw
   local url
   test -z "${XB_LLVM_MINGW_JSON}" && return 1
@@ -94,16 +71,17 @@ function llvm_mingw_install {
   wget_untar "${url}" "llvm-mingw"
   echo -e "§{CH}done${CD}"    
   echo "${XB_LLVM_MINGW_LATEST}" >"${LLVM_MINGW_HOME}/version"
+  export LLVM_MINGW_HOME
   popdir
-}
+} 
 
 # do_symlink --src <source> --dst <dest-slink> [--var varname][--test cmd_args][--export envfile value][--silent][--link]
 function do_symlink {
-  local src dst msg showlink var silent ret do_test test_args test_out do_export export_file export_val 
+  local src dst msg showlink var silent ret do_test test_args test_out do_exprt export_file export_val 
   showlink=false
   silent=false
   do_test=false
-  do_export=false
+  do_exprt=false
   ret=1
 
   # parse option
@@ -125,7 +103,7 @@ function do_symlink {
       --export|--exp|-e)
         shift; export_file="${1}"
         shift; export_val="${1}"
-        do_export=true
+        do_exprt=true
         ;;
       --silent|--quiet|-q)
         silent=true
@@ -162,7 +140,7 @@ function do_symlink {
     clr="${CR1}"
     msg_ok="failed"
     do_test=false
-    do_export=false
+    do_exprt=false
     showlink=false
   fi
 
@@ -175,11 +153,12 @@ function do_symlink {
     else
       msg+=" ${CR1}failed${CD}"
       ret=1
-      do_export=false
+      do_exprt=false
     fi
   fi
-  if ${do_export} && [ -f "${export_file}" ] && [ -n "${export_val}" ]; then
-    echo "export ${var^^}=\"${export_val}\"" >>"${export_file}" 
+  if ${do_exprt} && [ -f "${export_file}" ] && [ -n "${export_val}" ]; then
+    do_export "${export_file}" "${var^^}" "${export_val}"
+    #echo "export ${var^^}=\"${export_val}\"" >>"${export_file}" 
   fi
   ${showlink} && msg+=" ${src} -> ${dst}"
   ${silent} || msg+="\n"
@@ -189,10 +168,10 @@ function do_symlink {
 
 # do_wrapper --dst "${dst_bin}/clang" --cmd "clang ${wrapper_args} \"$@\"" --test "-dumpversion" --export "${env_file}" "CC"
 function do_wrapper {
-  local dst cmd msg var silent ret do_show do_test test_args test_out do_export export_file export_var
+  local dst cmd msg var silent ret do_show do_test test_args test_out do_exprt export_file export_var
   silent=false
   do_test=false
-  do_export=false
+  do_exprt=false
   do_show=false
   ret=1
 
@@ -215,7 +194,7 @@ function do_wrapper {
       --export|--exp|-e)
         shift; export_file="${1}"
         shift; export_var="${1}"
-        do_export=true
+        do_exprt=true
         ;;
       --silent|--quiet|-q)
         silent=true
@@ -235,7 +214,7 @@ function do_wrapper {
     clr="${CR1}"
     msg_ok='failed'
     do_test=false
-    do_export=false
+    do_exprt=false
   else
     clr="${C0}"
     msg_ok='ok'
@@ -250,18 +229,22 @@ function do_wrapper {
     else
       msg+=" ${CR1}${test_args} fails${CD}"
       ret=1
-      do_export=false
+      do_exprt=false
     fi
   fi
-  if ${do_export} && [ -f "${export_file}" ] && [ -n "${export_var}" ]; then
-    echo "export ${export_var}=\"${dst}\"" >>"${export_file}" 
+  if ${do_exprt} && [ -f "${export_file}" ] && [ -n "${export_var}" ]; then
+    do_export "${export_file}" "${export_var}" "${dst}"
+    #echo "export ${export_var}=\"${dst}\"" >>"${export_file}" 
   fi
   ${silent} || msg+="\n"
   echo -ne "${msg}"
   return ${ret}
 }
 
-
+# do_export ${env_file} "VAR" "VALUE"
+function do_export {
+  test -f "${1}" && echo "export ${2}=\"${3}\"" >>"${1}"
+}
 
 
 
@@ -419,7 +402,11 @@ if [ -n "${XB_BUILD_CLANG}" ]; then
 
     env_file="${dir_root}/builds/toolchain/clang-${t}.env"
     echo "#!/bin/bash" >"${env_file}"
-    
+    do_export "${env_file}" "PLATFORM" "Linux"
+    do_export "${env_file}" "TOOLCHAIN" "/usr/${t}"
+    do_export "${env_file}" "SYSROOT" "/usr/${t}"
+    do_export "${env_file}" "CROSS_PREFIX" "llvm-"
+
     dst_bin="/usr/${t}/bin"
     echo -e "\n${CH}  ${t}"
     
@@ -456,14 +443,19 @@ if [ -n "${XB_BUILD_CLANG}" ]; then
         --dst "${dst_bin}/llvm-${e}" \
         --var "${e}" --export "${env_file}" "${dst_bin}/llvm-${e}"
     done
-    echo -e "\n    ${C0}env file at ${CH}${env_file}${C0}"
+    echo
+    do_export "${env_file}" "CPPFLAGS" "-I\${TOOLCHAIN}/include -I\${TOOLCHAIN}/local/include -I/usr/lib/clang/${GNU_CLANG_VERSION_MAJOR}/include"
+    do_export "${env_file}" "LT_SYS_LIBRARY_PATH" "\${TOOLCHAIN}/lib:/usr/lib/llvm-${GNU_CLANG_VERSION_MAJOR}/lib"
+    do_export "${env_file}" "LDFLAGS" "-Wl,-rpath,\${LT_SYS_LIBRARY_PATH} -L\${TOOLCHAIN}/local/lib \${LDFLAGS}"
+
+    echo -e "    symlinks ${CH}ok${C0} env file at ${CW}${env_file}${C0}\n"
 	done
 fi
 
 
 # Android NDK CLANG compiler
 
-echo -e "\n${CC1}${b}Android NDK compiler"
+echo -e "\n${CC1}${b} Android NDK compiler"
 if [ ! -d "${ANDROID_NDK_HOME}" ]; then
   echo -e "   ${CY1}ANDROID_NDK_HOME is not defined or has changed.${C0} Searching..."
   ndk_dir="$(find ~ -name 'ndk-lldb' | head -n1)"
@@ -506,26 +498,26 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
   XB_NDK_MAX_PLATFORM_LEVEL="$(grep -oP '(?<=NDK_MAX_PLATFORM_LEVEL ")[0-9]+' "${cmake_platforms}")"
   ANDROID_NDK_API="${XB_NDK_MAX_PLATFORM_LEVEL}"
   
-  printf "${CH}${XBTAB}: ${C0}%s\n" "  found at" "${ANDROID_NDK_HOME}"
-  printf "${CH}${XBTAB}: ${C0}%s" "  release" "${ANDROID_NDK_RELEASE}"
+  printf "${CH}${XBTAB}: ${C0}%s\n" "   found at" "${ANDROID_NDK_HOME}"
+  printf "${CH}${XBTAB}: ${C0}%s" "   release" "${ANDROID_NDK_RELEASE}"
   echo -e "${status}"
-  printf "${CH}${XBTAB}: ${C0}%s\n" "  clang version" "${XB_NDK_CLANG_VERSION}"
-  printf "${CH}${XBTAB}: ${C0}%s\n" "  api range" "${XB_NDK_MIN_PLATFORM_LEVEL} to ${XB_NDK_MAX_PLATFORM_LEVEL}"
+  printf "${CH}${XBTAB}: ${C0}%s\n" "   clang version" "${XB_NDK_CLANG_VERSION}"
+  printf "${CH}${XBTAB}: ${C0}%s\n" "   api range" "${XB_NDK_MIN_PLATFORM_LEVEL} to ${XB_NDK_MAX_PLATFORM_LEVEL}"
   
   ndk_cmake="${sdk_root}/cmake"
   if [ -d "${ndk_cmake}" ]; then
     ndk_cmake_version="$(ls -1 "${ndk_cmake}" | sort | tail -n1)"
     if [ -f "${ndk_cmake}/${ndk_cmake_version}/bin/cmake" ]; then
       XB_NDK_CMAKE_EXE="${ndk_cmake}/${ndk_cmake_version}/bin/cmake"
-      printf "${CH}${XBTAB}: ${C0}%s\n" "  sdk cmake" "${ndk_cmake_version} (${XB_NDK_CMAKE_EXE})"
+      printf "${CH}${XBTAB}: ${C0}%s\n" "   sdk cmake" "${ndk_cmake_version} (${XB_NDK_CMAKE_EXE})"
     fi
   fi
   
   sdkmanager="${sdk_root}/cmdline-tools/latest/bin/sdkmanager"
-  test -f "${sdkmanager}" && printf "${CH}${XBTAB}: ${C0}%s\n" "  sdk cmdline-tools" "$(${sdkmanager} --version 2>/dev/null | head -n1) (${sdk_root}/cmdline-tools)"
+  test -f "${sdkmanager}" && printf "${CH}${XBTAB}: ${C0}%s\n" "   sdk cmdline-tools" "$(${sdkmanager} --version 2>/dev/null | head -n1) (${sdk_root}/cmdline-tools)"
   
-  ${ndk_download} && printf "${CH}${XBTAB}: ${CY1}%s${C0}\n" "  download link" "$(ndk_url)}"
-  echo -e "\n${CC0} Check NDK symlinks"
+  ${ndk_download} && printf "${CH}${XBTAB}: ${CY1}%s${C0}\n" "   download link" "$(ndk_url)}"
+  echo -e "\n   ${CC0}checking symlinks"
 
   c_abi=('arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64')
   c_clang=('aarch64-linux-android' 'armv7a-linux-androideabi' 'i686-linux-android' 'x86_64-linux-android')
@@ -533,17 +525,16 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
 
   for i in 0 1 2 3; do
     t="${c_lib[${i}]}"
-    printf "  ${CH}%s${C0}\n" "${t}"
+    printf "   ${CH}%s${C0}\n" "${t}"
     dst_root="/usr/${t}"
     dst_bin="${dst_root}/bin"
     dst_lib="${dst_root}/lib"
     env_file="${dir_root}/builds/toolchain/${c_lib[${i}]}.env"
 
     echo "#!/bin/bash" >"${env_file}"
-    echo "export PLATFORM='Android'" >>"${env_file}"
-    echo "export TOOLCHAIN=\"/usr/${t}\"" >>"${env_file}"
-    #echo "export SYSROOT=\"\${TOOLCHAIN}/sysroot\"" >>"${env_file}"
-    echo "export CROSS_PREFIX=\"\${TOOLCHAIN}/bin/\"" >>"${env_file}"
+    do_export "${env_file}" "PLATFORM" "Android"
+    do_export "${env_file}" "TOOLCHAIN" "/usr/${t}"
+    do_export "${env_file}" "CROSS_PREFIX" "\${TOOLCHAIN}/bin/"
 
     # create cross arch dir at /usr
     if [ ! -d "${dst_bin}" ]; then
@@ -573,18 +564,15 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
       --dst "${dst_bin}/yasm" \
       --var "YASM" --export "${env_file}" "\${CROSS_PREFIX}yasm" \
       --test "--version"
-    test $? && echo "export ASM_NASM=\"${dst_bin}/yasm\"" >>"${env_file}"
+    test $? && do_export "${env_file}" "ASM_NASM" "\${YASM}" # echo "export ASM_NASM=\"${dst_bin}/yasm\"" >>"${env_file}"
     
     echo -ne "    ${C0}binutils:${CD} "
-    do_symlink --quiet \
-      --src "${XB_NDK_TOOLCHAIN}/bin/llvm-as" \
-      --dst "${dst_bin}/as" \
-      --var "as" --export "${env_file}" "\${CROSS_PREFIX}clang"
-    for j in ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
+    for e in as ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
+      test "${e}" = "as" && v="\${CC}" || v="\${CROSS_PREFIX}${e}"
       do_symlink --quiet \
-        --src "${XB_NDK_TOOLCHAIN}/bin/llvm-${j}" \
-        --dst "${dst_bin}/${j}" \
-        --var "${j}" --export "${env_file}" "\${CROSS_PREFIX}${j}"
+        --src "${XB_NDK_TOOLCHAIN}/bin/llvm-${e}" \
+        --dst "${dst_bin}/${e}" \
+        --var "${e}" --export "${env_file}" "${e}"
     done
     echo
 
@@ -608,9 +596,12 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
       --var "local" \
       --showlink
 
-    echo "export CPPFLAGS=\"-I\${SYSROOT}/usr/include -I/usr/${t}/include -I/usr/${t}/local/include\"" >>"${env_file}"
-    echo "export LT_SYS_LIBRARY_PATH=\"\${TOOLCHAIN}/lib:\${SYSROOT}/usr/lib/${t}:\${SYSROOT}/usr/lib/${t}/\${ANDROID_NDK_API}\"" >>"${env_file}"
-    echo "export LDFLAGS=\"-Wl,-rpath,\${LT_SYS_LIBRARY_PATH} -L /usr/${t}/local/lib \${LDFLAGS}\"" >>"${env_file}"
+    do_export "${env_file}" "CPPFLAGS" "-I\${SYSROOT}/usr/include -I\${TOOLCHAIN}/include -I\${TOOLCHAIN}/local/include"
+    do_export "${env_file}" "LT_SYS_LIBRARY_PATH" "\${TOOLCHAIN}/lib:\${SYSROOT}/usr/lib/${t}:\${SYSROOT}/usr/lib/${t}/\${ANDROID_NDK_API}"
+    do_export "${env_file}" "LDFLAGS" "-Wl,-rpath,\${LT_SYS_LIBRARY_PATH} -L\${TOOLCHAIN}/local/lib \${LDFLAGS}"
+    #echo "export CPPFLAGS=\"-I\${SYSROOT}/usr/include -I\${TOOLCHAIN}/include -I\${TOOLCHAIN}/local/include\"" >>"${env_file}"
+    #echo "export LT_SYS_LIBRARY_PATH=\"\${TOOLCHAIN}/lib:\${SYSROOT}/usr/lib/${t}:\${SYSROOT}/usr/lib/${t}/\${ANDROID_NDK_API}\"" >>"${env_file}"
+    #echo "export LDFLAGS=\"-Wl,-rpath,\${LT_SYS_LIBRARY_PATH} -L\${TOOLCHAIN}/local/lib \${LDFLAGS}\"" >>"${env_file}"
     
     if [ ! -f "${dst_lib}/libpthread.a" ]; then
       sudo "${dst_bin}/ar" cr "${dst_lib}/libpthread.a"
@@ -621,9 +612,8 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
       sudo "${dst_bin}/ar" cr "${dst_lib}/librt.a"
     fi
     echo -e "    ${C0}librt${CD} ${dst_lib}/librt.a"
-    echo -e "    ${C0}env file at ${CH}${env_file}${C0}\n"
+    echo -e "    symlinks ${CH}ok${C0} env file at ${CW}${env_file}${C0}\n"
   done
-  printf "${CH}%-20s: ${C0}%s\n" '  all toolchain symlinks' "ok"
 fi
 
 
@@ -631,8 +621,8 @@ fi
 
 # Mingw LLCM compiler
 
-echo -e "\n${CC1}${b}LLVM-MINGW Clang compiler"
-echo -ne "  ${C0}Checking remote repository..."
+echo -e "\n${CC1}${b} LLVM-MINGW Clang compiler"
+echo -ne "   ${C0}Checking remote repository..."
 XB_LLVM_MINGW_JSON=$(curl -sL "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest")
 if [ -n "${XB_LLVM_MINGW_JSON}" ]; then
   echo "${XB_LLVM_MINGW_JSON}" >"${dir_root}/builds/llvm_mingw.json"
@@ -651,10 +641,10 @@ if [ -z "${LLVM_MINGW_HOME}" ]; then
 fi 
 
 if [ -n "${LLVM_MINGW_HOME}" ]; then
-  printf "${CH}%-20s: ${C0}%s\n" "  found at" "${LLVM_MINGW_HOME}"
+  printf "${CH}%-20s: ${C0}%s\n" "   found at" "${LLVM_MINGW_HOME}"
   [ -f "${LLVM_MINGW_HOME}/version" ] || echo "$XB_LLVM_MINGW_LATEST" >>"${LLVM_MINGW_HOME}/version"
   XB_LLVM_MINGW_LOCAL="$(cat "${LLVM_MINGW_HOME}/version")"
-  printf "${CH}%-20s: ${C0}%s " '  release' "${XB_LLVM_MINGW_LOCAL}"
+  printf "${CH}%-20s: ${C0}%s " '   release' "${XB_LLVM_MINGW_LOCAL}"
   if [ "${XB_LLVM_MINGW_LOCAL}" == "${XB_LLVM_MINGW_LATEST}" ]; then
       echo -e "(updated)"
   else
@@ -662,7 +652,7 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
   fi
   XB_LLVM_MINGW_CLANG_VERSION=$("${LLVM_MINGW_HOME}/bin/clang" -dumpversion)
   XB_LLVM_MINGW_CLANG_VERSION_MAJOR="${XB_LLVM_MINGW_CLANG_VERSION%%\.*}"
-  printf "${CH}%-20s: ${C0}%s\n" '  clang' "${XB_LLVM_MINGW_CLANG_VERSION}"  
+  printf "${CH}%-20s: ${C0}%s\n" '   clang' "${XB_LLVM_MINGW_CLANG_VERSION}"  
  
   if [ -z "$(ls -A "${LLVM_MINGW_HOME}/include")" ]; then
       rm -r "${LLVM_MINGW_HOME}/include"
@@ -670,7 +660,7 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
   fi
 
   for cl in aarch64 arm i686 x86_64; do
-    echo -ne "   ${CH}Checking symlinks for ${cl}-w64-mingw32"
+    echo -e "   ${CH}Checking symlinks for ${cl}-w64-mingw32"
     target_dir="/usr/${cl}-w64-mingw32"
     dst_bin="${target_dir}/bin"
     cl_abi=${cl/arm/armv7}
@@ -681,12 +671,40 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
     echo "#!/bin/bash" >"${env_file}"
     echo "export PLATFORM='Windows'" >>"${env_file}"
     echo "export TOOLCHAIN=\"${target_dir}\"" >>"${env_file}"
-    #echo "export SYSROOT=\"\${TOOLCHAIN}/sysroot\"" >>"${env_file}"
+    echo "export SYSROOT=\"${target_dir}\"" >>"${env_file}"
     echo "export CROSS_PREFIX=\"\${TOOLCHAIN}/bin/\"" >>"${env_file}"
-
 
     test -d "${target_dir}" || sudo mkdir -p "${target_dir}/bin"
 
+    # CLANG/CLANG++/LD
+    cmd_bin=( clang clang++ ld)
+    cmd_var=( CC CXX LD )
+    cmd_test=( -dumpversion -dumpversion --version )
+    for e in 0 1 2; do
+      do_symlink \
+        --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${cmd_bin[${e}]}" \
+        --dst "${dst_bin}/${cmd_bin[${e}]}" \
+        --var "${cmd_var[${e}]}" --export "${env_file}" "${dst_bin}/${cmd_bin[${e}]}" \
+        --test "${cmd_test[${e}]}"
+    done
+    # C++/GCC/G++ links
+    for e in c++ g++ gcc; do
+      do_symlink \
+        --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" \
+        --dst "${dst_bin}/${e}" \
+        --test "-dumpversion"
+    done
+    # binutils
+    echo -ne "    ${C0}binutils:${CD} "
+    for e in addr2line ar as dlltool llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf size strings strip widl windres; do
+      test "${e}" = "as" && v="\${CC}" || v="\${CROSS_PREFIX}${e}"
+      do_symlink --quiet \
+        --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" \
+        --dst "${dst_bin}/${e}" \
+        --var "${e^^}" --export "${env_file}" "${v}"
+    done
+    do_export ${env_file} "RC" "${dst_bin}/windres"
+    echo
     do_symlink \
       --src "${source_dir}/bin" \
       --dst "${target_dir}/dll" \
@@ -703,49 +721,12 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
       --src "${source_dir}/share" \
       --dst "${target_dir}/share" \
       --showlink
-    #check_ndk_symlink_dir "${target_dir}/dll" "${source_dir}/bin"
-    #check_ndk_symlink_dir "${target_dir}/include" "${source_dir}/include"
-    #check_ndk_symlink_dir "${target_dir}/lib" "${source_dir}/lib"
-    #check_ndk_symlink_dir "${target_dir}/share" "${source_dir}/share"
+
+    do_export "${env_file}" "CPPFLAGS" "-I\${SYSROOT}/include -I\${SYSROOT}/local/include"
+    do_export "${env_file}" "LT_SYS_LIBRARY_PATH" "${LLVM_MINGW_HOME}/lib/clang/${XB_LLVM_MINGW_CLANG_VERSION_MAJOR}"
+    do_export "${env_file}" "LDFLAGS" "-Wl,-rpath,\${LT_SYS_LIBRARY_PATH} -L\${SYSROOT}/lib -L${SYSROOT}/local/lib \${LDFLAGS}"
     
-    echo -ne "\n    ${C0}binutils:${CD} "
-    for e in addr2line ar as dlltool llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf size strings strip widl windres; do
-      do_symlink --quiet \
-        --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" \
-        --dst "${dst_bin}/${e}" \
-        --var "${e^^}" --export "${env_file}" "${dst_bin}/${e}"
-      #sudo ln -sfn "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" "${dst_bin}/${j}"
-      #test $? && echo -ne "${e} " || echo -ne "${CR1}${e}${CD} "   
-      #create_symlink "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32uwp-${e}" "${target_dir}/bin/uwp-${e}"
-    done
-    echo
-    cmd_bin=( clang clang++ ld)
-    cmd_var=( CC CXX LD )
-    cmd_test=( -dumpversion -dumpversion --version )
-    for e in 0 1 2; do
-      do_symlink \
-        --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${cmd_bin[${e}]}" \
-        --dst "${dst_bin}/${cmd_bin[${e}]}" \
-        --var "${cmd_var[${e}]}" --export "${env_file}" "${dst_bin}/${cmd_bin[${e}]}" \
-        --test "${cmd_test[${e}]}"
-    done
-    for e in c++ g++ gcc; do
-      do_symlink \
-        --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" \
-        --dst "${dst_bin}/${e}" \
-        --test "-dumpversion"
-    done
-      #for e in c++ clang clang++ g++ gcc ld; do
-      #  do_symlink \
-      #    --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" \
-      #    --dst "${dst_bin}/${e}" \
-      #    --var "${e}" --export "${env_file}" "${dst_bin}/${e}"
-      #  #sudo ln -sfn "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" "${dst_bin}/${j}"
-      #  #test $? && status="$("${dst_bin}/${j}" --version | head -n1)"
-      #  #st $? && echo -ne "\n    ${C0}${e} ${CD}symlink ${C0}ok${CD}: ${status}" || echo -ne "\n${CR1}${e} failed: not working${CD} "
-      #done
-    echo -e "\n    ${CH}ok${C0}"
-    echo -e "    ${C0}env file at ${CH}${env_file}${C0}\n"
+    echo -e "    symlinks ${CH}ok${C0} env file at ${CW}${env_file}${C0}\n"
     
   done
   printf "${CH}%-20s: ${C0}%s\n" '  toolchain symlinks' ok
@@ -757,7 +738,7 @@ fi
 
 # Write Config
 
-echo -e "\n${CC1}${b}Writing Config file"
+echo -e "\n${CC1}${b} Writing Config file"
 
 cat <<-EOF >"${dir_root}/.config"
 #!/bin/bash
@@ -795,76 +776,3 @@ export ANDROID_NDK_HOME="${ANDROID_NDK_HOME}" \\
 EOF
 
 echo -ne "... ${CC1}Done!${C0}\n\n"
-
-
-
-
-
-
-
-
-
-# symlink_exportenv [--export varname envfile][--silent|--test args] src dst
-function symlink_exportenv {
-  local silent=false
-  local ctest=false
-  local showlink=false
-  local var_export=false
-  local cargs
-  local envfile
-  case "${1}" in
-    --export|-e)
-      var_export=true; shift
-      envfile="${1}"; shift
-      ;;
-  esac
-  case "${1}" in
-    --silent|-s) silent=true; shift;;
-    --test|-t)   ctest=true; shift; cargs="${1}"; shift;;
-    --link|-l)   showlink=true; shift;; 
-  esac
-  local src="${1}"
-  local dst="${2}"
-  local varname="${3}"
-  local status=false
-  local msg
-  local msg_ok="ok"
-  local req_ln=false
-  
-  if [ ! -L "${dst}" ]; then
-    req_ln=true
-    msg_ok="${CH}created${CD}"
-    msg="${CH}"
-  elif [ "$(readlink "${dst}")" == "${src}" ]; then
-    status=true
-    msg_ok="${C0}ok${CD}"
-    msg="${C0}"
-  else
-    req_ln=true
-    msg_ok="${CY0}updated${CD}"
-    msg="${CY0}"
-  fi
-  if ${req_ln}; then
-    sudo ln -sfn "${src}" "${dst}"
-    if [ $? ]; then
-      status=true
-    else
-      msg="${CR}"
-      msg_ok="fail"
-    fi
-  fi
-  msg+="${varname,,}${CD} "
-  ${silent} || msg="    ${msg}symlink ${msg_ok}"
-  if ${status}; then
-    ${var_export} && echo "export ${varname}=${dst}" >>"${envfile}"
-    if ${ctest}; then
-      msg_ok="$("${dst}" "${cargs}" | head -n1)${CD}"
-      test $? && msg+=": ${C0}${msg_ok}"|| msg+=" ${CR1}failed${CD}"
-    elif ${showlink}; then
-      msg+="${CD}${dst} -> ${src}"
-    fi
-  fi
-  ${silent} || msg+="\n"
-  echo -ne "${msg}"
-  ${status} && return 0 || return 1
-}
