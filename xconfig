@@ -90,7 +90,9 @@ function llvm_mingw_install {
   pushdir "$(pwd)"
   safe_cd "$(dirname "${LLVM_MINGW_HOME}")"
   safe_rm "${LLVM_MINGW_HOME}"
-  wget_untar "${url}" "llvm-mingw"    
+  echo -ne "  ${CY0}Downloading and extracting...${CD}"
+  wget_untar "${url}" "llvm-mingw"
+  echo -e "§{CH}done${CD}"    
   echo "${XB_LLVM_MINGW_LATEST}" >"${LLVM_MINGW_HOME}/version"
   popdir
 }
