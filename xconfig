@@ -95,36 +95,6 @@ function check_ndk_symlink_dir {
   ! ${quiet} && echo -ne "\n    ${C0}$(basename "${dst}")${CD} symlink ${status}: ${dst} -> ${srcname}"
 }
 
-# synthax check_clang_wrapper [--overwrite] <triplet> <clang|clang++> <args>
-function check_clang_wrapper {
-  local overwrite=false
-  case "${1}" in
-    --overwrite) shift; overwrite=true;;
-  esac
-	if ${overwrite} || [ ! -f "/usr/${1}/bin/${2}" ]; then
-		cat <<-eof | sudo tee "/usr/${1}/bin/${2}" >/dev/null
-			#!/bin/bash
-			${2} ${3} "\$@"
-			eof
-		sudo chmod +x "/usr/${1}/bin/${2}"
-	fi
-}
-
-# synthax check_ndk_wrapper [--overwrite] <clang|clang++> <triplet> <dest>
-function check_ndk_wrapper {
-    local overwrite=false
-  case "${1}" in
-    --overwrite) shift; overwrite=true;;
-  esac
-  if ${overwrite} || [ ! -f "${3}" ]; then
-		cat <<-eof | sudo tee "${3}" >/dev/null
-			#!/bin/bash
-			\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${2}\${API:=${ANDROID_NDK_API}}-${1} "\$@"
-			eof
-    sudo chmod +x "${3}"
-  fi
-}
-
 function ndk_url {
   echo "$(curl -sL https://developer.android.com/ndk/downloads | grep -Po "https://dl.google.com/android/repository/android-ndk-r..*-linux.zip" | sed "/\"/d")"
 }
@@ -450,8 +420,11 @@ if [ -n "${XB_BUILD_CLANG}" ]; then
 	
   # check if llvm-windres symlink exists
   # do_symlink --src <source> --dst <dest-slink> [--var varname][--test cmd_args][--export envfile value][--silent][--link]
-  do_symlink --src "/usr/lib/llvm-${XB_BUILD_CLANG_VERSION_MAJOR}/bin/llvm-windres" --dst "/usr/bin/llvm-windres" --var "windres" --show
-  #check_slink "/usr/bin/llvm-windres" "/usr/lib/llvm-${XB_BUILD_CLANG_VERSION_MAJOR}/bin/llvm-windres"
+  do_symlink \
+    --src "/usr/lib/llvm-${XB_BUILD_CLANG_VERSION_MAJOR}/bin/llvm-windres" \
+    --dst "/usr/bin/llvm-windres" \
+    --var "windres" \
+    --show
 
   for a in 0 1 2 3; do
 
@@ -471,15 +444,33 @@ if [ -n "${XB_BUILD_CLANG}" ]; then
 
     # clang/clang++ wrapper
     wrapper_args="--target=${t}"
-    test "${ab[${a}]}" = "armhf" && wrapper_args+=' -mfloat-abi=hard -mfpu=neon' 
-    do_wrapper --dst "${dst_bin}/clang" --cmd "clang ${wrapper_args} \"\$@\"" --test "-dumpversion" --export "${env_file}" "CC" --show
-    do_wrapper --dst "${dst_bin}/clang++" --cmd "clang++ ${wrapper_args} \"\$@\"" --test "-dumpversion" --export "${env_file}" "CXX" --show
+    # add fp flags to armhf arch
+    test "${ab[${a}]}" = "armhf" && wrapper_args+=' -mfloat-abi=hard -mfpu=neon'
+    do_wrapper \
+      --dst "${dst_bin}/clang" \
+      --cmd "clang ${wrapper_args} \"\$@\"" \
+      --test "-dumpversion" \
+      --export "${env_file}" "CC" \
+      --show
+    do_wrapper \
+      --dst "${dst_bin}/clang++" \
+      --cmd "clang++ ${wrapper_args} \"\$@\"" \
+      --test "-dumpversion" \
+      --export "${env_file}" "CXX" \
+      --show
     # ld
-    do_symlink --src "/usr/bin/ld.lld" --dst "${dst_bin}/ld.lld" --var "ld" --export "${env_file}" "${dst_bin}/ld.lld"
+    do_symlink \
+      --src "/usr/bin/ld.lld" \
+      --dst "${dst_bin}/ld.lld" \
+      --var "ld" --export "${env_file}" "${dst_bin}/ld.lld"
+    
     # symlinks for llvm utils
     echo -ne "    ${C0}binutils:${CD} "
     for e in ${exe}; do
-      do_symlink --quiet --src "/usr/bin/llvm-${e}" --dst "${dst_bin}/llvm-${e}" --var "${e}" --export "${env_file}" "${dst_bin}/llvm-${e}"
+      do_symlink --quiet \
+        --src "/usr/bin/llvm-${e}" \
+        --dst "${dst_bin}/llvm-${e}" \
+        --var "${e}" --export "${env_file}" "${dst_bin}/llvm-${e}"
     done
     echo -e "\n    ${C0}env file at ${CH}${env_file}${C0}"
 	done
@@ -552,7 +543,6 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
   ${ndk_download} && printf "${CH}${XBTAB}: ${CY1}%s${C0}\n" "  download link" "$(ndk_url)}"
   echo -e "\n${CC0} Check NDK symlinks"
 
-  #c_arch=('aarch64' 'arm' 'i686' 'x86_64')
   c_abi=('arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64')
   c_clang=('aarch64-linux-android' 'armv7a-linux-androideabi' 'i686-linux-android' 'x86_64-linux-android')
   c_lib=('aarch64-linux-android' 'arm-linux-androideabi' 'i686-linux-android' 'x86_64-linux-android')
@@ -579,27 +569,60 @@ if [ -d "${ANDROID_NDK_HOME}" ]; then
 
     # C/C++
     cmd_prefix="\${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/${c_clang[${i}]}\${API:=${ANDROID_NDK_API}}-"
-    do_wrapper --dst "${dst_bin}/clang" --cmd "${cmd_prefix}clang \"\$@\"" --test "-dumpversion" --export "${env_file}" "CC"
-    do_wrapper --dst "${dst_bin}/clang++" --cmd "${cmd_prefix}clang++ \"\$@\"" --test "-dumpversion" --export "${env_file}" "CXX"
+    do_wrapper --dst "${dst_bin}/clang" \
+      --cmd "${cmd_prefix}clang \"\$@\"" \
+      --test "-dumpversion" \
+      --export "${env_file}" "CC"
+    do_wrapper --dst "${dst_bin}/clang++" \
+      --cmd "${cmd_prefix}clang++ \"\$@\"" \
+      --test "-dumpversion" \
+      --export "${env_file}" "CXX"
     
     # LD
-    do_symlink --src "${XB_NDK_TOOLCHAIN}/bin/ld" --dst "${dst_bin}/ld" --var "LD" --export "${env_file}" "\${CROSS_PREFIX}ld" --test "--version"
+    do_symlink --src "${XB_NDK_TOOLCHAIN}/bin/ld" \
+      --dst "${dst_bin}/ld" \
+      --var "LD" --export "${env_file}" "\${CROSS_PREFIX}ld" \
+      --test "--version"
     
     # YASM
-    do_symlink --src "${XB_NDK_TOOLCHAIN}/bin/yasm" --dst "${dst_bin}/yasm" --var "YASM" --export "${env_file}" "\${CROSS_PREFIX}yasm" --test "--version"
+    do_symlink --src "${XB_NDK_TOOLCHAIN}/bin/yasm" \
+      --dst "${dst_bin}/yasm" \
+      --var "YASM" --export "${env_file}" "\${CROSS_PREFIX}yasm" \
+      --test "--version"
     test $? && echo "export ASM_NASM=\"${dst_bin}/yasm\"" >>"${env_file}"
     
     echo -ne "    ${C0}binutils:${CD} "
-    do_symlink --quiet --src "${XB_NDK_TOOLCHAIN}/bin/llvm-as" --dst "${dst_bin}/as" --var "as" --export "${env_file}" "\${CROSS_PREFIX}clang"
+    do_symlink --quiet \
+      --src "${XB_NDK_TOOLCHAIN}/bin/llvm-as" \
+      --dst "${dst_bin}/as" \
+      --var "as" --export "${env_file}" "\${CROSS_PREFIX}clang"
     for j in ar nm addr2line objcopy objdump ranlib readelf readobj size strings strip; do
-      do_symlink --quiet --src "${XB_NDK_TOOLCHAIN}/bin/llvm-${j}" --dst "${dst_bin}/${j}" --var "${j}" --export "${env_file}" "\${CROSS_PREFIX}${j}"
+      do_symlink --quiet \
+        --src "${XB_NDK_TOOLCHAIN}/bin/llvm-${j}" \
+        --dst "${dst_bin}/${j}" \
+        --var "${j}" --export "${env_file}" "\${CROSS_PREFIX}${j}"
     done
     echo
 
-    do_symlink --src "${XB_NDK_SYSROOT}" --dst "/usr/${t}/sysroot" --var "SYSROOT" --export "${env_file}" "/usr/${t}/sysroot" --showlink
-    do_symlink --src "${XB_NDK_SYSROOT}/usr/include" --dst "/usr/${t}/include" --showlink
-    do_symlink --src "${XB_NDK_SYSROOT}/usr/lib/${c_lib[${i}]}" --dst "/usr/${t}/lib" --showlink --var "lib"
-    do_symlink --src "${dir_root}/builds/android/${c_abi[${i}]}" --dst "${dst_root}/local" --showlink --var "local"
+    do_symlink \
+      --src "${XB_NDK_SYSROOT}" \
+      --dst "/usr/${t}/sysroot" \
+      --var "SYSROOT" --export "${env_file}" "/usr/${t}/sysroot" \
+      --showlink
+    do_symlink \
+      --src "${XB_NDK_SYSROOT}/usr/include" \
+      --dst "/usr/${t}/include" \
+      --showlink
+    do_symlink \
+      --src "${XB_NDK_SYSROOT}/usr/lib/${c_lib[${i}]}" \
+      --dst "/usr/${t}/lib" \
+      --var "lib" \
+      --showlink
+    do_symlink \
+      --src "${dir_root}/builds/android/${c_abi[${i}]}" \
+      --dst "${dst_root}/local" \
+      --var "local" \
+      --showlink
 
     echo "export CPPFLAGS=\"-I\${SYSROOT}/usr/include -I/usr/${t}/include -I/usr/${t}/local/include\"" >>"${env_file}"
     echo "export LT_SYS_LIBRARY_PATH=\"\${TOOLCHAIN}/lib:\${SYSROOT}/usr/lib/${t}:\${SYSROOT}/usr/lib/${t}/\${ANDROID_NDK_API}\"" >>"${env_file}"
@@ -669,6 +692,8 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
     source_dir="${LLVM_MINGW_HOME}/${cl_abi}-w64-mingw32"
     
     test -d "${target_dir}" || sudo mkdir -p "${target_dir}/bin"
+
+    do_symlink --
     check_ndk_symlink_dir "${target_dir}/dll" "${source_dir}/bin"
     check_ndk_symlink_dir "${target_dir}/include" "${source_dir}/include"
     check_ndk_symlink_dir "${target_dir}/lib" "${source_dir}/lib"
