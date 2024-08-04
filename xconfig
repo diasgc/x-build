@@ -696,7 +696,7 @@ if [ -n "${LLVM_MINGW_HOME}" ]; then
     done
     # binutils
     echo -ne "    ${C0}binutils:${CD} "
-    for e in addr2line ar as dlltool llvm-ar llvm-ranlib nm objcopy objdump ranlib readelf size strings strip widl windres; do
+    for e in addr2line ar as dlltool nm objcopy objdump ranlib readelf size strings strip widl windres; do #llvm-ar llvm-ranlib
       test "${e}" = "as" && v="\${CC}" || v="\${CROSS_PREFIX}${e}"
       do_symlink --quiet \
         --src "${LLVM_MINGW_HOME}/bin/${cl_abi}-w64-mingw32-${e}" \
