@@ -20,11 +20,14 @@ on_config_mingw(){
 }
 
 dev_bra='main'
-dev_vrs='1.18.1'
+dev_vrs='1.18.2'
 pkg_deb='libheif-dev'
 eta='224'
 
-lst_inc='libheif/*.h'
+lst_inc='libheif/heif_plugin.h
+ libheif/heif_version.h
+ libheif/heif_cxx.h
+ libheif/heif.h'
 lst_lib='libheif'
 lst_bin='heif-convert heif-enc heif-info'
 lst_lic='LICENSE AUTHORS'
