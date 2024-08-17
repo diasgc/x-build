@@ -5,13 +5,13 @@ pkg_deb="${lib}-dev"
 dsc='General purpose data compression library'
 lic='GPL-3 LGPL-2.1'
 #vrs='v5.2.5' #stable, otherwise 5.3.2alpha will be used
-src='https://git.tukaani.org/xz.git'
+src='https://github.com/tukaani-project/xz'
 cfg='cmake'
-eta='184'
+eta='128'
 #make_install='install'
 #cfg_cmd='./autogen.sh --no-po4a'
 
-dev_vrs='5.7.0alpha'
+dev_vrs='5.6.2'
 lst_inc='lzma.h lzma/*.h'
 lst_lib='liblzma'
 lst_bin='xzmore xzdec xzgrep xz lzmainfo xzless lzmadec xzdiff'
