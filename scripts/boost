@@ -5,8 +5,11 @@ dsc='Super-project for modularized Boost'
 lic='BSD-1c'
 src='https://github.com/boostorg/boost.git'
 src_opt='--recursive'
-cfg='cmake'
 #dep='zlib liblzma libzstd bzip2 libicu libiconv'
+
+cfg='cmake'
+cmake_config='-DBoost_NOWIDE_WERROR=OFF'
+
 
 WFLAGS='-Wno-deprecated-declarations -Wno-format -Wno-implicit-const-int-float-conversion -Wno-#pragma-messages -Wno-tautological-constant-out-of-range-compare'
 
@@ -31,10 +34,14 @@ on_create_pc(){
     build_pkgconfig --libs= --version=${vrs}
 }
 
+# BOOST_LOCALE_ENABLE_ICONV BOOST_LOCALE_ENABLE_ICU BOOST_LOCALE_ENABLE_POSIX BOOST_IOSTREAMS_ENABLE_ZSTD
+# BOOST_RUNTIME_LINK shared*|static
+
 dev_bra='master'
-dev_vrs='1.85.0'
+dev_vrs='1.86.0'
+#dev_vrs='1.85.0' NDK
 pkg_deb='libboost-dev'
-eta='1444'
+eta='1280'
 
 lst_inc='boost/*'
 lst_lib='libboost_*'
