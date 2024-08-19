@@ -8,18 +8,12 @@ src_opt='--recursive'
 cfg='cmake'
 #dep='zlib liblzma libzstd bzip2 libicu libiconv'
 
-WFLAGS='-Wno-deprecated-declarations -Wno-format -Wno-implicit-const-int-float-conversion -Wno-#pragma-messages'
+WFLAGS='-Wno-deprecated-declarations -Wno-format -Wno-implicit-const-int-float-conversion -Wno-#pragma-messages -Wno-tautological-constant-out-of-range-compare'
 
 on_src_release(){
     vrs="$(github_latest_release $src)"
     src="https://github.com/boostorg/boost/releases/download/${vrs}/${vrs}-cmake.tar.gz"
     vrs="${vrs//boost-/}"
-}
-
-_on_src_release(){
-    vrs="$(github_latest_release boostorg/boost)"
-    vrs="${vrs//boost-/}"
-    src="https://github.com/boostorg/boost/releases/download/${vrs}/${vrs}-cmake.tar.gz"
 }
 
 on_config(){
@@ -48,9 +42,7 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc='boost.pc'
 
-#pc_llib=null
-
-
+# 1.86.0: ndk fails with 'wordexp.h' file not found at libs/process/src/shell.cpp:23:10
 
 # Filelist
 # --------
