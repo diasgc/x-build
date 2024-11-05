@@ -1,0 +1,234 @@
+--- ./Makefile	2024-11-05 23:26:12.838531833 +0000
++++ ./Makefile	2024-11-05 23:29:57.544514485 +0000
+@@ -271,8 +271,8 @@
+ # Look for make include files relative to root of kernel src
+ MAKEFLAGS += --include-dir=$(srctree)
+ 
+-HOSTCC  	= gcc
+-HOSTCXX  	= g++
++HOSTCC  	= clang
++HOSTCXX  	= clang++
+ HOSTCFLAGS	:=
+ HOSTCXXFLAGS	:=
+ # We need some generic definitions
+@@ -288,8 +288,8 @@
+ 
+ # Make variables (CC, etc...)
+ 
+-AS		= $(CROSS_COMPILE)as
+-CC		= $(CROSS_COMPILE)gcc
++AS		= $(CROSS_COMPILE)clang
++CC		= $(CROSS_COMPILE)clang
+ LD		= $(CC) -nostdlib
+ CPP		= $(CC) -E
+ AR		= $(CROSS_COMPILE)ar
+@@ -297,7 +297,7 @@
+ STRIP		= $(CROSS_COMPILE)strip
+ OBJCOPY		= $(CROSS_COMPILE)objcopy
+ OBJDUMP		= $(CROSS_COMPILE)objdump
+-PKG_CONFIG	?= $(CROSS_COMPILE)pkg-config
++PKG_CONFIG	?= pkg-config
+ AWK		= awk
+ GENKSYMS	= scripts/genksyms/genksyms
+ DEPMOD		= /sbin/depmod
+--- ./editors/awk.c.old	2024-11-05 19:51:41.068402653 +0000
++++ ./editors/awk.c	2024-11-05 19:53:09.813082677 +0000
+@@ -3723,6 +3723,7 @@
+ 	exit(G.exitcode);
+ }
+ 
++#pragma clang optimize off
+ int awk_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int awk_main(int argc UNUSED_PARAM, char **argv)
+ {
+--- ./editors/vi.c.old	2024-11-05 19:55:45.778464294 +0000
++++ ./editors/vi.c	2024-11-05 19:56:30.981274031 +0000
+@@ -4952,6 +4952,7 @@
+ 	OPT_R = IF_FEATURE_VI_READONLY(	(1 << OPTBIT_R)) + 0,
+ };
+ 
++#pragma clang optimize off
+ int vi_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int vi_main(int argc, char **argv)
+ {
+--- ./editors/diff.c.old	2024-11-05 19:54:00.531888720 +0000
++++ ./editors/diff.c	2024-11-05 19:54:46.592706389 +0000
+@@ -972,6 +972,7 @@
+ # define LONGOPTS
+ #endif
+ 
++#pragma clang optimize off
+ int diff_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int diff_main(int argc UNUSED_PARAM, char **argv)
+ {
+--- ./editors/ed.c.old	2024-11-05 19:54:59.780653176 +0000
++++ ./editors/ed.c	2024-11-05 19:55:31.347524085 +0000
+@@ -1002,6 +1002,7 @@
+ 	}
+ }
+ 
++#pragma clang optimize off
+ int ed_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int ed_main(int argc UNUSED_PARAM, char **argv)
+ {
+--- ./miscutils/less.c.old	2024-11-05 20:00:02.940511142 +0000
++++ ./miscutils/less.c	2024-11-05 20:00:36.293384704 +0000
+@@ -1807,6 +1807,7 @@
+ }
+ #endif
+ 
++#pragma clang optimize off
+ int less_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int less_main(int argc, char **argv)
+ {
+--- ./miscutils/bc.c.old	2024-11-05 19:58:33.419738520 +0000
++++ ./miscutils/bc.c	2024-11-05 19:59:41.654921610 +0000
+@@ -7526,6 +7526,7 @@
+ }
+ 
+ #if ENABLE_BC
++#pragma clang optimize off
+ int bc_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int bc_main(int argc UNUSED_PARAM, char **argv)
+ {
+@@ -7545,6 +7546,7 @@
+ #endif
+ 
+ #if ENABLE_DC
++#pragma clang optimize off
+ int dc_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int dc_main(int argc UNUSED_PARAM, char **argv)
+ {
+--- ./libbb/lineedit.c.old	2024-11-05 19:57:18.776068283 +0000
++++ ./libbb/lineedit.c	2024-11-05 19:58:06.265859599 +0000
+@@ -2460,6 +2460,7 @@
+  * (in both cases the cursor remains on the input line, '\n' is not printed)
+  * >0 length of input string, including terminating '\n'
+  */
++#pragma clang optimize off 
+ int FAST_FUNC read_line_input(line_input_t *st, const char *prompt, char *command, int maxsize)
+ {
+ 	int len, n;
+--- ./procps/nmeter.c.old	2024-11-05 20:04:03.173643381 +0000
++++ ./procps/nmeter.c	2024-11-05 20:04:22.592956553 +0000
+@@ -880,6 +880,7 @@
+ 	init_cr
+ };
+ 
++#pragma clang optimize off
+ int nmeter_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int nmeter_main(int argc UNUSED_PARAM, char **argv)
+ {
+--- ./networking/ftpd.c.old	2024-11-05 20:01:18.912417276 +0000
++++ ./networking/ftpd.c	2024-11-05 20:01:44.612997470 +0000
+@@ -1169,6 +1169,7 @@
+ 	OPT_w = (1 << (BIT_A + 3)) * ENABLE_FEATURE_FTPD_WRITE,
+ };
+ 
++#pragma clang optimize off
+ int ftpd_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int ftpd_main(int argc UNUSED_PARAM, char **argv)
+ {
+--- ./networking/httpd.c	2024-11-05 20:01:55.679237950 +0000
++++ ./networking/httpd.c	2024-11-05 20:02:36.491078598 +0000
+@@ -2770,6 +2770,7 @@
+ };
+ 
+ 
++#pragma clang optimize off
+ int httpd_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int httpd_main(int argc UNUSED_PARAM, char **argv)
+ {
+--- ./networking/wget.c	2024-11-05 20:03:10.432725335 +0000
++++ ./networking/wget.c	2024-11-05 20:03:35.366172022 +0000
+@@ -1493,6 +1493,7 @@
+ 	free(redirected_path);
+ }
+ 
++#pragma clang optimize off
+ int wget_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int wget_main(int argc UNUSED_PARAM, char **argv)
+ {
+--- ./shell/ash.c	2024-11-05 20:05:36.821041520 +0000
++++ ./shell/ash.c	2024-11-05 20:06:17.259564049 +0000
+@@ -14728,6 +14728,7 @@
+  * exception occurs.  When an exception occurs the variable "state"
+  * is used to figure out how far we had gotten.
+  */
++#pragma clang optimize off
+ int ash_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ #if NUM_SCRIPTS > 0
+ int ash_main(int argc, char **argv)
+--- ./util-linux/mount.c
++++ ./util-linux/mount.c
+@@ -182,6 +182,9 @@
+ //usage:       "Returns 0 for success, number of failed mounts for -a, or errno for one mount."
+ 
+ #include <mntent.h>
++#ifdef __ANDROID__
++#define addmntent(s,m) (1)
++#endif
+ #if ENABLE_FEATURE_SYSLOG
+ #include <syslog.h>
+ #endif
+--- ./networking/tc.c
++++ ./networking/tc.c
+@@ -231,6 +231,13 @@ static int cbq_parse_opt(int argc, char **argv, struct nlmsghdr *n)
+ 	return 0;
+ }
+ #endif
++
++#ifndef TCA_CBQ_MAX
++/*
++ * Linux v6.8-rc1~131^2~60^2^2 removed the uapi definitions for CBQ.
++ * See <A HREF="https://git.kernel.org/linus/33241dca48626">https://git.kernel.org/linus/33241dca48626</A>
++ */
++#else
+ static int cbq_print_opt(struct rtattr *opt)
+ {
+ 	struct rtattr *tb[TCA_CBQ_MAX+1];
+@@ -322,6 +329,7 @@ static int cbq_print_opt(struct rtattr *opt)
+  done:
+ 	return 0;
+ }
++#endif
+ 
+ static FAST_FUNC int print_qdisc(
+ 		const struct sockaddr_nl *who UNUSED_PARAM,
+@@ -372,8 +380,10 @@ static FAST_FUNC int print_qdisc(
+ 		int qqq = index_in_strings(_q_, name);
+ 		if (qqq == 0) { /* pfifo_fast aka prio */
+ 			prio_print_opt(tb[TCA_OPTIONS]);
++#ifdef TCA_CBQ_MAX
+ 		} else if (qqq == 1) { /* class based queuing */
+ 			cbq_print_opt(tb[TCA_OPTIONS]);
++#endif
+ 		} else {
+ 			/* don't know how to print options for this qdisc */
+ 			printf(&quot;(options for %s)&quot;, name);
+@@ -442,9 +452,11 @@ static FAST_FUNC int print_class(
+ 		int qqq = index_in_strings(_q_, name);
+ 		if (qqq == 0) { /* pfifo_fast aka prio */
+ 			/* nothing. */ /*prio_print_opt(tb[TCA_OPTIONS]);*/
++#ifdef TCA_CBQ_MAX
+ 		} else if (qqq == 1) { /* class based queuing */
+ 			/* cbq_print_copt() is identical to cbq_print_opt(). */
+ 			cbq_print_opt(tb[TCA_OPTIONS]);
++#endif
+ 		} else {
+ 			/* don't know how to print options for this class */
+ 			printf(&quot;(options for %s)&quot;, name);
+--- ./include/libbb.h
++++ ./include/libbb.h
+@@ -382,6 +382,10 @@
+ #ifndef BB_GLOBAL_CONST
+ # define BB_GLOBAL_CONST const
+ #endif
++#ifdef __clang__
++# undef BB_GLOBAL_CONST
++# define BB_GLOBAL_CONST
++#endif
+ 
+ #if defined(errno)
+ /* If errno is a define, assume it's "define errno (*__errno_location())"
+ 

@@ -998,7 +998,7 @@ fi
 safe_cd "${dir_build}"
 
 log_vars dir_src dep PKG_CONFIG_LIBDIR SYSROOT TOOLCHAIN
-log_vars CC CXX LD AS AR NM ADDR2LINE OBJCOPY OBJDUMP RANLIB READELF SIZE STRINGS STRIP WINDRES API
+log_vars CC CXX LD ASmake_args AR NM ADDR2LINE OBJCOPY OBJDUMP RANLIB READELF SIZE STRINGS STRIP WINDRES API
 
 if fn_defined 'build_all'; then
   fn_log 'build' build_all

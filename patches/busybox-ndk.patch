@@ -1,0 +1,513 @@
+--- ./Makefile.old	2024-11-05 23:26:12.838531833 +0000
++++ ./Makefile	2024-11-05 23:29:57.544514485 +0000
+@@ -271,8 +271,8 @@
+ # Look for make include files relative to root of kernel src
+ MAKEFLAGS += --include-dir=$(srctree)
+ 
+-HOSTCC  	= gcc
+-HOSTCXX  	= g++
++HOSTCC  	= clang
++HOSTCXX  	= clang++
+ HOSTCFLAGS	:=
+ HOSTCXXFLAGS	:=
+ # We need some generic definitions
+@@ -288,8 +288,8 @@
+ 
+ # Make variables (CC, etc...)
+ 
+-AS		= $(CROSS_COMPILE)as
+-CC		= $(CROSS_COMPILE)gcc
++AS		= $(CROSS_COMPILE)clang
++CC		= $(CROSS_COMPILE)clang
+ LD		= $(CC) -nostdlib
+ CPP		= $(CC) -E
+ AR		= $(CROSS_COMPILE)ar
+@@ -297,7 +297,7 @@
+ STRIP		= $(CROSS_COMPILE)strip
+ OBJCOPY		= $(CROSS_COMPILE)objcopy
+ OBJDUMP		= $(CROSS_COMPILE)objdump
+-PKG_CONFIG	?= $(CROSS_COMPILE)pkg-config
++PKG_CONFIG	?= pkg-config
+ AWK		= awk
+ GENKSYMS	= scripts/genksyms/genksyms
+ DEPMOD		= /sbin/depmod
+--- busybox-1.32.0/editors/awk.c	2020-06-26 21:47:44.000000000 +0300
++++ busybox-1.32.0.mod/editors/awk.c	2020-10-02 21:43:17.208050022 +0300
+@@ -3190,6 +3190,7 @@
+ #undef files_happen
+ }
+ 
++#pragma clang optimize off
+ int awk_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int awk_main(int argc UNUSED_PARAM, char **argv)
+ {
+diff -uNr busybox-1.32.0/editors/diff.c busybox-1.32.0.mod/editors/diff.c
+--- busybox-1.32.0/editors/diff.c	2020-06-26 21:47:44.000000000 +0300
++++ busybox-1.32.0.mod/editors/diff.c	2020-10-02 21:43:17.208050022 +0300
+@@ -972,6 +972,7 @@
+ # define LONGOPTS
+ #endif
+ 
++#pragma clang optimize off
+ int diff_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int diff_main(int argc UNUSED_PARAM, char **argv)
+ {
+diff -uNr busybox-1.32.0/editors/ed.c busybox-1.32.0.mod/editors/ed.c
+--- busybox-1.32.0/editors/ed.c	2020-06-26 21:47:44.000000000 +0300
++++ busybox-1.32.0.mod/editors/ed.c	2020-10-02 21:43:17.208050022 +0300
+@@ -990,6 +990,7 @@
+ 	}
+ }
+ 
++#pragma clang optimize off
+ int ed_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int ed_main(int argc UNUSED_PARAM, char **argv)
+ {
+diff -uNr busybox-1.32.0/editors/vi.c busybox-1.32.0.mod/editors/vi.c
+--- busybox-1.32.0/editors/vi.c	2020-06-26 21:47:44.000000000 +0300
++++ busybox-1.32.0.mod/editors/vi.c	2020-10-02 21:43:17.208050022 +0300
+@@ -4314,6 +4314,7 @@
+ #undef cur_line
+ }
+ 
++#pragma clang optimize off
+ int vi_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int vi_main(int argc, char **argv)
+ {
+diff -uNr busybox-1.32.0/libbb/lineedit.c busybox-1.32.0.mod/libbb/lineedit.c
+--- busybox-1.32.0/libbb/lineedit.c	2020-06-26 21:47:44.000000000 +0300
++++ busybox-1.32.0.mod/libbb/lineedit.c	2020-10-02 21:43:08.191980579 +0300
+@@ -2348,6 +2348,7 @@
+  * (in both cases the cursor remains on the input line, '\n' is not printed)
+  * >0 length of input string, including terminating '\n'
+  */
++#pragma clang optimize off
+ int FAST_FUNC read_line_input(line_input_t *st, const char *prompt, char *command, int maxsize)
+ {
+ 	int len, n;
+diff -uNr busybox-1.32.0/miscutils/bc.c busybox-1.32.0.mod/miscutils/bc.c
+--- busybox-1.32.0/miscutils/bc.c	2020-06-26 21:47:44.000000000 +0300
++++ busybox-1.32.0.mod/miscutils/bc.c	2020-10-02 21:43:08.195980610 +0300
+@@ -7440,6 +7440,7 @@
+ }
+ 
+ #if ENABLE_BC
++#pragma clang optimize off
+ int bc_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int bc_main(int argc UNUSED_PARAM, char **argv)
+ {
+@@ -7459,6 +7460,7 @@
+ #endif
+ 
+ #if ENABLE_DC
++#pragma clang optimize off
+ int dc_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int dc_main(int argc UNUSED_PARAM, char **argv)
+ {
+diff -uNr busybox-1.32.0/miscutils/less.c busybox-1.32.0.mod/miscutils/less.c
+--- busybox-1.32.0/miscutils/less.c	2018-12-30 17:14:20.000000000 +0200
++++ busybox-1.32.0.mod/miscutils/less.c	2020-10-02 21:43:08.195980610 +0300
+@@ -1803,6 +1803,7 @@
+ }
+ #endif
+ 
++#pragma clang optimize off
+ int less_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int less_main(int argc, char **argv)
+ {
+diff -uNr busybox-1.32.0/networking/ftpd.c busybox-1.32.0.mod/networking/ftpd.c
+--- busybox-1.32.0/networking/ftpd.c	2018-12-05 16:44:34.000000000 +0200
++++ busybox-1.32.0.mod/networking/ftpd.c	2020-10-02 21:43:08.195980610 +0300
+@@ -1169,6 +1169,7 @@
+ 	OPT_w = (1 << (BIT_A + 3)) * ENABLE_FEATURE_FTPD_WRITE,
+ };
+ 
++#pragma clang optimize off
+ int ftpd_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int ftpd_main(int argc UNUSED_PARAM, char **argv)
+ {
+diff -uNr busybox-1.32.0/networking/httpd.c busybox-1.32.0.mod/networking/httpd.c
+--- busybox-1.32.0/networking/httpd.c	2020-06-26 21:47:44.000000000 +0300
++++ busybox-1.32.0.mod/networking/httpd.c	2020-10-02 21:43:08.195980610 +0300
+@@ -2663,7 +2663,7 @@
+ 	OPT_VERBOSE     = 1 << p_opt_verbose,
+ };
+ 
+-
++#pragma clang optimize off
+ int httpd_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int httpd_main(int argc UNUSED_PARAM, char **argv)
+ {
+diff -uNr busybox-1.32.0/networking/wget.c busybox-1.32.0.mod/networking/wget.c
+--- busybox-1.32.0/networking/wget.c	2020-06-26 21:47:44.000000000 +0300
++++ busybox-1.32.0.mod/networking/wget.c	2020-10-02 21:43:54.148335280 +0300
+@@ -1430,6 +1430,7 @@
+ 	free(redirected_path);
+ }
+ 
++#pragma clang optimize off
+ int wget_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int wget_main(int argc UNUSED_PARAM, char **argv)
+ {
+diff -uNr busybox-1.32.0/procps/nmeter.c busybox-1.32.0.mod/procps/nmeter.c
+--- busybox-1.32.0/procps/nmeter.c	2020-06-26 21:47:44.000000000 +0300
++++ busybox-1.32.0.mod/procps/nmeter.c	2020-10-02 21:43:08.195980610 +0300
+@@ -853,6 +853,7 @@
+ 	init_cr
+ };
+ 
++#pragma clang optimize off
+ int nmeter_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int nmeter_main(int argc UNUSED_PARAM, char **argv)
+ {
+diff -uNr busybox-1.32.0/runit/svlogd.c busybox-1.32.0.mod/runit/svlogd.c
+--- busybox-1.32.0/runit/svlogd.c	2020-06-26 21:47:44.000000000 +0300
++++ busybox-1.32.0.mod/runit/svlogd.c	2020-10-02 21:43:08.195980610 +0300
+@@ -1034,6 +1034,7 @@
+ 	}
+ }
+ 
++#pragma clang optimize off
+ int svlogd_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int svlogd_main(int argc, char **argv)
+ {
+diff -uNr busybox-1.32.0/shell/ash.c busybox-1.32.0.mod/shell/ash.c
+--- busybox-1.32.0/shell/ash.c	2020-06-26 21:47:44.000000000 +0300
++++ busybox-1.32.0.mod/shell/ash.c	2020-10-02 21:43:08.199980641 +0300
+@@ -14378,6 +14378,7 @@
+  * exception occurs.  When an exception occurs the variable "state"
+  * is used to figure out how far we had gotten.
+  */
++#pragma clang optimize off
+ int ash_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ #if NUM_SCRIPTS > 0
+ int ash_main(int argc, char **argv)
+--- ./util-linux/fdisk.c~	2021-12-26 17:53:21.000000000 +0100
++++ ./util-linux/fdisk.c	2022-08-05 08:59:58.167748508 +0200
+@@ -3021,6 +3021,7 @@
+ }
+ #endif
+ 
++#pragma clang optimize off
+ int fdisk_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int fdisk_main(int argc UNUSED_PARAM, char **argv)
+ {
+
+diff -uNr busybox-1.31.1/coreutils/mktemp.c busybox-1.31.1.mod/coreutils/mktemp.c
+--- busybox-1.31.1/coreutils/mktemp.c	2019-06-10 13:50:53.000000000 +0300
++++ busybox-1.31.1.mod/coreutils/mktemp.c	2019-11-11 21:46:00.848464330 +0200
+@@ -50,7 +50,7 @@
+ //usage:     "\n	-p DIR	Use DIR as a base directory (implies -t)"
+ //usage:     "\n	-u	Do not create anything; print a name"
+ //usage:     "\n"
+-//usage:     "\nBase directory is: -p DIR, else $TMPDIR, else /tmp"
++//usage:     "\nBase directory is: -p DIR, else $TMPDIR, else @TERMUX_PREFIX@/tmp"
+ //usage:
+ //usage:#define mktemp_example_usage
+ //usage:       "$ mktemp /tmp/temp.XXXXXX\n"
+@@ -76,7 +76,7 @@
+ 
+ 	path = getenv("TMPDIR");
+ 	if (!path || path[0] == '\0')
+-		path = "/tmp";
++		path = "@TERMUX_PREFIX@/tmp";
+ 
+ 	opts = getopt32(argv, "^" "dqtp:u" "\0" "?1"/*1 arg max*/, &path);
+ 
+diff -uNr busybox-1.31.1/editors/diff.c busybox-1.31.1.mod/editors/diff.c
+--- busybox-1.31.1/editors/diff.c	2019-06-10 13:50:53.000000000 +0300
++++ busybox-1.31.1.mod/editors/diff.c	2019-11-11 21:46:33.625316185 +0200
+@@ -730,7 +730,7 @@
+ 		 * When we meet non-seekable file, we must make a temp copy.
+ 		 */
+ 		if (lseek(fd, 0, SEEK_SET) == -1 && errno == ESPIPE) {
+-			char name[] = "/tmp/difXXXXXX";
++			char name[] = "@TERMUX_PREFIX@/tmp/difXXXXXX";
+ 			int fd_tmp = xmkstemp(name);
+ 
+ 			unlink(name);
+diff -uNr busybox-1.31.1/include/libbb.h busybox-1.31.1.mod/include/libbb.h
+--- busybox-1.31.1/include/libbb.h	2019-06-10 13:50:53.000000000 +0300
++++ busybox-1.31.1.mod/include/libbb.h	2019-11-11 21:55:22.141411848 +0200
+@@ -2126,12 +2126,12 @@
+  * use bb_default_login_shell and following defines.
+  * If you change LIBBB_DEFAULT_LOGIN_SHELL,
+  * don't forget to change increment constant. */
+-#define LIBBB_DEFAULT_LOGIN_SHELL  "-/bin/sh"
++#define LIBBB_DEFAULT_LOGIN_SHELL  "-@TERMUX_PREFIX@/bin/sh"
+ extern const char bb_default_login_shell[] ALIGN1;
+-/* "/bin/sh" */
++/* "@TERMUX_PREFIX@/bin/sh" */
+ #define DEFAULT_SHELL              (bb_default_login_shell+1)
+ /* "sh" */
+-#define DEFAULT_SHELL_SHORT_NAME   (bb_default_login_shell+6)
++#define DEFAULT_SHELL_SHORT_NAME   (bb_default_login_shell+1+sizeof("@TERMUX_PREFIX@/bin"))
+ 
+ /* The following devices are the same on all systems.  */
+ #define CURRENT_TTY "/dev/tty"
+diff -uNr ../busybox-1.35.0/networking/telnetd.c ./networking/telnetd.c
+--- ../busybox-1.35.0/networking/telnetd.c	2021-12-26 17:53:21.000000000 +0100
++++ ./networking/telnetd.c	2022-08-05 08:44:20.976821463 +0200
+@@ -105,7 +105,7 @@
+ //usage:       "Handle incoming telnet connections"
+ //usage:	IF_NOT_FEATURE_TELNETD_STANDALONE(" via inetd") "\n"
+ //usage:     "\n	-l LOGIN	Exec LOGIN on connect"
+-//usage:     "\n	-f ISSUE_FILE	Display ISSUE_FILE instead of /etc/issue"
++//usage:     "\n	-f ISSUE_FILE	Display ISSUE_FILE instead of @TERMUX_PREFIX@/etc/issue.net"
+ //usage:     "\n	-K		Close connection as soon as login exits"
+ //usage:     "\n			(normally wait until all programs close slave pty)"
+ //usage:	IF_FEATURE_TELNETD_STANDALONE(
+@@ -166,8 +166,8 @@
+ #define G (*(struct globals*)bb_common_bufsiz1)
+ #define INIT_G() do { \
+ 	setup_common_bufsiz(); \
+-	G.loginpath = "/bin/login"; \
+-	G.issuefile = "/etc/issue.net"; \
++	G.loginpath = "@TERMUX_PREFIX@/bin/login"; \
++	G.issuefile = "@TERMUX_PREFIX@/etc/issue.net"; \
+ } while (0)
+ 
+ 
+diff -uNr busybox-1.31.1/util-linux/setarch.c busybox-1.31.1.mod/util-linux/setarch.c
+--- busybox-1.31.1/util-linux/setarch.c	2019-06-10 13:50:53.000000000 +0300
++++ busybox-1.31.1.mod/util-linux/setarch.c	2019-11-11 21:56:31.521753610 +0200
+@@ -98,7 +98,7 @@
+ 
+ 	argv += optind;
+ 	if (!argv[0])
+-		(--argv)[0] = (char*)"/bin/sh";
++		(--argv)[0] = (char*)"@TERMUX_PREFIX@/bin/sh";
+ 
+ 	/* Try to execute the program */
+ 	BB_EXECVP_or_die(argv);
+ 	
+diff -uNr busybox-1.31.1/include/platform.h busybox-1.31.1.mod/include/platform.h
+--- busybox-1.31.1/include/platform.h	2019-06-10 13:50:53.000000000 +0300
++++ busybox-1.31.1.mod/include/platform.h	2019-11-12 02:43:11.833640516 +0200
+@@ -526,7 +526,9 @@
+ #  undef HAVE_STPCPY
+ # endif
+ # undef HAVE_MEMPCPY
+-# undef HAVE_STRCHRNUL
++# if __ANDROID_API__ < 24
++#  undef HAVE_STRCHRNUL
++# endif
+ # undef HAVE_STRVERSCMP
+ # undef HAVE_UNLOCKED_LINE_OPS
+ # undef HAVE_NET_ETHERNET_H
+ 
+ diff -uNr busybox-1.31.1/libbb/change_identity.c busybox-1.31.1.mod/libbb/change_identity.c
+--- busybox-1.31.1/libbb/change_identity.c	2019-06-10 13:50:53.000000000 +0300
++++ busybox-1.31.1.mod/libbb/change_identity.c	2019-11-11 22:12:18.976233196 +0200
+@@ -32,6 +32,9 @@
+ /* Become the user and group(s) specified by PW.  */
+ void FAST_FUNC change_identity(const struct passwd *pw)
+ {
++#ifdef __ANDROID__
++	return;
++#endif
+ 	int res;
+ 
+ 	res = initgroups(pw->pw_name, pw->pw_gid);
+ 	
+diff -uNr busybox-1.31.1/miscutils/crond.c busybox-1.31.1.mod/miscutils/crond.c
+--- busybox-1.31.1/miscutils/crond.c	2019-06-10 13:50:53.000000000 +0300
++++ busybox-1.31.1.mod/miscutils/crond.c	2019-11-11 22:04:10.820622087 +0200
+@@ -435,7 +435,7 @@
+ 
+ 	maxLines = (strcmp(fileName, "root") == 0) ? 65535 : MAXLINES;
+ 
+-	if (fstat(fileno(parser->fp), &sbuf) == 0 && sbuf.st_uid == DAEMON_UID) {
++	if (fstat(fileno(parser->fp), &sbuf) == 0) {
+ 		CronFile *file = xzalloc(sizeof(CronFile));
+ 		CronLine **pline;
+ 		int n;
+@@ -655,6 +655,9 @@
+ 
+ static void set_env_vars(struct passwd *pas, const char *shell)
+ {
++#ifdef __ANDROID__
++	return;
++#endif
+ 	/* POSIX requires crond to set up at least HOME, LOGNAME, PATH, SHELL.
+ 	 * We assume crond inherited suitable PATH.
+ 	 */
+ 	 
+diff -uNr busybox-1.33.1/miscutils/crontab.c busybox-1.33.1.mod/miscutils/crontab.c
+--- busybox-1.33.1/miscutils/crontab.c	2021-01-01 10:52:27.000000000 +0000
++++ busybox-1.33.1.mod/miscutils/crontab.c	2021-05-04 14:17:52.387444315 +0000
+@@ -51,12 +51,14 @@
+ 		return;
+ 	}
+ 
++#ifndef __ANDROID__
+ 	/* CHILD - change user and run editor */
+ 	/* initgroups, setgid, setuid */
+ 	change_identity(pas);
+ 	setup_environment(pas->pw_shell,
+ 		SETUP_ENV_CHANGEENV | SETUP_ENV_TO_TMP | SETUP_ENV_CHDIR,
+ 		pas);
++#endif
+ 	ptr = getenv("VISUAL");
+ 	if (!ptr) {
+ 		ptr = getenv("EDITOR");
+@@ -129,7 +131,11 @@
+ 		if (!argv[0])
+ 			bb_show_usage();
+ 		if (NOT_LONE_DASH(argv[0])) {
++#ifndef __ANDROID__
+ 			src_fd = xopen_as_uid_gid(argv[0], O_RDONLY, pas->pw_uid, pas->pw_gid);
++#else
++			src_fd = xopen3(argv[0], O_RDONLY, 0600);
++#endif
+ 		}
+ 	}
+ 
+@@ -158,7 +164,9 @@
+ 		/* No O_EXCL: we don't want to be stuck if earlier crontabs
+ 		 * were killed, leaving stale temp file behind */
+ 		src_fd = xopen3(tmp_fname, O_RDWR|O_CREAT|O_TRUNC, 0600);
++#ifndef __ANDROID__
+ 		fchown(src_fd, pas->pw_uid, pas->pw_gid);
++#endif
+ 		fd = open(pas->pw_name, O_RDONLY);
+ 		if (fd >= 0) {
+ 			bb_copyfd_eof(fd, src_fd);
+ 			
+--- ./networking/ftpd.c.orig	2021-08-19 16:49:06.730314230 +0200
++++ ./networking/ftpd.c	2021-08-19 16:49:06.753647572 +0200
+@@ -1302,8 +1302,11 @@
+ 		G.root_fd = xopen("/", O_RDONLY | O_DIRECTORY);
+ 		close_on_exec_on(G.root_fd);
+ #endif
++#ifndef __ANDROID__
++		/* Do not try chroot() on Android because it may trigger seccomp. */
+ 		if (chroot(basedir) == 0)
+ 			basedir = "/";
++#endif
+ #if !BB_MMU
+ 		else {
+ 			close(G.root_fd);
+ 			
+--- ./networking/httpd.c.orig	2022-03-01 20:22:51.797986436 +0000
++++ ./networking/httpd.c	2022-03-01 20:25:18.869664006 +0000
+@@ -1043,7 +1043,7 @@
+ 	if (!errno && n && n <= 0xffff)
+ 		n = create_and_bind_stream_or_die(NULL, n);
+ 	else
+-		n = create_and_bind_stream_or_die(bind_addr_or_port, 80);
++		n = create_and_bind_stream_or_die(bind_addr_or_port, 8080);
+ 	xlisten(n, 9);
+ 	return n;
+ }
+@@ -2286,7 +2286,7 @@
+ 
+ 		if (verbose > 1)
+ 			bb_error_msg("proxy:%s", urlp);
+-		lsa = host2sockaddr(proxy_entry->host_port, 80);
++		lsa = host2sockaddr(proxy_entry->host_port, 8080);
+ 		if (!lsa)
+ 			send_headers_and_exit(HTTP_INTERNAL_SERVER_ERROR);
+ 		proxy_fd = socket(lsa->u.sa.sa_family, SOCK_STREAM, 0);
+ 		
+--- ./networking/tftp.c.orig	2021-01-01 11:52:27.000000000 +0100
++++ ./networking/tftp.c	2021-08-19 16:49:06.763647575 +0200
+@@ -917,7 +917,12 @@
+ 		G.pw = xgetpwnam(user_opt);
+ 	}
+ 	if (argv[0]) {
++#ifdef __ANDROID__
++		// chroot may trigger seccomp and is allowed only for root anyway.
++		xchdir(argv[0]);
++#else
+ 		xchroot(argv[0]);
++#endif
+ 	}
+ 
+ 	result = recv_from_to(STDIN_FILENO,
+ 	
+--- a/util-linux/mount.c
++++ b/util-linux/mount.c
+@@ -182,6 +182,9 @@
+ //usage:       "Returns 0 for success, number of failed mounts for -a, or errno for one mount."
+ 
+ #include <mntent.h>
++#ifdef __ANDROID__
++#define addmntent(s,m) (1)
++#endif
+ #if ENABLE_FEATURE_SYSLOG
+ #include <syslog.h>
+ #endif
+ 
+https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=d8ad860a1ed9aa92adaa7dcf1c3fc78d0e2f80ce
+
+http://lists.busybox.net/pipermail/busybox/2024-March/090678.html
+https://bugs.gentoo.org/926872
+
+Linux v6.8-rc1 removed the definitions related to CBQ making tc fail to
+build. Add some #ifdefs to handle this missing support.
+--- a/networking/tc.c
++++ b/networking/tc.c
+@@ -231,6 +231,13 @@ static int cbq_parse_opt(int argc, char **argv, struct nlmsghdr *n)
+ 	return 0;
+ }
+ #endif
++
++#ifndef TCA_CBQ_MAX
++/*
++ * Linux v6.8-rc1~131^2~60^2^2 removed the uapi definitions for CBQ.
++ * See <A HREF="https://git.kernel.org/linus/33241dca48626">https://git.kernel.org/linus/33241dca48626</A>
++ */
++#else
+ static int cbq_print_opt(struct rtattr *opt)
+ {
+ 	struct rtattr *tb[TCA_CBQ_MAX+1];
+@@ -322,6 +329,7 @@ static int cbq_print_opt(struct rtattr *opt)
+  done:
+ 	return 0;
+ }
++#endif
+ 
+ static FAST_FUNC int print_qdisc(
+ 		const struct sockaddr_nl *who UNUSED_PARAM,
+@@ -372,8 +380,10 @@ static FAST_FUNC int print_qdisc(
+ 		int qqq = index_in_strings(_q_, name);
+ 		if (qqq == 0) { /* pfifo_fast aka prio */
+ 			prio_print_opt(tb[TCA_OPTIONS]);
++#ifdef TCA_CBQ_MAX
+ 		} else if (qqq == 1) { /* class based queuing */
+ 			cbq_print_opt(tb[TCA_OPTIONS]);
++#endif
+ 		} else {
+ 			/* don't know how to print options for this qdisc */
+ 			printf(&quot;(options for %s)&quot;, name);
+@@ -442,9 +452,11 @@ static FAST_FUNC int print_class(
+ 		int qqq = index_in_strings(_q_, name);
+ 		if (qqq == 0) { /* pfifo_fast aka prio */
+ 			/* nothing. */ /*prio_print_opt(tb[TCA_OPTIONS]);*/
++#ifdef TCA_CBQ_MAX
+ 		} else if (qqq == 1) { /* class based queuing */
+ 			/* cbq_print_copt() is identical to cbq_print_opt(). */
+ 			cbq_print_opt(tb[TCA_OPTIONS]);
++#endif
+ 		} else {
+ 			/* don't know how to print options for this class */
+ 			printf(&quot;(options for %s)&quot;, name);
+ 			
+https://github.com/termux/termux-packages/issues/21522
+
+--- a/include/libbb.h
++++ b/include/libbb.h
+@@ -382,6 +382,10 @@
+ #ifndef BB_GLOBAL_CONST
+ # define BB_GLOBAL_CONST const
+ #endif
++#ifdef __clang__
++# undef BB_GLOBAL_CONST
++# define BB_GLOBAL_CONST
++#endif
+ 
+ #if defined(errno)
+ /* If errno is a define, assume it's "define errno (*__errno_location())"
+
+

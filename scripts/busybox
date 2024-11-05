@@ -1,14 +1,17 @@
 #!/bin/bash
 
 lib='busybox'
-dsc='@desc@'
+dsc='The Swiss Army Knife of Embedded Linux'
 lic='GPL2'
 src="https://git.busybox.net/busybox/"
+# see https://github.com/termux/termux-packages/blob/master/packages/busybox/build.sh
+patch='busybox'
 #sub=''
 #src_opt=''
 #src_rel=true|false
 
 cfg='make'
+cfg_args='oldconfig'
 
 dev_bra='master'
 dev_vrs=''
@@ -20,6 +23,10 @@ lst_lib=''
 lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
+
+before_make(){
+    cat $dir_patches/busybox.config | envsubst > $dir_src/.config
+}
 
 # cpu av8 av7 x86 x64
 # NDK  .   .   .   .  clang
