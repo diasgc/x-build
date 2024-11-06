@@ -11,7 +11,7 @@ patch='busybox'
 #src_rel=true|false
 
 cfg='make'
-cfg_args='oldconfig'
+cfg_args='android_ndk2_defconfig'
 
 dev_bra='master'
 dev_vrs=''
@@ -24,8 +24,9 @@ lst_bin=''
 lst_lic='LICENSE AUTHORS'
 lst_pc=''
 
-before_make(){
-    cat $dir_patches/busybox.config | envsubst > $dir_src/.config
+on_make(){
+    cat $dir_patches/busybox.config | envsubst > $dir_src/configs/android_ndk2_defconfig
+    make android_ndk2_defconfig && make
 }
 
 # cpu av8 av7 x86 x64
