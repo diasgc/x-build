@@ -1,0 +1,34 @@
+#!/bin/bash
+
+
+currvrs=$(gcc -dumpversion)
+latest=$(curl --silent  http://ftp.gnu.org/gnu/gcc/ | grep -oP 'gcc-\K[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n1)
+
+echo " - current version: ${currvrs}"
+echo " - latest version: ${latest}"
+
+if [ $currvrs == $latest ]; then
+  echo " - already latest version"
+  exit 0
+else
+  read -p "- installing latest version? (y/n): " -n 1 -r
+fi
+
+
+
+vrs=${latest}
+vrs_major=$(echo $vrs | cut -d. -f1)
+
+src="http://ftp.gnu.org/gnu/gcc/gcc-${vrs}/gcc-${vrs}.tar.gz"
+
+sudo apt install build-essential
+sudo apt install libmpfr-dev libgmp3-dev libmpc-dev -y
+wget ${src}
+tar -xf gcc-${vrs}.tar.gz
+cd gcc-${vrs}
+CC=clang CXX=clang++ CPPFLAGS='-mtune=native' ./configure -v --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu --prefix=/usr/local/gcc-${vrs} --enable-checking=release --enable-languages=c,c++ --disable-multilib --program-suffix=-${vrs}
+make
+sudo make install
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/local/gcc-${vrs}/bin/g++-${vrs} ${vrs_major}
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/local/gcc-${vrs}/bin/gcc-${vrs} ${vrs_major}
+exit 0

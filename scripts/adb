@@ -1,0 +1,29 @@
+#!/bin/bash
+
+lib='adb'
+dsc='The Android Debug Bridge (ADB)'
+lic='Apache 2.0'
+#src="https://android.googlesource.com/platform/packages/modules/adb"
+src='https://android.googlesource.com/platform/packages/modules/adb/+archive/refs/heads/main.tar.gz'
+cmake_file="adb"
+#sub=''
+#src_opt=''
+#src_rel=true|false
+
+cfg='cmake'
+
+dev_bra='master'
+dev_vrs=''
+pkg_deb=''
+eta='0'
+
+lst_inc=''
+lst_lib=''
+lst_bin=''
+lst_lic='LICENSE AUTHORS'
+lst_pc=''
+
+# cpu av8 av7 x86 x64
+# NDK  .   .   .   .  clang
+# GNU  .   .   .   .  clang/gcc
+# WIN  .   .   .   .  clang/gcc
