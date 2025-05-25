@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=all
 # ................................................
 # X-Build util 2.0.0 2024-diasgc
 # ................................................
@@ -18,7 +19,7 @@ function init {
 
   case "${1}" in
     --help|-h)  show_banner; usage; exit 0;;
-    --new|-n)   shift; generate_script $@; exit 0;;
+    --new|-n)   shift; generate_script $@ ;;
   esac
   
   # array of args first passed to scripts
@@ -44,10 +45,11 @@ function init {
   fi
 }
 
- function do_strip {
+# shellcheck disable=SC2317
+function do_strip {
   ${verbose} && logf "do_strip $@"
   local libdir
-  for dd in $(find "${dir_build}" \( -name "*.a" -o -name "*.so" \));do
+  for dd in $(find "${dir_build}" \( -name "*.a" -o -name "*.so" \)); do
     ${STRIP} --strip-unneeded "${dd}" >>${log_file}
   done
 }
@@ -323,7 +325,7 @@ function set_env {
     x86_64)  host_arm=false; host_arm32=false; host_arm64=false; host_x86=false; host_x64=true; host_bits=64;;
   esac
   case ${host_trip[3]} in
-    android) host_sys=linux;   host_mingw=false; host_os=android; host_ndk=true;  host_gnu=false;  host_clang=true;  PLATFORM="Android"
+    android) host_sys=linux; host_mingw=false; host_os=android; host_ndk=true;  host_gnu=false;  host_clang=true;  PLATFORM="Android"
              dir_install="/usr/${arch}/local"
              ;;
     gnu)     host_sys=linux;   host_mingw=false; host_os=gnu;     host_ndk=false;  host_gnu=true;  host_clang=false; PLATFORM="Linux"

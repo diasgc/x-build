@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2059,SC2183,SC1072,SC1073,SC2068,SC2086,SC2207,SC2154,SC2155,SC2153,SC2156,SC2157,SC2158,SC2162
 # ................................................
 # setup util 1.0 2021-diasgc
 # ................................................
@@ -111,7 +112,7 @@ function install_ndk {
 	test -z "${XB_NDK_URL}" && return 1
 
 	local od=$(pwd)
-	cd ${HOME}
+	cd ${HOME} || exit
 
     # install android-ndk
     test -z "$(command -v unzip)" && check_install unzip
@@ -140,7 +141,7 @@ function install_llvm_gnu {
 }
 
 function llvm_mingw_get_latest_version {
-    echo $(curl --silent "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    curl --silent "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'
 }
 
 function install_llvm_mingw {
@@ -149,17 +150,17 @@ function install_llvm_mingw {
     if [ -z "${LLVM_MINGW_HOME}" ]; then
         export LLVM_MINGW_HOME="$HOME/llvm-mingw"
     fi
-    cd $(dirname ${LLVM_MINGW_HOME})
+    cd "$(dirname "${LLVM_MINGW_HOME}")" || exit
     [ -d "llvm-mingw" ] && rm -rf "llvm-mingw"
     export llvm_mingw_rel=$(llvm_mingw_get_latest_version)
     wget_untar "https://github.com/mstorsjo/llvm-mingw/releases/download/${llvm_mingw_rel}/llvm-mingw-${llvm_mingw_rel}-ucrt-ubuntu-20.04-x86_64.tar.xz" "llvm-mingw"    
     echo $llvm_mingw_rel >"${LLVM_MINGW_HOME}/version"
     export xv_llvm_mingw=$(./llvm-mingw/bin/aarch64-w64-mingw32-clang --version | grep -oP '\d*\.\d*.\d* (?=\()')
-    cd $od
+    cd $od || exit
 }
 
 function build_utils {
-    cd utils
+    cd utils || exit
     [ -n "$(command -v clang++)" ] && cc=clang++ || cc=g++
     printf "${CH}%-20s: ${C0}%s" "  lz-string" "compiling..."
     $cc -mtune=native -std=c++14 -O3 -Wall -stdlib=libstdc++ -c lz-string.cpp && clang++ -o lz-string lz-string.o && rm *.o && echo " done" || echo " fail"
@@ -180,7 +181,7 @@ function do_git_cleanup {
 function check_slink {
     local status
 	if [ ! -f "${1}" ]; then
-		sudo ln -s "${2}" "${1}" 2>&1 >/dev/null && status="new" || status="${CR1}err${C0}"
+        sudo ln -s "${2}" "${1}" >/dev/null 2>&1 && status="new" || status="${CR1}err${C0}"
         ${verbose} && printf "${CC1}%-6s ${C0}%-60s-> ${CW}%s\n" "    ${status}" "${1}" "${2}"
 	elif [ "$(readlink ${1})" == "${2}" ]; then
         ${verbose} && printf "${CH}%-6s ${CD}%-60s-> ${C0}%s\n" "    ok" "${1}" "${2}"
@@ -604,7 +605,7 @@ if [ -z "${LLVM_MINGW_HOME}" ]; then
         echo -ne "  not found. Install? "; read -p "[Y|n]" pndk
         case $pndk in y|Y) install_llvm_mingw;; esac
     else
-        export LLVM_MINGW_HOME=$(dirname $(dirname $llvm_mingw_bin_dir))
+        export LLVM_MINGW_HOME="$(dirname "$(dirname "$llvm_mingw_bin_dir")")"
     fi
 fi 
 
@@ -663,7 +664,7 @@ case "$(uname -s)" in
       build_arch=$(echo $(uname -m)-linux-gnu)
       [ -n "$(grep -q BCM2708 /proc/cpuinfo)" ] && build_arch="${build_arch}eabihf"    
       if [ -n "$(command -v getprop)" ]; then
-        build_arch=$(echo $(uname -m)-linux-android)
+        build_arch="$(echo $(uname -m)-linux-android)"
         export API=$(getprop ro.build.version.sdk)
       fi
       ;;
@@ -671,7 +672,7 @@ case "$(uname -s)" in
       build_arch=$(echo $(uname -m)-darwin-gnu)
       ;;
     CYGWIN*|MINGW32*|MSYS*|MINGW*)
-      build_arch=$(echo $(uname -m)-w64-mingw32)
+      build_arch="$(echo "$(uname -m)-w64-mingw32")"
       ;;
 esac
 
