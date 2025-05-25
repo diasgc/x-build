@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='celt'
 dsc='CELT is a low-delay audio codec'

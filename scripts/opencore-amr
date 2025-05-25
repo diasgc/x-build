@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 # Aa8 Aa7 A86 A64 L64 W64 La8 La7 Wa8 W86 L86
 #  +   +   .   .   .   +   .   .   .   .   .  static
 #  +   +   .   .   .   +   .   .   .   .   .  shared

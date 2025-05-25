@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='libde265'
 dsc='Open h.265 video codec implementation.'

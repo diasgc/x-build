@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='libxml2'
 pkg='libxml-2.0'

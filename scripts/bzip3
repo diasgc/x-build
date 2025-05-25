@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='bzip3'
 dsc='A better and stronger spiritual successor to BZip2.'

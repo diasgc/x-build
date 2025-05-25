@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='cryptopp'
 dsc='Free C++ class library of cryptographic schemes'

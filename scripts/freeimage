@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='freeimage'
 dsc='Open Source library to support popular graphics image formats like PNG, BMP, JPEG, TIFF'

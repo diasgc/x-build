@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='mbedtls'
 dsc='An open source, portable, easy to use, readable and flexible SSL library.'

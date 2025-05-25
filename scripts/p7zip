@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='p7zip'
 dsc='p7zip is a port of the Windows programs 7z.exe and 7za.exe provided by 7-zip'

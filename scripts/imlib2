@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='imlib2'
 dsc='Image loading, rendering, saving library'

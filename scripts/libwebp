@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='libwebp'
 dsc='Library to encode and decode images in WebP format'

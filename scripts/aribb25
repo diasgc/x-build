@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='aribb25'
 dsc='Basic implementation of the ARIB STD-B25 public standard.'

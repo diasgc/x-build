@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='cpu_features'
 dsc='A cross platform C99 library to get cpu features at runtime'

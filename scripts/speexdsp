@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='speexdsp'
 dsc='Speexdsp is a speech processing library that goes along with the Speex codec'

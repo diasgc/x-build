@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 # TODO patch src/libjasper/CMakeLists.txt to support dual static-shared build
 

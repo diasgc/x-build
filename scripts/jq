@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='jq'
 dsc='Lightweight and flexible command-line JSON processor'

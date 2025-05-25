@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='xeve'
 dsc='eXtra-fast Essential Video Encoder, MPEG-5 EVC (Essential Video Coding)'

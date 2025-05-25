@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 #             a8  a7  x86 x64
 # ndk-clang   F.. ... ... ...

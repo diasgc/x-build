@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='id3v2lib'
 pkg_deb='id3lib-dev'

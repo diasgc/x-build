@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='pango'
 dsc='Pango is a library for layout and rendering of text, with an emphasis on internationalization'

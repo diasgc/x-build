@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='dwarfs'
 dsc='A fast high compression read-only file system for Linux, Windows and macOS'

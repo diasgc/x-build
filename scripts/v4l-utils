@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='v4l-utils'
 dsc='Linux utilities and libraries to handle media devices'

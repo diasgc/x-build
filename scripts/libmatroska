@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='libmatroska'
 dsc='a C++ libary to parse Matroska files (.mkv and .mka)'

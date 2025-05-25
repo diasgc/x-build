@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='samplerate'
 dsc='An audio Sample Rate Conversion library'

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='draco'
 dsc='Draco is a library for compressing and decompressing 3D geometric meshes and point clouds'

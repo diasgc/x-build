@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='libyuv'
 dsc='Libyuv is an open source project that includes YUV scaling and conversion functionality'

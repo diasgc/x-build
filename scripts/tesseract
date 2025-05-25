@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='tesseract'
 dsc='An OCR Engine that was developed at HP Labs between 1985 and 1995... and now at Google'

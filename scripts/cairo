@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='cairo'
 dsc='Development files for the Cairo 2D graphics library'

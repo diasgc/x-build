@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='c-plus-plus'
 dsc='Collection of various algorithms in mathematics, machine learning, computer science and physics implemented in C++ for educational purposes.'

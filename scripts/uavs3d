@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2154
 
 lib='uavs3d'
 dsc='AVS3 decoder which supports AVS3-P2 baseline profile.'
