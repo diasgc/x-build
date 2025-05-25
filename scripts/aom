@@ -17,7 +17,7 @@ cmake_config='-DENABLE_TESTS=OFF
  -DENABLE_DOCS=OFF'
 
 dev_bra='main'
-dev_vrs='3.9.1'
+dev_vrs='3.12.1'
 pkg_deb='libaom-dev'
 eta='1056'
 

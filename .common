@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034,SC2059,SC2068,SC2086,SC2145,SC2154,SC2155,SC2183
 # ................................................
 # Commons 1.2.0-dev 2021-diasgc
 # Definition constants and functions
@@ -6,7 +7,7 @@
 
 function trap_sigint_common {
   tput cnorm
-  cd "$(dirname $0)"
+  cd "$(dirname "$0")" || exit
   local l
   [ -f "${log_file}" ] && l="  Log available at ${log_file}\n"
   echo -e "\n\n${CY1}  trap_sigint@common: Interrupted by user${C0}\n${l}\n"
@@ -87,7 +88,7 @@ function show_banner {
 }
 
 function usage {
-  cat ${dir_root}/README.md
+  cat "${dir_root}/README.md"
 }
 
 
@@ -481,16 +482,16 @@ str_concat(){
 
 # usage: str_contains str1 substr2
 str_contains(){
-   [ -z "${1##*${2}*}" ]
+  [ -z "${1##*"${2}"*}" ]
 }
 
 # usage: str_starts str1 substr2
 str_starts(){
-   [ "${1#${2}}" != "${1}" ]
+  [ "${1#"${2}"}" != "${1}" ]
 }
 
 str_ends(){
-   [ "${1%${2}}" != "${1}" ]
+  [ "${1%"${2}"}" != "${1}" ]
 }
 
 str_lowercase(){
@@ -513,15 +514,15 @@ shell_dstack=
 
 pushdir(){
   case $SHELL in
-    *bash) pushd $1 >/dev/null 2>&1;;
-    *) pushvar_f shell_dstack $1; cd $1;;
+    *bash) pushd $1 >/dev/null 2>&1 || exit;;
+    *) pushvar_f shell_dstack $1; cd $1 || exit;;
   esac
 }
 
 popdir(){
   case $SHELL in
-    *bash) popd >/dev/null 2>&1;;
-    *) local d=$(popvar_f shell_dstack); [ -n "$d" ] && cd $d;;
+    *bash) popd >/dev/null 2>&1 || exit;;
+    *) local d=$(popvar_f shell_dstack); [ -n "$d" ] && cd $d || exit;;
   esac
 }
 
@@ -550,44 +551,44 @@ dec_tab(){
 var_xaddl(){
   local v=$1; shift
     while [ -n "$1" ];do
-        [ -z "${!v##*${1}*}" ] || eval $v=\"${1} ${!v}\"
-        shift
+      [ -z "${!v##*"${1}"*}" ] || eval $v=\"${1} ${!v}\"
+      shift
     done
 }
 
 # exclusive variable add substrings right var_xaddl <var> <substrings...>
 # appends substrings to the right/end of var variable iff main doesnt contains substring
 var_xaddr(){
-    local v=$1; shift
-    while [ -n "$1" ];do
-        [ -z "${!v##*${1}*}" ] || eval $v=\"${!v} ${1} \"
-        shift
-    done
+  local v=$1; shift
+  while [ -n "$1" ];do
+    [ -z "${!v##*"${1}"*}" ] || eval $v=\"${!v} ${1} \"
+    shift
+  done
 }
 
 var_addr(){
-    local v=$1; shift; eval $v=\"${!v} $@\"
+  local v=$1; shift; eval $v=\"${!v} $@\"
 }
 
 var_addl(){
-    local v=$1; shift; eval $v=\"$@ ${!v}\"
+  local v=$1; shift; eval $v=\"$@ ${!v}\"
 }
 
 # vercomp v1 v2 returns 0: v1=v2, 1: v1>v2, 2: v1<v2
 vercomp () {
-    test "$1" = "$2" && return 0
-    local IFS=.
-    local i ver1=($1) ver2=($2)
-    # fill empty fields in ver1 with zeros
-    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++)); do
-        ver1[i]=0
-    done
-    for ((i=0; i<${#ver1[@]}; i++)); do
-        test -z "${ver2[i]}" && ver2[i]=0
-        if ((10#${ver1[i]} > 10#${ver2[i]})); then return 1; fi
-        if ((10#${ver1[i]} < 10#${ver2[i]})); then return 2; fi
-    done
-    return 0
+  test "$1" = "$2" && return 0
+  local IFS=.
+  local i ver1=($1) ver2=($2)
+  # fill empty fields in ver1 with zeros
+  for ((i=${#ver1[@]}; i<${#ver2[@]}; i++)); do
+    ver1[i]=0
+  done
+  for ((i=0; i<${#ver1[@]}; i++)); do
+    test -z "${ver2[i]}" && ver2[i]=0
+    if ((10#${ver1[i]} > 10#${ver2[i]})); then return 1; fi
+    if ((10#${ver1[i]} < 10#${ver2[i]})); then return 2; fi
+  done
+  return 0
 }
 
 rm_quiet(){
@@ -1586,15 +1587,16 @@ git_local_version(){
   local out;
   if [ -d "${1}/.git" ];then
     local d=$(pwd)
-    cd ${1}
+    cd "${1}" || return
     out=$(git describe --abbrev=0 --tags 2>/dev/null)
-    cd ${d}
+    cd "${d}" || return
   fi
-  echo $out
+  echo "$out"
 }
 
 get_latest_release() {
-  local s=$(echo "$1" | sed 's/https:\/\///g; s/\// /g; s/\.git$//')
+  local s
+  s=$(echo "$1" | sed 's/https:\/\///g; s/\// /g; s/\.git$//')
   set -- $s
   #echo -ne "$1: $2/$3"
   case "${1}" in
@@ -1606,7 +1608,7 @@ wget_untar(){
   local args
   case "${1}" in
     *.tar.lz) 
-      [ -z $(command -v lzip) ] || exit 1
+      [ -z "$(command -v lzip)" ] || exit 1
       args="--lzip -xv"
       ;;
     *.tar.gz|*.tgz) args="-xvz";;
@@ -1614,9 +1616,9 @@ wget_untar(){
   esac
   [ -d "tmp" ] && rm -rf tmp
   mkdir tmp
-  wget -qO- $1 2>/dev/null | tar --transform 's/^dbt2-0.37.50.3/dbt2/' $args -C tmp >/dev/null 2>&1 || exit 1
-  cd tmp
-  mv * $2 && mv $2 ..
+  wget -qO- "$1" 2>/dev/null | tar --transform 's/^dbt2-0.37.50.3/dbt2/' $args -C tmp >/dev/null 2>&1 || exit 1
+  cd tmp || return
+  mv * "$2" && mv "$2" ..
   cd ..
   rm -rf tmp
 }
@@ -1974,7 +1976,7 @@ function log_unused2 {
 }
 
 libname_2_packagename(){
-  if [ -n $(command -v apt) ]; then
+  if [[ -n "$(command -v apt)" ]]; then
     pkglist=$(apt-cache search --names-only ${lib})
   fi
 }

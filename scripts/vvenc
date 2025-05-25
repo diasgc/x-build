@@ -21,7 +21,7 @@ lst_lic='AUTHORS.md LICENSE.txt'
 lst_pc='libvvenc.pc'
 
 dev_bra='master'
-dev_vrs='1.12.0'
+dev_vrs='1.13.1'
 pkg_deb=''
 eta='1088'
 
